@@ -1,0 +1,14 @@
+:::note Organization Roles
+See the [users](users.mdx#organization-users) page for information on roles that users can assume
+:::
+
+```bash
+# Create an organization user for Susan and grant her the 'Integrator' role
+prism organization:users:create \
+    --email 'foo@email.com' \
+    --name 'Susan Foo' \
+    --role $(prism organization:users:roles \
+                --columns id \
+                --no-header \
+                --filter 'name=^Integrator$')
+```

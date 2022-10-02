@@ -1,0 +1,7 @@
+```bash
+# Get the ID of the Webhook trigger of the Webhook Triggers component by key
+prism components:triggers:list --columns id --filter 'key=^webhook$' --no-header webhook-triggers
+
+# Get triggers related to the Management Triggers component
+prism components:triggers:list management-triggers
+```

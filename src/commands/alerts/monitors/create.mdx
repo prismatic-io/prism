@@ -1,0 +1,24 @@
+:::note Alert Monitors and Alert Groups
+While individual users and webhooks can be tied to alert monitors, it is recommended that you create [alert groups](#alertsgroupscreate) and attach alert groups to alert monitors. This helps in the case that you need to add a user to a set of monitors: it's simpler to edit a single alert group than to edit dozens of alert monitors.
+:::
+
+```bash
+# Create an alert monitor for an instance named "My Instance"
+# and alert the "DevOps" group in the event that an
+# instance execution takes longer than 10 seconds.
+prism alerts:monitors:create \
+    --name "Alert Devops of slow execution" \
+    --instance $(prism instances:list \
+                    --columns id \
+                    --filter 'name=^My Instance$' \
+                    --no-header) \
+    --triggers "[\"$(prism alerts:triggers:list \
+                    --columns id \
+                    --filter 'name=^Execution Duration Matched or Exceeded$' \
+                    --no-header)\"]" \
+    --duration 10 \
+    --groups "[\"$(prism alerts:groups:list \
+                    --columns id \
+                    --filter 'name=^DevOps$' \
+                    --no-header)\"]"
+```

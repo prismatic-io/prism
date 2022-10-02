@@ -1,0 +1,122 @@
+import { Command, CliUx, Flags } from "@oclif/core";
+import { gql, gqlRequest } from "../../../graphql";
+
+interface ActionNode {
+  [index: string]: unknown;
+  id: string;
+  key: string;
+  label: string;
+  description: string;
+}
+
+export default class ListCommand extends Command {
+  static description = "List Actions that Components implement";
+  static flags = {
+    ...CliUx.ux.table.flags(),
+    public: Flags.boolean({
+      required: false,
+      description:
+        "Show actions for the public component with the given key. Use this flag when you have a private component with the same key as a public component.",
+    }),
+    private: Flags.boolean({
+      required: false,
+      description:
+        "Show actions for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
+    }),
+  };
+  static args = [
+    {
+      name: "Component Key",
+      required: true,
+      description:
+        "The key of the component to show actions for (e.g. 'salesforce')",
+    },
+  ];
+
+  async run() {
+    const {
+      flags,
+      args: { "Component Key": componentKey },
+    } = await this.parse(ListCommand);
+
+    let actions: ActionNode[] = [];
+    let componentId: string;
+    let hasNextPage = true;
+    let cursor = "";
+
+    while (hasNextPage) {
+      const {
+        components: {
+          nodes: [component],
+        },
+      } = await gqlRequest({
+        document: gql`
+          query listComponentActions(
+            $componentKey: String
+            $after: String
+            $public: Boolean
+          ) {
+            components(key: $componentKey, public: $public) {
+              nodes {
+                id
+                key
+                actions(isTrigger: false, isDataSource: false, after: $after) {
+                  nodes {
+                    id
+                    key
+                    label
+                    description
+                  }
+                  pageInfo {
+                    hasNextPage
+                    endCursor
+                  }
+                }
+              }
+            }
+          }
+        `,
+        variables: {
+          after: cursor,
+          componentKey,
+          public: flags.public ? true : flags.private ? false : null,
+        },
+      });
+      if (!component) {
+        console.log(
+          "The key you provided is not valid. Please run 'prism components:list -x' and identify a valid component key."
+        );
+        this.exit(1);
+      }
+      actions = [...actions, ...component.actions.nodes];
+      componentId = component.id;
+      cursor = component.actions.pageInfo.endCursor;
+      hasNextPage = component.actions.pageInfo.hasNextPage;
+    }
+
+    CliUx.ux.table(
+      actions,
+      {
+        id: {
+          minWidth: 8,
+          extended: true,
+        },
+        key: {
+          minWidth: 10,
+          extended: true,
+        },
+        label: {},
+        description: {},
+        componentid: {
+          get: () => componentId,
+          extended: true,
+        },
+        componentkey: {
+          get: () => componentKey,
+          extended: true,
+        },
+      },
+      { ...flags }
+    );
+  }
+}

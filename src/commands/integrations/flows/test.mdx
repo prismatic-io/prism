@@ -1,0 +1,9 @@
+```bash
+# Test an integration flow named 'My Integration Flow' and tail log output
+prism integrations:flows:test \
+    --tail \
+    $(prism integrations:flows:list \
+        --columns id \
+        --no-header \
+        --filter 'name=^My Integration Flow$')
+```

@@ -1,0 +1,9 @@
+```bash
+# Create an group for "DevOps"
+prism alerts:groups:create \
+    --name DevOps \
+    --users "[\"$(prism organization:users:list \
+                    --columns id \
+                    --filter 'Name=John Doe' \
+                    --no-header)\"]"
+```

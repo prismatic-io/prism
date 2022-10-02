@@ -1,0 +1,14 @@
+```bash
+# Add a new 'Member' user for customer 'My First Customer'
+prism customers:users:create \
+    --email 'bar@email.com' \
+    --name 'Thomas Bar' \
+    --customer $(prism customers:list \
+                    --columns id \
+                    --no-header \
+                    --filter 'name=^My First Customer$') \
+    --role $(prism customers:users:roles \
+                --columns id \
+                --no-header \
+                --filter 'name=^Member$')
+```
