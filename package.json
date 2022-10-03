@@ -2,13 +2,14 @@
   "name": "@prismatic-io/prism",
   "version": "4.3.2",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
-  "keywords": [
-    "prismatic",
-    "cli"
-  ],
+  "keywords": ["prismatic","cli"],
   "homepage": "https://prismatic.io",
   "bugs": {
-    "url": "https://prismatic.io"
+    "url": "https://github.com/prismatic-io/prism"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prismatic-io/prism.git"
   },
   "license": "MIT",
   "bin": {
