@@ -82,9 +82,9 @@ export default class PublishCommand extends Command {
     const {
       display: { iconPath },
     } = definition;
+    await uploadFile(packagePath, packageUploadUrl);
     await uploadFile(iconPath, iconUploadUrl);
     await uploadConnectionIcons(definition, connectionIconUploadUrls);
-    await uploadFile(packagePath, packageUploadUrl);
 
     const {
       display: { label },

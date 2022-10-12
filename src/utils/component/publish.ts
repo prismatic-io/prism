@@ -1,6 +1,6 @@
 import { CliUx } from "@oclif/core";
 import { exists, fs } from "../../fs";
-import { resolve } from "path";
+import { resolve, extname } from "path";
 import { ComponentDefinition as ComponentDefinitionTemplate } from "@prismatic-io/spectral";
 import tempy from "tempy";
 import crypto from "crypto";
@@ -8,7 +8,6 @@ import archiver from "archiver";
 import { gqlRequest, gql } from "../../graphql";
 import axios from "axios";
 import mimetypes from "mime-types";
-import { extname } from "path";
 
 /** Type defining leftover legacy backwards compat keys. */
 type LegacyDefinition = {
@@ -89,13 +88,18 @@ export const loadEntrypoint = async (): Promise<ComponentDefinition> => {
   return definition;
 };
 
+const validateIcon = async (iconPath?: string): Promise<boolean> =>
+  !iconPath ||
+  (extname(iconPath.trim().toLowerCase()) === ".png" &&
+    (await exists(iconPath)));
+
 export const validateDefinition = async (
   definition: ComponentDefinition
 ): Promise<void> => {
   // Output basic information to the user to confirm that this component is what they want to publish
   const {
     display: { label, description, iconPath },
-    // connections,
+    connections,
   } = definition;
   if (!label || !description) {
     CliUx.ux.error(
@@ -104,14 +108,24 @@ export const validateDefinition = async (
     );
   }
 
-  if (iconPath && !(await exists(iconPath))) {
-    CliUx.ux.error(
-      "Icon was specified (iconPath) but a file was not found at specified path. Exiting.",
-      { exit: 1 }
-    );
+  const componentIconValid = await validateIcon(iconPath);
+  if (!componentIconValid) {
+    CliUx.ux.error(`Component icon does not exist or is not a png. Exiting.`, {
+      exit: 1,
+    });
   }
 
-  // TODO: Check if all Connection icons exist.
+  const connectionIconsValid = await Promise.all(
+    (connections ?? []).map(({ iconPath }) => validateIcon(iconPath))
+  );
+  if (connectionIconsValid.some((v) => !v)) {
+    CliUx.ux.error(
+      `One or more connection icons do not exist or are not a png. Exiting.`,
+      {
+        exit: 1,
+      }
+    );
+  }
 };
 
 export const createComponentPackage = async (): Promise<string> => {
