@@ -154,7 +154,7 @@ export default class TestCommand extends Command {
     } = await this.parse(TestCommand);
 
     if (await exists(envPath)) {
-      const { error } = dotenv.config({ path: envPath });
+      const { error } = dotenv.config({ path: envPath, override: true });
       if (error) {
         CliUx.ux.error(`Failed to load specified dotenv file: ${error}`, {
           exit: 1,
