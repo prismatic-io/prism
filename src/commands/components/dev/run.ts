@@ -1,23 +1,7 @@
 import { Command, Flags, CliUx } from "@oclif/core";
 import { isEmpty } from "lodash";
 import { gqlRequest, gql } from "../../../graphql";
-import { spawn } from "child_process";
-
-const spawnProcess = (
-  [command, ...args]: string[],
-  env: Record<string, string>
-): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      env: { ...process.env, ...env },
-    });
-
-    child.stdout.pipe(process.stdout);
-    child.stderr.pipe(process.stderr);
-
-    child.on("close", (code) => (code === 0 ? resolve() : reject()));
-  });
-};
+import { spawnProcess } from "../../../utils/process";
 
 export default class RunCommand extends Command {
   static description = `Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.`;
