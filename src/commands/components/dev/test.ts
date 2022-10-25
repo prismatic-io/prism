@@ -148,11 +148,12 @@ export default class TestCommand extends Command {
       char: "e",
       description: "Path to dotenv file to load for supplying testing values",
     }),
-    "no-build": Flags.boolean({
+    build: Flags.boolean({
       required: false,
-      default: false,
-      char: "n",
-      description: "Skip building the component prior to testing",
+      default: true,
+      allowNo: true,
+      char: "b",
+      description: "Build the component prior to testing",
     }),
     "output-file": Flags.string({
       required: false,
@@ -163,13 +164,13 @@ export default class TestCommand extends Command {
 
   async run() {
     const {
-      flags: { envPath, "no-build": noBuild, "output-file": outputFile },
+      flags: { envPath, build, "output-file": outputFile },
     } = await this.parse(TestCommand);
 
     // Save the current working directory, so we can return later after moving to dist/
     const cwd = process.cwd();
 
-    if (!noBuild) {
+    if (build) {
       console.log("Building component...");
       await spawnProcess(["npm", "run", "build"], {});
     }
