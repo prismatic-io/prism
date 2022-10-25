@@ -25,6 +25,8 @@ import { pollForActiveConfigVarState } from "../../../utils/integration/query";
 import { Expression } from "../../../utils/integration/export";
 import { exists } from "../../../fs";
 import { whoAmI } from "../../../utils/user/query";
+import { spawnProcess } from "../../../utils/process";
+import { writeFinalStepResults } from "../../../utils/execution/stepResults";
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -138,7 +140,7 @@ const valuesFromAnswers = ({
 
 export default class TestCommand extends Command {
   static description =
-    "Run a Component in Prismatic by publishing it into a test Integration";
+    "Run an action of a component within a test integration in the integration runner";
   static flags = {
     envPath: Flags.string({
       required: false,
@@ -146,12 +148,32 @@ export default class TestCommand extends Command {
       char: "e",
       description: "Path to dotenv file to load for supplying testing values",
     }),
+    build: Flags.boolean({
+      required: false,
+      default: true,
+      allowNo: true,
+      char: "b",
+      description: "Build the component prior to testing",
+    }),
+    "output-file": Flags.string({
+      required: false,
+      char: "o",
+      description: "Output the results of the action to a specified file",
+    }),
   };
 
   async run() {
     const {
-      flags: { envPath },
+      flags: { envPath, build, "output-file": outputFile },
     } = await this.parse(TestCommand);
+
+    // Save the current working directory, so we can return later after moving to dist/
+    const cwd = process.cwd();
+
+    if (build) {
+      console.log("Building component...");
+      await spawnProcess(["npm", "run", "build"], {});
+    }
 
     if (await exists(envPath)) {
       const { error } = dotenv.config({ path: envPath, override: true });
@@ -333,6 +355,12 @@ export default class TestCommand extends Command {
     const { executionId } = await runIntegrationFlow({ integrationId, flowId });
 
     await displayLogs(executionId);
+
+    if (outputFile) {
+      process.chdir(cwd);
+      console.log(`Writing step results to ${outputFile}`);
+      await writeFinalStepResults(executionId, outputFile);
+    }
 
     CliUx.ux.action.stop();
   }
