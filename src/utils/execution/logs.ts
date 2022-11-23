@@ -36,7 +36,7 @@ export const waitForExecutionCompletion = (
 
           // Grace period to let logs finish flowing; logs are fully async and are
           // not guaranteed to be added in chronological order.
-          await setTimeoutPromise(1000);
+          await setTimeoutPromise(2000);
 
           resolve();
         }

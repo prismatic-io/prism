@@ -26,7 +26,10 @@ import { Expression } from "../../../utils/integration/export";
 import { exists } from "../../../fs";
 import { whoAmI } from "../../../utils/user/query";
 import { spawnProcess } from "../../../utils/process";
-import { writeFinalStepResults } from "../../../utils/execution/stepResults";
+import {
+  printFinalStepResults,
+  writeFinalStepResults,
+} from "../../../utils/execution/stepResults";
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -160,11 +163,21 @@ export default class TestCommand extends Command {
       char: "o",
       description: "Output the results of the action to a specified file",
     }),
+    "print-results": Flags.boolean({
+      required: false,
+      default: false,
+      description: "Print the results of the action to stdout",
+    }),
   };
 
   async run() {
     const {
-      flags: { envPath, build, "output-file": outputFile },
+      flags: {
+        envPath,
+        build,
+        "output-file": outputFile,
+        "print-results": printResults,
+      },
     } = await this.parse(TestCommand);
 
     // Save the current working directory, so we can return later after moving to dist/
@@ -360,6 +373,10 @@ export default class TestCommand extends Command {
       process.chdir(cwd);
       console.log(`Writing step results to ${outputFile}`);
       await writeFinalStepResults(executionId, outputFile);
+    }
+
+    if (printResults) {
+      await printFinalStepResults(executionId);
     }
 
     CliUx.ux.action.stop();
