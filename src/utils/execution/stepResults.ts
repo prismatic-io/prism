@@ -82,3 +82,16 @@ export const writeFinalStepResults = async (
   const result = await getFinalStepResult(executionId);
   await fs.writeFile(fileName, result.data);
 };
+
+export const printFinalStepResults = async (
+  executionId: string
+): Promise<void> => {
+  const result = await getFinalStepResult(executionId);
+  console.log(`
+======== Step Results ========
+
+${result.data}
+
+==============================
+`);
+};
