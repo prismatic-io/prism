@@ -56,3 +56,6 @@ build/Release
 
 # PowerPoint tmp files
 ~$*.pptx
+
+# Test component generator files
+src/commands/components/init/temp
