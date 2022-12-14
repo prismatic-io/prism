@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "4.4.1",
+  "version": "4.4.2",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": [
     "prismatic",
@@ -44,8 +44,8 @@
     "@oclif/core": "1.7.0",
     "@oclif/plugin-help": "5.1.12",
     "@oclif/plugin-warn-if-update-available": "2.0.4",
-    "@prismatic-io/spectral": "7.0.0",
-    "@prismatic-io/generator-spectral": "2.0.0",
+    "@prismatic-io/spectral": "7.3.3",
+    "@prismatic-io/generator-spectral": "2.1.1",
     "@jest/types": "27.5.1",
     "graphql-request": "4.2.0",
     "graphql": "16.3.0",
