@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "4.4.2",
+  "version": "4.4.3",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": [
     "prismatic",
@@ -134,9 +134,6 @@
       "customers": {
         "description": "Manage Customers"
       },
-      "customers:credentials": {
-        "description": "Manage Customer Credentials"
-      },
       "customers:users": {
         "description": "Manage Customer Users"
       },
@@ -154,9 +151,6 @@
       },
       "organization": {
         "description": "Manage your Organization"
-      },
-      "organization:credentials": {
-        "description": "Manage Organization Credentials"
       },
       "organization:users": {
         "description": "Manage Organization Users"
