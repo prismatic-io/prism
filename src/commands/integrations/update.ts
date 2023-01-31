@@ -21,6 +21,10 @@ export default class UpdateCommand extends Command {
       char: "d",
       description: "new description to give the integration",
     }),
+    customer: Flags.string({
+      char: "c",
+      description: "ID of customer with which to associate the integration",
+    }),
     "test-config-vars": Flags.string({
       description: "JSON-formatted config variables to be used for testing",
     }),
@@ -33,7 +37,12 @@ export default class UpdateCommand extends Command {
   async run() {
     const {
       args: { integration },
-      flags: { name, description, "test-config-vars": testConfigVars },
+      flags: {
+        name,
+        description,
+        customer,
+        "test-config-vars": testConfigVars,
+      },
     } = await this.parse(UpdateCommand);
     const result = await gqlRequest({
       document: gql`
@@ -41,6 +50,7 @@ export default class UpdateCommand extends Command {
           $id: ID!
           $name: String
           $description: String
+          $customer: ID
           $testConfigVars: [InputInstanceConfigVariable]
         ) {
           updateIntegration(
@@ -48,6 +58,7 @@ export default class UpdateCommand extends Command {
               id: $id
               name: $name
               description: $description
+              customer: $customer
               testConfigVariables: $testConfigVars
             }
           ) {
@@ -65,6 +76,7 @@ export default class UpdateCommand extends Command {
         id: integration,
         name,
         description,
+        customer,
         testConfigVars: parseJsonOrUndefined(testConfigVars),
       },
     });

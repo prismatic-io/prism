@@ -34,6 +34,9 @@ export default class PublishCommand extends Command {
       description:
         "Skips component publish if the new signature matches the existing signature",
     }),
+    customer: Flags.string({
+      description: "ID of customer with which to associate the component",
+    }),
   };
 
   async run() {
@@ -43,6 +46,7 @@ export default class PublishCommand extends Command {
         confirm,
         "check-signature": checkSignature,
         "skip-on-signature-match": skipOnSignatureMatch,
+        customer,
       },
     } = await this.parse(PublishCommand);
 
@@ -77,7 +81,7 @@ export default class PublishCommand extends Command {
       packageUploadUrl,
       connectionIconUploadUrls,
       versionNumber,
-    } = await publishDefinition(definition, comment);
+    } = await publishDefinition(definition, comment, customer);
 
     const {
       display: { iconPath },

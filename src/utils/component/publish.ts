@@ -190,7 +190,8 @@ export const confirmPublish = async (
 
 export const publishDefinition = async (
   { actions, triggers, dataSources, connections, ...rest }: ComponentDefinition,
-  comment?: string
+  comment?: string,
+  customer?: string
 ): Promise<{
   iconUploadUrl: string;
   packageUploadUrl: string;
@@ -246,6 +247,7 @@ export const publishDefinition = async (
         $dataSources: [DataSourceDefinitionInput]
         $connections: [ConnectionDefinitionInput]
         $comment: String
+        $customer: ID
       ) {
         publishComponent(
           input: {
@@ -255,6 +257,7 @@ export const publishDefinition = async (
             dataSources: $dataSources
             connections: $connections
             comment: $comment
+            customer: $customer
           }
         ) {
           publishResult {
@@ -283,6 +286,7 @@ export const publishDefinition = async (
       dataSources: dataSourceDefinitions,
       connections: connectionDefinitions,
       comment,
+      customer,
     },
   });
 
