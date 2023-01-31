@@ -14,17 +14,31 @@ export default class CreateCommand extends Command {
       required: true,
       description: "longer description of the integration",
     }),
+    customer: Flags.string({
+      char: "c",
+      description: "ID of customer with which to associate the integration",
+    }),
   };
 
   async run() {
     const {
-      flags: { name, description },
+      flags: { name, description, customer },
     } = await this.parse(CreateCommand);
 
     const result = await gqlRequest({
       document: gql`
-        mutation createIntegration($name: String!, $description: String!) {
-          createIntegration(input: { name: $name, description: $description }) {
+        mutation createIntegration(
+          $name: String!
+          $description: String!
+          $customer: ID
+        ) {
+          createIntegration(
+            input: {
+              name: $name
+              description: $description
+              customer: $customer
+            }
+          ) {
             integration {
               id
             }
@@ -38,6 +52,7 @@ export default class CreateCommand extends Command {
       variables: {
         name,
         description,
+        customer,
       },
     });
 
