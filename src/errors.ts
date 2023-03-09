@@ -19,7 +19,7 @@ const getStatusMessage = (status: number): string | undefined => {
     return;
   }
   return status === StatusCodes.UNAUTHORIZED
-    ? "You are not logged in."
+    ? "You are not logged to the Prismatic platform at the specified endpoint URL. Check the value for PRISMATIC_URL."
     : getReasonPhrase(status);
 };
 
