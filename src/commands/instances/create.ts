@@ -13,12 +13,7 @@ export default class CreateCommand extends Command {
     integration: Flags.string({
       char: "i",
       required: false,
-      description: "ID of the integration this is an instance of",
-    }),
-    version: Flags.string({
-      char: "i",
-      required: false,
-      description: "ID of the integration (version) this is an instance of.",
+      description: "ID of the integration or a specific instance version ID this is an instance of",
     }),
     customer: Flags.string({
       char: "c",
@@ -43,16 +38,10 @@ export default class CreateCommand extends Command {
         name,
         description,
         integration,
-        version,
         customer,
         "config-vars": configVars,
       },
     } = await this.parse(CreateCommand);
-
-    if (!integration && !version) {
-      this.error('Integration or version must be provided.')
-    }
-    const integrationValue = integration || version
 
     const result = await gqlRequest({
       document: gql`
@@ -85,9 +74,8 @@ export default class CreateCommand extends Command {
       variables: {
         name,
         description,
-        integration: integrationValue,
+        integration,
         customer,
-        version,
         configVariables: parseJsonOrUndefined(configVars),
       },
     });
