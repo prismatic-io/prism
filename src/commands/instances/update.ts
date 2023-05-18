@@ -26,24 +26,19 @@ export default class UpdateCommand extends Command {
       description: "ID of integration version",
       required: false,
     }),
-    latestVersion: Flags.string({
-      char: "l",
-      description: "Flag to update to latest published version",
-      required: false,
-    }),
   };
 
   async run() {
     const {
       args: { instance },
-      flags: { name, description, version, latestVersion },
+      flags: { name, description, version },
     } = await this.parse(UpdateCommand);
 
     const result = await gqlRequest({
       document: gql`
-        mutation updateInstance($id: ID!, $name: String, $description: String, $version: Int ) {
+        mutation updateInstance($id: ID!, $name: String, $description: String, $integration: ID! ) {
           updateInstance(
-            input: { id: $id, name: $name, description: $description, version: $version}
+            input: { id: $id, name: $name, description: $description, integration: $version}
           ) {
             instance {
               id
