@@ -12,7 +12,7 @@ export default class CreateCommand extends Command {
     }),
     integration: Flags.string({
       char: "i",
-      required: false,
+      required: true,
       description: "ID of the integration or a specific instance version ID this is an instance of",
     }),
     customer: Flags.string({
