@@ -36,7 +36,7 @@ export default class UpdateCommand extends Command {
 
     const result = await gqlRequest({
       document: gql`
-        mutation updateInstance($id: ID!, $name: String, $description: String, $integration: ID! ) {
+        mutation updateInstance($id: ID!, $name: String, $description: String, $version: ID! ) {
           updateInstance(
             input: { id: $id, name: $name, description: $description, integration: $version}
           ) {
@@ -52,9 +52,9 @@ export default class UpdateCommand extends Command {
       `,
       variables: {
         id: instance,
-        name: name,
-        description: description,
-        integration: version,
+        name,
+        description,
+        version,
       },
     });
 
