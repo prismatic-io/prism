@@ -49,6 +49,23 @@ export const getIntegrationFlow = async (
   return flows[0].id;
 };
 
+/** Delete a specified integration by ID */
+export const deleteIntegration = async (integrationId: string) => {
+  await gqlRequest({
+    document: gql`
+      mutation deleteIntegration($id: ID!) {
+        deleteIntegration(input: { id: $id }) {
+          errors {
+            field
+            messages
+          }
+        }
+      }
+    `,
+    variables: { id: integrationId },
+  });
+};
+
 interface IntegrationFlowRunProps {
   integrationId: string;
   flowId?: string;
