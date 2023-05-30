@@ -20,7 +20,10 @@ import {
   ComponentTestInfo,
 } from "../../../utils/integration/definition";
 import { importDefinition } from "../../../utils/integration/import";
-import { runIntegrationFlow } from "../../../utils/integration/invoke";
+import {
+  deleteIntegration,
+  runIntegrationFlow,
+} from "../../../utils/integration/invoke";
 import { pollForActiveConfigVarState } from "../../../utils/integration/query";
 import { Expression } from "../../../utils/integration/export";
 import { exists } from "../../../fs";
@@ -30,6 +33,7 @@ import {
   printFinalStepResults,
   writeFinalStepResults,
 } from "../../../utils/execution/stepResults";
+import { deleteComponentByKey } from "../../../utils/component/deleteByKey";
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -168,6 +172,12 @@ export default class TestCommand extends Command {
       default: false,
       description: "Print the results of the action to stdout",
     }),
+    "clean-up": Flags.boolean({
+      required: false,
+      default: false,
+      description:
+        "Clean up the integration and temporary component after running the action",
+    }),
   };
 
   async run() {
@@ -177,6 +187,7 @@ export default class TestCommand extends Command {
         build,
         "output-file": outputFile,
         "print-results": printResults,
+        "clean-up": cleanUp,
       },
     } = await this.parse(TestCommand);
 
@@ -377,6 +388,16 @@ export default class TestCommand extends Command {
 
     if (printResults) {
       await printFinalStepResults(executionId);
+    }
+
+    if (cleanUp) {
+      CliUx.ux.action.start(`Cleaning up test Integration (${integrationId})`);
+      await deleteIntegration(integrationId);
+      CliUx.ux.action.stop();
+
+      CliUx.ux.action.start(`Cleaning up test component (${definition.key})`);
+      await deleteComponentByKey(definition.key);
+      CliUx.ux.action.stop();
     }
 
     CliUx.ux.action.stop();
