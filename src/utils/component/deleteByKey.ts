@@ -1,11 +1,11 @@
 import { gql, gqlRequest } from "../../graphql";
 
 export const deleteComponentByKey = async (key: string) => {
-  // Retrieve the existing signature of the component if it exists.
+  // Fetch a component by key
   const result = await gqlRequest({
     document: gql`
       query component($key: String!) {
-        components(key: $key) {
+        components(key: $key, public: false) {
           nodes {
             id
           }
@@ -16,6 +16,7 @@ export const deleteComponentByKey = async (key: string) => {
       key,
     },
   });
+  // Delete the component by ID
   await gqlRequest({
     document: gql`
       mutation deleteComponent($id: ID!) {
