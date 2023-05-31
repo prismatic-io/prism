@@ -1,3 +1,4 @@
+import chardet from "chardet";
 import { Command, Flags } from "@oclif/core";
 import { fs, exists } from "../../fs";
 import { gql, gqlRequest } from "../../graphql";
@@ -39,7 +40,12 @@ export default class ImportCommand extends Command {
       });
     }
 
-    const definition = await fs.readFile(path, "utf-8");
+    const encoding = await chardet.detectFile(path);
+    const definition = await fs.readFile(
+      path,
+      encoding === "UTF-16LE" ? "utf16le" : "utf-8"
+    );
+
     const { integrationId: integrationImportId } = await importDefinition(
       definition,
       integrationId
