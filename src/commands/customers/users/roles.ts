@@ -1,11 +1,11 @@
-import { Command, CliUx } from "@oclif/core";
+import { Command, ux } from "@oclif/core";
 import { gql, gqlRequest } from "../../../graphql";
 
 export default class ListCommand extends Command {
   static description = "List Roles you can grant to Customer Users";
 
   static flags = {
-    ...CliUx.ux.table.flags(),
+    ...ux.table.flags(),
   };
 
   async run() {
@@ -23,7 +23,7 @@ export default class ListCommand extends Command {
       `,
     });
 
-    CliUx.ux.table(
+    ux.table(
       result.customerRoles,
       {
         id: {

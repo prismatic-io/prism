@@ -1,15 +1,14 @@
-import { Command } from "@oclif/core";
+import { Command, Args } from "@oclif/core";
 import { gqlRequest, gql } from "../../graphql";
 
 export default class DeleteCommand extends Command {
   static description = "Delete a Component";
-  static args = [
-    {
-      name: "component",
+  static args = {
+    component: Args.string({
       required: true,
       description: "ID of the component to delete",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {

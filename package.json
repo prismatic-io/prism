@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "4.6.9",
+  "version": "4.7.0",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": [
     "prismatic",
@@ -41,10 +41,10 @@
   ],
   "dependencies": {
     "@msgpack/msgpack": "2.3.0",
-    "@oclif/core": "1.7.0",
-    "@oclif/plugin-autocomplete": "2.3.0",
-    "@oclif/plugin-help": "5.1.12",
-    "@oclif/plugin-warn-if-update-available": "2.0.4",
+    "@oclif/core": "2.11.8",
+    "@oclif/plugin-autocomplete": "2.3.6",
+    "@oclif/plugin-help": "5.2.17",
+    "@oclif/plugin-warn-if-update-available": "2.0.48",
     "@prismatic-io/generator-spectral": "2.1.4",
     "@prismatic-io/spectral": "7.4.0",
     "archiver": "3.1.1",
@@ -64,7 +64,8 @@
     "jwt-decode": "2.2.0",
     "lodash": "4.17.21",
     "mime-types": "2.1.27",
-    "oclif": "3.0.1",
+    "oclif": "3.11.3",
+    "open": "8.4.2",
     "prettier": "2.6.2",
     "striptags": "3.2.0",
     "tempy": "0.5.0",
@@ -73,7 +74,7 @@
     "yeoman-environment": "3.9.1"
   },
   "devDependencies": {
-    "@oclif/test": "2.1.0",
+    "@oclif/test": "2.4.6",
     "@types/archiver": "3.1.0",
     "@types/fs-extra": "9.0.1",
     "@types/glob": "7.1.4",

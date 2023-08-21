@@ -1,17 +1,16 @@
-import { Command, CliUx } from "@oclif/core";
+import { Command, Args, ux } from "@oclif/core";
 import { gqlRequest, gql } from "../../../graphql";
 
 export default class ListCommand extends Command {
   static description = "List Alert Events for an Alert Monitor";
-  static args = [
-    {
-      name: "alertMonitorId",
+  static args = {
+    alertMonitorId: Args.string({
       description: "ID of an alert monitor",
       required: true,
-    },
-  ];
+    }),
+  };
   static flags = {
-    ...CliUx.ux.table.flags(),
+    ...ux.table.flags(),
   };
 
   async run() {
@@ -43,7 +42,7 @@ export default class ListCommand extends Command {
       },
     });
 
-    CliUx.ux.table(
+    ux.table(
       result.alertEvents.nodes,
       {
         id: {

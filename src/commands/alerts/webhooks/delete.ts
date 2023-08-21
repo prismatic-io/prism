@@ -1,15 +1,14 @@
-import { Command } from "@oclif/core";
+import { Command, Args } from "@oclif/core";
 import { gqlRequest, gql } from "../../../graphql";
 
 export default class DeleteCommand extends Command {
   static description = "Delete an Alert Webhook";
-  static args = [
-    {
-      name: "webhook",
+  static args = {
+    webhook: Args.string({
       required: true,
       description: "ID of the webhook to delete",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {

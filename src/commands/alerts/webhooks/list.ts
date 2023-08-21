@@ -1,9 +1,9 @@
-import { Command, CliUx } from "@oclif/core";
+import { Command, ux } from "@oclif/core";
 import { gqlRequest, gql } from "../../../graphql";
 
 export default class ListCommand extends Command {
   static description = "List Alert Webhooks";
-  static flags = { ...CliUx.ux.table.flags() };
+  static flags = { ...ux.table.flags() };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
@@ -40,7 +40,7 @@ export default class ListCommand extends Command {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    CliUx.ux.table(
+    ux.table(
       alertWebhooks,
       {
         id: {

@@ -1,4 +1,4 @@
-import { CliUx } from "@oclif/core";
+import { ux } from "@oclif/core";
 import { exists, fs } from "../../fs";
 import { resolve, extname } from "path";
 import { ComponentDefinition as ComponentDefinitionTemplate } from "@prismatic-io/spectral";
@@ -47,7 +47,7 @@ export const seekComponentPackageDistDirectory = async (): Promise<void> => {
     const tempDir = process.cwd();
     process.chdir("../");
     if (process.cwd() == tempDir) {
-      CliUx.ux.error(
+      ux.error(
         "Failed to find 'package.json' file. Is the current path a component?",
         { exit: 1 }
       );
@@ -55,12 +55,9 @@ export const seekComponentPackageDistDirectory = async (): Promise<void> => {
   }
 
   if (!(await exists("./dist"))) {
-    CliUx.ux.error(
-      "Failed to find 'dist' folder. Is the current path a component?",
-      {
-        exit: 1,
-      }
-    );
+    ux.error("Failed to find 'dist' folder. Is the current path a component?", {
+      exit: 1,
+    });
   }
 
   process.chdir("./dist");
@@ -74,7 +71,7 @@ export const loadEntrypoint = async (): Promise<ComponentDefinition> => {
 
   // If we still didn't find index.js error out
   if (!(await exists("index.js"))) {
-    CliUx.ux.error(
+    ux.error(
       "Failed to find 'index.js' entrypoint file. Is the current path a component?",
       { exit: 1 }
     );
@@ -102,15 +99,14 @@ export const validateDefinition = async (
     connections,
   } = definition;
   if (!label || !description) {
-    CliUx.ux.error(
-      "Missing required values `label` or `description`. Exiting.",
-      { exit: 1 }
-    );
+    ux.error("Missing required values `label` or `description`. Exiting.", {
+      exit: 1,
+    });
   }
 
   const componentIconValid = await validateIcon(iconPath);
   if (!componentIconValid) {
-    CliUx.ux.error(`Component icon does not exist or is not a png. Exiting.`, {
+    ux.error(`Component icon does not exist or is not a png. Exiting.`, {
       exit: 1,
     });
   }
@@ -119,7 +115,7 @@ export const validateDefinition = async (
     (connections ?? []).map(({ iconPath }) => validateIcon(iconPath))
   );
   if (connectionIconsValid.some((v) => !v)) {
-    CliUx.ux.error(
+    ux.error(
       `One or more connection icons do not exist or are not a png. Exiting.`,
       {
         exit: 1,
@@ -180,12 +176,12 @@ export const confirmPublish = async (
 ) => {
   if (!confirm) return;
 
-  CliUx.ux.log(label, "-", description);
+  ux.log(label, "-", description);
 
-  const continuePublish = await CliUx.ux.confirm(
+  const continuePublish = await ux.confirm(
     `Would you like to publish ${label}? (y/N)`
   );
-  if (!continuePublish) CliUx.ux.exit(0);
+  if (!continuePublish) ux.exit(0);
 };
 
 export const publishDefinition = async (

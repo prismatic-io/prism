@@ -1,16 +1,15 @@
-import { Command, Flags } from "@oclif/core";
+import { Command, Args, Flags } from "@oclif/core";
 import { gql, gqlRequest } from "../../graphql";
 
 export default class UpdateCommand extends Command {
   // TODO: Add more flags once optional updates are implemented
   static description = "Update a Customer";
-  static args = [
-    {
-      name: "customer",
+  static args = {
+    customer: Args.string({
       required: true,
       description: "ID of a customer",
-    },
-  ];
+    }),
+  };
 
   static flags = {
     name: Flags.string({

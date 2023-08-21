@@ -11,7 +11,8 @@ import {
 } from "./config";
 import { gqlRequest, gql } from "./graphql";
 import { AddressInfo } from "net";
-import { CliUx } from "@oclif/core";
+import { ux } from "@oclif/core";
+import open from "open";
 
 const urlEncodeBase64 = (buffer: Buffer | string): string => {
   if (typeof buffer === "string") {
@@ -215,7 +216,7 @@ export class Authenticate {
       returnTo: this.options.successRedirectUri,
     };
     const queryString = createRequestParams(params);
-    await CliUx.ux.open(`https://${this.options.domain}/logout?${queryString}`);
+    await open(`https://${this.options.domain}/logout?${queryString}`);
     await deleteConfig();
   }
 
@@ -292,7 +293,7 @@ export class Authenticate {
       redirectUri
     );
 
-    await CliUx.ux.open(challengeUrl);
+    await open(challengeUrl);
   }
 
   private async getChallengeUrl(
@@ -385,7 +386,7 @@ export const getAccessToken = async (): Promise<string | undefined> => {
 
   if (accessToken && refreshToken) {
     const now = Math.floor(new Date().getTime() / 1000);
-    const { exp } = jwtDecode(accessToken);
+    const { exp } = jwtDecode<{ exp: number }>(accessToken);
 
     // Refresh if expired or expiring in 5 minutes or less
     if (exp - now < 5 * 60) {

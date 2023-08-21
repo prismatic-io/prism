@@ -1,15 +1,14 @@
-import { Command, Flags } from "@oclif/core";
+import { Command, Args, Flags } from "@oclif/core";
 import { gqlRequest, gql } from "../../graphql";
 
 export default class DeployCommand extends Command {
   static description = "Deploy an Instance";
-  static args = [
-    {
-      name: "instance",
+  static args = {
+    instance: Args.string({
       required: true,
       description: "ID of an instance",
-    },
-  ];
+    }),
+  };
   static flags = {
     force: Flags.boolean({
       char: "f",

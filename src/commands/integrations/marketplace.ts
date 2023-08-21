@@ -1,17 +1,16 @@
-import { Command, Flags } from "@oclif/core";
+import { Command, Args, Flags } from "@oclif/core";
 import { gql, gqlRequest } from "../../graphql";
 
 export default class MarketplaceCommand extends Command {
   static description =
     "Make a version of an Integration available in the Marketplace";
 
-  static args = [
-    {
-      name: "integration",
+  static args = {
+    integration: Args.string({
       required: true,
       description: "ID of an integration version to make marketplace available",
-    },
-  ];
+    }),
+  };
 
   static flags = {
     available: Flags.boolean({

@@ -1,4 +1,4 @@
-import { Command, CliUx, Flags } from "@oclif/core";
+import { Command, ux, Args, Flags } from "@oclif/core";
 import { gql, gqlRequest } from "../../../graphql";
 
 interface ActionNode {
@@ -12,7 +12,7 @@ interface ActionNode {
 export default class ListCommand extends Command {
   static description = "List Actions that Components implement";
   static flags = {
-    ...CliUx.ux.table.flags(),
+    ...ux.table.flags(),
     public: Flags.boolean({
       required: false,
       description:
@@ -24,19 +24,19 @@ export default class ListCommand extends Command {
         "Show actions for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
     }),
   };
-  static args = [
-    {
+  static args = {
+    componentKey: Args.string({
       name: "Component Key",
       required: true,
       description:
         "The key of the component to show actions for (e.g. 'salesforce')",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {
       flags,
-      args: { "Component Key": componentKey },
+      args: { componentKey },
     } = await this.parse(ListCommand);
 
     let actions: ActionNode[] = [];
@@ -94,7 +94,7 @@ export default class ListCommand extends Command {
       hasNextPage = component.actions.pageInfo.hasNextPage;
     }
 
-    CliUx.ux.table(
+    ux.table(
       actions,
       {
         id: {

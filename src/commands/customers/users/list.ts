@@ -1,18 +1,17 @@
-import { Command, CliUx } from "@oclif/core";
+import { Command, ux, Args } from "@oclif/core";
 import { gql, gqlRequest } from "../../../graphql";
 
 export default class ListCommand extends Command {
   static description = "List Customer Users";
-  static args = [
-    {
-      name: "customer",
+  static args = {
+    customer: Args.string({
       description: "ID of the customer",
       required: true,
-    },
-  ];
+    }),
+  };
 
   static flags = {
-    ...CliUx.ux.table.flags(),
+    ...ux.table.flags(),
   };
 
   async run() {
@@ -59,7 +58,7 @@ export default class ListCommand extends Command {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    CliUx.ux.table(
+    ux.table(
       customerUsers,
       {
         id: {

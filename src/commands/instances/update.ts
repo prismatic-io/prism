@@ -1,16 +1,15 @@
-import { Command, Flags } from "@oclif/core";
+import { Command, Args, Flags } from "@oclif/core";
 import { gql, gqlRequest } from "../../graphql";
 
 export default class UpdateCommand extends Command {
   // TODO: Add more flags once optional updates are implemented
   static description = "Update an Instance";
-  static args = [
-    {
-      name: "instance",
+  static args = {
+    instance: Args.string({
       required: true,
       description: "ID of an instance",
-    },
-  ];
+    }),
+  };
 
   static flags = {
     name: Flags.string({

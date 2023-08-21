@@ -1,4 +1,4 @@
-import { Command, Flags, CliUx } from "@oclif/core";
+import { Command, Flags, ux } from "@oclif/core";
 import { isLoggedIn, login } from "../auth";
 
 export default class LoginCommand extends Command {
@@ -29,7 +29,7 @@ export default class LoginCommand extends Command {
     }
 
     if (!url) {
-      await CliUx.ux.anykey(
+      await ux.anykey(
         "Press any key to open prismatic.io in your default browser"
       );
     }

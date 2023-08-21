@@ -1,15 +1,14 @@
-import { Command } from "@oclif/core";
+import { Command, Args } from "@oclif/core";
 import { gql, gqlRequest } from "../../../graphql";
 
 export default class DeleteCommand extends Command {
   static description = "Delete an Alert Group";
-  static args = [
-    {
-      name: "group",
+  static args = {
+    group: Args.string({
       required: true,
       description: "ID of the group to delete",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {

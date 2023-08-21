@@ -1,18 +1,14 @@
-import { Command, CliUx } from "@oclif/core";
+import { Command, ux, Args } from "@oclif/core";
 import { gql, gqlRequest } from "../../../graphql";
 
 export default class ListCommand extends Command {
   static description = "List Config Variables used on an Instance";
-  static args = [
-    {
-      name: "instance",
-      description: "ID of an instance",
-      required: true,
-    },
-  ];
+  static args = {
+    instance: Args.string({ description: "ID of an instance", required: true }),
+  };
 
   static flags = {
-    ...CliUx.ux.table.flags(),
+    ...ux.table.flags(),
   };
 
   async run() {
@@ -70,7 +66,7 @@ export default class ListCommand extends Command {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    CliUx.ux.table(
+    ux.table(
       configVariables,
       {
         id: {

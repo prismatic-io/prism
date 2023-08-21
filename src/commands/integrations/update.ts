@@ -1,16 +1,15 @@
-import { Command, Flags } from "@oclif/core";
+import { Command, Args, Flags } from "@oclif/core";
 import { gqlRequest, gql } from "../../graphql";
 import { parseJsonOrUndefined } from "../../fields";
 
 export default class UpdateCommand extends Command {
   static description = "Update an Integration's name or description";
-  static args = [
-    {
-      name: "integration",
+  static args = {
+    integration: Args.string({
       required: true,
       description: "ID of an integration",
-    },
-  ];
+    }),
+  };
 
   static flags = {
     name: Flags.string({

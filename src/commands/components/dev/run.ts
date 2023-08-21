@@ -1,4 +1,4 @@
-import { Command, Flags, CliUx } from "@oclif/core";
+import { Command, Flags, ux } from "@oclif/core";
 import { isEmpty } from "lodash";
 import { gqlRequest, gql } from "../../../graphql";
 import { spawnProcess } from "../../../utils/process";
@@ -87,7 +87,7 @@ export default class RunCommand extends Command {
       ({ requiredConfigVariable: { key } }) => key === connectionKey
     );
     if (!connection) {
-      CliUx.ux.error("Failed to find active connection.", { exit: 1 });
+      ux.error("Failed to find active connection.", { exit: 1 });
     }
 
     const { meta, inputs } = connection;
@@ -102,6 +102,6 @@ export default class RunCommand extends Command {
       fields,
     });
 
-    await spawnProcess(argv, { PRISMATIC_CONNECTION_VALUE: value });
+    await spawnProcess(argv as string[], { PRISMATIC_CONNECTION_VALUE: value });
   }
 }

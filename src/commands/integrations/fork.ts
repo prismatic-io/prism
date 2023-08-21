@@ -1,4 +1,4 @@
-import { Command, Flags } from "@oclif/core";
+import { Command, Args, Flags } from "@oclif/core";
 import { gqlRequest, gql } from "../../graphql";
 
 export default class ForkCommand extends Command {
@@ -17,13 +17,12 @@ export default class ForkCommand extends Command {
     }),
   };
 
-  static args = [
-    {
-      name: "parent",
+  static args = {
+    parent: Args.string({
       required: true,
       description: "ID of the Integration to fork",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {

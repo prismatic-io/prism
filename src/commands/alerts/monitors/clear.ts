@@ -1,15 +1,14 @@
-import { Command } from "@oclif/core";
+import { Command, Args } from "@oclif/core";
 import { gqlRequest, gql } from "../../../graphql";
 
 export default class ClearCommand extends Command {
   static description = "Clear an Alert Monitor";
-  static args = [
-    {
-      name: "monitor",
+  static args = {
+    monitor: Args.string({
       required: true,
       description: "ID of the monitor to clear",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {

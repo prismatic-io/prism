@@ -1,4 +1,4 @@
-import { Command, Flags, CliUx } from "@oclif/core";
+import { Command, Flags, ux } from "@oclif/core";
 import {
   checkPackageSignature,
   confirmPublish,
@@ -63,13 +63,13 @@ export default class PublishCommand extends Command {
       if (signatureMatches) {
         if (
           skipOnSignatureMatch ||
-          !(await CliUx.ux.confirm(
+          !(await ux.confirm(
             "The new package signature matches the existing package signature. Continue publishing new package? (y/N)"
           ))
         ) {
           // Signatures match and we've opted to skip on match, so bail.
-          CliUx.ux.log("Package signatures match, skipping publish.");
-          CliUx.ux.exit(0);
+          ux.log("Package signatures match, skipping publish.");
+          ux.exit(0);
         }
       }
     }

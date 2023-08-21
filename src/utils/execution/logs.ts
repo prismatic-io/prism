@@ -1,4 +1,4 @@
-import { CliUx } from "@oclif/core";
+import { ux } from "@oclif/core";
 import chalk from "chalk";
 import { formatTimestamp } from "../date";
 import { gqlRequest, gql } from "../../graphql";
@@ -70,7 +70,7 @@ export const displayLogs = async (executionId: string): Promise<void> => {
   });
 
   const logs: Log[] = result.executionResult.logs.nodes;
-  CliUx.ux.table(
+  ux.table(
     logs,
     {
       timestamp: {

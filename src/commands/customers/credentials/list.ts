@@ -1,4 +1,4 @@
-import { Command, Flags, CliUx } from "@oclif/core";
+import { Command, Flags, ux } from "@oclif/core";
 import { gqlRequest, gql } from "../../../graphql";
 
 export default class ListCommand extends Command {
@@ -9,7 +9,7 @@ export default class ListCommand extends Command {
       required: true,
       description: "ID of a customer",
     }),
-    ...CliUx.ux.table.flags(),
+    ...ux.table.flags(),
   };
 
   async run() {
@@ -39,7 +39,7 @@ export default class ListCommand extends Command {
       },
     });
 
-    CliUx.ux.table(
+    ux.table(
       result.customer.credentials.nodes,
       {
         id: {
