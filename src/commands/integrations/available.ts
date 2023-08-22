@@ -16,6 +16,7 @@ export default class AvailableCommand extends Command {
       required: true,
       char: "a",
       description: "Version is available or unavailable",
+      allowNo: true,
     }),
   };
 
