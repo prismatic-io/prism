@@ -136,14 +136,15 @@ export const createComponentPackage = async (): Promise<string> => {
 };
 
 export const checkPackageSignature = async (
-  { key }: ComponentDefinition,
-  packagePath: string
+  { key, public: isPublic }: ComponentDefinition,
+  packagePath: string,
+  customer?: string
 ): Promise<boolean> => {
   // Retrieve the existing signature of the component if it exists.
-  const result = await gqlRequest({
+  const results = await gqlRequest({
     document: gql`
-      query component($key: String!) {
-        components(key: $key) {
+      query component($key: String!, $public: Boolean!, $customer: ID) {
+        components(key: $key, public: $public, customer: $customer) {
           nodes {
             signature
           }
@@ -152,6 +153,8 @@ export const checkPackageSignature = async (
     `,
     variables: {
       key,
+      public: isPublic ?? false,
+      customer,
     },
   });
 
@@ -159,7 +162,7 @@ export const checkPackageSignature = async (
     components: {
       nodes: [{ signature: existingSignature } = { signature: null }],
     },
-  } = result;
+  } = results;
 
   // Generate the signature of the package so we may compare it against the existing one.
   const packageSignature = crypto

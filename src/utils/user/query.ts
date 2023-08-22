@@ -1,15 +1,27 @@
 import { gql, gqlRequest } from "../../graphql";
 
-interface User {
+interface OrgUser {
+  userType: "org";
   name: string;
   email: string;
-  org?: {
+  org: {
     name: string;
   };
-  customer?: {
+  customer: undefined;
+}
+
+interface CustomerUser {
+  userType: "customer";
+  name: string;
+  email: string;
+  org: undefined;
+  customer: {
+    id: string;
     name: string;
   };
 }
+
+type User = OrgUser | CustomerUser;
 
 export const whoAmI = async (): Promise<User> => {
   const { authenticatedUser } = await gqlRequest<{ authenticatedUser: User }>({
@@ -22,11 +34,13 @@ export const whoAmI = async (): Promise<User> => {
             name
           }
           customer {
+            id
             name
           }
         }
       }
     `,
   });
+  authenticatedUser.userType = authenticatedUser.org ? "org" : "customer";
   return authenticatedUser;
 };
