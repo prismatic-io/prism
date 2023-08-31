@@ -1,15 +1,14 @@
-import { Command } from "@oclif/core";
+import { Command, Args } from "@oclif/core";
 import { gql, gqlRequest } from "../../graphql";
 
 export default class EnableCommand extends Command {
   static description = "Enable an Instance";
-  static args = [
-    {
-      name: "instance",
+  static args = {
+    instance: Args.string({
       required: true,
       description: "ID of an instance",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {

@@ -1,15 +1,14 @@
-import { Command } from "@oclif/core";
+import { Command, Args } from "@oclif/core";
 import { gql, gqlRequest } from "../../graphql";
 
 export default class DeleteCommand extends Command {
   static description = "Delete an Integration";
-  static args = [
-    {
-      name: "integration",
+  static args = {
+    integration: Args.string({
       required: true,
       description: "ID of the integration to delete",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {

@@ -1,10 +1,10 @@
-import { Command, Flags, CliUx } from "@oclif/core";
+import { Command, Flags, ux } from "@oclif/core";
 import { gql, gqlRequest } from "../../graphql";
 
 export default class ListCommand extends Command {
   static description = "List Integrations";
   static flags = {
-    ...CliUx.ux.table.flags(),
+    ...ux.table.flags(),
     showAllVersions: Flags.boolean({
       char: "a",
       description:
@@ -78,7 +78,7 @@ export default class ListCommand extends Command {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    CliUx.ux.table(
+    ux.table(
       integrations,
       {
         id: {

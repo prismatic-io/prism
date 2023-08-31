@@ -1,17 +1,16 @@
-import { Command, Flags } from "@oclif/core";
+import { Command, Args, Flags } from "@oclif/core";
 import { exportDefinition } from "../../utils/integration/export";
 import { dumpYaml } from "../../utils/serialize";
 
 export default class ExportCommand extends Command {
   static description = "Export an integration to YAML definition";
 
-  static args = [
-    {
-      name: "integration",
+  static args = {
+    integration: Args.string({
       required: true,
       description: "ID of an integration to export",
-    },
-  ];
+    }),
+  };
   static flags = {
     "latest-components": Flags.boolean({
       char: "l",

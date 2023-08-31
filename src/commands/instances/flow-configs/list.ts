@@ -1,13 +1,13 @@
-import { Command, CliUx } from "@oclif/core";
+import { Command, ux, Args } from "@oclif/core";
 import { gql, gqlRequest } from "../../../graphql";
 
 export default class ListCommand extends Command {
   static description = "List Instance Flow Configs";
-  static args = [
-    { name: "instance", description: "ID of an Instance", required: true },
-  ];
+  static args = {
+    instance: Args.string({ description: "ID of an Instance", required: true }),
+  };
   static flags = {
-    ...CliUx.ux.table.flags(),
+    ...ux.table.flags(),
   };
 
   async run() {
@@ -55,7 +55,7 @@ export default class ListCommand extends Command {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    CliUx.ux.table(
+    ux.table(
       flowConfigs,
       {
         id: {

@@ -1,6 +1,7 @@
 import { promisify } from "util";
 import dotenv from "dotenv";
-import { Command, Flags, CliUx } from "@oclif/core";
+import { Command, Flags, ux } from "@oclif/core";
+import open from "open";
 import inquirer, { DistinctQuestion } from "inquirer";
 import { snakeCase, upperCase, kebabCase } from "lodash";
 import { serverTypes } from "@prismatic-io/spectral"; // FIXME: Get rid of this and stop exporting it in Spectral.
@@ -202,17 +203,17 @@ export default class TestCommand extends Command {
     if (await exists(envPath)) {
       const { error } = dotenv.config({ path: envPath, override: true });
       if (error) {
-        CliUx.ux.error(`Failed to load specified dotenv file: ${error}`, {
+        ux.error(`Failed to load specified dotenv file: ${error}`, {
           exit: 1,
         });
       }
     }
 
-    CliUx.ux.action.start("Validating Component");
+    ux.action.start("Validating Component");
 
     const { name } = await whoAmI();
     if (!name) {
-      CliUx.ux.error(
+      ux.error(
         "Failed to determine the name of the currently logged in user.",
         {
           exit: 1,
@@ -234,10 +235,10 @@ export default class TestCommand extends Command {
       packagePath
     );
 
-    CliUx.ux.action.stop();
+    ux.action.stop();
 
     if (!signatureMatches) {
-      CliUx.ux.action.start("Publishing Component");
+      ux.action.start("Publishing Component");
 
       const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
         await publishDefinition(definition);
@@ -249,7 +250,7 @@ export default class TestCommand extends Command {
       await uploadConnectionIcons(definition, connectionIconUploadUrls);
       await uploadFile(packagePath, packageUploadUrl);
 
-      CliUx.ux.action.stop();
+      ux.action.stop();
     }
 
     const publishedTimestamp = Date.now();
@@ -323,7 +324,7 @@ export default class TestCommand extends Command {
 
     const { actionInfo, connectionInfo } = valuesFromAnswers(answers);
 
-    CliUx.ux.action.start("Assembling test integration");
+    ux.action.start("Assembling test integration");
 
     // FIXME: Wait for version to be available but due to issues we have to do a static wait.
     const wait = 5000 - (Date.now() - publishedTimestamp);
@@ -341,8 +342,8 @@ export default class TestCommand extends Command {
       connectionInfo,
     });
 
-    CliUx.ux.action.stop();
-    CliUx.ux.action.start("Updating test Integration");
+    ux.action.stop();
+    ux.action.start("Updating test Integration");
 
     const {
       integrationId,
@@ -350,7 +351,7 @@ export default class TestCommand extends Command {
       pendingAuthorizations,
     } = await importDefinition(harnessYaml);
 
-    CliUx.ux.action.stop();
+    ux.action.stop();
 
     // Prompt for user authorization of pending connections
     if (pendingAuthorizations.length > 0) {
@@ -361,20 +362,20 @@ export default class TestCommand extends Command {
         );
       }
 
-      CliUx.ux.url("Authorize URL", url);
-      await CliUx.ux.anykey(
+      ux.url("Authorize URL", url);
+      await ux.anykey(
         "Press any key to open your browser and authorize the Connection"
       );
-      await CliUx.ux.open(url);
+      await open(url);
 
-      CliUx.ux.action.start("Waiting for Connection authorization");
+      ux.action.start("Waiting for Connection authorization");
 
       await pollForActiveConfigVarState(integrationId, id);
 
-      CliUx.ux.action.stop();
+      ux.action.stop();
     }
 
-    CliUx.ux.action.start("Running test Integration");
+    ux.action.start("Running test Integration");
 
     const { executionId } = await runIntegrationFlow({ integrationId, flowId });
 
@@ -391,15 +392,15 @@ export default class TestCommand extends Command {
     }
 
     if (cleanUp) {
-      CliUx.ux.action.start(`Cleaning up test Integration (${integrationId})`);
+      ux.action.start(`Cleaning up test Integration (${integrationId})`);
       await deleteIntegration(integrationId);
-      CliUx.ux.action.stop();
+      ux.action.stop();
 
-      CliUx.ux.action.start(`Cleaning up test component (${definition.key})`);
+      ux.action.start(`Cleaning up test component (${definition.key})`);
       await deleteComponentByKey(definition.key);
-      CliUx.ux.action.stop();
+      ux.action.stop();
     }
 
-    CliUx.ux.action.stop();
+    ux.action.stop();
   }
 }

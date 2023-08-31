@@ -1,17 +1,16 @@
-import { Command, Flags } from "@oclif/core";
+import { Command, Args, Flags } from "@oclif/core";
 import { gql, gqlRequest } from "../../graphql";
 
 export default class PublishCommand extends Command {
   static description =
     "Publish a version of an Integration for use in Instances";
 
-  static args = [
-    {
-      name: "integration",
+  static args = {
+    integration: Args.string({
       required: true,
       description: "ID of an integration to publish",
-    },
-  ];
+    }),
+  };
 
   static flags = {
     comment: Flags.string({

@@ -1,24 +1,23 @@
-import { Command, CliUx, Flags } from "@oclif/core";
+import { Command, ux, Args, Flags } from "@oclif/core";
 import { gql, gqlRequest } from "../../../graphql";
 
 export default class ListCommand extends Command {
   static description = "List Integration versions";
 
   static flags = {
-    ...CliUx.ux.table.flags(),
+    ...ux.table.flags(),
     "latest-available": Flags.boolean({
       char: "l",
       description: "Show only the latest available version",
     }),
   };
 
-  static args = [
-    {
-      name: "integration",
+  static args = {
+    integration: Args.string({
       required: true,
       description: "ID of an integration",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {
@@ -60,7 +59,7 @@ export default class ListCommand extends Command {
       },
     });
 
-    CliUx.ux.table(
+    ux.table(
       result.integration.versionSequence.nodes,
       {
         versionNumber: {

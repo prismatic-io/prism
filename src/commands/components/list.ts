@@ -1,11 +1,11 @@
-import { Command, Flags, CliUx } from "@oclif/core";
+import { Command, Flags, ux } from "@oclif/core";
 import dayjs from "dayjs";
 import { gqlRequest, gql } from "../../graphql";
 
 export default class ListCommand extends Command {
   static description = "List available Components";
   static flags = {
-    ...CliUx.ux.table.flags(),
+    ...ux.table.flags(),
     showAllVersions: Flags.boolean({
       char: "a",
       required: false,
@@ -56,7 +56,7 @@ export default class ListCommand extends Command {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    CliUx.ux.table(
+    ux.table(
       components,
       {
         id: {

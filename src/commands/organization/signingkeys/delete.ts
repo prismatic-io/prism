@@ -1,15 +1,14 @@
-import { Command } from "@oclif/core";
+import { Command, Args } from "@oclif/core";
 import { gql, gqlRequest } from "../../../graphql";
 
 export default class DeleteCommand extends Command {
   static description = "Delete an embedded marketplace signing key";
-  static args = [
-    {
-      name: "signingKeyId",
+  static args = {
+    signingKeyId: Args.string({
       required: true,
       description: "ID of the signing key to delete",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {

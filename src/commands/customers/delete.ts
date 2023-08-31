@@ -1,15 +1,14 @@
-import { Command } from "@oclif/core";
+import { Command, Args } from "@oclif/core";
 import { gql, gqlRequest } from "../../graphql";
 
 export default class DeleteCommand extends Command {
   static description = "Delete a Customer";
-  static args = [
-    {
-      name: "customer",
+  static args = {
+    customer: Args.string({
       required: true,
       description: "ID of the customer to delete",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {

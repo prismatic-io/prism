@@ -1,4 +1,4 @@
-import { Command, Flags, CliUx } from "@oclif/core";
+import { Command, Flags, Args, ux } from "@oclif/core";
 import { gqlRequest, gql } from "../../../graphql";
 
 interface LogNode {
@@ -16,16 +16,15 @@ interface FetchLogsResult {
 
 export default class TestCommand extends Command {
   static description = "Test a Flow Config of an Instance";
-  static args = [
-    {
-      name: "flowConfig",
+  static args = {
+    flowConfig: Args.string({
       description: "ID of a Flow Config to test",
       required: true,
-    },
-  ];
+    }),
+  };
 
   static flags = {
-    ...CliUx.ux.table.flags({ only: ["extended", "columns"] }),
+    ...ux.table.flags({ only: ["extended", "columns"] }),
     tail: Flags.boolean({
       required: false,
       char: "t",
@@ -97,7 +96,7 @@ export default class TestCommand extends Command {
     let nextCursor: string | undefined = undefined;
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      await CliUx.ux.wait(500);
+      await ux.wait(500);
 
       const result: any = await this.fetchLogs(executionId, nextCursor);
       if (result === undefined) continue;
@@ -106,7 +105,7 @@ export default class TestCommand extends Command {
 
       nextCursor = cursor;
 
-      CliUx.ux.table(
+      ux.table(
         logs,
         {
           timestamp: {},

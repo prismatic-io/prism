@@ -1,17 +1,16 @@
-import { Command, CliUx } from "@oclif/core";
+import { Command, Args, ux } from "@oclif/core";
 import { gqlRequest, gql } from "../../../graphql";
 
 export default class ListCommand extends Command {
   static description = "List Integration Flows";
-  static args = [
-    {
-      name: "integration",
+  static args = {
+    integration: Args.string({
       description: "ID of an Integration",
       required: true,
-    },
-  ];
+    }),
+  };
   static flags = {
-    ...CliUx.ux.table.flags(),
+    ...ux.table.flags(),
   };
 
   async run() {
@@ -58,7 +57,7 @@ export default class ListCommand extends Command {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    CliUx.ux.table(
+    ux.table(
       flows,
       {
         id: {

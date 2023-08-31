@@ -1,4 +1,4 @@
-import { Command, Flags } from "@oclif/core";
+import { Command, Args, Flags } from "@oclif/core";
 import { promises as fs } from "fs";
 import * as path from "path";
 import { parseAndGenerate } from "wsdl-tsclient";
@@ -57,14 +57,13 @@ export default class InitializeComponent extends Command {
       description: "Output more verbose logging from Component generation",
     }),
   };
-  static args = [
-    {
-      name: "name",
+  static args = {
+    name: Args.string({
       required: true,
       description:
         "Name of the new component to create (alphanumeric characters, hyphens, and underscores)",
-    },
-  ];
+    }),
+  };
 
   async run() {
     const {

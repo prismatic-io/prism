@@ -1,4 +1,4 @@
-import { Command, CliUx } from "@oclif/core";
+import { Command, ux } from "@oclif/core";
 import { gqlRequest, gql } from "../../graphql";
 
 interface AuthMethod {
@@ -15,7 +15,7 @@ interface AuthMethod {
 
 export default class ListCommand extends Command {
   static description = "List Authorization Methods that Components can use";
-  static flags = { ...CliUx.ux.table.flags() };
+  static flags = { ...ux.table.flags() };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
@@ -41,7 +41,7 @@ export default class ListCommand extends Command {
 
     const authMethods: AuthMethod[] = result.authorizationMethods.nodes;
 
-    CliUx.ux.table(
+    ux.table(
       authMethods,
       {
         id: {
