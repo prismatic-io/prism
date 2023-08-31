@@ -9,6 +9,7 @@ import {
   uploadFile,
   validateDefinition,
 } from "../../utils/component/publish";
+import { whoAmI } from "../../utils/user/query";
 
 export default class PublishCommand extends Command {
   static description = "Publish a Component to Prismatic";
@@ -46,9 +47,12 @@ export default class PublishCommand extends Command {
         confirm,
         "check-signature": checkSignature,
         "skip-on-signature-match": skipOnSignatureMatch,
-        customer,
+        customer: flagCustomer,
       },
     } = await this.parse(PublishCommand);
+
+    const me = await whoAmI();
+    const customer = flagCustomer ?? me.customer?.id;
 
     const definition = await loadEntrypoint();
     await validateDefinition(definition);
@@ -58,7 +62,8 @@ export default class PublishCommand extends Command {
     if (checkSignature) {
       const signatureMatches = await checkPackageSignature(
         definition,
-        packagePath
+        packagePath,
+        customer
       );
       if (signatureMatches) {
         if (
