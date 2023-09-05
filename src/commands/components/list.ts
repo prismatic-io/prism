@@ -38,6 +38,11 @@ export default class ListCommand extends Command {
                 versionNumber
                 category
                 versionCreatedAt
+                customer {
+                  id
+                  externalId
+                  name
+                }
               }
               pageInfo {
                 hasNextPage
@@ -77,6 +82,18 @@ export default class ListCommand extends Command {
           get: ({ versionCreatedAt }) => dayjs(versionCreatedAt).format(),
         },
         category: { get: ({ category }) => category || "" },
+        customerId: {
+          extended: true,
+          get: ({ customer }) => customer?.id ?? "",
+        },
+        customerName: {
+          extended: true,
+          get: ({ customer }) => customer?.name ?? "",
+        },
+        customerExternalId: {
+          extended: true,
+          get: ({ customer }) => customer?.externalId ?? "",
+        },
       },
       { ...flags }
     );
