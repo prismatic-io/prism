@@ -23,14 +23,16 @@ export default class UpdateCommand extends Command {
     version: Flags.string({
       char: "v",
       description: "ID of integration version",
-      required: false,
+    }),
+    deploy: Flags.boolean({
+      description: "Deploy the instance after updating",
     }),
   };
 
   async run() {
     const {
       args: { instance },
-      flags: { name, description, version },
+      flags: { name, description, version, deploy },
     } = await this.parse(UpdateCommand);
 
     const result = await gqlRequest({
@@ -39,7 +41,7 @@ export default class UpdateCommand extends Command {
           $id: ID!
           $name: String
           $description: String
-          $version: ID!
+          $version: ID
         ) {
           updateInstance(
             input: {
@@ -67,6 +69,30 @@ export default class UpdateCommand extends Command {
       },
     });
 
-    this.log(result.updateInstance.instance.id);
+    if (!deploy) {
+      this.log(result.updateInstance.instance.id);
+      return;
+    }
+
+    const deployResult = await gqlRequest({
+      document: gql`
+        mutation deployInstance($id: ID!) {
+          deployInstance(input: { id: $id }) {
+            instance {
+              id
+            }
+            errors {
+              field
+              messages
+            }
+          }
+        }
+      `,
+      variables: {
+        id: instance,
+      },
+    });
+
+    this.log(deployResult.deployInstance.instance.id);
   }
 }
