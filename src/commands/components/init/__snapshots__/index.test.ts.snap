@@ -611,6 +611,7 @@ export const myTrigger = trigger({
     description: "This is my trigger",
   },
   perform: async (context, payload, params) => {
+    console.log("My Trigger params", params);
     return Promise.resolve({
       payload,
     });
@@ -730,6 +731,7 @@ export const myTrigger = trigger({
     description: "This is my trigger",
   },
   perform: async (context, payload, params) => {
+    console.log("My Trigger params", params);
     return Promise.resolve({
       payload,
     });
