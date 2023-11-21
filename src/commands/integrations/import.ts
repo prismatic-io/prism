@@ -1,17 +1,20 @@
-import chardet from "chardet";
 import { Command, Flags } from "@oclif/core";
-import { fs, exists } from "../../fs";
-import { gql, gqlRequest } from "../../graphql";
-import { uploadAvatar } from "../../utils/avatar";
-import { importDefinition } from "../../utils/integration/import";
+import { exists } from "../../fs";
+import {
+  importYamlIntegration,
+  importCodeNativeIntegration,
+} from "../../utils/integration/import";
+import { openIntegration } from "../../utils/integration/open";
 
 export default class ImportCommand extends Command {
-  static description = "Import an Integration using a YAML definition file";
+  static description =
+    "Import an Integration using a YAML definition file or a Code Native Integration";
   static flags = {
     path: Flags.string({
       char: "p",
-      required: true,
-      description: "path to the YAML definition of the integration to import",
+      required: false,
+      description:
+        "If supplied, the path to the YAML definition of the integration to import. Not applicable for Code Native Integrations.",
     }),
     integrationId: Flags.string({
       char: "i",
@@ -20,16 +23,24 @@ export default class ImportCommand extends Command {
     }),
     "icon-path": Flags.string({
       required: false,
-      description: "path to the PNG icon for the integration",
+      description:
+        "If supplied, the path to the PNG icon for the integration. Not applicable for Code Native Integrations.",
+    }),
+    open: Flags.boolean({
+      char: "o",
+      required: false,
+      default: false,
+      description:
+        "If supplied, open the Designer for the imported integration",
     }),
   };
 
   async run() {
     const {
-      flags: { path, integrationId, "icon-path": iconPath },
+      flags: { path, integrationId, "icon-path": iconPath, open },
     } = await this.parse(ImportCommand);
 
-    if (!(await exists(path))) {
+    if (path && !(await exists(path))) {
       this.error(`Cannot find definition file at specified path "${path}"`, {
         exit: 2,
       });
@@ -40,48 +51,16 @@ export default class ImportCommand extends Command {
       });
     }
 
-    const encoding = await chardet.detectFile(path);
-    const definition = await fs.readFile(
-      path,
-      encoding === "UTF-16LE" ? "utf16le" : "utf-8"
-    );
+    const integrationImportId = path
+      ? // A path was specified, so assume we're importing a YAML Integration.
+        await importYamlIntegration(path, integrationId)
+      : // No path was specified, so assume the current directory is a Code Native Integration and import it.
+        await importCodeNativeIntegration(integrationId);
 
-    const { integrationId: integrationImportId } = await importDefinition(
-      definition,
-      integrationId
-    );
-
-    if (iconPath) {
-      try {
-        const avatarUrl = await uploadAvatar(integrationImportId, iconPath);
-        await gqlRequest({
-          document: gql`
-            mutation commitAvatarUpload(
-              $integrationId: ID!
-              $avatarUrl: String!
-            ) {
-              updateIntegration(
-                input: { id: $integrationId, avatarUrl: $avatarUrl }
-              ) {
-                integration {
-                  id
-                }
-                errors {
-                  field
-                  messages
-                }
-              }
-            }
-          `,
-          variables: {
-            integrationId: integrationImportId,
-            avatarUrl,
-          },
-        });
-      } catch (err) {
-        console.warn(`Error setting integration icon: ${err}`);
-      }
-    }
     this.log(integrationImportId);
+
+    if (open) {
+      await openIntegration(integrationImportId);
+    }
   }
 }

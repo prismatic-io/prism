@@ -8,6 +8,8 @@ const generatorTypes = [
   "dataSource",
   "connection",
   "formats",
+  "integration",
+  "flow",
 ] as const;
 type GeneratorType = typeof generatorTypes[number];
 
