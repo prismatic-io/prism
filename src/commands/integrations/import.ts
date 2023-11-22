@@ -1,7 +1,5 @@
 import { Command, Flags } from "@oclif/core";
 import { exists } from "../../fs";
-import { gql, gqlRequest } from "../../graphql";
-import { uploadAvatar } from "../../utils/avatar";
 import {
   importYamlIntegration,
   importCodeNativeIntegration,
@@ -15,7 +13,7 @@ export default class ImportCommand extends Command {
       char: "p",
       required: false,
       description:
-        "If supplied, the path to the YAML definition of the integration to import",
+        "If supplied, the path to the YAML definition of the integration to import. Not applicable for Code Native Integrations.",
     }),
     integrationId: Flags.string({
       char: "i",
@@ -24,7 +22,8 @@ export default class ImportCommand extends Command {
     }),
     "icon-path": Flags.string({
       required: false,
-      description: "If supplied, the path to the PNG icon for the integration",
+      description:
+        "If supplied, the path to the PNG icon for the integration. Not applicable for Code Native Integrations.",
     }),
   };
 
@@ -50,37 +49,6 @@ export default class ImportCommand extends Command {
       : // No path was specified, so assume the current directory is a Code Native Integration and import it.
         await importCodeNativeIntegration(integrationId);
 
-    if (iconPath) {
-      try {
-        const avatarUrl = await uploadAvatar(integrationImportId, iconPath);
-        await gqlRequest({
-          document: gql`
-            mutation commitAvatarUpload(
-              $integrationId: ID!
-              $avatarUrl: String!
-            ) {
-              updateIntegration(
-                input: { id: $integrationId, avatarUrl: $avatarUrl }
-              ) {
-                integration {
-                  id
-                }
-                errors {
-                  field
-                  messages
-                }
-              }
-            }
-          `,
-          variables: {
-            integrationId: integrationImportId,
-            avatarUrl,
-          },
-        });
-      } catch (err) {
-        console.warn(`Error setting integration icon: ${err}`);
-      }
-    }
     this.log(integrationImportId);
   }
 }

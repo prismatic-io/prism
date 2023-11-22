@@ -1,6 +1,7 @@
 import chardet from "chardet";
 import { ux } from "@oclif/core";
 import { gqlRequest, gql } from "../../graphql";
+import { uploadAvatar } from "../../utils/avatar";
 import { exists, fs } from "../../fs";
 import { resolve } from "path";
 import { seekPackageDistDirectory } from "../import";
@@ -83,9 +84,43 @@ export const importDefinition = async (
   };
 };
 
+const setIntegrationAvatar = async (
+  integrationId: string,
+  iconPath: string
+): Promise<void> => {
+  try {
+    const avatarUrl = await uploadAvatar(integrationId, iconPath);
+
+    await gqlRequest({
+      document: gql`
+        mutation commitAvatarUpload($integrationId: ID!, $avatarUrl: String!) {
+          updateIntegration(
+            input: { id: $integrationId, avatarUrl: $avatarUrl }
+          ) {
+            integration {
+              id
+            }
+            errors {
+              field
+              messages
+            }
+          }
+        }
+      `,
+      variables: {
+        integrationId,
+        avatarUrl,
+      },
+    });
+  } catch (err) {
+    console.warn(`Error setting integration icon: ${err}`);
+  }
+};
+
 export const importYamlIntegration = async (
   path: string,
-  integrationId?: string
+  integrationId?: string,
+  iconPath?: string
 ): Promise<string> => {
   const encoding = await chardet.detectFile(path);
   const definition = await fs.readFile(
@@ -97,6 +132,10 @@ export const importYamlIntegration = async (
     definition,
     integrationId
   );
+
+  if (iconPath) {
+    await setIntegrationAvatar(integrationImportId, iconPath);
+  }
 
   return integrationImportId;
 };
@@ -118,30 +157,38 @@ export const importCodeNativeIntegration = async (
 
   const packagePath = await createComponentPackage();
 
-  const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
-    await publishComponentDefinition(
-      componentDefinition,
-      undefined,
-      undefined,
-      true
-    );
-
   const {
-    display: { iconPath },
-  } = componentDefinition;
+    iconUploadUrl,
+    packageUploadUrl,
+    connectionIconUploadUrls,
+    versionNumber,
+  } = await publishComponentDefinition(
+    componentDefinition,
+    undefined,
+    undefined,
+    true
+  );
 
   await uploadFile(packagePath, packageUploadUrl);
-  if (iconPath) {
-    await uploadFile(iconPath, iconUploadUrl);
-  }
-  await uploadConnectionIcons(componentDefinition, connectionIconUploadUrls);
 
-  // TODO: There needs to be a delay or something here to wait for the files to be uploaded.
+  await waitForCodeNativeComponentAvailable(
+    componentDefinition.key,
+    versionNumber
+  );
 
   const { integrationId: integrationImportId } = await importDefinition(
     integrationDefinition,
     integrationId
   );
+
+  const {
+    display: { iconPath },
+  } = componentDefinition;
+  if (iconPath) {
+    await uploadFile(iconPath, iconUploadUrl); // Component avatar.
+    await setIntegrationAvatar(integrationImportId, iconPath); // Integration avatar.
+  }
+  await uploadConnectionIcons(componentDefinition, connectionIconUploadUrls);
 
   return integrationImportId;
 };
@@ -178,4 +225,64 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
     integrationDefinition: componentDefinition.codeNativeIntegrationYAML,
     componentDefinition: componentDefinition,
   };
+};
+
+export const waitForCodeNativeComponentAvailable = async (
+  componentKey: string,
+  versionNumber: string,
+  attemptNumber = 0,
+  maximumAttempts = 10
+): Promise<boolean> => {
+  if (attemptNumber === 0) {
+    ux.log("Waiting for Code Native Integration to become ready...");
+  }
+
+  // Retrieve the current availability status.
+  const results = await gqlRequest({
+    document: gql`
+      query component($componentKey: String!, $versionNumber: Int!) {
+        components(
+          key: $componentKey
+          versionNumber: $versionNumber
+          public: false
+          forCodeNativeIntegration: true
+        ) {
+          nodes {
+            versionIsAvailable
+          }
+        }
+      }
+    `,
+    variables: {
+      componentKey,
+      versionNumber,
+    },
+  });
+
+  const {
+    components: {
+      nodes: [{ versionIsAvailable }],
+    },
+  } = results;
+
+  if (versionIsAvailable) {
+    // Component is ready.
+    ux.log("Code Native Integration ready.");
+    return versionIsAvailable;
+  } else if (attemptNumber < maximumAttempts) {
+    // Wait 1 second and try again.
+    ux.log(".");
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return waitForCodeNativeComponentAvailable(
+      componentKey,
+      versionNumber,
+      attemptNumber + 1,
+      maximumAttempts
+    );
+  }
+
+  // Component is still not ready, so bail out.
+  ux.error("Code Native Integration not ready, it may become available later.");
+  return false;
 };

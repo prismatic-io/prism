@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "4.9.0",
+  "version": "5.0.0-preview1",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": [
     "prismatic",
@@ -46,7 +46,7 @@
     "@oclif/plugin-help": "5.2.17",
     "@oclif/plugin-warn-if-update-available": "2.0.48",
     "@prismatic-io/generator-spectral": "2.3.0",
-    "@prismatic-io/spectral": "8.0.0-preview3",
+    "@prismatic-io/spectral": "8.0.0-preview4",
     "archiver": "3.1.1",
     "axios": "0.21.4",
     "camelcase": "6.2.0",
