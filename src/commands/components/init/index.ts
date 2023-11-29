@@ -4,39 +4,12 @@ import * as path from "path";
 import { parseAndGenerate } from "wsdl-tsclient";
 import { Logger as WsdlTsClientLogger } from "wsdl-tsclient/dist/src/utils/logger";
 import { generate, updatePackageJson } from "../../../generate/index";
-import prettier from "prettier";
-import glob from "glob-promise";
 import { runGenerator } from "../../../yeoman";
-
-const componentNameRegex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*[a-zA-Z0-9]$/;
-
-const getFilesToFormat = async (basename: string) => {
-  return await glob("**/*.ts", {
-    ignore: ["**/node_modules/**"],
-    cwd: path.dirname(basename),
-  });
-};
-
-const formatSourceFiles = async (basePath: string, files: string[]) => {
-  //format the text of each file
-  await Promise.all(
-    files.map(async (filePath) => {
-      const formattedFile = prettier.format(
-        await fs.readFile(
-          path.resolve(path.dirname(basePath), filePath),
-          "utf-8"
-        ),
-        { parser: "typescript" }
-      );
-
-      //write the formatted text to the proper file location
-      await fs.writeFile(
-        path.resolve(path.dirname(basePath), filePath),
-        formattedFile
-      );
-    })
-  );
-};
+import {
+  VALID_NAME_REGEX,
+  formatSourceFiles,
+  getFilesToFormat,
+} from "../../../utils/generate";
 
 export default class InitializeComponent extends Command {
   static description = "Initialize a new Component";
@@ -80,10 +53,10 @@ export default class InitializeComponent extends Command {
       ? path.resolve(rawOpenApiPath)
       : undefined;
 
-    if (!componentNameRegex.test(name)) {
+    if (!VALID_NAME_REGEX.test(name)) {
       this.error(
         `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See https://regex101.com/?regex=${encodeURIComponent(
-          componentNameRegex.source
+          VALID_NAME_REGEX.source
         )}`,
         { exit: 1 }
       );
