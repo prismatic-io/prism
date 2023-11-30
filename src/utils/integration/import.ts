@@ -169,13 +169,23 @@ export const importCodeNativeIntegration = async (
     true
   );
 
+  ux.action.start("Uploading package for Code Native Integration");
   await uploadFile(packagePath, packageUploadUrl);
-
-  await waitForCodeNativeComponentAvailable(
+  const uploaded = await waitForCodeNativeComponentAvailable(
     componentDefinition.key,
     versionNumber
   );
+  if (uploaded) {
+    ux.action.stop();
+  } else {
+    ux.action.stop(
+      "Package still processing for Code Native Integration, it will likely be available in a few minutes."
+    );
+  }
 
+  ux.action.start(
+    "Importing definition for Code Native Integration into Prismatic"
+  );
   const { integrationId: integrationImportId } = await importDefinition(
     integrationDefinition,
     integrationId
@@ -189,6 +199,8 @@ export const importCodeNativeIntegration = async (
     await setIntegrationAvatar(integrationImportId, iconPath); // Integration avatar.
   }
   await uploadConnectionIcons(componentDefinition, connectionIconUploadUrls);
+
+  ux.action.stop();
 
   return integrationImportId;
 };
@@ -233,10 +245,6 @@ export const waitForCodeNativeComponentAvailable = async (
   attemptNumber = 0,
   maximumAttempts = 10
 ): Promise<boolean> => {
-  if (attemptNumber === 0) {
-    ux.log("Waiting for Code Native Integration to become ready...");
-  }
-
   // Retrieve the current availability status.
   const results = await gqlRequest({
     document: gql`
@@ -267,12 +275,9 @@ export const waitForCodeNativeComponentAvailable = async (
 
   if (versionIsAvailable) {
     // Component is ready.
-    ux.log("Code Native Integration ready.");
     return versionIsAvailable;
   } else if (attemptNumber < maximumAttempts) {
     // Wait 1 second and try again.
-    ux.log(".");
-
     await new Promise((resolve) => setTimeout(resolve, 1000));
     return waitForCodeNativeComponentAvailable(
       componentKey,
@@ -283,6 +288,5 @@ export const waitForCodeNativeComponentAvailable = async (
   }
 
   // Component is still not ready, so bail out.
-  ux.error("Code Native Integration not ready, it may become available later.");
   return false;
 };

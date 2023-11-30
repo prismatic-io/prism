@@ -4,6 +4,7 @@ import {
   importYamlIntegration,
   importCodeNativeIntegration,
 } from "../../utils/integration/import";
+import { openIntegration } from "../../utils/integration/open";
 
 export default class ImportCommand extends Command {
   static description =
@@ -25,11 +26,18 @@ export default class ImportCommand extends Command {
       description:
         "If supplied, the path to the PNG icon for the integration. Not applicable for Code Native Integrations.",
     }),
+    open: Flags.boolean({
+      char: "o",
+      required: false,
+      default: false,
+      description:
+        "If supplied, open the Designer for the imported integration",
+    }),
   };
 
   async run() {
     const {
-      flags: { path, integrationId, "icon-path": iconPath },
+      flags: { path, integrationId, "icon-path": iconPath, open },
     } = await this.parse(ImportCommand);
 
     if (path && !(await exists(path))) {
@@ -50,5 +58,9 @@ export default class ImportCommand extends Command {
         await importCodeNativeIntegration(integrationId);
 
     this.log(integrationImportId);
+
+    if (open) {
+      await openIntegration(integrationImportId);
+    }
   }
 }
