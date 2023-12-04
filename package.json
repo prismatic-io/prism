@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "4.9.0",
+  "version": "4.10.0",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": [
     "prismatic",
@@ -45,10 +45,10 @@
     "@oclif/plugin-autocomplete": "2.3.6",
     "@oclif/plugin-help": "5.2.17",
     "@oclif/plugin-warn-if-update-available": "2.0.48",
-    "@prismatic-io/generator-spectral": "2.3.0",
-    "@prismatic-io/spectral": "7.4.0",
+    "@prismatic-io/generator-spectral": "2.3.1",
+    "@prismatic-io/spectral": "7.9.0",
     "archiver": "3.1.1",
-    "axios": "0.21.4",
+    "axios": "1.6.2",
     "camelcase": "6.2.0",
     "chardet": "1.5.1",
     "dayjs": "1.11.0",
@@ -166,5 +166,8 @@
         "description": "Manage Organization Users"
       }
     }
+  },
+  "overrides": {
+    "axios": "1.6.2"
   }
 }

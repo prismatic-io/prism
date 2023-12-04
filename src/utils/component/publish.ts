@@ -22,8 +22,11 @@ type LegacyDefinition = {
  * Prism must be capable of publishing all past component definitions and
  * gracefully publish future component definitions.
  */
-type ComponentDefinition = Omit<ComponentDefinitionTemplate<false>, "hooks"> &
-  Pick<ComponentDefinitionTemplate<true>, "documentationUrl"> &
+type ComponentDefinition = Omit<
+  ComponentDefinitionTemplate<false, any>,
+  "hooks"
+> &
+  Pick<ComponentDefinitionTemplate<true, any>, "documentationUrl"> &
   LegacyDefinition;
 
 const componentDefinitionShape: Record<keyof ComponentDefinition, true> = {
