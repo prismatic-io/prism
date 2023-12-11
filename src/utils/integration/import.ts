@@ -253,7 +253,7 @@ export const waitForCodeNativeComponentAvailable = async (
           key: $componentKey
           versionNumber: $versionNumber
           public: false
-          forCodeNativeIntegration: true
+          includeComponentsForCodeNativeIntegrations: true
         ) {
           nodes {
             versionIsAvailable
