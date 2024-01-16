@@ -6,6 +6,7 @@ import tempy from "tempy";
 import crypto from "crypto";
 import archiver from "archiver";
 import { gqlRequest, gql } from "../../graphql";
+import { seekPackageDistDirectory } from "../import";
 import axios from "axios";
 import mimetypes from "mime-types";
 
@@ -22,7 +23,7 @@ type LegacyDefinition = {
  * Prism must be capable of publishing all past component definitions and
  * gracefully publish future component definitions.
  */
-type ComponentDefinition = Omit<
+export type ComponentDefinition = Omit<
   ComponentDefinitionTemplate<false, any>,
   "hooks"
 > &
@@ -45,31 +46,10 @@ interface ComponentEntrypoint {
   default: ComponentDefinition;
 }
 
-export const seekComponentPackageDistDirectory = async (): Promise<void> => {
-  while (!(await exists("package.json"))) {
-    const tempDir = process.cwd();
-    process.chdir("../");
-    if (process.cwd() == tempDir) {
-      ux.error(
-        "Failed to find 'package.json' file. Is the current path a component?",
-        { exit: 1 }
-      );
-    }
-  }
-
-  if (!(await exists("./dist"))) {
-    ux.error("Failed to find 'dist' folder. Is the current path a component?", {
-      exit: 1,
-    });
-  }
-
-  process.chdir("./dist");
-};
-
 export const loadEntrypoint = async (): Promise<ComponentDefinition> => {
   // If we don't have an index.js in cwd seek directories to find package.json of component
   if (!(await exists("index.js"))) {
-    await seekComponentPackageDistDirectory();
+    await seekPackageDistDirectory("component");
   }
 
   // If we still didn't find index.js error out
@@ -193,20 +173,24 @@ export const confirmPublish = async (
 export const publishDefinition = async (
   { actions, triggers, dataSources, connections, ...rest }: ComponentDefinition,
   comment?: string,
-  customer?: string
+  customer?: string,
+  forCodeNativeIntegration?: boolean
 ): Promise<{
   iconUploadUrl: string;
   packageUploadUrl: string;
   connectionIconUploadUrls: Record<string, string>;
   versionNumber: string;
 }> => {
-  const componentDefinition = Object.entries(rest).reduce(
+  const componentDefinition: Record<string, unknown> = Object.entries(
+    rest
+  ).reduce(
     (result, [key, value]) =>
       componentDefinitionShape[key as keyof ComponentDefinition]
         ? { ...result, [key]: value }
         : result,
     {}
   );
+  componentDefinition.forCodeNativeIntegration = forCodeNativeIntegration;
 
   const actionDefinitions = Object.values(actions || {}).map((action) => {
     return {
