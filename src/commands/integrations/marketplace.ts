@@ -30,8 +30,7 @@ export default class MarketplaceCommand extends Command {
       char: "m",
       description:
         "Allow a customer to deploy multiple instances of this integration",
-      allowNo: false,
-      default: false,
+      allowNo: true,
     }),
     overview: Flags.string({
       char: "o",
