@@ -164,6 +164,9 @@
       },
       "organization:users": {
         "description": "Manage Organization Users"
+      },
+      "translations": {
+        "description": "Generates phrases"
       }
     }
   },
