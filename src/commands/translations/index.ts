@@ -9,11 +9,13 @@ export default class TranslationsCommand extends Command {
 
   async run() {
     this.log("Fetching marketplace integrations");
-    const data = await gqlRequest<MarketplaceTranslations>({
+    const {
+      marketplaceIntegrations: { nodes },
+    } = await gqlRequest({
       document: GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS,
     });
 
     this.log("Processing marketplace integrations");
-    processIntegration(data);
+    processIntegration(nodes);
   }
 }

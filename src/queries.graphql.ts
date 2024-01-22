@@ -2,7 +2,7 @@ import { gql } from "./graphql";
 
 export const GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS = gql`
   fragment IntegrationTranslation on Integration {
-    namec
+    name
     description
     definition
     category
