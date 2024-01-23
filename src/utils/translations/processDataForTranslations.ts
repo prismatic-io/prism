@@ -32,13 +32,15 @@ const setResultProperty = (property?: string | null) => {
   }
 };
 
+const processProperties = (properties: Array<string | undefined | null>) => {
+  properties.forEach((property) => setResultProperty(property));
+};
+
 const processIntegration = (integration: MarketplaceIntegration) => {
   const { name, description, category, overview, definition, instances } =
     integration;
 
-  [name, description, category, overview].forEach((property) =>
-    setResultProperty(property)
-  );
+  processProperties([name, description, category, overview]);
 
   if (definition) {
     processIntegrationDefinition(definition);
@@ -73,7 +75,7 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
     requiredConfigVars,
   } = definition;
 
-  [description, category].forEach((property) => setResultProperty(property));
+  processProperties([description, category]);
 
   configPages?.forEach((page) => {
     setResultProperty(page.name);
@@ -82,13 +84,13 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
   });
 
   flows?.forEach(traverseFlow);
-  labels?.forEach((label) => setResultProperty(label));
+  processProperties(labels ?? []);
 
   requiredConfigVars?.forEach((configVar) => {
     setResultProperty(configVar.key);
     setResultProperty(configVar.description);
     if (configVar.dataType === "picklist") {
-      configVar.pickList?.forEach((item) => setResultProperty(item));
+      processProperties(configVar.pickList ?? []);
     }
 
     if (
@@ -145,7 +147,7 @@ const traverseStep = (step: Step) => {
     description,
   } = step;
 
-  [name, description, key].forEach((property) => setResultProperty(property));
+  processProperties([name, description, key]);
 
   steps?.forEach((nestedStep) => {
     traverseStep(nestedStep);
