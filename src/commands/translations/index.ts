@@ -1,7 +1,7 @@
 import { Command } from "@oclif/core";
 import { gqlRequest } from "../../graphql";
 import { MarketplaceTranslations } from "../../types";
-import processIntegration from "../../utils/translations/processDataForTranslations";
+import { processIntegrationsForTranslations } from "../../utils/translations/processDataForTranslations";
 import { GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS } from "../../queries.graphql";
 
 export default class TranslationsCommand extends Command {
@@ -14,7 +14,7 @@ export default class TranslationsCommand extends Command {
     });
 
     this.log("Processing marketplace integrations");
-    const processedIntegations = processIntegration(result);
+    const processedIntegations = processIntegrationsForTranslations(result);
 
     this.logJson(processedIntegations);
   }
