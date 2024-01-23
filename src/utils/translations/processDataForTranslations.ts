@@ -118,11 +118,6 @@ function extractValues(data: MarketplaceTranslations): ProcessedData {
           });
         }
 
-        if ("dataSource" in configVar) {
-          result[configVar.dataSource.component.key] =
-            configVar.dataSource.component.key;
-        }
-
         if (configVar.dataType === "jsonForm") {
           if ("inputs" in configVar && configVar?.inputs?.schema) {
             if (typeof configVar.inputs.schema.value === "string")

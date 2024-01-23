@@ -14,6 +14,8 @@ export default class TranslationsCommand extends Command {
     });
 
     this.log("Processing marketplace integrations");
-    const data = processIntegration(result);
+    const processedIntegations = processIntegration(result);
+
+    this.logJson(processedIntegations);
   }
 }
