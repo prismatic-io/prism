@@ -157,23 +157,14 @@ function extractValues(data: MarketplaceTranslations): ProcessedData {
 
     flow.steps.forEach((step) => {
       result[step.name] = step.name;
-      result[step.action.component.key] = step.action.component.key;
+
+      if (step.description) {
+        result[step.description] = step.description;
+      }
 
       if (step.steps && step.steps.length) {
         step.steps.forEach((nestedStep) => {
           traverseStep(nestedStep);
-        });
-      }
-
-      if (step.inputs) {
-        Object.entries(step.inputs).forEach(([, input]) => {
-          if (input.name) {
-            result[input.name] = input.name;
-          }
-
-          if (typeof input.value === "string") {
-            result[input.value] = input.value;
-          }
         });
       }
 
@@ -187,10 +178,6 @@ function extractValues(data: MarketplaceTranslations): ProcessedData {
           }
         });
       }
-
-      if (step.description) {
-        result[step.description] = step.description;
-      }
     });
   }
 
@@ -202,18 +189,6 @@ function extractValues(data: MarketplaceTranslations): ProcessedData {
       step.steps.forEach((nestedStep) => {
         // Recurse for nested steps
         traverseStep(nestedStep);
-      });
-    }
-
-    if (step.inputs) {
-      Object.entries(step.inputs).forEach(([key, input]) => {
-        if (input.name) {
-          result[input.name] = input.name;
-        }
-
-        if (typeof input.value === "string") {
-          result[input.value] = input.value;
-        }
       });
     }
 
