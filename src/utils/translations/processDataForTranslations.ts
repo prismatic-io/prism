@@ -84,12 +84,6 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
   flows?.forEach(traverseFlow);
   labels?.forEach((label) => setResultProperty(label));
 
-  if (definition.labels) {
-    definition.labels.forEach((label) => {
-      result[label] = label;
-    });
-  }
-
   requiredConfigVars?.forEach((configVar) => {
     setResultProperty(configVar.key);
     setResultProperty(configVar.description);
@@ -119,25 +113,20 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
 
 const traverseFlow = (flow: Flow) => {
   const { name, description, steps } = flow;
-  result[name] = name;
-
-  if (description) {
-    result[description] = description;
-  }
+  setResultProperty(name);
+  setResultProperty(description);
 
   steps.forEach((step) => {
-    result[step.name] = step.name;
+    const { name, description, steps, branches } = step;
+    setResultProperty(name);
+    setResultProperty(description);
 
-    if (step.description) {
-      result[step.description] = step.description;
-    }
-
-    step?.steps?.forEach((nestedStep) => {
+    steps?.forEach((nestedStep) => {
       traverseStep(nestedStep);
     });
 
-    step?.branches?.forEach((branch) => {
-      result[branch.name] = branch.name;
+    branches?.forEach((branch) => {
+      setResultProperty(branch.name);
       branch.steps.forEach((branchStep) => {
         traverseStep(branchStep);
       });
