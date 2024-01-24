@@ -24,11 +24,11 @@ type ParsedConfigVarStringValue = {
   };
 };
 
-const result: ProcessedData = {};
+const processedProperties = new Set<string>();
 
 const setResultProperty = (property?: string | null) => {
-  if (property) {
-    result[property] = property;
+  if (property && !processedProperties.has(property)) {
+    processedProperties.add(property);
   }
 };
 
@@ -118,47 +118,38 @@ const traverseFlow = (flow: Flow) => {
   setResultProperty(name);
   setResultProperty(description);
 
-  steps.forEach((step) => {
-    const { name, description, steps, branches } = step;
-    setResultProperty(name);
-    setResultProperty(description);
+  const stack = [...steps];
 
-    steps?.forEach((nestedStep) => {
-      traverseStep(nestedStep);
-    });
+  while (stack.length > 0) {
+    const currentStep = stack.pop();
+    if (currentStep) {
+      const {
+        name,
+        description,
+        steps,
+        branches,
+        action: {
+          component: { key },
+        },
+      } = currentStep;
+      setResultProperty(name);
+      setResultProperty(description);
+      setResultProperty(key);
 
-    branches?.forEach((branch) => {
-      setResultProperty(branch.name);
-      branch.steps.forEach((branchStep) => {
-        traverseStep(branchStep);
-      });
-    });
-  });
-};
-
-const traverseStep = (step: Step) => {
-  const {
-    name,
-    action: {
-      component: { key },
-    },
-    steps,
-    branches,
-    description,
-  } = step;
-
-  processProperties([name, description, key]);
-
-  steps?.forEach((nestedStep) => {
-    traverseStep(nestedStep);
-  });
-
-  branches?.forEach((branch) => {
-    setResultProperty(branch.name);
-    branch.steps.forEach((branchStep) => {
-      traverseStep(branchStep);
-    });
-  });
+      // Add nested steps and branch steps to the stack
+      if (steps) {
+        stack.push(...steps);
+      }
+      if (branches) {
+        branches.forEach((branch) => {
+          setResultProperty(branch.name);
+          branch.steps.forEach((branchStep) => {
+            stack.push(branchStep);
+          });
+        });
+      }
+    }
+  }
 };
 
 export const processIntegrationsForTranslations = (
@@ -170,6 +161,8 @@ export const processIntegrationsForTranslations = (
     }
     processIntegration(integration);
   });
+
+  const result = Object.fromEntries(processedProperties.entries());
 
   return result;
 };
