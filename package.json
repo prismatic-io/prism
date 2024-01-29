@@ -165,8 +165,11 @@
       "organization:users": {
         "description": "Manage Organization Users"
       },
-      "translations": {
-        "description": "Generates phrases"
+      "translations:list": {
+        "description": "Generates phrases for all marketplace integrations"
+      },
+      "translations:integration": {
+        "description": "Generate phrases for a particular marketplace integration"
       }
     }
   },

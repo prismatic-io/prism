@@ -8,12 +8,10 @@ export default class TranslationsCommand extends Command {
   static description = "Generate Dynamic Phrases for Embedded Marketplace";
 
   async run() {
-    this.log("Fetching marketplace integrations");
     const result = await gqlRequest<MarketplaceTranslations>({
       document: GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS,
     });
 
-    this.log("Processing marketplace integrations");
     const processedIntegations = processIntegrationsForTranslations(result);
 
     this.logJson(processedIntegations);

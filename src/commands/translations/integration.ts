@@ -19,7 +19,6 @@ export default class TranslationsCommand extends Command {
       args: { integration },
     } = await this.parse(TranslationsCommand);
 
-    this.log("Fetching marketplace integrations");
     const result = await gqlRequest<MarketplaceTranslations>({
       document: GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS,
       variables: {
@@ -27,7 +26,6 @@ export default class TranslationsCommand extends Command {
       },
     });
 
-    this.log("Processing marketplace integration");
     const processedIntegations = processIntegrationsForTranslations(result);
 
     this.logJson(processedIntegations);
