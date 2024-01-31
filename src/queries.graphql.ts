@@ -7,6 +7,7 @@ export const GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS = gql`
     definition
     category
     overview
+    configPages
     requiredConfigVariables {
       nodes {
         key

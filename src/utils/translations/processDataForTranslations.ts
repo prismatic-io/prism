@@ -5,6 +5,7 @@ import {
   Step,
   Flow,
   IntegrationSchema,
+  Branch,
 } from "../../types";
 
 import { loadYaml } from "../serialize";
@@ -46,6 +47,10 @@ const processIntegration = (integration: MarketplaceIntegration) => {
     processIntegrationDefinition(definition);
   }
 
+  if (!instances) {
+    return;
+  }
+
   instances.nodes.forEach((instance) => processIntegrationInstance(instance));
 };
 
@@ -58,9 +63,11 @@ const processIntegrationInstance = (instance: MarketplaceInstance | null) => {
 
   setResultProperty(name);
 
-  if (integration) {
-    processIntegration(instance.integration as MarketplaceIntegration);
+  if (!integration) {
+    return;
   }
+
+  processIntegration(instance.integration as MarketplaceIntegration);
 };
 
 const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
@@ -83,7 +90,7 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
     page.elements.forEach((element) => setResultProperty(element.value));
   });
 
-  flows?.forEach(traverseFlow);
+  flows?.forEach(traverse);
   processProperties(labels ?? []);
 
   requiredConfigVars?.forEach((configVar) => {
@@ -113,52 +120,50 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
   });
 };
 
-const traverseFlow = (flow: Flow) => {
-  const { name, description, steps } = flow;
-  setResultProperty(name);
-  setResultProperty(description);
+const traverse = (flowOrStep: Flow | Step) => {
+  const stack: Array<Flow | Step | Branch> = [flowOrStep];
 
-  steps.forEach((step) => {
-    const { name, description, steps, branches } = step;
-    setResultProperty(name);
-    setResultProperty(description);
+  while (stack.length > 0) {
+    const current = stack.pop();
 
-    steps?.forEach((nestedStep) => {
-      traverseStep(nestedStep);
-    });
+    if (current === undefined) continue;
 
-    branches?.forEach((branch) => {
-      setResultProperty(branch.name);
-      branch.steps.forEach((branchStep) => {
-        traverseStep(branchStep);
-      });
-    });
-  });
+    if (isFlow(current)) {
+      // Handling Flow type
+      processProperties([current.name, current.description]);
+      stack.push(...current.steps);
+    } else if (isStep(current)) {
+      // Handling Step type
+      processProperties([
+        current.name,
+        current.description,
+        current.action?.component?.key,
+      ]);
+      if (current.steps) {
+        stack.push(...current.steps);
+      }
+      if (current.branches) {
+        stack.push(
+          ...current.branches.map((branch) => ({
+            name: branch.name,
+            steps: branch.steps,
+          }))
+        );
+      }
+    } else {
+      // Handling Branch type
+      setResultProperty(current.name);
+      stack.push(...current.steps);
+    }
+  }
 };
 
-const traverseStep = (step: Step) => {
-  const {
-    name,
-    action: {
-      component: { key },
-    },
-    steps,
-    branches,
-    description,
-  } = step;
+const isFlow = (object: Flow | Step): object is Flow => {
+  return "steps" in object && Array.isArray(object.steps);
+};
 
-  processProperties([name, description, key]);
-
-  steps?.forEach((nestedStep) => {
-    traverseStep(nestedStep);
-  });
-
-  branches?.forEach((branch) => {
-    setResultProperty(branch.name);
-    branch.steps.forEach((branchStep) => {
-      traverseStep(branchStep);
-    });
-  });
+const isStep = (object: Flow | Step): object is Step => {
+  return "action" in object;
 };
 
 export const processIntegrationsForTranslations = (
@@ -168,6 +173,7 @@ export const processIntegrationsForTranslations = (
     if (!integration) {
       return;
     }
+
     processIntegration(integration);
   });
 
@@ -175,5 +181,3 @@ export const processIntegrationsForTranslations = (
 
   return result;
 };
-
-// export type Phrases = keyof typeof result
