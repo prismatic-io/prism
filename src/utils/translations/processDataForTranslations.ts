@@ -96,6 +96,27 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
   requiredConfigVars?.forEach((configVar) => {
     setResultProperty(configVar.key);
     setResultProperty(configVar.description);
+
+    if ("collectionType" in configVar) {
+      try {
+        const valueParsed = JSON.parse(configVar.defaultValue ?? "");
+        valueParsed.forEach((value: any) => {
+          if (typeof value === "string") {
+            setResultProperty(value);
+          }
+
+          if (typeof value === "object") {
+            Object.entries(value).forEach(([key, value]) => {
+              setResultProperty(key);
+              setResultProperty(value as string);
+            });
+          }
+        });
+      } catch (error) {
+        console.error(`JSON Parsing Error: ${error}`);
+      }
+    }
+
     if (configVar.dataType === "picklist") {
       processProperties(configVar.pickList ?? []);
     }
