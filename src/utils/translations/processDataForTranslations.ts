@@ -118,38 +118,38 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
       processProperties(configVar.pickList ?? []);
     }
 
-    if (
-      configVar.dataType === "jsonForm" &&
-      "inputs" in configVar &&
-      typeof configVar?.inputs?.schema?.value === "string"
-    ) {
-      const schema: JsonSchema = JSON.parse(configVar.inputs.schema.value);
-      processJSONFormProperties(schema.properties);
-    }
+    // if (
+    //   configVar.dataType === "jsonForm" &&
+    //   "inputs" in configVar &&
+    //   typeof configVar?.inputs?.schema?.value === "string"
+    // ) {
+    //   const schema: JsonSchema = JSON.parse(configVar.inputs.schema.value);
+    //   processJSONFormProperties(schema.properties);
+    // }
   });
 };
 
-// Helper function for processing properties recursively
-const processJSONFormProperties = (properties: JsonSchema["properties"]) => {
-  if (!properties) {
-    return;
-  }
+// // Helper function for processing properties recursively
+// const processJSONFormProperties = (properties: JsonSchema["properties"]) => {
+//   if (!properties) {
+//     return;
+//   }
 
-  Object.entries(properties).forEach(([key, value]) => {
-    setResultProperty(key);
-    setResultProperty(value.description);
+//   Object.entries(properties).forEach(([key, value]) => {
+//     setResultProperty(key);
+//     setResultProperty(value.description);
 
-    if (value.enum && Array.isArray(value.enum)) {
-      value.enum.forEach((enumValue: any) => {
-        setResultProperty(enumValue);
-      });
-    }
+//     if (value.enum && Array.isArray(value.enum)) {
+//       value.enum.forEach((enumValue: any) => {
+//         setResultProperty(enumValue);
+//       });
+//     }
 
-    if ("properties" in value && typeof value.properties === "object") {
-      processJSONFormProperties(value.properties);
-    }
-  });
-};
+//     if ("properties" in value && typeof value.properties === "object") {
+//       processJSONFormProperties(value.properties);
+//     }
+//   });
+// };
 
 const traverse = (flowOrStep: Flow | Step) => {
   const stack: Array<Flow | Step | Branch> = [flowOrStep];
