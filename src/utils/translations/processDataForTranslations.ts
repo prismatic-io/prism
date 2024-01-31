@@ -6,23 +6,13 @@ import {
   Flow,
   IntegrationSchema,
   Branch,
+  JsonSchema,
 } from "../../types";
 
 import { loadYaml } from "../serialize";
 
 type ProcessedData = {
   [key: string]: string;
-};
-
-type ParsedConfigVarStringValue = {
-  type: string;
-  properties: {
-    [key: string]: {
-      type: string;
-      minLength?: number;
-      description?: string;
-    };
-  };
 };
 
 const processedProperties = new Set<string>();
@@ -94,6 +84,13 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
   processProperties(labels ?? []);
 
   requiredConfigVars?.forEach((configVar) => {
+    if (
+      configVar.dataType === "date" ||
+      configVar.dataType === "timestamp" ||
+      configVar.dataType === "schedule"
+    ) {
+      return;
+    }
     setResultProperty(configVar.key);
     setResultProperty(configVar.description);
 
@@ -126,17 +123,30 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
       "inputs" in configVar &&
       typeof configVar?.inputs?.schema?.value === "string"
     ) {
-      try {
-        const valueParsed: ParsedConfigVarStringValue = JSON.parse(
-          configVar.inputs.schema.value
-        );
-        Object.entries(valueParsed.properties).forEach(([key, value]) => {
-          setResultProperty(key);
-          setResultProperty(value.description);
-        });
-      } catch (error) {
-        console.error(`JSON Parsing Error: ${error}`);
-      }
+      const schema: JsonSchema = JSON.parse(configVar.inputs.schema.value);
+      processJSONFormProperties(schema.properties);
+    }
+  });
+};
+
+// Helper function for processing properties recursively
+const processJSONFormProperties = (properties: JsonSchema["properties"]) => {
+  if (!properties) {
+    return;
+  }
+
+  Object.entries(properties).forEach(([key, value]) => {
+    setResultProperty(key);
+    setResultProperty(value.description);
+
+    if (value.enum && Array.isArray(value.enum)) {
+      value.enum.forEach((enumValue: any) => {
+        setResultProperty(enumValue);
+      });
+    }
+
+    if ("properties" in value && typeof value.properties === "object") {
+      processJSONFormProperties(value.properties);
     }
   });
 };
