@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "5.0.2",
+  "version": "5.1.0",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": [
     "prismatic",
@@ -164,6 +164,9 @@
       },
       "organization:users": {
         "description": "Manage Organization Users"
+      },
+      "translations:list": {
+        "description": "Generates phrases for all marketplace integrations"
       }
     }
   },
