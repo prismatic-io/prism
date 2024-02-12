@@ -112,7 +112,11 @@ export const createComponentPackage = async (): Promise<string> => {
   const pathPromise = tempy.write(zip, { extension: "zip" });
 
   // Zip all files in the current directory (since we found the index.js entrypoint)
-  zip.directory(process.cwd(), false);
+  // Set all files' dates to the Unix epoch so that the zip hash is deterministic
+  zip.directory(process.cwd(), false, (entry) => ({
+    ...entry,
+    date: new Date(0),
+  }));
   await zip.finalize();
 
   return pathPromise;
