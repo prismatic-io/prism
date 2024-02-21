@@ -27,12 +27,17 @@ export default class UpdateCommand extends Command {
     deploy: Flags.boolean({
       description: "Deploy the instance after updating",
     }),
+    label: Flags.string({
+      char: "l",
+      description: "a label or set of labels to apply to the instance",
+      multiple: true,
+    }),
   };
 
   async run() {
     const {
       args: { instance },
-      flags: { name, description, version, deploy },
+      flags: { name, description, version, deploy, label },
     } = await this.parse(UpdateCommand);
 
     const result = await gqlRequest({
@@ -42,6 +47,7 @@ export default class UpdateCommand extends Command {
           $name: String
           $description: String
           $version: ID
+          $labels: [String]
         ) {
           updateInstance(
             input: {
@@ -49,6 +55,7 @@ export default class UpdateCommand extends Command {
               name: $name
               description: $description
               integration: $version
+              labels: $labels
             }
           ) {
             instance {
@@ -66,6 +73,7 @@ export default class UpdateCommand extends Command {
         name,
         description,
         version,
+        labels: label,
       },
     });
 

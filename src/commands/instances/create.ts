@@ -31,6 +31,11 @@ export default class CreateCommand extends Command {
       char: "v",
       description: "config variables to bind to steps of your instance",
     }),
+    label: Flags.string({
+      char: "l",
+      description: "a label or set of labels to apply to the instance",
+      multiple: true,
+    }),
   };
 
   async run() {
@@ -41,6 +46,7 @@ export default class CreateCommand extends Command {
         integration,
         customer,
         "config-vars": configVars,
+        label,
       },
     } = await this.parse(CreateCommand);
 
@@ -52,6 +58,7 @@ export default class CreateCommand extends Command {
           $integration: ID!
           $customer: ID!
           $configVariables: [InputInstanceConfigVariable]
+          $labels: [String]
         ) {
           createInstance(
             input: {
@@ -60,6 +67,7 @@ export default class CreateCommand extends Command {
               integration: $integration
               customer: $customer
               configVariables: $configVariables
+              labels: $labels
             }
           ) {
             instance {
@@ -78,6 +86,7 @@ export default class CreateCommand extends Command {
         integration,
         customer,
         configVariables: parseJsonOrUndefined(configVars),
+        labels: label,
       },
     });
 
