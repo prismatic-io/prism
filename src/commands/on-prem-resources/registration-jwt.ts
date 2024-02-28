@@ -1,16 +1,34 @@
-import { Command } from "@oclif/core";
+import { Command, Flags } from "@oclif/core";
 import { gqlRequest, gql } from "../../graphql";
 
 export default class CreateCommand extends Command {
   static description =
     "Create a short-lived JWT that may be used to perform registration of an On-Premise Resource.";
-  static flags = {};
+  static flags = {
+    customerId: Flags.string({
+      char: "c",
+      required: false,
+      description:
+        "The ID of the customer for which to create the JWT. Only valid when authenticated as an Organization user.",
+    }),
+    resourceId: Flags.string({
+      char: "r",
+      required: false,
+      description:
+        "An optional ID of an existing On-Premise Resource for which to generate a new JWT.",
+    }),
+  };
 
   async run() {
+    const {
+      flags: { customerId, resourceId },
+    } = await this.parse(CreateCommand);
     const result = await gqlRequest({
       document: gql`
-        mutation createOnPremiseResourceJWT {
-          createOnPremiseResourceJWT(input: {}) {
+        mutation createOnPremiseResourceJWT($customerId: ID, $resourceId: ID) {
+          createOnPremiseResourceJWT(
+            input: { customerId: $customerId, resourceId: $resourceId }
+          ) {
             result {
               jwt
             }
@@ -21,7 +39,10 @@ export default class CreateCommand extends Command {
           }
         }
       `,
-      variables: {},
+      variables: {
+        customerId,
+        resourceId,
+      },
     });
 
     this.log(result.createOnPremiseResourceJWT.result.jwt);
