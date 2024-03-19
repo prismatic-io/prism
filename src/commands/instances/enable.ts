@@ -1,5 +1,5 @@
 import { Command, Args } from "@oclif/core";
-import { gql, gqlRequest } from "../../graphql";
+import { gql, gqlRequest } from "../../graphql.js";
 
 export default class EnableCommand extends Command {
   static description = "Enable an Instance";

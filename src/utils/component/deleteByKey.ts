@@ -1,4 +1,4 @@
-import { gql, gqlRequest } from "../../graphql";
+import { gql, gqlRequest } from "../../graphql.js";
 
 export const deleteComponentByKey = async (key: string) => {
   // Fetch a component by key

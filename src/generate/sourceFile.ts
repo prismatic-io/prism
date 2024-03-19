@@ -1,16 +1,13 @@
-import camelCase from "camelcase";
 import { Project, SourceFile } from "ts-morph";
-import { ProjectStructure } from ".";
+import { ProjectStructure } from "./index.js";
 import * as path from "path";
+import { camelCase } from "lodash-es";
 
-const initializeActionFile = (
-  componentProject: Project,
-  projectRoot: string
-): SourceFile => {
+const initializeActionFile = (componentProject: Project, projectRoot: string): SourceFile => {
   const actionFile = componentProject.createSourceFile(
     path.join(projectRoot, "src", "actions.ts"),
     undefined,
-    { overwrite: true }
+    { overwrite: true },
   );
   actionFile.addImportDeclaration({
     moduleSpecifier: "@prismatic-io/spectral",
@@ -19,14 +16,11 @@ const initializeActionFile = (
   return actionFile;
 };
 
-const initializeInputsFile = (
-  componentProject: Project,
-  projectRoot: string
-): SourceFile => {
+const initializeInputsFile = (componentProject: Project, projectRoot: string): SourceFile => {
   const inputsFile = componentProject.createSourceFile(
     path.join(projectRoot, "src", "inputs.ts"),
     undefined,
-    { overwrite: true }
+    { overwrite: true },
   );
 
   inputsFile.addImportDeclaration({
@@ -40,11 +34,10 @@ const copyTemplateFileToProject = (
   componentProject: Project,
   projectRoot: string,
   projectTemplatePath: string,
-  fileName: string
+  fileName: string,
 ) => {
   componentProject.addSourceFileAtPath(projectTemplatePath);
-  const templateFile =
-    componentProject.getSourceFileOrThrow(projectTemplatePath);
+  const templateFile = componentProject.getSourceFileOrThrow(projectTemplatePath);
   templateFile.copy(path.join(process.cwd(), projectRoot, fileName));
 };
 
@@ -55,21 +48,18 @@ const initializeWSDL = ({
   componentProject,
   actionFile,
 }: ProjectStructure): string => {
-  const wsdlProjectLocation = path.join(
-    projectRoot,
-    `${projectTemplateName}.wsdl`
-  );
+  const wsdlProjectLocation = path.join(projectRoot, `${projectTemplateName}.wsdl`);
 
   // Copy the wsdl used for generation to the project root
   copyTemplateFileToProject(
     componentProject,
     projectRoot,
     projectTemplatePath,
-    `${projectTemplateName}.wsdl`
+    `${projectTemplateName}.wsdl`,
   );
 
   actionFile.addImportDeclaration({
-    defaultImport: `* as path`,
+    defaultImport: "* as path",
     moduleSpecifier: "path",
   });
   // Return the relative path of the WSDL
@@ -85,7 +75,7 @@ const projectTypeSetup = (project: ProjectStructure) => {
 export const initializeProject = (
   projectRoot: string,
   projectTemplateName: string,
-  projectTemplatePath: string
+  projectTemplatePath: string,
 ): ProjectStructure => {
   const componentProject = new Project({
     tsConfigFilePath: path.join(projectRoot, "tsconfig.json"),

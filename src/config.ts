@@ -1,7 +1,7 @@
 import { homedir } from "os";
 import path from "path";
-import { fs, exists } from "./fs";
-import { loadYaml, dumpYaml } from "./utils/serialize";
+import { fs, exists } from "./fs.js";
+import { loadYaml, dumpYaml } from "./utils/serialize.js";
 
 export interface Configuration {
   accessToken: string;

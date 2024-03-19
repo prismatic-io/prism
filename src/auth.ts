@@ -3,27 +3,15 @@ import http from "http";
 import axios from "axios";
 import url from "url";
 import jwtDecode from "jwt-decode";
-import {
-  configFileExists,
-  deleteConfig,
-  readConfig,
-  writeConfig,
-} from "./config";
-import { gqlRequest, gql } from "./graphql";
+import { configFileExists, deleteConfig, readConfig, writeConfig } from "./config.js";
+import { gqlRequest, gql } from "./graphql.js";
 import { AddressInfo } from "net";
-import { ux } from "@oclif/core";
 import open from "open";
 
-const urlEncodeBase64 = (buffer: Buffer | string): string => {
-  if (typeof buffer === "string") {
-    buffer = Buffer.from(buffer);
-  }
+const urlEncodeBase64 = (value: Buffer | string): string => {
+  const buffer = typeof value === "string" ? Buffer.from(value) : value;
 
-  return buffer
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
+  return buffer.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 };
 
 const codeVerifier = (): string => urlEncodeBase64(crypto.randomBytes(32));
@@ -31,8 +19,7 @@ const codeVerifier = (): string => urlEncodeBase64(crypto.randomBytes(32));
 const sha256 = (buffer: Buffer | string): Buffer =>
   crypto.createHash("sha256").update(buffer).digest();
 
-const codeChallenge = (verifier: string): string =>
-  urlEncodeBase64(sha256(verifier));
+const codeChallenge = (verifier: string): string => urlEncodeBase64(sha256(verifier));
 
 const codeState = (): string => urlEncodeBase64(crypto.randomBytes(12));
 
@@ -43,6 +30,7 @@ const extractRequestParams = (url: string): Record<string, string> => {
   const paramRegex = new RegExp(/([a-z]+)=([^=&]+)/, "g");
   const params: Record<string, string> = {};
   let param: RegExpExecArray | null;
+  // biome-ignore lint/suspicious/noAssignInExpressions:
   while ((param = paramRegex.exec(url)) !== null) {
     params[`${param[1]}`] = param[2];
   }
@@ -50,12 +38,9 @@ const extractRequestParams = (url: string): Record<string, string> => {
   return params;
 };
 
-export const prismaticUrl =
-  process.env.PRISMATIC_URL ?? "https://app.prismatic.io";
+export const prismaticUrl = process.env.PRISMATIC_URL ?? "https://app.prismatic.io";
 
-export const createRequestParams = (
-  data: Record<string, string | undefined>
-): string =>
+export const createRequestParams = (data: Record<string, string | undefined>): string =>
   Object.entries(data).reduce((result, [key, value]) => {
     if (value === undefined) return result;
 
@@ -67,10 +52,7 @@ export const createRequestParams = (
     return `${result}&${part}`;
   }, "");
 
-const validateAuthorizationToken = async (
-  url: string,
-  expectedState: string
-): Promise<string> => {
+const validateAuthorizationToken = async (url: string, expectedState: string): Promise<string> => {
   const { code, state } = extractRequestParams(url);
 
   if (state !== expectedState) {
@@ -142,11 +124,7 @@ export class Authenticate {
     const redirectUri = await this.createRedirectServer();
 
     if (props?.url) {
-      const challengeUrl = await this.getChallengeUrl(
-        challenge,
-        state,
-        redirectUri
-      );
+      const challengeUrl = await this.getChallengeUrl(challenge, state, redirectUri);
       console.log(challengeUrl);
     } else {
       await this.openChallengeBrowser(challenge, state, redirectUri);
@@ -154,10 +132,7 @@ export class Authenticate {
 
     return new Promise<Auth>((resolve, reject) => {
       // Close the redirect server if we don't get a response
-      const timeoutHandle = setTimeout(
-        this.redirectServer.close,
-        3 * 60 * 1000
-      );
+      const timeoutHandle = setTimeout(this.redirectServer.close, 3 * 60 * 1000);
 
       this.redirectServer.on("request", (request, response) => {
         clearTimeout(timeoutHandle);
@@ -171,11 +146,7 @@ export class Authenticate {
 
         validateAuthorizationToken(request.url, state)
           .then(async (authorizationToken) =>
-            this.retrieveAuthenticationToken(
-              verifier,
-              authorizationToken,
-              redirectUri
-            )
+            this.retrieveAuthenticationToken(verifier, authorizationToken, redirectUri),
           )
           .then(resolve)
           .catch(reject);
@@ -185,11 +156,9 @@ export class Authenticate {
 
   async refresh(refreshToken: string): Promise<Auth> {
     const data = {
-      /* eslint-disable camelcase */
       grant_type: "refresh_token",
       client_id: this.options.clientId,
       refresh_token: refreshToken,
-      /* eslint-enable camelcase */
     };
 
     const { data: response } = await axios({
@@ -211,7 +180,6 @@ export class Authenticate {
 
   async logout(): Promise<void> {
     const params = {
-      // eslint-disable-next-line camelcase
       client_id: this.options.clientId,
       returnTo: this.options.successRedirectUri,
     };
@@ -233,9 +201,7 @@ export class Authenticate {
   }
 
   private async retry<T>(retries: number, fn: () => Promise<T>): Promise<T> {
-    return fn().catch(async (e) =>
-      retries > 1 ? this.retry(retries - 1, fn) : Promise.reject(e)
-    );
+    return fn().catch(async (e) => (retries > 1 ? this.retry(retries - 1, fn) : Promise.reject(e)));
   }
 
   private async createRedirectServer(): Promise<string> {
@@ -253,16 +219,14 @@ export class Authenticate {
   private async retrieveAuthenticationToken(
     verifier: string,
     code: string,
-    redirectUri: string
+    redirectUri: string,
   ): Promise<Auth> {
     const data = {
-      /* eslint-disable camelcase */
       grant_type: "authorization_code",
       client_id: this.options.clientId,
       code_verifier: verifier,
       code,
       redirect_uri: redirectUri,
-      /* eslint-enable camelcase */
     };
 
     const { data: response } = await axios({
@@ -285,25 +249,16 @@ export class Authenticate {
   private async openChallengeBrowser(
     challenge: string,
     state: string,
-    redirectUri: string
+    redirectUri: string,
   ): Promise<void> {
-    const challengeUrl = await this.getChallengeUrl(
-      challenge,
-      state,
-      redirectUri
-    );
+    const challengeUrl = await this.getChallengeUrl(challenge, state, redirectUri);
 
     await open(challengeUrl);
   }
 
-  private async getChallengeUrl(
-    challenge: string,
-    state: string,
-    redirectUri: string
-  ) {
+  private async getChallengeUrl(challenge: string, state: string, redirectUri: string) {
     const { clientId, audience, scopes } = this.options;
     const params = {
-      /* eslint-disable camelcase */
       response_type: "code",
       code_challenge: challenge,
       code_challenge_method: "S256",
@@ -312,7 +267,6 @@ export class Authenticate {
       scope: scopes.join(" "),
       state,
       audience,
-      /* eslint-enable camelcase */
     };
     const queryString = createRequestParams(params);
 
@@ -365,21 +319,15 @@ export const logout = async () => {
  * also refresh the access token using the provided refresh token if possible.
  */
 export const getAccessToken = async (): Promise<string | undefined> => {
-  const {
-    PRISM_ACCESS_TOKEN: envAccessToken,
-    PRISM_REFRESH_TOKEN: envRefreshToken,
-  } = process.env;
+  const { PRISM_ACCESS_TOKEN: envAccessToken, PRISM_REFRESH_TOKEN: envRefreshToken } = process.env;
 
   if (envRefreshToken && !envAccessToken) {
-    const { accessToken: refreshedAccessToken } = await refresh(
-      envRefreshToken
-    );
+    const { accessToken: refreshedAccessToken } = await refresh(envRefreshToken);
     return refreshedAccessToken;
   }
 
   const config = await readConfig();
-  const { accessToken: configAccessToken, refreshToken: configRefreshToken } =
-    config ?? {};
+  const { accessToken: configAccessToken, refreshToken: configRefreshToken } = config ?? {};
 
   const accessToken = envAccessToken ?? configAccessToken;
   const refreshToken = envRefreshToken ?? configRefreshToken;
@@ -439,7 +387,6 @@ export const revokeRefreshToken = async (): Promise<void> => {
     method: "post",
     url: new url.URL("/auth/revoke", prismaticUrl).toString(),
     data: {
-      /* eslint-disable camelcase */
       refresh_token: refreshToken,
     },
   });

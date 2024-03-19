@@ -6,9 +6,9 @@ import {
   Flow,
   IntegrationSchema,
   Branch,
-} from "../../types";
+} from "../../types.js";
 
-import { loadYaml } from "../serialize";
+import { loadYaml } from "../serialize.js";
 
 type ProcessedData = {
   [key: string]: string;
@@ -27,8 +27,7 @@ const processProperties = (properties: Array<string | undefined | null>) => {
 };
 
 const processIntegration = (integration: MarketplaceIntegration) => {
-  const { name, description, category, overview, definition, instances } =
-    integration;
+  const { name, description, category, overview, definition, instances } = integration;
 
   processProperties([name, description, category, overview]);
 
@@ -60,16 +59,9 @@ const processIntegrationInstance = (instance: MarketplaceInstance | null) => {
 };
 
 const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
-  const definition: IntegrationSchema = loadYaml(unparsedYamlDefinition);
+  const definition = loadYaml<IntegrationSchema>(unparsedYamlDefinition);
 
-  const {
-    category,
-    description,
-    configPages,
-    flows,
-    labels,
-    requiredConfigVars,
-  } = definition;
+  const { category, description, configPages, flows, labels, requiredConfigVars } = definition;
 
   processProperties([description, category]);
 
@@ -133,11 +125,7 @@ const traverse = (flowOrStep: Flow | Step) => {
       stack.push(...current.steps);
     } else if (isStep(current)) {
       // Handling Step type
-      processProperties([
-        current.name,
-        current.description,
-        current.action?.component?.key,
-      ]);
+      processProperties([current.name, current.description, current.action?.component?.key]);
       if (current.steps) {
         stack.push(...current.steps);
       }
@@ -146,7 +134,7 @@ const traverse = (flowOrStep: Flow | Step) => {
           ...current.branches.map((branch) => ({
             name: branch.name,
             steps: branch.steps,
-          }))
+          })),
         );
       }
     } else {
@@ -166,7 +154,7 @@ const isStep = (object: Flow | Step): object is Step => {
 };
 
 export const processIntegrationsForTranslations = (
-  data: MarketplaceTranslations
+  data: MarketplaceTranslations,
 ): ProcessedData => {
   data.marketplaceIntegrations.nodes.forEach((integration) => {
     if (!integration) {

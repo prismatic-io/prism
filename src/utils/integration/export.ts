@@ -1,5 +1,5 @@
-import { gqlRequest, gql } from "../../graphql";
-import { loadYaml } from "../serialize";
+import { gqlRequest, gql } from "../../graphql.js";
+import { loadYaml } from "../serialize.js";
 
 /** The version of the Integration definition to request.
  *  It's important to request a version that corresponds with the

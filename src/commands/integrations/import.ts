@@ -1,10 +1,10 @@
 import { Command, Flags } from "@oclif/core";
-import { exists } from "../../fs";
+import { exists } from "../../fs.js";
 import {
   importYamlIntegration,
   importCodeNativeIntegration,
-} from "../../utils/integration/import";
-import { openIntegration } from "../../utils/integration/open";
+} from "../../utils/integration/import.js";
+import { openIntegration } from "../../utils/integration/open.js";
 
 export default class ImportCommand extends Command {
   static description =
@@ -30,8 +30,7 @@ export default class ImportCommand extends Command {
       char: "o",
       required: false,
       default: false,
-      description:
-        "If supplied, open the Designer for the imported integration",
+      description: "If supplied, open the Designer for the imported integration",
     }),
   };
 

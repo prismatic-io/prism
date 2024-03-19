@@ -1,10 +1,10 @@
 import chardet from "chardet";
 import { ux } from "@oclif/core";
-import { gqlRequest, gql } from "../../graphql";
-import { uploadAvatar } from "../../utils/avatar";
-import { exists, fs } from "../../fs";
+import { gqlRequest, gql } from "../../graphql.js";
+import { uploadAvatar } from "../../utils/avatar.js";
+import { exists, fs } from "../../fs.js";
 import { resolve } from "path";
-import { seekPackageDistDirectory } from "../import";
+import { seekPackageDistDirectory } from "../import.js";
 import {
   createComponentPackage,
   publishDefinition as publishComponentDefinition,
@@ -12,7 +12,7 @@ import {
   uploadFile,
   uploadConnectionIcons,
   ComponentDefinition,
-} from "../component/publish";
+} from "../component/publish.js";
 
 interface ImportDefinitionResult {
   integrationId: string;
@@ -38,7 +38,7 @@ interface Integration {
 
 export const importDefinition = async (
   definition: string,
-  integrationId?: string
+  integrationId?: string,
 ): Promise<ImportDefinitionResult> => {
   const result = await gqlRequest({
     document: gql`
@@ -79,15 +79,12 @@ export const importDefinition = async (
     integrationId: integration.id,
     flows: integration.flows.nodes,
     pendingAuthorizations: integration.testConfigVariables.nodes.map(
-      ({ id, authorizeUrl: url }) => ({ id, url })
+      ({ id, authorizeUrl: url }) => ({ id, url }),
     ),
   };
 };
 
-const setIntegrationAvatar = async (
-  integrationId: string,
-  iconPath: string
-): Promise<void> => {
+const setIntegrationAvatar = async (integrationId: string, iconPath: string): Promise<void> => {
   try {
     const avatarUrl = await uploadAvatar(integrationId, iconPath);
 
@@ -120,18 +117,12 @@ const setIntegrationAvatar = async (
 export const importYamlIntegration = async (
   path: string,
   integrationId?: string,
-  iconPath?: string
+  iconPath?: string,
 ): Promise<string> => {
   const encoding = await chardet.detectFile(path);
-  const definition = await fs.readFile(
-    path,
-    encoding === "UTF-16LE" ? "utf16le" : "utf-8"
-  );
+  const definition = await fs.readFile(path, encoding === "UTF-16LE" ? "utf16le" : "utf-8");
 
-  const { integrationId: integrationImportId } = await importDefinition(
-    definition,
-    integrationId
-  );
+  const { integrationId: integrationImportId } = await importDefinition(definition, integrationId);
 
   if (iconPath) {
     await setIntegrationAvatar(integrationImportId, iconPath);
@@ -140,16 +131,14 @@ export const importYamlIntegration = async (
   return integrationImportId;
 };
 
-export const importCodeNativeIntegration = async (
-  integrationId?: string
-): Promise<string> => {
+export const importCodeNativeIntegration = async (integrationId?: string): Promise<string> => {
   const { integrationDefinition, componentDefinition } =
     await loadCodeNativeIntegrationEntryPoint();
 
   if (!integrationDefinition) {
     ux.error(
       "Failed to find Code Native Integration definition in 'index.js' entrypoint file. Is the current path a Code Native Integration?",
-      { exit: 1 }
+      { exit: 1 },
     );
   }
 
@@ -157,38 +146,27 @@ export const importCodeNativeIntegration = async (
 
   const packagePath = await createComponentPackage();
 
-  const {
-    iconUploadUrl,
-    packageUploadUrl,
-    connectionIconUploadUrls,
-    versionNumber,
-  } = await publishComponentDefinition(
-    componentDefinition,
-    undefined,
-    undefined,
-    true
-  );
+  const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls, versionNumber } =
+    await publishComponentDefinition(componentDefinition, undefined, undefined, true);
 
   ux.action.start("Uploading package for Code Native Integration");
   await uploadFile(packagePath, packageUploadUrl);
   const uploaded = await waitForCodeNativeComponentAvailable(
     componentDefinition.key,
-    versionNumber
+    versionNumber,
   );
   if (uploaded) {
     ux.action.stop();
   } else {
     ux.action.stop(
-      "Package still processing for Code Native Integration, it will likely be available in a few minutes."
+      "Package still processing for Code Native Integration, it will likely be available in a few minutes.",
     );
   }
 
-  ux.action.start(
-    "Importing definition for Code Native Integration into Prismatic"
-  );
+  ux.action.start("Importing definition for Code Native Integration into Prismatic");
   const { integrationId: integrationImportId } = await importDefinition(
     integrationDefinition,
-    integrationId
+    integrationId,
   );
 
   const {
@@ -222,16 +200,14 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
   if (!(await exists("index.js"))) {
     ux.error(
       "Failed to find 'index.js' entrypoint file. Is the current path a Code Native Integration?",
-      { exit: 1 }
+      { exit: 1 },
     );
   }
 
   // Require index.js and access its root-most default export which should contain the YAML definition.
   const cwd = process.cwd();
   const entrypointPath = resolve(cwd, "./index.js");
-  const {
-    default: componentDefinition,
-  }: CodeNativeIntegrationEntrypoint = require(entrypointPath); // eslint-disable-line @typescript-eslint/no-var-requires
+  const { default: componentDefinition }: CodeNativeIntegrationEntrypoint = require(entrypointPath);
 
   return {
     integrationDefinition: componentDefinition.codeNativeIntegrationYAML,
@@ -243,7 +219,7 @@ export const waitForCodeNativeComponentAvailable = async (
   componentKey: string,
   versionNumber: string,
   attemptNumber = 0,
-  maximumAttempts = 10
+  maximumAttempts = 10,
 ): Promise<boolean> => {
   // Retrieve the current availability status.
   const results = await gqlRequest({
@@ -283,7 +259,7 @@ export const waitForCodeNativeComponentAvailable = async (
       componentKey,
       versionNumber,
       attemptNumber + 1,
-      maximumAttempts
+      maximumAttempts,
     );
   }
 

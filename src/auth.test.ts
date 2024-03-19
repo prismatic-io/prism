@@ -1,4 +1,5 @@
-import { Authenticate, createRequestParams } from "./auth";
+import { describe, it, expect } from "bun:test";
+import { Authenticate, createRequestParams } from "./auth.js";
 import axios from "axios";
 
 const domain = "prismatic-io-dev.auth0.com";
@@ -32,7 +33,6 @@ describe("createRequestParams", () => {
 
 // Skip the auth tests since they're more for convenience testing auth
 // rather than actual good unit tests to run due to their side effects.
-// eslint-disable-next-line jest/no-disabled-tests
 describe.skip("auth", () => {
   it("should work", async () => {
     expect.assertions(1);

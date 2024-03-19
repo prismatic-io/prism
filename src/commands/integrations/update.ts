@@ -1,6 +1,6 @@
 import { Command, Args, Flags } from "@oclif/core";
-import { gqlRequest, gql } from "../../graphql";
-import { parseJsonOrUndefined } from "../../fields";
+import { gqlRequest, gql } from "../../graphql.js";
+import { parseJsonOrUndefined } from "../../fields.js";
 
 export default class UpdateCommand extends Command {
   static description = "Update an Integration's name or description";
@@ -36,12 +36,7 @@ export default class UpdateCommand extends Command {
   async run() {
     const {
       args: { integration },
-      flags: {
-        name,
-        description,
-        customer,
-        "test-config-vars": testConfigVars,
-      },
+      flags: { name, description, customer, "test-config-vars": testConfigVars },
     } = await this.parse(UpdateCommand);
     const result = await gqlRequest({
       document: gql`

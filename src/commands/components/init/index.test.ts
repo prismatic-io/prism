@@ -1,3 +1,4 @@
+import { expect, it, describe } from "bun:test";
 import fs from "fs";
 import path from "path";
 import InitializeComponent from ".";
@@ -27,7 +28,7 @@ const specs = specFiles.reduce(
     }
     return result;
   },
-  { wsdl: [] as SpecMeta[] }
+  { wsdl: [] as SpecMeta[] },
 );
 
 const generatedFiles = {
@@ -47,14 +48,12 @@ describe("component generation tests", () => {
               `--wsdl-path=../fixtures/specs/${specName}`,
             ]);
           },
-          componentGenerationTimeout
+          componentGenerationTimeout,
         );
 
         for (const filename of generatedFiles.wsdl) {
           it(`should match ${filename} snapshot`, async () => {
-            const contents = fs
-              .readFileSync(path.join(componentName, "src", filename))
-              .toString();
+            const contents = fs.readFileSync(path.join(componentName, "src", filename)).toString();
             expect(contents).toMatchSnapshot(`${componentName}-${filename}`);
           });
         }

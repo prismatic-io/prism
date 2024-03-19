@@ -1,5 +1,5 @@
 import { Command, Args } from "@oclif/core";
-import { gqlRequest, gql } from "../../../graphql";
+import { gqlRequest, gql } from "../../../graphql.js";
 
 export default class ClearCommand extends Command {
   static description = "Clear an Alert Monitor";

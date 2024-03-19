@@ -1,5 +1,5 @@
 import { Command, Args, ux } from "@oclif/core";
-import { gqlRequest, gql } from "../../../graphql";
+import { gqlRequest, gql } from "../../../graphql.js";
 
 export default class ListCommand extends Command {
   static description = "List Integration Flows";
@@ -68,7 +68,7 @@ export default class ListCommand extends Command {
         description: {},
         testUrl: { header: "Test URL", extended: true },
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

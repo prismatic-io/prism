@@ -1,5 +1,5 @@
 import { Command, Flags } from "@oclif/core";
-import { gql, gqlRequest } from "../../../graphql";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends Command {
   static description = "Create a User for your Organization";

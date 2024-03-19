@@ -1,5 +1,5 @@
 import { Command } from "@oclif/core";
-import { gql, gqlRequest } from "../../../graphql";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class GenerateCommand extends Command {
   static description = "Generate an embedded marketplace signing key";

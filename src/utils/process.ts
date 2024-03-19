@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 
 export const spawnProcess = (
   [command, ...args]: string[],
-  env: Record<string, string>
+  env: Record<string, string>,
 ): Promise<void> => {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {

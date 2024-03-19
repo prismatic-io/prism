@@ -1,6 +1,6 @@
 import { Command, Flags, ux } from "@oclif/core";
 import dayjs from "dayjs";
-import { gqlRequest, gql } from "../../graphql";
+import { gqlRequest, gql } from "../../graphql.js";
 
 export default class ListCommand extends Command {
   static description = "List available Components";
@@ -95,7 +95,7 @@ export default class ListCommand extends Command {
           get: ({ customer }) => customer?.externalId ?? "",
         },
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

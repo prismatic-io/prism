@@ -1,21 +1,16 @@
 {
   "compilerOptions": {
     "strict": true,
+    "sourceMap": false,
     "esModuleInterop": true,
     "declaration": false,
-    "target": "es2019",
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "target": "ES2022",
+    "module": "node16",
+    "moduleResolution": "node16",
     "outDir": "./lib",
-    "lib": [
-      "es2019",
-      "es2020.promise",
-      "es2020.bigint",
-      "es2020.string",
-      "dom"
-    ],
+    "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src"],
-  "exclude": ["src/commands/components/temp", "**/*.test.ts", "jest.config.ts"]
+  "include": ["src", "bin"],
+  "exclude": ["src/commands/components/temp", "templates", "**/*.test.ts"]
 }

@@ -1,7 +1,7 @@
 import { decode } from "@msgpack/msgpack";
 import axios from "axios";
-import { fs } from "../../fs";
-import { gql, gqlRequest } from "../../graphql";
+import { fs } from "../../fs.js";
+import { gql, gqlRequest } from "../../graphql.js";
 import { extension } from "mime-types";
 
 export interface DeserializeResult {
@@ -9,8 +9,7 @@ export interface DeserializeResult {
   contentType: string;
 }
 
-export const deserialize = (data: Buffer): DeserializeResult | unknown =>
-  decode(data);
+export const deserialize = (data: Buffer): DeserializeResult | unknown => decode(data);
 
 export const parseData = (data: any, contentType = ""): string | Buffer => {
   if (data === null || data === undefined) {
@@ -37,8 +36,7 @@ export const parseData = (data: any, contentType = ""): string | Buffer => {
     return data;
   }
 
-  return typeof data === "string" ||
-    (typeof data === "object" && Buffer.isBuffer(data))
+  return typeof data === "string" || (typeof data === "object" && Buffer.isBuffer(data))
     ? data
     : JSON.stringify(data);
 };
@@ -65,9 +63,7 @@ const getFinalStepResult = async (executionId: string) => {
     responseType: "arraybuffer",
   });
   const resultsBuffer = Buffer.from(await response.data);
-  const { data: deserializedResult, contentType } = decode(
-    resultsBuffer
-  ) as DeserializeResult;
+  const { data: deserializedResult, contentType } = decode(resultsBuffer) as DeserializeResult;
 
   return {
     data: parseData(deserializedResult as string, contentType),
@@ -77,15 +73,13 @@ const getFinalStepResult = async (executionId: string) => {
 
 export const writeFinalStepResults = async (
   executionId: string,
-  fileName: string
+  fileName: string,
 ): Promise<void> => {
   const result = await getFinalStepResult(executionId);
   await fs.writeFile(fileName, result.data);
 };
 
-export const printFinalStepResults = async (
-  executionId: string
-): Promise<void> => {
+export const printFinalStepResults = async (executionId: string): Promise<void> => {
   const result = await getFinalStepResult(executionId);
   console.log(`
 ======== Step Results ========

@@ -1,5 +1,5 @@
 import { Command, Args, ux } from "@oclif/core";
-import { gqlRequest, gql } from "../../../graphql";
+import { gqlRequest, gql } from "../../../graphql.js";
 
 export default class ListCommand extends Command {
   static description = "List Alert Events for an Alert Monitor";
@@ -58,7 +58,7 @@ export default class ListCommand extends Command {
         },
         details: {},
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

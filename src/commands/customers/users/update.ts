@@ -1,5 +1,5 @@
 import { Command, Args, Flags } from "@oclif/core";
-import { gqlRequest, gql } from "../../../graphql";
+import { gqlRequest, gql } from "../../../graphql.js";
 
 export default class UpdateCommand extends Command {
   static description = "Update a User";
@@ -36,12 +36,7 @@ export default class UpdateCommand extends Command {
   async run() {
     const {
       args: { user },
-      flags: {
-        name,
-        phone,
-        "dark-mode": darkMode,
-        "dark-mode-os-sync": darkModeOsSync,
-      },
+      flags: { name, phone, "dark-mode": darkMode, "dark-mode-os-sync": darkModeOsSync },
     } = await this.parse(UpdateCommand);
 
     const result = await gqlRequest({

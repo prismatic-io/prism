@@ -1,10 +1,11 @@
 import { Command, Flags, ux } from "@oclif/core";
-import { isEmpty } from "lodash";
-import { gqlRequest, gql } from "../../../graphql";
-import { spawnProcess } from "../../../utils/process";
+import { isEmpty } from "lodash-es";
+import { gqlRequest, gql } from "../../../graphql.js";
+import { spawnProcess } from "../../../utils/process.js";
 
 export default class RunCommand extends Command {
-  static description = `Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.`;
+  static description =
+    `Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.`;
   static usage = "components:dev:run -i <value> -c <value> -- /command/to/run";
   static examples = [
     {
@@ -34,8 +35,7 @@ export default class RunCommand extends Command {
     connectionKey: Flags.string({
       required: true,
       char: "c",
-      description:
-        "Key of the connection config variable to fetch meta/state for",
+      description: "Key of the connection config variable to fetch meta/state for",
     }),
   };
 
@@ -47,7 +47,7 @@ export default class RunCommand extends Command {
 
     if (isEmpty(argv)) {
       this.error(
-        "A command to run must be supplied after a double dash (--) delimiter. See examples in this command's help for details."
+        "A command to run must be supplied after a double dash (--) delimiter. See examples in this command's help for details.",
       );
     }
 
@@ -84,7 +84,7 @@ export default class RunCommand extends Command {
     }[] = result.integration.testConfigVariables.nodes;
 
     const [connection] = nodes.filter(
-      ({ requiredConfigVariable: { key } }) => key === connectionKey
+      ({ requiredConfigVariable: { key } }) => key === connectionKey,
     );
     if (!connection) {
       ux.error("Failed to find active connection.", { exit: 1 });
@@ -94,7 +94,7 @@ export default class RunCommand extends Command {
 
     const fields = inputs.nodes.reduce<Record<string, unknown>>(
       (result, { name, value }) => ({ ...result, [name]: value }),
-      {}
+      {},
     );
 
     const value = JSON.stringify({

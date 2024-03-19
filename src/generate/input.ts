@@ -5,23 +5,19 @@ import {
   ParameterDeclaration,
   SourceFile,
 } from "ts-morph";
-
 import { InputFieldType } from "@prismatic-io/spectral";
-import camelCase from "camelcase";
-import { InputPropertyStructure, ProjectStructure } from ".";
+import { InputPropertyStructure, ProjectStructure } from "./index.js";
+import { pascalCase } from "./util.js";
 
 export const getActionMethodInputProperties = (
   parameter: ParameterDeclaration,
-  parameterTypeDefinition: SourceFile | undefined
+  parameterTypeDefinition: SourceFile | undefined,
 ): InputPropertyStructure[] => {
   const paramName = parameter.getName();
   const propertyStructures: InputPropertyStructure[] = [];
   if (parameterTypeDefinition) {
     const paramDefinition = parameterTypeDefinition.getInterfaceOrThrow(
-      camelCase(
-        !paramName.includes("Param") ? paramName : paramName.split("Param")[0],
-        { pascalCase: true }
-      )
+      pascalCase(!paramName.includes("Param") ? paramName : paramName.split("Param")[0]),
     );
 
     const paramProperties = paramDefinition.getProperties();
@@ -67,25 +63,19 @@ export const getActionMethodInputProperties = (
 
 export const writeInputs = async (
   { inputsFile }: ProjectStructure,
-  inputs: InputPropertyStructure[]
+  inputs: InputPropertyStructure[],
 ): Promise<void> => {
   inputs.forEach((propertyStructure) => {
     const placeholder = inputsFile.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
-      declarations: [
-        { name: "genericActionInput", initializer: Writers.object({}) },
-      ],
+      declarations: [{ name: "genericActionInput", initializer: Writers.object({}) }],
     });
-    const object = placeholder
-      .getDeclarations()[0]
-      .getInitializer() as ObjectLiteralExpression;
+    const object = placeholder.getDeclarations()[0].getInitializer() as ObjectLiteralExpression;
 
     object.addPropertyAssignments([
       {
         name: "label",
-        initializer: `"${camelCase(propertyStructure.propertyName, {
-          pascalCase: true,
-        })}"`,
+        initializer: `"${pascalCase(propertyStructure.propertyName)}"`,
       },
       {
         name: "type",

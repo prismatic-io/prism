@@ -1,5 +1,5 @@
 import { Command, Args, Flags } from "@oclif/core";
-import { gql, gqlRequest } from "../../graphql";
+import { gql, gqlRequest } from "../../graphql.js";
 
 export default class UpdateCommand extends Command {
   // TODO: Add more flags once optional updates are implemented

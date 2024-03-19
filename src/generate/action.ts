@@ -1,6 +1,5 @@
-import camelCase from "camelcase";
 import * as path from "path";
-import { ProjectStructure, InputPropertyStructure } from "./index";
+import { ProjectStructure, InputPropertyStructure } from "./index.js";
 import {
   VariableDeclarationKind,
   ObjectLiteralExpression,
@@ -9,10 +8,10 @@ import {
   MethodSignature,
   ParameterDeclaration,
 } from "ts-morph";
-import { getParamTypeDefinition, getActionMethods } from "./parse";
-import { getActionMethodInputProperties, writeInputs } from "./input";
-import { createDescription } from "./util";
-import { uniq, uniqBy, sortBy } from "lodash";
+import { getParamTypeDefinition, getActionMethods } from "./parse.js";
+import { getActionMethodInputProperties, writeInputs } from "./input.js";
+import { createDescription, pascalCase } from "./util.js";
+import { uniq, uniqBy, sortBy, camelCase } from "lodash-es";
 
 export interface ActionInput {
   shouldImport: boolean;
@@ -33,28 +32,22 @@ interface Action {
   actionObject: ActionObject;
 }
 
-const getPerformFunctionWSDL = (
-  projectTemplatePath: string,
-  action: Action
-) => {
+const getPerformFunctionWSDL = (projectTemplatePath: string, action: Action) => {
   return `const client = await createClientAsync(path.join(__dirname, "${path.basename(
-    projectTemplatePath
+    projectTemplatePath,
   )}"), headers);
         const [result] = await client.${action.methodSignature.getName()}(${action.actionObject.inputs
-    .map((input) => {
-      return `{${
-        input.shouldImport
-          ? input.properties.map(({ propertyName }) => propertyName).join(", ")
-          : ""
-      }}`;
-    })
-    .join(",")});`;
+          .map((input) => {
+            return `{${
+              input.shouldImport
+                ? input.properties.map(({ propertyName }) => propertyName).join(", ")
+                : ""
+            }}`;
+          })
+          .join(",")});`;
 };
 
-const instantiatePerformFunction = (
-  action: Action,
-  project: ProjectStructure
-) => {
+const instantiatePerformFunction = (action: Action, project: ProjectStructure) => {
   const { projectTemplatePath } = project;
 
   const performFunction = getPerformFunctionWSDL(projectTemplatePath, action);
@@ -81,7 +74,7 @@ const instantiatePerformFunction = (
 // used as a parameter for our perform function
 const generateActionObject = (
   methodSignature: MethodSignature,
-  project: ProjectStructure
+  project: ProjectStructure,
 ): ActionObject => {
   const inputPropertiesMapping = methodSignature
     .getParameters()
@@ -90,14 +83,13 @@ const generateActionObject = (
         name: parameter.getName(),
         properties: getActionMethodInputProperties(
           parameter,
-          getParamTypeDefinition(project, parameter)
+          getParamTypeDefinition(project, parameter),
         ),
         paramTypeDefinition: getParamTypeDefinition(project, parameter),
       } as ActionInput;
 
       input.shouldImport =
-        (input.properties.length > 0 &&
-          input.paramTypeDefinition !== undefined) ||
+        (input.properties.length > 0 && input.paramTypeDefinition !== undefined) ||
         input.paramTypeDefinition === undefined;
 
       return input;
@@ -114,12 +106,12 @@ const generateActionObject = (
 const compileAction = (
   actionService: string,
   actionMethod: MethodSignature,
-  project: ProjectStructure
+  project: ProjectStructure,
 ): Action => ({
   service: actionService,
   key: camelCase(actionMethod.getName()),
   display: {
-    label: camelCase(actionMethod.getName(), { pascalCase: true })
+    label: pascalCase(actionMethod.getName())
       .split(/(?=[A-Z])/)
       .join(" "),
     description:
@@ -131,32 +123,23 @@ const compileAction = (
   actionObject: generateActionObject(actionMethod, project),
 });
 
-const writeAction = async (
-  action: Action,
-  project: ProjectStructure
-): Promise<void> => {
+const writeAction = async (action: Action, project: ProjectStructure): Promise<void> => {
   const { actionFile } = project;
 
   // Apparently you can't generate an Object without adding it to the file
   // so this is our place holder to use as a template
   const placeholder = actionFile.addVariableStatement({
     declarationKind: VariableDeclarationKind.Const,
-    declarations: [
-      { name: "genericActionPayload", initializer: Writers.object({}) },
-    ],
+    declarations: [{ name: "genericActionPayload", initializer: Writers.object({}) }],
   });
-  const object = placeholder
-    .getDeclarations()[0]
-    .getInitializer() as ObjectLiteralExpression;
+  const object = placeholder.getDeclarations()[0].getInitializer() as ObjectLiteralExpression;
 
-  const inputFields = action.actionObject.inputs.flatMap(
-    ({ properties, shouldImport, name }) => {
-      if (properties.length > 0) {
-        return properties.map(({ propertyName }) => propertyName);
-      }
-      return shouldImport ? [name] : [];
+  const inputFields = action.actionObject.inputs.flatMap(({ properties, shouldImport, name }) => {
+    if (properties.length > 0) {
+      return properties.map(({ propertyName }) => propertyName);
     }
-  );
+    return shouldImport ? [name] : [];
+  });
 
   object.addPropertyAssignments([
     {
@@ -203,7 +186,7 @@ const writeAction = async (
 
 const writeServicesImport = async (
   services: string[],
-  { actionFile, definitionDirectory }: ProjectStructure
+  { actionFile, definitionDirectory }: ProjectStructure,
 ): Promise<void> => {
   actionFile.addImportDeclaration({
     moduleSpecifier: `../${definitionDirectory}/index`,
@@ -213,7 +196,7 @@ const writeServicesImport = async (
 
 const writeInputsImport = async (
   inputNames: string[],
-  { actionFile }: ProjectStructure
+  { actionFile }: ProjectStructure,
 ): Promise<void> => {
   actionFile.addImportDeclaration({
     moduleSpecifier: "./inputs",
@@ -221,20 +204,16 @@ const writeInputsImport = async (
   });
 };
 
-export const generateActions = async (
-  project: ProjectStructure
-): Promise<void> => {
+export const generateActions = async (project: ProjectStructure): Promise<void> => {
   const { actionFile, inputsFile } = project;
 
   const methods = getActionMethods(project);
   const actions = sortBy(
     Object.entries(methods).flatMap(([service, actionMethods]) => {
       const dedupedActions = uniqBy(actionMethods, (a) => a.getName());
-      return dedupedActions.map((action) =>
-        compileAction(service, action, project)
-      );
+      return dedupedActions.map((action) => compileAction(service, action, project));
     }),
-    ({ key }) => key
+    ({ key }) => key,
   );
 
   const inputs = actions
@@ -243,7 +222,7 @@ export const generateActions = async (
     .flatMap(({ properties }) => properties);
   const dedupedInputs = sortBy(
     uniqBy(inputs, (i) => i.propertyName.toLowerCase()),
-    (i) => i.propertyName
+    (i) => i.propertyName,
   );
 
   await writeInputs(project, dedupedInputs);

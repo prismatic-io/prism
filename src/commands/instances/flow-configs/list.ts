@@ -1,5 +1,5 @@
 import { Command, ux, Args } from "@oclif/core";
-import { gql, gqlRequest } from "../../../graphql";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ListCommand extends Command {
   static description = "List Instance Flow Configs";
@@ -69,7 +69,7 @@ export default class ListCommand extends Command {
           extended: true,
         },
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

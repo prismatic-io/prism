@@ -1,12 +1,6 @@
-import { dumpYaml } from "../serialize";
-import { merge } from "lodash";
-import {
-  exportDefinition,
-  IntegrationDefinition,
-  Expression,
-  ConfigVar,
-  Step,
-} from "./export";
+import { dumpYaml } from "../serialize.js";
+import { merge } from "lodash-es";
+import { exportDefinition, IntegrationDefinition, Expression, ConfigVar, Step } from "./export.js";
 
 interface ConnectionInfo {
   key: string;
@@ -33,14 +27,12 @@ export interface ComponentTestInfo {
   connectionInfo?: ConnectionInfo;
 }
 
-export const componentTestIntegrationName = (
-  componentKey: string,
-  name: string
-): string => `Component Test Harness - ${componentKey} - ${name}`;
+export const componentTestIntegrationName = (componentKey: string, name: string): string =>
+  `Component Test Harness - ${componentKey} - ${name}`;
 
 export const buildConnectionConfigVar = (
   { key: componentKey, isPublic }: ComponentInfo,
-  { key, values }: ConnectionInfo
+  { key, values }: ConnectionInfo,
 ): ConfigVar => {
   return {
     key: "testConnection",
@@ -60,7 +52,7 @@ export const buildConnectionConfigVar = (
 
 export const buildStep = (
   { key: componentKey, isPublic }: ComponentInfo,
-  { key, values }: ActionInfo
+  { key, values }: ActionInfo,
 ): Step => {
   return {
     name: "Test Step",
@@ -119,7 +111,7 @@ export const defaultDefinition = ({
 };
 
 export const buildComponentTestHarnessIntegration = async (
-  info: ComponentTestInfo
+  info: ComponentTestInfo,
 ): Promise<string> => {
   const {
     integrationInfo: { id: integrationId },
@@ -137,7 +129,7 @@ export const buildComponentTestHarnessIntegration = async (
     const connection = buildConnectionConfigVar(componentInfo, connectionInfo);
 
     const existingConnection = definition.requiredConfigVars?.filter(
-      ({ key }) => key === "testConnection"
+      ({ key }) => key === "testConnection",
     )?.[0];
     if (existingConnection) {
       merge(existingConnection, connection);
@@ -149,9 +141,7 @@ export const buildComponentTestHarnessIntegration = async (
   }
 
   const step = buildStep(componentInfo, actionInfo);
-  const existingStep = definition.flows[0].steps.filter(
-    ({ name }) => name === "Test Step"
-  )[0];
+  const existingStep = definition.flows[0].steps.filter(({ name }) => name === "Test Step")[0];
   merge(existingStep, step);
 
   return dumpYaml(definition);

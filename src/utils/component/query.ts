@@ -1,4 +1,4 @@
-import { gqlRequest, gql } from "../../graphql";
+import { gqlRequest, gql } from "../../graphql.js";
 
 interface ComponentInfo {
   id: string;
@@ -7,9 +7,7 @@ interface ComponentInfo {
   public: boolean;
 }
 
-export const queryComponentKeys = async (
-  keys: string[]
-): Promise<ComponentInfo[]> => {
+export const queryComponentKeys = async (keys: string[]): Promise<ComponentInfo[]> => {
   const result = await gqlRequest({
     document: gql`
       query components($keys: [String]!) {

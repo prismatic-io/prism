@@ -16,19 +16,13 @@ export const formatSourceFiles = async (basePath: string, files: string[]) => {
   //format the text of each file
   await Promise.all(
     files.map(async (filePath) => {
-      const formattedFile = prettier.format(
-        await fs.readFile(
-          path.resolve(path.dirname(basePath), filePath),
-          "utf-8"
-        ),
-        { parser: "typescript" }
+      const formattedFile = await prettier.format(
+        await fs.readFile(path.resolve(path.dirname(basePath), filePath), "utf-8"),
+        { parser: "typescript" },
       );
 
       //write the formatted text to the proper file location
-      await fs.writeFile(
-        path.resolve(path.dirname(basePath), filePath),
-        formattedFile
-      );
-    })
+      await fs.writeFile(path.resolve(path.dirname(basePath), filePath), formattedFile);
+    }),
   );
 };

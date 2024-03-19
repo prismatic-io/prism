@@ -356,9 +356,7 @@ export interface ComplexInput {
   meta?: object;
 }
 
-export type ComplexInputValue = Array<
-  string | Input | ComplexInputValue | undefined
->;
+export type ComplexInputValue = Array<string | Input | ComplexInputValue | undefined>;
 
 export interface Branch {
   name: string;
@@ -448,11 +446,7 @@ export interface DefaultRequiredConfigVar {
   meta?: object;
 }
 
-export type SimpleInputTypeEnum =
-  | "value"
-  | "reference"
-  | "configVar"
-  | "template";
+export type SimpleInputTypeEnum = "value" | "reference" | "configVar" | "template";
 export type ComplexInputTypeEnum = "complex";
 
 export interface ConnectionConfigVar {
@@ -468,13 +462,7 @@ export interface ConnectionConfigVar {
   meta?: object;
 }
 
-export type ScheduleTypeEnum =
-  | "none"
-  | "custom"
-  | "minute"
-  | "hour"
-  | "day"
-  | "week";
+export type ScheduleTypeEnum = "none" | "custom" | "minute" | "hour" | "day" | "week";
 export type ConfigVarDataTypeEnum =
   | "string"
   | "date"
@@ -499,10 +487,7 @@ export type DefaultConfigVarDataTypeEnum =
   | "objectSelection"
   | "objectFieldMap"
   | "jsonForm";
-export type DataSourceConfigVarDataTypeEnum = Exclude<
-  DefaultConfigVarDataTypeEnum,
-  "connection"
->;
+export type DataSourceConfigVarDataTypeEnum = Exclude<DefaultConfigVarDataTypeEnum, "connection">;
 export type CredentialTypeEnum =
   | "oauth2"
   | "basic"
@@ -512,15 +497,9 @@ export type CredentialTypeEnum =
   | "oauth2ClientCredentials";
 export type CollectionTypeEnum = "valuelist" | "keyvaluelist";
 export type CodeLanguageEnum = "json" | "xml" | "html";
-export type EndpointTypeEnum =
-  | "flow_specific"
-  | "instance_specific"
-  | "shared_instance";
+export type EndpointTypeEnum = "flow_specific" | "instance_specific" | "shared_instance";
 export type StepErrorHandlerTypeEnum = "fail" | "ignore" | "retry";
-export type ConfigPageElementTypeEnum =
-  | "configVar"
-  | "htmlElement"
-  | "jsonForm";
+export type ConfigPageElementTypeEnum = "configVar" | "htmlElement" | "jsonForm";
 export type EndpointSecurityTypeEnum =
   | "unsecured"
   | "customer_optional"

@@ -1,5 +1,5 @@
 import { Command, Flags, ux } from "@oclif/core";
-import { gql, gqlRequest } from "../../graphql";
+import { gql, gqlRequest } from "../../graphql.js";
 
 export default class ListCommand extends Command {
   static description = "List Instances";
@@ -88,7 +88,7 @@ export default class ListCommand extends Command {
         description: {},
         enabled: { extended: true },
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

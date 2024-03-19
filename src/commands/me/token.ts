@@ -1,6 +1,6 @@
 import { Command, Flags } from "@oclif/core";
-import { getAccessToken } from "../../auth";
-import { readConfig } from "../../config";
+import { getAccessToken } from "../../auth.js";
+import { readConfig } from "../../config.js";
 export default class PrintTokenCommand extends Command {
   static description = "Print your authorization tokens";
 
@@ -22,8 +22,7 @@ export default class PrintTokenCommand extends Command {
     await getAccessToken();
 
     const config = await readConfig();
-    const token =
-      tokenType === "access" ? config?.accessToken : config?.refreshToken;
+    const token = tokenType === "access" ? config?.accessToken : config?.refreshToken;
     this.log(token);
   }
 }
