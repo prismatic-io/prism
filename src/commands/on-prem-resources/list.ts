@@ -36,7 +36,6 @@ export default class ListCommand extends Command {
                   externalId
                 }
                 port
-                status
               }
               pageInfo {
                 hasNextPage
@@ -72,7 +71,6 @@ export default class ListCommand extends Command {
           get: (row) => row.customer?.externalId ?? "",
         },
         port: {},
-        status: {},
       },
       { ...flags }
     );
