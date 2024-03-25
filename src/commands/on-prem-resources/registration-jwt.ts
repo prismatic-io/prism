@@ -17,34 +17,71 @@ export default class CreateCommand extends Command {
       description:
         "An optional ID of an existing On-Premise Resource for which to generate a new JWT.",
     }),
+    rotate: Flags.boolean({
+      required: false,
+      description:
+        "Invalidate all JWTs for the On-Premise Resource and get a new JWT.",
+    }),
   };
 
   async run() {
     const {
-      flags: { customerId, resourceId },
+      flags: { customerId, resourceId, rotate },
     } = await this.parse(CreateCommand);
-    const result = await gqlRequest({
-      document: gql`
-        mutation createOnPremiseResourceJWT($customerId: ID, $resourceId: ID) {
-          createOnPremiseResourceJWT(
-            input: { customerId: $customerId, resourceId: $resourceId }
+    if (rotate) {
+      const result = await gqlRequest({
+        document: gql`
+          mutation rotateOnPremiseResourceJWT(
+            $customerId: ID
+            $resourceId: ID
           ) {
-            result {
-              jwt
-            }
-            errors {
-              field
-              messages
+            rotateOnPremiseResourceJWT(
+              input: { customerId: $customerId, resourceId: $resourceId }
+            ) {
+              result {
+                jwt
+              }
+              errors {
+                field
+                messages
+              }
             }
           }
-        }
-      `,
-      variables: {
-        customerId,
-        resourceId,
-      },
-    });
+        `,
+        variables: {
+          customerId,
+          resourceId,
+        },
+      });
 
-    this.log(result.createOnPremiseResourceJWT.result.jwt);
+      this.log(result.rotateOnPremiseResourceJWT.result.jwt);
+    } else {
+      const result = await gqlRequest({
+        document: gql`
+          mutation createOnPremiseResourceJWT(
+            $customerId: ID
+            $resourceId: ID
+          ) {
+            createOnPremiseResourceJWT(
+              input: { customerId: $customerId, resourceId: $resourceId }
+            ) {
+              result {
+                jwt
+              }
+              errors {
+                field
+                messages
+              }
+            }
+          }
+        `,
+        variables: {
+          customerId,
+          resourceId,
+        },
+      });
+
+      this.log(result.createOnPremiseResourceJWT.result.jwt);
+    }
   }
 }
