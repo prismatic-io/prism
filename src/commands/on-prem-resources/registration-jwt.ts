@@ -3,7 +3,7 @@ import { gqlRequest, gql } from "../../graphql";
 
 export default class CreateCommand extends Command {
   static description =
-    "Create a short-lived JWT that may be used to perform registration of an On-Premise Resource.";
+    "Create a JWT that may be used to register an On-Premise Resource.";
   static flags = {
     customerId: Flags.string({
       char: "c",
