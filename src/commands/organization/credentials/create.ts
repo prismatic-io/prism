@@ -1,10 +1,9 @@
 import { Command, Flags } from "@oclif/core";
-import { toValues } from "../../../fields";
-import { gql, gqlRequest } from "../../../graphql";
+import { toValues } from "../../../fields.js";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends Command {
-  static description =
-    "Create a set of Organization-level Credentials for use by Instance Actions";
+  static description = "Create a set of Organization-level Credentials for use by Instance Actions";
 
   static flags = {
     label: Flags.string({

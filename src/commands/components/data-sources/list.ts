@@ -1,5 +1,5 @@
 import { Command, ux, Args, Flags } from "@oclif/core";
-import { gql, gqlRequest } from "../../../graphql";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 interface DataSourceNode {
   [index: string]: unknown;
@@ -30,8 +30,7 @@ export default class ListCommand extends Command {
     componentKey: Args.string({
       name: "Component Key",
       required: true,
-      description:
-        "The key of the component to show data sources for (e.g. 'salesforce')",
+      description: "The key of the component to show data sources for (e.g. 'salesforce')",
     }),
   };
 
@@ -90,18 +89,16 @@ export default class ListCommand extends Command {
       });
       if (!component) {
         console.log(
-          "The key you provided is not valid. Please run 'prism components:list -x' and identify a valid component key."
+          "The key you provided is not valid. Please run 'prism components:list -x' and identify a valid component key.",
         );
         this.exit(1);
       }
       dataSources = [
         ...dataSources,
-        ...component.actions.nodes.map(
-          (action: { detailDataSource: { label: string } }) => ({
-            ...action,
-            detailDataSource: action.detailDataSource?.label || "",
-          })
-        ),
+        ...component.actions.nodes.map((action: { detailDataSource: { label: string } }) => ({
+          ...action,
+          detailDataSource: action.detailDataSource?.label || "",
+        })),
       ];
       componentId = component.id;
       cursor = component.actions.pageInfo.endCursor;
@@ -135,7 +132,7 @@ export default class ListCommand extends Command {
           extended: true,
         },
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

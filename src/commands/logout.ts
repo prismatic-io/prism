@@ -1,6 +1,6 @@
 import { Command, Flags } from "@oclif/core";
-import { deleteConfig } from "../config";
-import { logout } from "../auth";
+import { deleteConfig } from "../config.js";
+import { logout } from "../auth.js";
 
 export default class LogoutCommand extends Command {
   static description = "Log out of your Prismatic account";

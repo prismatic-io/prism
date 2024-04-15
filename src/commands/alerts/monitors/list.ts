@@ -1,5 +1,5 @@
 import { Command, ux } from "@oclif/core";
-import { gqlRequest, gql } from "../../../graphql";
+import { gqlRequest, gql } from "../../../graphql.js";
 
 export default class ListCommand extends Command {
   static description = "List Alert Monitors for Customer Instances";
@@ -65,7 +65,7 @@ export default class ListCommand extends Command {
         instance: { get: ({ instance }) => instance.name },
         instanceId: { extended: true, get: ({ instance }) => instance.id },
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

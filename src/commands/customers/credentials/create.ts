@@ -1,10 +1,9 @@
 import { Command, Flags } from "@oclif/core";
-import { toValues } from "../../../fields";
-import { gql, gqlRequest } from "../../../graphql";
+import { toValues } from "../../../fields.js";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends Command {
-  static description =
-    "Create a set of Customer-specific Credentials for use by Instance Actions";
+  static description = "Create a set of Customer-specific Credentials for use by Instance Actions";
 
   static flags = {
     customer: Flags.string({
@@ -30,12 +29,7 @@ export default class CreateCommand extends Command {
 
   async run() {
     const {
-      flags: {
-        label,
-        "authorization-method": authorizationMethod,
-        fields,
-        customer,
-      },
+      flags: { label, "authorization-method": authorizationMethod, fields, customer },
     } = await this.parse(CreateCommand);
 
     const values = toValues(fields);

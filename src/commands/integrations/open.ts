@@ -1,5 +1,5 @@
 import { Command, Args } from "@oclif/core";
-import { openIntegration } from "../../utils/integration/open";
+import { openIntegration } from "../../utils/integration/open.js";
 
 export default class OpenCommand extends Command {
   static description = "Open the Designer for the specified Integration";

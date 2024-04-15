@@ -1,6 +1,6 @@
 import { URL } from "url";
 import { request, RequestDocument } from "graphql-request";
-import { getAccessToken, prismaticUrl } from "./auth";
+import { getAccessToken, prismaticUrl } from "./auth.js";
 
 interface GQLRequest {
   document: RequestDocument;
@@ -16,14 +16,7 @@ interface ErroredResult {
 }
 
 const isErrored = (result: unknown): result is ErroredResult => {
-  if (
-    !(
-      Boolean(result) &&
-      typeof result === "object" &&
-      result !== null &&
-      "errors" in result
-    )
-  ) {
+  if (!(Boolean(result) && typeof result === "object" && result !== null && "errors" in result)) {
     return false;
   }
 
@@ -39,10 +32,7 @@ const formatError = (field: string, messages: string[]) => {
   return `${field}: ${message}`;
 };
 
-export const gqlRequest = async <T = any>({
-  document,
-  variables,
-}: GQLRequest): Promise<T> => {
+export const gqlRequest = async <T = any>({ document, variables }: GQLRequest): Promise<T> => {
   const accessToken = await getAccessToken();
   const url = new URL("/api", prismaticUrl).toString();
 
@@ -51,7 +41,7 @@ export const gqlRequest = async <T = any>({
     "Prismatic-Client": "prism",
   });
 
-  const errors = Object.values(result)
+  const errors = Object.values(result as any)
     .filter(isErrored)
     .flatMap(({ errors }) => errors)
     .map(({ field, messages }) => formatError(field, messages));

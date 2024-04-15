@@ -1,4 +1,4 @@
-import { gqlRequest, gql } from "../../graphql";
+import { gqlRequest, gql } from "../../graphql.js";
 
 interface Integration {
   flows: {
@@ -12,7 +12,7 @@ interface Integration {
 /** Return Flow ID of given flow name on specified Integration. */
 export const getIntegrationFlow = async (
   integrationId: string,
-  flowName: string
+  flowName: string,
 ): Promise<string> => {
   // TODO: Make flows searchable by name.
   const result = await gqlRequest({
@@ -81,9 +81,7 @@ export const runIntegrationFlow = async ({
   flowId,
   flowName,
 }: IntegrationFlowRunProps): Promise<IntegrationFlowRunResult> => {
-  const integrationFlowId = flowName
-    ? await getIntegrationFlow(integrationId, flowName)
-    : flowId;
+  const integrationFlowId = flowName ? await getIntegrationFlow(integrationId, flowName) : flowId;
 
   const result = await gqlRequest({
     document: gql`
@@ -104,7 +102,6 @@ export const runIntegrationFlow = async ({
     variables: { id: integrationFlowId },
   });
 
-  const executionId: string =
-    result.testIntegrationFlow.testIntegrationFlowResult.execution.id;
+  const executionId: string = result.testIntegrationFlow.testIntegrationFlowResult.execution.id;
   return { executionId };
 };

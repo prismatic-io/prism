@@ -1,6 +1,6 @@
 import { Command } from "@oclif/core";
-import { prismaticUrl } from "../../auth";
-import { whoAmI } from "../../utils/user/query";
+import { prismaticUrl } from "../../auth.js";
+import { whoAmI } from "../../utils/user/query.js";
 
 export default class WhoAmICommand extends Command {
   static description = "Print your user profile information";

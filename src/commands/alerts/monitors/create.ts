@@ -1,6 +1,6 @@
 import { Command, Flags } from "@oclif/core";
-import { gqlRequest, gql } from "../../../graphql";
-import { parseJsonOrUndefined } from "../../../fields";
+import { gqlRequest, gql } from "../../../graphql.js";
+import { parseJsonOrUndefined } from "../../../fields.js";
 
 export default class CreateCommand extends Command {
   static description =
@@ -23,8 +23,7 @@ export default class CreateCommand extends Command {
       name: "triggers",
       char: "t",
       required: true,
-      description:
-        "JSON-formatted list of trigger IDs that should trigger this monitor",
+      description: "JSON-formatted list of trigger IDs that should trigger this monitor",
     }),
     duration: Flags.integer({
       name: "duration",
@@ -36,8 +35,7 @@ export default class CreateCommand extends Command {
       name: "log-severity",
       required: false,
       char: "s",
-      description:
-        "greatest log level {debug, info, warn, error} allowed for log-based triggers",
+      description: "greatest log level {debug, info, warn, error} allowed for log-based triggers",
     }),
     groups: Flags.string({
       required: false,

@@ -1,5 +1,5 @@
 import { Command, ux } from "@oclif/core";
-import { gql, gqlRequest } from "../../../graphql";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ListCommand extends Command {
   static description = "List Users of your Organization";
@@ -64,7 +64,7 @@ export default class ListCommand extends Command {
           get: ({ externalId }) => externalId || "",
         },
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

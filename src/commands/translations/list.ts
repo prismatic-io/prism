@@ -1,10 +1,10 @@
 import { Command, Flags } from "@oclif/core";
 
-import { gqlRequest } from "../../graphql";
-import { MarketplaceTranslations } from "../../types";
-import { processIntegrationsForTranslations } from "../../utils/translations/processDataForTranslations";
-import { GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS } from "../../queries.graphql";
-import { fs } from "../../fs";
+import { gqlRequest } from "../../graphql.js";
+import { MarketplaceTranslations } from "../../types.js";
+import { processIntegrationsForTranslations } from "../../utils/translations/processDataForTranslations.js";
+import { GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS } from "../../queries.graphql.js";
+import { fs } from "../../fs.js";
 
 export default class TranslationsCommand extends Command {
   static description = "Generate Dynamic Phrases for Embedded Marketplace";

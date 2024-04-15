@@ -1,9 +1,8 @@
 import { Command, Flags } from "@oclif/core";
-import { gqlRequest, gql } from "../../graphql";
+import { gqlRequest, gql } from "../../graphql.js";
 
 export default class CreateCommand extends Command {
-  static description =
-    "Create a JWT that may be used to register an On-Premise Resource.";
+  static description = "Create a JWT that may be used to register an On-Premise Resource.";
   static flags = {
     customerId: Flags.string({
       char: "c",
@@ -19,8 +18,7 @@ export default class CreateCommand extends Command {
     }),
     rotate: Flags.boolean({
       required: false,
-      description:
-        "Invalidate all JWTs for the On-Premise Resource and get a new JWT.",
+      description: "Invalidate all JWTs for the On-Premise Resource and get a new JWT.",
     }),
   };
 

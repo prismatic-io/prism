@@ -1,5 +1,5 @@
 import { Command, Flags } from "@oclif/core";
-import { gql, gqlRequest } from "../../../graphql";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends Command {
   static description = "Create an Alert Webhook";
@@ -17,8 +17,7 @@ export default class CreateCommand extends Command {
     headers: Flags.string({
       required: false,
       char: "h",
-      description:
-        "JSON-formatted object of key/value pairs to include in the request header",
+      description: "JSON-formatted object of key/value pairs to include in the request header",
     }),
     payloadTemplate: Flags.string({
       char: "p",

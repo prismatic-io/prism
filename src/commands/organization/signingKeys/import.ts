@@ -1,10 +1,9 @@
 import { Command, Flags } from "@oclif/core";
 import { readFileSync } from "fs";
-import { gql, gqlRequest } from "../../../graphql";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ImportCommand extends Command {
-  static description =
-    "Import a RSA public key for use with embedded marketplace";
+  static description = "Import a RSA public key for use with embedded marketplace";
 
   static flags = {
     "public-key-file": Flags.string({

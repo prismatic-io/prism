@@ -2,22 +2,19 @@ import { Command, Args, Flags } from "@oclif/core";
 import { promises as fs } from "fs";
 import * as path from "path";
 import { parseAndGenerate } from "wsdl-tsclient";
-import { Logger as WsdlTsClientLogger } from "wsdl-tsclient/dist/src/utils/logger";
-import { generate, updatePackageJson } from "../../../generate/index";
-import { runGenerator } from "../../../yeoman";
-import {
-  VALID_NAME_REGEX,
-  formatSourceFiles,
-  getFilesToFormat,
-} from "../../../utils/generate";
+import { Logger as WsdlTsClientLogger } from "wsdl-tsclient/dist/src/utils/logger.js";
+import { generate } from "../../../generate/index.js";
+import { updatePackageJson } from "../../../generate/util.js";
+import { VALID_NAME_REGEX, formatSourceFiles, getFilesToFormat } from "../../../utils/generate.js";
+import GenerateFormatsCommand from "./formats.js";
+import GenerateComponentCommand from "./component.js";
 
 export default class InitializeComponent extends Command {
   static description = "Initialize a new Component";
   static flags = {
     "wsdl-path": Flags.string({
       required: false,
-      description:
-        "Path to the WSDL definition file used to generate a Component",
+      description: "Path to the WSDL definition file used to generate a Component",
     }),
     "open-api-path": Flags.string({
       required: false,
@@ -41,24 +38,18 @@ export default class InitializeComponent extends Command {
   async run() {
     const {
       args: { name },
-      flags: {
-        verbose,
-        "wsdl-path": rawWsdlPath,
-        "open-api-path": rawOpenApiPath,
-      },
+      flags: { verbose, "wsdl-path": rawWsdlPath, "open-api-path": rawOpenApiPath },
     } = await this.parse(InitializeComponent);
 
     const wsdlPath = rawWsdlPath ? path.resolve(rawWsdlPath) : undefined;
-    const openApiPath = rawOpenApiPath
-      ? path.resolve(rawOpenApiPath)
-      : undefined;
+    const openApiPath = rawOpenApiPath ? path.resolve(rawOpenApiPath) : undefined;
 
     if (!VALID_NAME_REGEX.test(name)) {
       this.error(
         `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See https://regex101.com/?regex=${encodeURIComponent(
-          VALID_NAME_REGEX.source
+          VALID_NAME_REGEX.source,
         )}`,
-        { exit: 1 }
+        { exit: 1 },
       );
     }
     if (wsdlPath && !wsdlPath?.includes(".wsdl")) {
@@ -74,22 +65,21 @@ export default class InitializeComponent extends Command {
     process.chdir(name);
 
     if (openApiPath) {
-      await runGenerator("formats", {
-        name,
-        openapi: openApiPath,
-      });
+      await GenerateFormatsCommand.invoke(
+        {
+          name,
+          openapi: openApiPath,
+        },
+        this.config,
+      );
     } else {
-      // Legacy code paths (mostly; keep the component generator call)
-      await runGenerator(
-        "component",
-        process.env.NODE_ENV === "test"
-          ? {
-              name,
-              description: "Prism-generated Component",
-              connectionType: "basic",
-              skipInstall: true,
-            }
-          : { name, skipInstall: Boolean(wsdlPath) }
+      await GenerateComponentCommand.invoke(
+        {
+          name,
+          description: "Prism-generated Component",
+          connectionType: "basic",
+        },
+        this.config,
       );
       // Need to pop back as the WSDL generator assumes it's a directory up
       process.chdir(cwd);

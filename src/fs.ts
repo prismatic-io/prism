@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 export const exists = async (path: string) => {
   return fs.access(path).then(
     () => true,
-    () => false
+    () => false,
   );
 };
 

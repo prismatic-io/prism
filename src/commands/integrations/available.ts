@@ -1,9 +1,8 @@
 import { Command, Args, Flags } from "@oclif/core";
-import { gql, gqlRequest } from "../../graphql";
+import { gql, gqlRequest } from "../../graphql.js";
 
 export default class AvailableCommand extends Command {
-  static description =
-    "Mark an Integration version as available or unavailable";
+  static description = "Mark an Integration version as available or unavailable";
   static args = {
     integration: Args.string({
       required: true,

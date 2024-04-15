@@ -1,7 +1,7 @@
 import { ux } from "@oclif/core";
 import chalk from "chalk";
-import { formatTimestamp } from "../date";
-import { gqlRequest, gql } from "../../graphql";
+import { formatTimestamp } from "../date.js";
+import { gqlRequest, gql } from "../../graphql.js";
 import { promisify } from "util";
 
 const setTimeoutPromise = promisify(setTimeout);
@@ -13,9 +13,7 @@ interface Log {
   message: string;
 }
 
-export const waitForExecutionCompletion = (
-  executionId: string
-): Promise<void> => {
+export const waitForExecutionCompletion = (executionId: string): Promise<void> => {
   return new Promise<void>((resolve, reject) => {
     const interval = setInterval(async () => {
       try {
@@ -79,13 +77,13 @@ export const displayLogs = async (executionId: string): Promise<void> => {
       severity: {
         minWidth: 12,
         get: ({ severity }) => {
-          if (severity == "INFO") {
+          if (severity === "INFO") {
             return chalk.blue("info");
           }
-          if (severity == "WARN") {
+          if (severity === "WARN") {
             return chalk.yellow("warn");
           }
-          if (severity == "ERROR") {
+          if (severity === "ERROR") {
             return chalk.red("error");
           }
           return severity.toLowerCase();
@@ -93,6 +91,6 @@ export const displayLogs = async (executionId: string): Promise<void> => {
       },
       message: {},
     },
-    { "no-header": true }
+    { "no-header": true },
   );
 };

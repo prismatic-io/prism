@@ -1,6 +1,6 @@
 import axios from "axios";
-import { fs } from "../fs";
-import { gql, gqlRequest } from "../graphql";
+import { fs } from "../fs.js";
+import { gql, gqlRequest } from "../graphql.js";
 import mimetypes from "mime-types";
 import { basename, extname } from "path";
 

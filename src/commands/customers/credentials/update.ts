@@ -1,10 +1,9 @@
 import { Command, Args, Flags } from "@oclif/core";
-import { toValues } from "../../../fields";
-import { gql, gqlRequest } from "../../../graphql";
+import { toValues } from "../../../fields.js";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class UpdateCommand extends Command {
-  static description =
-    "Update a Customer-specific Credential for use by Instance Actions";
+  static description = "Update a Customer-specific Credential for use by Instance Actions";
   static args = {
     credential: Args.string({
       required: true,

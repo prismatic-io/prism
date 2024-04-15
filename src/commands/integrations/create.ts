@@ -1,5 +1,5 @@
 import { Command, Flags } from "@oclif/core";
-import { gqlRequest, gql } from "../../graphql";
+import { gqlRequest, gql } from "../../graphql.js";
 
 export default class CreateCommand extends Command {
   static description = "Create an Integration";

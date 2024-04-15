@@ -1,4 +1,4 @@
-import { gql, gqlRequest } from "../../graphql";
+import { gql, gqlRequest } from "../../graphql.js";
 
 interface OrgUser {
   userType: "org";

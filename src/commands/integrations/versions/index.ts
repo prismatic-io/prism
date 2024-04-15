@@ -1,5 +1,5 @@
 import { Command, ux, Args, Flags } from "@oclif/core";
-import { gql, gqlRequest } from "../../../graphql";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ListCommand extends Command {
   static description = "List Integration versions";
@@ -87,7 +87,7 @@ export default class ListCommand extends Command {
           get: (row: any) => row.versionIsAvailable,
         },
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

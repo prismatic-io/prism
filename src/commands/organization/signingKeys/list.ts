@@ -1,5 +1,5 @@
 import { Command, ux } from "@oclif/core";
-import { gql, gqlRequest } from "../../../graphql";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ListCommand extends Command {
   static description = "List embedded signing keys for embedded marketplace";
@@ -35,7 +35,7 @@ export default class ListCommand extends Command {
         issuedAt: { header: "Timestamp" },
         imported: { header: "Imported?" },
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

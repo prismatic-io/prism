@@ -1,6 +1,6 @@
 import { Command, Flags } from "@oclif/core";
-import { gqlRequest, gql } from "../../graphql";
-import { parseJsonOrUndefined } from "../../fields";
+import { gqlRequest, gql } from "../../graphql.js";
+import { parseJsonOrUndefined } from "../../fields.js";
 
 export default class CreateCommand extends Command {
   static description = "Create an Instance";
@@ -40,14 +40,7 @@ export default class CreateCommand extends Command {
 
   async run() {
     const {
-      flags: {
-        name,
-        description,
-        integration,
-        customer,
-        "config-vars": configVars,
-        label,
-      },
+      flags: { name, description, integration, customer, "config-vars": configVars, label },
     } = await this.parse(CreateCommand);
 
     const result = await gqlRequest({

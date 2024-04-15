@@ -1,11 +1,11 @@
-import { gqlRequest, gql } from "../../graphql";
+import { gqlRequest, gql } from "../../graphql.js";
 
 interface IntegrationByNameResult {
   id: string;
 }
 
 export const integrationByName = async (
-  name: string
+  name: string,
 ): Promise<IntegrationByNameResult | undefined> => {
   const result = await gqlRequest({
     document: gql`
@@ -28,7 +28,7 @@ export const integrationByName = async (
 
 export const pollForActiveConfigVarState = async (
   integrationId: string,
-  configVarId: string
+  configVarId: string,
 ): Promise<boolean> => {
   return new Promise<boolean>((resolve, reject) => {
     const interval = setInterval(async () => {
@@ -53,7 +53,7 @@ export const pollForActiveConfigVarState = async (
           result.integration.testConfigVariables.nodes;
 
         const [{ status: serverStatus }] = testConfigVariables.filter(
-          ({ id }) => id === configVarId
+          ({ id }) => id === configVarId,
         );
 
         const status = serverStatus.toLowerCase();

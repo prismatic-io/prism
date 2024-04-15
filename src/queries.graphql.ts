@@ -1,4 +1,4 @@
-import { gql } from "./graphql";
+import { gql } from "./graphql.js";
 
 export const GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS = gql`
   fragment IntegrationTranslation on Integration {

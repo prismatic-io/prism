@@ -8,8 +8,8 @@ import {
   uploadConnectionIcons,
   uploadFile,
   validateDefinition,
-} from "../../utils/component/publish";
-import { whoAmI } from "../../utils/user/query";
+} from "../../utils/component/publish.js";
+import { whoAmI } from "../../utils/user/query.js";
 
 export default class PublishCommand extends Command {
   static description = "Publish a Component to Prismatic";
@@ -27,13 +27,11 @@ export default class PublishCommand extends Command {
     "check-signature": Flags.boolean({
       allowNo: true,
       default: true,
-      description:
-        "Check signature of existing component and confirm publish if matched",
+      description: "Check signature of existing component and confirm publish if matched",
     }),
     "skip-on-signature-match": Flags.boolean({
       required: false,
-      description:
-        "Skips component publish if the new signature matches the existing signature",
+      description: "Skips component publish if the new signature matches the existing signature",
     }),
     customer: Flags.string({
       description: "ID of customer with which to associate the component",
@@ -60,16 +58,12 @@ export default class PublishCommand extends Command {
     const packagePath = await createComponentPackage();
 
     if (checkSignature) {
-      const signatureMatches = await checkPackageSignature(
-        definition,
-        packagePath,
-        customer
-      );
+      const signatureMatches = await checkPackageSignature(definition, packagePath, customer);
       if (signatureMatches) {
         if (
           skipOnSignatureMatch ||
           !(await ux.confirm(
-            "The new package signature matches the existing package signature. Continue publishing new package? (y/N)"
+            "The new package signature matches the existing package signature. Continue publishing new package? (y/N)",
           ))
         ) {
           // Signatures match and we've opted to skip on match, so bail.
@@ -81,12 +75,8 @@ export default class PublishCommand extends Command {
 
     await confirmPublish(definition, confirm);
 
-    const {
-      iconUploadUrl,
-      packageUploadUrl,
-      connectionIconUploadUrls,
-      versionNumber,
-    } = await publishDefinition(definition, comment, customer);
+    const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls, versionNumber } =
+      await publishDefinition(definition, comment, customer);
 
     const {
       display: { iconPath },
@@ -100,7 +90,7 @@ export default class PublishCommand extends Command {
     } = definition;
     // Tell user that their publish was successful and can use components list to view status
     this.log(
-      `Successfully submitted ${label} (v${versionNumber})! The publish should finish processing shortly.`
+      `Successfully submitted ${label} (v${versionNumber})! The publish should finish processing shortly.`,
     );
   }
 }

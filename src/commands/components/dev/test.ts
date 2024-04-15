@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import { Command, Flags, ux } from "@oclif/core";
 import open from "open";
 import inquirer, { DistinctQuestion } from "inquirer";
-import { snakeCase, upperCase, kebabCase } from "lodash";
+import { snakeCase, upperCase, kebabCase } from "lodash-es";
 import { serverTypes } from "@prismatic-io/spectral"; // FIXME: Get rid of this and stop exporting it in Spectral.
 import {
   loadEntrypoint,
@@ -13,37 +13,33 @@ import {
   uploadFile,
   validateDefinition,
   checkPackageSignature,
-} from "../../../utils/component/publish";
-import { displayLogs } from "../../../utils/execution/logs";
+} from "../../../utils/component/publish.js";
+import { displayLogs } from "../../../utils/execution/logs.js";
 import {
   buildComponentTestHarnessIntegration,
   componentTestIntegrationName,
   ComponentTestInfo,
-} from "../../../utils/integration/definition";
-import { importDefinition } from "../../../utils/integration/import";
-import {
-  deleteIntegration,
-  runIntegrationFlow,
-} from "../../../utils/integration/invoke";
-import { pollForActiveConfigVarState } from "../../../utils/integration/query";
-import { Expression } from "../../../utils/integration/export";
-import { exists } from "../../../fs";
-import { whoAmI } from "../../../utils/user/query";
-import { spawnProcess } from "../../../utils/process";
+} from "../../../utils/integration/definition.js";
+import { importDefinition } from "../../../utils/integration/import.js";
+import { deleteIntegration, runIntegrationFlow } from "../../../utils/integration/invoke.js";
+import { pollForActiveConfigVarState } from "../../../utils/integration/query.js";
+import { Expression } from "../../../utils/integration/export.js";
+import { exists } from "../../../fs.js";
+import { whoAmI } from "../../../utils/user/query.js";
+import { spawnProcess } from "../../../utils/process.js";
 import {
   printFinalStepResults,
   writeFinalStepResults,
-} from "../../../utils/execution/stepResults";
-import { deleteComponentByKey } from "../../../utils/component/deleteByKey";
+} from "../../../utils/execution/stepResults.js";
+import { deleteComponentByKey } from "../../../utils/component/deleteByKey.js";
 
 const setTimeoutPromise = promisify(setTimeout);
 
-const envVarCase = (name: string): string =>
-  upperCase(snakeCase(name)).replace(/\s+/g, "_");
+const envVarCase = (name: string): string => upperCase(snakeCase(name)).replace(/\s+/g, "_");
 
 const toInquirerInputType = (
   type: string,
-  collection: string | undefined
+  collection: string | undefined,
 ): Required<DistinctQuestion["type"]> => {
   if (collection) {
     // FIXME: Improve prompting instead of instantly bailing to editor.
@@ -123,7 +119,7 @@ const valuesFromAnswers = ({
       ...result,
       [key]: value,
     }),
-    {}
+    {},
   );
 
   const connectionValues = Object.entries(connectionInputs).reduce<
@@ -133,12 +129,10 @@ const valuesFromAnswers = ({
       ...result,
       [key]: value,
     }),
-    {}
+    {},
   );
 
-  const connectionInfo = connection
-    ? { key: connection.key, values: connectionValues }
-    : undefined;
+  const connectionInfo = connection ? { key: connection.key, values: connectionValues } : undefined;
 
   return {
     actionInfo: { key: action.key, values: actionValues },
@@ -176,8 +170,7 @@ export default class TestCommand extends Command {
     "clean-up": Flags.boolean({
       required: false,
       default: false,
-      description:
-        "Clean up the integration and temporary component after running the action",
+      description: "Clean up the integration and temporary component after running the action",
     }),
   };
 
@@ -213,12 +206,9 @@ export default class TestCommand extends Command {
 
     const { name } = await whoAmI();
     if (!name) {
-      ux.error(
-        "Failed to determine the name of the currently logged in user.",
-        {
-          exit: 1,
-        }
-      );
+      ux.error("Failed to determine the name of the currently logged in user.", {
+        exit: 1,
+      });
     }
 
     const testingKey = kebabCase(name);
@@ -230,10 +220,7 @@ export default class TestCommand extends Command {
     await validateDefinition(definition);
 
     const packagePath = await createComponentPackage();
-    const signatureMatches = await checkPackageSignature(
-      definition,
-      packagePath
-    );
+    const signatureMatches = await checkPackageSignature(definition, packagePath);
 
     ux.action.stop();
 
@@ -271,7 +258,7 @@ export default class TestCommand extends Command {
           name: label,
           value: key,
           short: key,
-        })
+        }),
       ),
       default: Object.keys(actions)[0],
       filter: (value: string) => actions[value],
@@ -280,9 +267,7 @@ export default class TestCommand extends Command {
     const { inputs } = action;
 
     // Ask for values of action's inputs
-    const actionInputs = await inquirer.prompt(
-      inputs.map((i) => getInputQuestion(i))
-    );
+    const actionInputs = await inquirer.prompt(inputs.map((i) => getInputQuestion(i)));
 
     const answers = {
       action,
@@ -316,7 +301,7 @@ export default class TestCommand extends Command {
       const connectionInputs = await inquirer.prompt(
         inputs
           .filter(({ shown }) => shown === undefined || shown === true)
-          .map((i) => getInputQuestion(i))
+          .map((i) => getInputQuestion(i)),
       );
 
       Object.assign(answers, { connection, connectionInputs });
@@ -358,14 +343,12 @@ export default class TestCommand extends Command {
       const [{ id, url }] = pendingAuthorizations;
       if (!url) {
         throw new Error(
-          "Did not receive a valid URL for authorization. Verify your Connection inputs."
+          "Did not receive a valid URL for authorization. Verify your Connection inputs.",
         );
       }
 
       ux.url("Authorize URL", url);
-      await ux.anykey(
-        "Press any key to open your browser and authorize the Connection"
-      );
+      await ux.anykey("Press any key to open your browser and authorize the Connection");
       await open(url);
 
       ux.action.start("Waiting for Connection authorization");

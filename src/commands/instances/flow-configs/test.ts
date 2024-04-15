@@ -1,5 +1,5 @@
 import { Command, Flags, Args, ux } from "@oclif/core";
-import { gqlRequest, gql } from "../../../graphql";
+import { gqlRequest, gql } from "../../../graphql.js";
 
 interface LogNode {
   [index: string]: unknown;
@@ -33,8 +33,7 @@ export default class TestCommand extends Command {
     payload: Flags.string({
       required: false,
       char: "p",
-      description:
-        "Optional JSON-formatted data payload to submit with the test",
+      description: "Optional JSON-formatted data payload to submit with the test",
     }),
     contentType: Flags.string({
       required: false,
@@ -85,8 +84,7 @@ export default class TestCommand extends Command {
       return;
     }
 
-    const executionId =
-      result.testInstanceFlowConfig.testInstanceFlowConfigResult.execution.id;
+    const executionId = result.testInstanceFlowConfig.testInstanceFlowConfigResult.execution.id;
     await this.tailLogs(executionId);
   }
 
@@ -94,7 +92,6 @@ export default class TestCommand extends Command {
     const { flags } = await this.parse(TestCommand);
 
     let nextCursor: string | undefined = undefined;
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       await ux.wait(500);
 
@@ -114,7 +111,7 @@ export default class TestCommand extends Command {
           },
           message: {},
         },
-        { ...flags, "no-header": true }
+        { ...flags, "no-header": true },
       );
 
       if (executionComplete) return;
@@ -123,7 +120,7 @@ export default class TestCommand extends Command {
 
   private async fetchLogs(
     executionId: string,
-    nextCursor?: string
+    nextCursor?: string,
   ): Promise<FetchLogsResult | undefined> {
     const results = await gqlRequest({
       document: gql`
@@ -161,9 +158,8 @@ export default class TestCommand extends Command {
 
     const logs = edges.map(({ node }) => node);
     const executionComplete = logs.reduce<boolean>(
-      (result: boolean, { message }) =>
-        result || message.startsWith("Ending Instance Execution"),
-      false
+      (result: boolean, { message }) => result || message.startsWith("Ending Instance Execution"),
+      false,
     );
 
     const { cursor } = edges[edges.length - 1];

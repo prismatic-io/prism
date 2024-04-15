@@ -1,5 +1,5 @@
 import { Command, Flags, Args, ux } from "@oclif/core";
-import { gql, gqlRequest } from "../../../graphql";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 interface LogNode {
   [index: string]: unknown;
@@ -29,8 +29,7 @@ export default class TestCommand extends Command {
     }),
     payload: Flags.string({
       char: "p",
-      description:
-        "Optional JSON-formatted data payload to submit with the test",
+      description: "Optional JSON-formatted data payload to submit with the test",
       required: false,
     }),
     contentType: Flags.string({
@@ -77,8 +76,7 @@ export default class TestCommand extends Command {
         contentType,
       },
     });
-    const executionId =
-      result.testIntegrationFlow.testIntegrationFlowResult.execution.id;
+    const executionId = result.testIntegrationFlow.testIntegrationFlowResult.execution.id;
     console.log(`Execution ID: ${executionId}`);
     if (tail) {
       await this.tailLogs(executionId);
@@ -89,7 +87,6 @@ export default class TestCommand extends Command {
     const { flags } = await this.parse(TestCommand);
 
     let nextCursor: string | undefined = undefined;
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       await ux.wait(500);
 
@@ -109,7 +106,7 @@ export default class TestCommand extends Command {
           },
           message: {},
         },
-        { ...flags, "no-header": true }
+        { ...flags, "no-header": true },
       );
 
       if (executionComplete) return;
@@ -118,7 +115,7 @@ export default class TestCommand extends Command {
 
   private async fetchLogs(
     executionId: string,
-    nextCursor?: string
+    nextCursor?: string,
   ): Promise<FetchLogsResult | undefined> {
     const results = await gqlRequest({
       document: gql`
@@ -145,17 +142,15 @@ export default class TestCommand extends Command {
       },
     });
 
-    const { edges }: { edges: { node: LogNode; cursor?: string }[] } =
-      results.logs;
+    const { edges }: { edges: { node: LogNode; cursor?: string }[] } = results.logs;
     if (!edges || edges.length === 0) {
       return undefined;
     }
 
     const logs = edges.map(({ node }) => node);
     const executionComplete = logs.reduce(
-      (result: boolean, { message }) =>
-        result || message.startsWith("Ending Instance"),
-      false
+      (result: boolean, { message }) => result || message.startsWith("Ending Instance"),
+      false,
     );
 
     const { cursor } = edges[edges.length - 1];

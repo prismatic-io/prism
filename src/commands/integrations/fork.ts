@@ -1,5 +1,5 @@
 import { Command, Args, Flags } from "@oclif/core";
-import { gqlRequest, gql } from "../../graphql";
+import { gqlRequest, gql } from "../../graphql.js";
 
 export default class ForkCommand extends Command {
   static description = "Fork an Integration";

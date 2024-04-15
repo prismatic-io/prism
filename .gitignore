@@ -2,7 +2,6 @@
 .DS_Store
 
 # Editor settings
-**/.vscode/settings.json
 *.code-workspace
 .idea/
 .eslintcache

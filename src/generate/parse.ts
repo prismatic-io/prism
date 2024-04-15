@@ -1,12 +1,7 @@
 import * as path from "path";
-import {
-  Project,
-  MethodSignature,
-  SourceFile,
-  ParameterDeclaration,
-} from "ts-morph";
-import { ProjectStructure } from ".";
-import camelCase from "camelcase";
+import { Project, MethodSignature, SourceFile, ParameterDeclaration } from "ts-morph";
+import { ProjectStructure } from "./index.js";
+import { pascalCase } from "./util.js";
 
 interface ServiceMethods {
   [k: string]: MethodSignature[];
@@ -14,13 +9,12 @@ interface ServiceMethods {
 const getWSDLClientMethods = (
   clientPath: string,
   clientInterface: string,
-  componentProject: Project
+  componentProject: Project,
 ) => {
   try {
     const wsdlClientSource = componentProject.getSourceFileOrThrow(clientPath);
     // Gather all the methods being translated to actions
-    const wsdlClientInterface =
-      wsdlClientSource.getInterfaceOrThrow(clientInterface);
+    const wsdlClientInterface = wsdlClientSource.getInterfaceOrThrow(clientInterface);
 
     return wsdlClientInterface?.getMethods();
   } catch (error) {
@@ -31,7 +25,7 @@ const getWSDLClientMethods = (
 
 export const getParamTypeDefinition = (
   project: ProjectStructure,
-  parameter: ParameterDeclaration
+  parameter: ParameterDeclaration,
 ): SourceFile | undefined => {
   const { componentProject, projectRoot, definitionDirectory } = project;
 
@@ -41,32 +35,21 @@ export const getParamTypeDefinition = (
       projectRoot,
       definitionDirectory,
       "definitions",
-      `${camelCase(
-        !paramName.includes("Param") ? paramName : paramName.split("Param")[0],
-        {
-          pascalCase: true,
-        }
-      )}.ts`
-    )
+      `${pascalCase(!paramName.includes("Param") ? paramName : paramName.split("Param")[0])}.ts`,
+    ),
   );
 };
 
 // Gather the methods that will be translated to actions
-export const getActionMethods = (
-  projectStructure: ProjectStructure
-): ServiceMethods => {
-  const {
-    projectRoot,
-    componentProject,
-    projectTemplateName,
-    definitionDirectory,
-  } = projectStructure;
+export const getActionMethods = (projectStructure: ProjectStructure): ServiceMethods => {
+  const { projectRoot, componentProject, projectTemplateName, definitionDirectory } =
+    projectStructure;
 
   return {
     createClientAsync: getWSDLClientMethods(
       path.join(projectRoot, definitionDirectory, "client.ts"),
-      `${camelCase(projectTemplateName, { pascalCase: true })}Client`,
-      componentProject
+      `${pascalCase(projectTemplateName)}Client`,
+      componentProject,
     ),
   };
 };

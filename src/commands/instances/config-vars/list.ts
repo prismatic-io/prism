@@ -1,5 +1,5 @@
 import { Command, ux, Args } from "@oclif/core";
-import { gql, gqlRequest } from "../../../graphql";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ListCommand extends Command {
   static description = "List Config Variables used on an Instance";
@@ -82,9 +82,7 @@ export default class ListCommand extends Command {
         },
         value: {
           get: (row: any) =>
-            row.requiredConfigVariable.dataType === "CONNECTION"
-              ? row.inputs
-              : row.value,
+            row.requiredConfigVariable.dataType === "CONNECTION" ? row.inputs : row.value,
         },
         defaultValue: {
           get: (row: any) =>
@@ -93,7 +91,7 @@ export default class ListCommand extends Command {
               : row.requiredConfigVariable.defaultValue,
         },
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

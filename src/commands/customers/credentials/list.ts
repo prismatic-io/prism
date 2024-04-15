@@ -1,5 +1,5 @@
 import { Command, Flags, ux } from "@oclif/core";
-import { gqlRequest, gql } from "../../../graphql";
+import { gqlRequest, gql } from "../../../graphql.js";
 
 export default class ListCommand extends Command {
   static description = "List Credentials for a Customer";
@@ -55,7 +55,7 @@ export default class ListCommand extends Command {
           header: "Ready for Use",
         },
       },
-      { ...flags }
+      { ...flags },
     );
   }
 }

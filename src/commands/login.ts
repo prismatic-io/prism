@@ -1,5 +1,5 @@
 import { Command, Flags, ux } from "@oclif/core";
-import { isLoggedIn, login } from "../auth";
+import { isLoggedIn, login } from "../auth.js";
 
 export default class LoginCommand extends Command {
   static description = "Log in to your Prismatic account";
@@ -13,8 +13,7 @@ export default class LoginCommand extends Command {
     url: Flags.boolean({
       char: "u",
       default: false,
-      description:
-        "returns a challenge url without automatically opening a browser",
+      description: "returns a challenge url without automatically opening a browser",
     }),
   };
 
@@ -29,14 +28,12 @@ export default class LoginCommand extends Command {
     }
 
     if (!url) {
-      await ux.anykey(
-        "Press any key to open prismatic.io in your default browser"
-      );
+      await ux.anykey("Press any key to open prismatic.io in your default browser");
     }
 
     await login({ url });
 
     this.log("Login complete!");
-    this.exit();
+    process.exit(0);
   }
 }
