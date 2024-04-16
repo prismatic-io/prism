@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": ["prismatic", "cli"],
   "homepage": "https://prismatic.io",
@@ -42,6 +42,7 @@
     "@oclif/core": "3.26.0",
     "@oclif/plugin-autocomplete": "3.0.13",
     "@oclif/plugin-help": "6.0.20",
+    "@oclif/plugin-plugins": "5.0.9",
     "@oclif/plugin-warn-if-update-available": "3.0.15",
     "@prismatic-io/spectral": "8.0.6",
     "archiver": "6.0.1",
@@ -68,7 +69,7 @@
     "tempy": "0.5.0",
     "ts-morph": "22.0.0",
     "uuid": "9.0.1",
-    "wsdl-tsclient": "1.4.0"
+    "wsdl-tsclient": "1.5.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.3",
