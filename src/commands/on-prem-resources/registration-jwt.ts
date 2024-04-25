@@ -1,14 +1,19 @@
 import { Command, Flags } from "@oclif/core";
 import { gqlRequest, gql } from "../../graphql.js";
 
+const onlyWhenOrgUser = "Only valid for Organization users.";
+
 export default class CreateCommand extends Command {
   static description = "Create a JWT that may be used to register an On-Premise Resource.";
   static flags = {
     customerId: Flags.string({
       char: "c",
       required: false,
-      description:
-        "The ID of the customer for which to create the JWT. Only valid when authenticated as an Organization user.",
+      description: `The ID of the customer for which to create the JWT. ${onlyWhenOrgUser}`,
+    }),
+    orgOnly: Flags.boolean({
+      required: false,
+      description: `Register a Resource available to Organization users only. ${onlyWhenOrgUser}`,
     }),
     resourceId: Flags.string({
       char: "r",
@@ -24,17 +29,19 @@ export default class CreateCommand extends Command {
 
   async run() {
     const {
-      flags: { customerId, resourceId, rotate },
+      flags: { customerId, orgOnly, resourceId, rotate },
     } = await this.parse(CreateCommand);
+
     if (rotate) {
       const result = await gqlRequest({
         document: gql`
           mutation rotateOnPremiseResourceJWT(
             $customerId: ID
             $resourceId: ID
+            $orgOnly: Boolean
           ) {
             rotateOnPremiseResourceJWT(
-              input: { customerId: $customerId, resourceId: $resourceId }
+              input: { customerId: $customerId, orgOnly: $orgOnly, resourceId: $resourceId }
             ) {
               result {
                 jwt
@@ -49,6 +56,7 @@ export default class CreateCommand extends Command {
         variables: {
           customerId,
           resourceId,
+          orgOnly,
         },
       });
 
@@ -59,9 +67,10 @@ export default class CreateCommand extends Command {
           mutation createOnPremiseResourceJWT(
             $customerId: ID
             $resourceId: ID
+            $orgOnly: Boolean
           ) {
             createOnPremiseResourceJWT(
-              input: { customerId: $customerId, resourceId: $resourceId }
+              input: { customerId: $customerId, orgOnly: $orgOnly, resourceId: $resourceId }
             ) {
               result {
                 jwt
@@ -76,6 +85,7 @@ export default class CreateCommand extends Command {
         variables: {
           customerId,
           resourceId,
+          orgOnly,
         },
       });
 
