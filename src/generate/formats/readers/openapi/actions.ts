@@ -61,7 +61,7 @@ const buildAction = (
   const operationName = cleanIdentifier(operation.operationId || `${verb} ${path}`);
 
   const { pathInputs, queryInputs, bodyInputs } = getInputs(operation, sharedParameters);
-  const groupTag = toGroupTag(path);
+  const groupTag = toGroupTag(operation.tags?.[0] ?? path);
 
   // Repackage inputs; need to ensure we camelCase to handle hyphenated identifiers.
   const inputs = [...pathInputs, ...queryInputs, ...bodyInputs].reduce(

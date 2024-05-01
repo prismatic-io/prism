@@ -36,81 +36,82 @@ export default class InitializeComponent extends Command {
   };
 
   async run() {
-    const {
-      args: { name },
-      flags: { verbose, "wsdl-path": rawWsdlPath, "open-api-path": rawOpenApiPath },
-    } = await this.parse(InitializeComponent);
-
-    const wsdlPath = rawWsdlPath ? path.resolve(rawWsdlPath) : undefined;
-    const openApiPath = rawOpenApiPath ? path.resolve(rawOpenApiPath) : undefined;
-
-    if (!VALID_NAME_REGEX.test(name)) {
-      this.error(
-        `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See https://regex101.com/?regex=${encodeURIComponent(
-          VALID_NAME_REGEX.source,
-        )}`,
-        { exit: 1 },
-      );
-    }
-    if (wsdlPath && !wsdlPath?.includes(".wsdl")) {
-      this.error("If a WSDL is provided it must have an extension of '.wsdl'", {
-        exit: 1,
-      });
-    }
-    this.log(`Creating component directory for "${name}"...`);
-
-    await fs.mkdir(name);
-
     const cwd = process.cwd();
-    process.chdir(name);
 
-    if (openApiPath) {
-      await GenerateFormatsCommand.invoke(
-        {
-          name,
-          openapi: openApiPath,
-        },
-        this.config,
-      );
-    } else {
-      await GenerateComponentCommand.invoke(
-        {
-          name,
-          description: "Prism-generated Component",
-          connectionType: "basic",
-        },
-        this.config,
-      );
-      // Need to pop back as the WSDL generator assumes it's a directory up
-      process.chdir(cwd);
+    try {
+      const {
+        args: { name },
+        flags: { verbose, "wsdl-path": rawWsdlPath, "open-api-path": rawOpenApiPath },
+      } = await this.parse(InitializeComponent);
 
-      if (wsdlPath) {
-        if (!verbose) {
-          // wsdl-tsclient emits pretty noisy logs that aren't particularly useful
-          WsdlTsClientLogger.disabled();
+      const wsdlPath = rawWsdlPath ? path.resolve(rawWsdlPath) : undefined;
+      const openApiPath = rawOpenApiPath ? path.resolve(rawOpenApiPath) : undefined;
+
+      if (!VALID_NAME_REGEX.test(name)) {
+        this.error(
+          `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See https://regex101.com/?regex=${encodeURIComponent(
+            VALID_NAME_REGEX.source,
+          )}`,
+          { exit: 1 },
+        );
+      }
+      if (wsdlPath && !wsdlPath?.includes(".wsdl")) {
+        this.error("If a WSDL is provided it must have an extension of '.wsdl'", {
+          exit: 1,
+        });
+      }
+      this.log(`Creating component directory for "${name}"...`);
+
+      await fs.mkdir(name);
+      process.chdir(name);
+
+      if (openApiPath) {
+        await GenerateFormatsCommand.invoke(
+          {
+            name,
+            openapi: openApiPath,
+          },
+          this.config,
+        );
+      } else {
+        await GenerateComponentCommand.invoke(
+          {
+            name,
+            description: "Prism-generated Component",
+            connectionType: "basic",
+          },
+          this.config,
+        );
+        // Need to pop back as the WSDL generator assumes it's a directory up
+        process.chdir(cwd);
+
+        if (wsdlPath) {
+          if (!verbose) {
+            // wsdl-tsclient emits pretty noisy logs that aren't particularly useful
+            WsdlTsClientLogger.disabled();
+          }
+
+          const [wsdlName] = path.basename(wsdlPath).split(".wsdl");
+          await parseAndGenerate(wsdlPath, name, {
+            caseInsensitiveNames: true,
+          });
+
+          await generate({
+            projectRoot: name,
+            projectTemplateName: wsdlName,
+            projectTemplatePath: wsdlPath,
+          });
+
+          await updatePackageJson({
+            path: path.resolve(name, "package.json"),
+            dependencies: { soap: "0.40.0" },
+          });
+
+          const filesToFormat = await getFilesToFormat(name);
+          await formatSourceFiles(name, filesToFormat);
         }
 
-        const wsdlName = path.basename(wsdlPath).split(".wsdl")[0];
-        await parseAndGenerate(wsdlPath, name, {
-          caseInsensitiveNames: true,
-        });
-
-        await generate({
-          projectRoot: name,
-          projectTemplateName: wsdlName,
-          projectTemplatePath: wsdlPath,
-        });
-
-        await updatePackageJson({
-          path: path.resolve(name, "package.json"),
-          dependencies: { soap: "0.40.0" },
-        });
-
-        const filesToFormat = await getFilesToFormat(name);
-        await formatSourceFiles(name, filesToFormat);
-      }
-
-      this.log(`
+        this.log(`
 "${name}" is ready for development.
 To install dependencies, run either "npm install" or "yarn install"
 To test the component, run "npm run test" or "yarn test"
@@ -119,6 +120,9 @@ To publish the component, run "prism components:publish"
 
 For documentation on writing custom components, visit https://prismatic.io/docs/custom-components/writing-custom-components/
     `);
+      }
+    } finally {
+      process.chdir(cwd);
     }
   }
 }

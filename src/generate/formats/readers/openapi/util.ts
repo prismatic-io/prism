@@ -1,8 +1,8 @@
 import { camelCase } from "lodash-es";
-import { toWords } from "number-to-words";
 
 /** Convert path to grouping tag. */
-export const toGroupTag = (path: string): string =>
-  camelCase(path === "/" ? "root" : path.split("/")[1]).replace(/^(\d+)/, (_, match) =>
-    toWords(match),
-  );
+export const toGroupTag = (input: string): string => {
+  const tag = input.startsWith("/") ? input.split("/")[1] || "root" : input;
+  const cleaned = tag.replace(/^(\d)/, "a$1");
+  return camelCase(cleaned);
+};

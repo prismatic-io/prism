@@ -1,9 +1,12 @@
 import { expect, it, describe } from "bun:test";
 import fs from "fs";
 import path from "path";
+import { kebabCase } from "lodash-es";
 import InitializeComponent from ".";
+import { readFile } from "fs-extra";
+import { walkDir } from "../../../fs";
 
-const tempPath = "src/commands/components/init/temp";
+const tempPath = path.resolve("src/commands/components/init/temp");
 if (!fs.existsSync(tempPath)) {
   fs.mkdirSync(tempPath);
 }
@@ -12,52 +15,45 @@ process.chdir(tempPath);
 const componentGenerationTimeout = 5 * 60 * 1000; // 5 minutes
 
 interface SpecMeta {
-  specName: string;
-  componentName: string;
+  type: "openApi" | "wsdl";
+  fileName: string;
+  name: string;
 }
 
-const specFiles = fs.readdirSync("../fixtures/specs");
-const specs = specFiles.reduce(
-  (result, fileName) => {
-    if (fileName.endsWith(".wsdl")) {
-      const [componentName] = fileName.toLowerCase().split(".");
-      result.wsdl.push({
-        specName: fileName,
-        componentName,
-      });
-    }
-    return result;
-  },
-  { wsdl: [] as SpecMeta[] },
-);
+const specs = fs.readdirSync("../fixtures/specs").map<SpecMeta>((fileName) => {
+  const type = fileName.endsWith(".wsdl") ? "wsdl" : "openApi";
+  const [name] = fileName.toLowerCase().split(".");
+  return { type, fileName, name };
+});
 
-const generatedFiles = {
-  wsdl: ["actions.ts", "triggers.ts", "index.ts", "inputs.ts"],
-};
-
-// NOTE: OpenAPI and basic scaffolding tests are moved to the spectral repo under the generator package
 describe("component generation tests", () => {
-  describe("wsdl", () => {
-    for (const { specName, componentName } of specs.wsdl) {
-      describe(`${specName} generation`, () => {
-        it(
-          "should generate successfully",
-          async () => {
-            await InitializeComponent.run([
-              componentName,
-              `--wsdl-path=../fixtures/specs/${specName}`,
-            ]);
-          },
-          componentGenerationTimeout,
-        );
+  for (const { type, fileName, name } of specs) {
+    describe(`${type} - ${name}`, () => {
+      it(
+        "should generate successfully",
+        async () => {
+          const startingCwd = process.cwd();
+          expect(startingCwd).toStrictEqual(tempPath);
 
-        for (const filename of generatedFiles.wsdl) {
-          it(`should match ${filename} snapshot`, async () => {
-            const contents = fs.readFileSync(path.join(componentName, "src", filename)).toString();
-            expect(contents).toMatchSnapshot(`${componentName}-${filename}`);
-          });
+          await InitializeComponent.run([
+            name,
+            `--${kebabCase(type)}-path=../fixtures/specs/${fileName}`,
+          ]);
+
+          expect(process.cwd()).toStrictEqual(startingCwd);
+        },
+        componentGenerationTimeout,
+      );
+
+      it("should match scaffolding snapshots", async () => {
+        // TODO: Bun snapshotting has a bug where it is dropping the slash for `\.ts` in webpack.config.js.
+        // Skip that file for now and restore when upstream is fixed.
+        const targets = await walkDir(name, [".png", "webpack.config.js"]);
+        for (const target of targets) {
+          const contents = await readFile(target, "utf-8");
+          expect(contents).toMatchSnapshot(target);
         }
       });
-    }
-  });
+    });
+  }
 });

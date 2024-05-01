@@ -5,6 +5,7 @@ import prettier from "prettier";
 import { startCase, camelCase, merge } from "lodash-es";
 import path from "path";
 import { fileURLToPath } from "url";
+import { exists } from "../fs.js";
 
 export const pascalCase = (str: string) => startCase(camelCase(str)).replace(/ /g, "");
 
@@ -25,7 +26,7 @@ export const toArgv = (args: Record<string, unknown>): string[] =>
 export const template = async (
   source: string,
   destination: string = source.replace(/\.ejs$/, ""),
-  data?: Record<string, unknown>,
+  data: Record<string, unknown> = {},
 ): Promise<void> => {
   const basePath =
     process.env.NODE_ENV === "test"
@@ -49,7 +50,8 @@ interface UpdatePackageJsonParams {
 }
 
 export const updatePackageJson = async ({ path, ...rest }: UpdatePackageJsonParams) => {
-  const contents = await readJson(path, { encoding: "utf-8" });
+  const existingPackageJson = await exists(path);
+  const contents = existingPackageJson ? await readJson(path, { encoding: "utf-8" }) : {};
   const result = merge({}, contents, rest);
   const formatted = await prettier.format(JSON.stringify(result, null, 2), {
     parser: "json",
