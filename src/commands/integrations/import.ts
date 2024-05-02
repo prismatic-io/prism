@@ -52,7 +52,7 @@ export default class ImportCommand extends Command {
 
     const integrationImportId = path
       ? // A path was specified, so assume we're importing a YAML Integration.
-        await importYamlIntegration(path, integrationId)
+        await importYamlIntegration(path, integrationId, iconPath)
       : // No path was specified, so assume the current directory is a Code Native Integration and import it.
         await importCodeNativeIntegration(integrationId);
 
