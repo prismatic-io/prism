@@ -35,12 +35,13 @@ export default class GenerateFormatsCommand extends Command {
     } = await this.parse(GenerateFormatsCommand);
     const key = camelCase(name);
 
-    await Promise.all([
-      template("tsconfig.json.ejs"),
-      template("webpack.config.js.ejs"),
-      template("jest.config.js.ejs"),
-      template(path.join("assets", "icon.png.ejs")),
-    ]);
+    const templateFiles = [
+      "tsconfig.json",
+      "webpack.config.js",
+      "jest.config.js",
+      path.join("assets", "icon.png"),
+    ];
+    await Promise.all(templateFiles.map((f) => template(path.join("formats", `${f}.ejs`), f)));
 
     await updatePackageJson({
       path: "package.json",

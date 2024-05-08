@@ -64,21 +64,28 @@ const writeTests = (
   [{ key: actionKey, inputs }]: Action[],
 ): SourceFile => {
   const connection = minBy(connections, ({ orderPriority }) => orderPriority);
+  const connectionKey = connection?.key;
 
   const file = project.createSourceFile(path.join("src", "component.test.ts"), (writer) =>
     writer
       .writeLine(`import { testing } from "@prismatic-io/spectral";`)
-      .writeLine(`import { ${connection?.key} } from "./connections.js";`)
+      .conditionalWriteLine(
+        Boolean(connectionKey),
+        `import { ${connectionKey} } from "./connections";`,
+      )
       .writeLine(`import component from ".";`)
       .blankLine()
       .writeLine(`describe("${key}", () => {`)
       .writeLine("const harness = testing.createHarness(component);")
-      .writeLine(`const connection = harness.connectionValue(${connection?.key});`)
+      .conditionalWriteLine(
+        Boolean(connectionKey),
+        `const connection = harness.connectionValue(${connectionKey});`,
+      )
       .blankLine()
       .writeLine(`it("should invoke action", async () => {`)
       .writeLine(`const result = await harness.action("${actionKey}", `)
       .block(() => {
-        writer.writeLine("connection,");
+        writer.conditionalWriteLine(Boolean(connectionKey), "connection,");
         Object.entries(inputs).forEach(([key, input]) => {
           const value = `${(input as Input).default}` ?? null;
           writer.conditionalWriteLine(key !== "connection", `${key}: ${value},`);
