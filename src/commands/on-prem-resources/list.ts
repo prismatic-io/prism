@@ -30,12 +30,12 @@ export default class ListCommand extends Command {
               nodes {
                 id
                 name
+                status
                 customer {
                   id
                   name
                   externalId
                 }
-                port
               }
               pageInfo {
                 hasNextPage
@@ -62,15 +62,14 @@ export default class ListCommand extends Command {
           extended: true,
         },
         name: {},
-        customerId: { extended: true, get: (row) => row.customer?.id ?? "" },
-        customer: {
-          get: (row) => row.customer?.name ?? "",
-        },
+        customerId: { header: "Customer ID", extended: true, get: (row) => row.customer?.id ?? "" },
+        status: { get: (row) => row.status ?? "" },
+        customer: { get: (row) => row.customer?.name ?? "" },
         customerExternalId: {
+          header: "Customer External ID",
           extended: true,
           get: (row) => row.customer?.externalId ?? "",
         },
-        port: {},
       },
       { ...flags },
     );
