@@ -23,7 +23,7 @@ export class ConnectionSelectorStrategy implements SelectorStrategy {
     });
     return result.components.nodes.map(({ id, key, label, public: isPublic }) => ({
       name: isPublic ? label : `${label} (private)`,
-      value: { key, id },
+      value: { key, id, isPublic },
     }));
   }
 

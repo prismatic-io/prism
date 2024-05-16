@@ -49,10 +49,14 @@ export default class GenerateComponentSelectorCommand extends Command {
       source: (input?: string) => strategy.searchSelectors(componentKey, input ?? ""),
     });
 
+    const componentSelector = componentKey.isPublic
+      ? `"${componentKey.key}"`
+      : `{ key: "${componentKey.key}", isPublic: false }`;
+
     const selector = `
 interface ${pascalCase(`${componentKey.key} ${key.key} ${type}`)} {
   type: "${type}";
-  component: "${componentKey.key}";
+  component: ${componentSelector};
   key: "${key.key}";
   values: {
 ${key.inputs
