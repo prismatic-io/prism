@@ -37,7 +37,7 @@ export default class CreateCommand extends Command {
         document: gql`
           mutation rotateOnPremiseResourceJWT(
             $customerId: ID
-            $resourceId: ID
+            $resourceId: ID!
             $orgOnly: Boolean
           ) {
             rotateOnPremiseResourceJWT(
