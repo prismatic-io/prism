@@ -27,10 +27,6 @@ export default class UpdateCommand extends Command {
     "test-config-vars": Flags.string({
       description: "JSON-formatted config variables to be used for testing",
     }),
-    "default-config-vars": Flags.string({
-      description:
-        "JSON-formatted default values for config variables that are replaced with instance or test config variables",
-    }),
   };
 
   async run() {
