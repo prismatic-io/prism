@@ -110,7 +110,7 @@ const writeClient = (project: Project, baseUrl: string, connections: Connection[
           `import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/dist/clients/http";`,
         )
         .writeLine(
-          `import { ${connections.map(({ key }) => key).join(", ")} } from "./connections.js";`,
+          `import { ${connections.map(({ key }) => key).join(", ")} } from "./connections";`,
         )
         .blankLine()
         .writeLine(`export const baseUrl = "${baseUrl}";`)
