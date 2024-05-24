@@ -1,3 +1,4 @@
+import axios from "axios";
 import { renderFile } from "ejs";
 import { copyFile, mkdirp, outputFile, readJson } from "fs-extra";
 import striptags from "striptags";
@@ -44,15 +45,41 @@ export const template = async (
   }
 };
 
+const updateDependencies = async (dependencies: Record<string, string>) => {
+  const promises = Object.entries(dependencies).map(async ([name, version]) => {
+    if (version === "*") {
+      const { data } = await axios.get(`https://registry.npmjs.org/${name}/latest`);
+      return [name, data.version];
+    }
+    return [name, version];
+  });
+  const resolved = await Promise.all(promises);
+  return Object.fromEntries(resolved);
+};
+
 interface UpdatePackageJsonParams {
   path: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
   [key: string]: unknown;
 }
 
-export const updatePackageJson = async ({ path, ...rest }: UpdatePackageJsonParams) => {
+export const updatePackageJson = async ({
+  path,
+  dependencies = {},
+  devDependencies = {},
+  ...rest
+}: UpdatePackageJsonParams) => {
   const existingPackageJson = await exists(path);
   const contents = existingPackageJson ? await readJson(path, { encoding: "utf-8" }) : {};
-  const result = merge({}, contents, rest);
+
+  const updatedDependencies = await updateDependencies(dependencies);
+  const updatedDevDependencies = await updateDependencies(devDependencies);
+
+  const result = merge({}, contents, rest, {
+    dependencies: updatedDependencies,
+    devDependencies: updatedDevDependencies,
+  });
   const formatted = await prettier.format(JSON.stringify(result, null, 2), {
     parser: "json",
   });
