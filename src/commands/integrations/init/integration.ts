@@ -115,7 +115,7 @@ export default class GenerateIntegrationCommand extends Command {
         extends: ["@prismatic-io/eslint-config-spectral"],
       },
       dependencies: {
-        "@prismatic-io/spectral": "8.0.6",
+        "@prismatic-io/spectral": "*",
       },
       devDependencies: {
         "@prismatic-io/eslint-config-spectral": "2.0.1",
