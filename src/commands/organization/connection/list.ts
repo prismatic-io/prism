@@ -2,6 +2,33 @@ import { Command, Flags, ux } from "@oclif/core";
 import dayjs from "dayjs";
 import { gqlRequest, gql } from "../../../graphql.js";
 
+interface Connection {
+  componentLabel: string;
+  connectionId: string;
+  connectionLabel: string;
+}
+
+interface Component {
+  id: string;
+  label: string;
+  connections: {
+    nodes: {
+      id: string;
+      label: string;
+    }[];
+  };
+}
+
+interface ComponentResponse {
+  components: {
+    nodes: Component[];
+    pageInfo: {
+      hasNextPage: boolean;
+      endCursor: string;
+    };
+  };
+}
+
 export default class ListCommand extends Command {
   static description = "List available connections";
   static flags = {
@@ -18,14 +45,14 @@ export default class ListCommand extends Command {
     const { flags } = await this.parse(ListCommand);
     const { showAllVersions } = flags;
 
-    let components: any[] = [];
+    let components: Component[] = [];
     let hasNextPage = true;
     let cursor = "";
 
     while (hasNextPage) {
       const {
         components: { nodes, pageInfo },
-      } = await gqlRequest({
+      } = await gqlRequest<ComponentResponse>({
         document: gql`
           query listComponents($showAllVersions: Boolean, $after: String) {
             components(allVersions: $showAllVersions, after: $after, hasConnections: true) {
@@ -33,11 +60,9 @@ export default class ListCommand extends Command {
                 id
                 label
                 connections {
-                  edges {
-                    node {
-                      id
-                      label
-                    }
+                  nodes {
+                    id
+                    label
                   }
                 }
               }
@@ -58,17 +83,29 @@ export default class ListCommand extends Command {
       hasNextPage = pageInfo.hasNextPage;
     }
 
+    const filteredConnections: Record<string, unknown>[] = [];
+
+    components.forEach((component) => {
+      component.connections.nodes.forEach((connection) => {
+        filteredConnections.push({
+          componentLabel: component.label,
+          connectionId: connection.id,
+          connectionLabel: connection.label,
+        });
+      });
+    });
+
     ux.table(
-      components,
+      filteredConnections,
       {
         component: {
-          get: ({ label }) => label ?? "",
+          get: ({ componentLabel }) => componentLabel ?? "",
         },
         label: {
-          get: ({ connections }) => connections.edges[0]?.node.label ?? "",
+          get: ({ connectionLabel }) => connectionLabel ?? "",
         },
         id: {
-          get: ({ connections }) => connections.edges[0]?.node.id ?? "",
+          get: ({ connectionId }) => connectionId ?? "",
         },
       },
       { ...flags },
