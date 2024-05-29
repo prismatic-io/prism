@@ -3,69 +3,55 @@ import { gqlRequest, gql } from "../../../graphql.js";
 import { parseJsonOrUndefined } from "../../../fields.js";
 
 export default class CreateCommand extends Command {
-  static description = "Create an Instance";
+  static description = "Create a Connection Template";
   static flags = {
+    connection: Flags.string({
+      char: "c",
+      required: true,
+      description: "The Connection from which this template is structured",
+    }),
     name: Flags.string({
       char: "n",
       required: true,
-      description: "name of your new instance.",
+      description: "Name of your Connection Template",
     }),
-    integration: Flags.string({
-      char: "i",
+    presets: Flags.string({
       required: true,
-      description:
-        "ID of the integration or a specific integration version ID this is an instance of",
+      char: "p",
+      description: "The input presets associated with this template",
     }),
-    customer: Flags.string({
-      char: "c",
-      required: true,
-      description: "ID of customer to deploy to",
-    }),
-    description: Flags.string({
+    clientMutationId: Flags.string({
+      char: "m",
       required: false,
-      char: "d",
-      description: "longer description of the instance",
-    }),
-    "config-vars": Flags.string({
-      required: false,
-      char: "v",
-      description: "config variables to bind to steps of your instance",
-    }),
-    label: Flags.string({
-      char: "l",
-      description: "a label or set of labels to apply to the instance",
-      multiple: true,
+      description: "A unique identifier for the client performing the mutation",
     }),
   };
 
   async run() {
     const {
-      flags: { name, description, integration, customer, "config-vars": configVars, label },
+      flags: { name, connection, clientMutationId, presets },
     } = await this.parse(CreateCommand);
 
     const result = await gqlRequest({
       document: gql`
-        mutation createInstance(
+        mutation createConnectionTemplate(
+          $connection: ID!
           $name: String!
-          $description: String
-          $integration: ID!
-          $customer: ID!
-          $configVariables: [InputInstanceConfigVariable]
-          $labels: [String]
+          $presets: [ConnectionTemplateField]!
+          $clientMutationId: String
         ) {
-          createInstance(
+          createConnectionTemplate(
             input: {
+              connection: $connection
               name: $name
-              description: $description
-              integration: $integration
-              customer: $customer
-              configVariables: $configVariables
-              labels: $labels
+              presets: $presets
+              clientMutationId: $clientMutationId
             }
           ) {
-            instance {
+            connectionTemplate {
               id
             }
+            clientMutationId
             errors {
               field
               messages
@@ -74,15 +60,13 @@ export default class CreateCommand extends Command {
         }
       `,
       variables: {
+        connection,
         name,
-        description,
-        integration,
-        customer,
-        configVariables: parseJsonOrUndefined(configVars),
-        labels: label,
+        presets: parseJsonOrUndefined(presets),
+        clientMutationId,
       },
     });
 
-    this.log(result.createInstance.instance.id);
+    this.log(result.createConnectionTemplate.connectionTemplate.id);
   }
 }

@@ -92,6 +92,7 @@ import OrganizationUsersListCommand from "./commands/organization/users/list.js"
 import OrganizationUsersRolesCommand from "./commands/organization/users/roles.js";
 import OrganizationUsersUpdateCommand from "./commands/organization/users/update.js";
 import ComponentsConnectionListCommand from "./commands/components/connection/list.js";
+import ComponentsConnectionCreateCommand from "./commands/components/connection/create.js";
 
 export const Commands = {
   login: LoginCommand,
@@ -153,6 +154,8 @@ export const Commands = {
   "components:init": ComponentsInitCommand,
   "components:init:trigger": ComponentsInitTriggerCommand,
   "components:triggers:list": ComponentsTriggersListCommand,
+  "components:connections:list": ComponentsConnectionListCommand,
+  "components:connections:create": ComponentsConnectionCreateCommand,
   "customers:credentials:create": CustomersCredentialsCreateCommand,
   "customers:credentials:delete": CustomersCredentialsDeleteCommand,
   "customers:credentials:update": CustomersCredentialsUpdateCommand,
