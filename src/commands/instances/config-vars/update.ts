@@ -1,6 +1,7 @@
 import { Command, Args, Flags } from "@oclif/core";
 import { gql, gqlRequest } from "../../../graphql.js";
 import { configVar } from "@prismatic-io/spectral";
+import { parseJsonOrUndefined } from "../../../fields.js";
 
 export default class UpdateCommand extends Command {
   static description = "Update Config Variables on an Instance";
@@ -11,12 +12,12 @@ export default class UpdateCommand extends Command {
     }),
   };
 
-
   static flags = {
     configVar: Flags.string({
       char: "l",
       description: "a set of config variables to apply to the instance",
-      multiple: true }),
+      multiple: false,
+    }),
   };
 
   async run() {
@@ -63,11 +64,10 @@ export default class UpdateCommand extends Command {
       `,
       variables: {
         id: instance,
-        configVariables: configVar,
+        configVariables: parseJsonOrUndefined(configVar),
       },
     });
 
-    this.log(result.updateInstance.instance.id);
-
+    this.log(result.updateInstanceConfigVariables.instance.id);
   }
 }
