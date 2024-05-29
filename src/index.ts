@@ -91,6 +91,7 @@ import OrganizationUsersDeleteCommand from "./commands/organization/users/delete
 import OrganizationUsersListCommand from "./commands/organization/users/list.js";
 import OrganizationUsersRolesCommand from "./commands/organization/users/roles.js";
 import OrganizationUsersUpdateCommand from "./commands/organization/users/update.js";
+import OrganizationConnectionListCommand from "./commands/organization/connection/list.js";
 
 export const Commands = {
   login: LoginCommand,
@@ -186,4 +187,5 @@ export const Commands = {
   "organization:users:list": OrganizationUsersListCommand,
   "organization:users:roles": OrganizationUsersRolesCommand,
   "organization:users:update": OrganizationUsersUpdateCommand,
+  "organization:connection:list": OrganizationConnectionListCommand,
 };

@@ -1,6 +1,6 @@
 import { Command, Flags } from "@oclif/core";
-import { gqlRequest, gql } from "../../graphql.js";
-import { parseJsonOrUndefined } from "../../fields.js";
+import { gqlRequest, gql } from "../../../graphql.js";
+import { parseJsonOrUndefined } from "../../../fields.js";
 
 export default class CreateCommand extends Command {
   static description = "Create an Instance";

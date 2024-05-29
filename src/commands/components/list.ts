@@ -37,6 +37,13 @@ export default class ListCommand extends Command {
                 description
                 versionNumber
                 category
+                connections {
+                  edges {
+                    node {
+                      id
+                    }
+                  }
+                }
                 versionCreatedAt
                 customer {
                   id
@@ -82,6 +89,7 @@ export default class ListCommand extends Command {
           get: ({ versionCreatedAt }) => dayjs(versionCreatedAt).format(),
         },
         category: { get: ({ category }) => category || "" },
+        connectionIds: { get: ({ connections }) => connections.edges[0]?.node.id || "" },
         customerId: {
           extended: true,
           get: ({ customer }) => customer?.id ?? "",
