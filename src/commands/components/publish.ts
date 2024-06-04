@@ -36,6 +36,18 @@ export default class PublishCommand extends Command {
     customer: Flags.string({
       description: "ID of customer with which to associate the component",
     }),
+    commitHash: Flags.string({
+      required: false,
+      description: "Commit hash corresponding to the component version being published",
+    }),
+    repoUrl: Flags.string({
+      required: false,
+      description: "URL to the repository containing the component definition",
+    }),
+    pullRequestUrl: Flags.string({
+      required: false,
+      description: "URL to the pull request that modified this version of the component",
+    }),
   };
 
   async run() {
@@ -46,11 +58,21 @@ export default class PublishCommand extends Command {
         "check-signature": checkSignature,
         "skip-on-signature-match": skipOnSignatureMatch,
         customer: flagCustomer,
+        commitHash,
+        repoUrl,
+        pullRequestUrl,
       },
     } = await this.parse(PublishCommand);
 
     const me = await whoAmI();
     const customer = flagCustomer ?? me.customer?.id;
+
+    const didProvideAttributes = Boolean(commitHash) || Boolean(repoUrl) || Boolean(pullRequestUrl);
+    const attributes = {
+      commitHash,
+      repoUrl,
+      pullRequestUrl,
+    };
 
     const definition = await loadEntrypoint();
     await validateDefinition(definition);
@@ -76,7 +98,11 @@ export default class PublishCommand extends Command {
     await confirmPublish(definition, confirm);
 
     const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls, versionNumber } =
-      await publishDefinition(definition, comment, customer);
+      await publishDefinition(definition, {
+        comment,
+        customer,
+        attributes: didProvideAttributes ? attributes : undefined,
+      });
 
     const {
       display: { iconPath },

@@ -163,9 +163,21 @@ export const confirmPublish = async (
 
 export const publishDefinition = async (
   { actions, triggers, dataSources, connections, ...rest }: ComponentDefinition,
-  comment?: string,
-  customer?: string,
-  forCodeNativeIntegration?: boolean,
+  {
+    comment,
+    customer,
+    forCodeNativeIntegration,
+    attributes,
+  }: {
+    comment?: string;
+    customer?: string;
+    forCodeNativeIntegration?: boolean;
+    attributes?: {
+      commitHash?: string;
+      pullRequestUrl?: string;
+      repoUrl?: string;
+    };
+  } = {},
 ): Promise<{
   iconUploadUrl: string;
   packageUploadUrl: string;
@@ -221,6 +233,7 @@ export const publishDefinition = async (
         $connections: [ConnectionDefinitionInput]
         $comment: String
         $customer: ID
+        $attributes: String
       ) {
         publishComponent(
           input: {
@@ -231,6 +244,7 @@ export const publishDefinition = async (
             connections: $connections
             comment: $comment
             customer: $customer
+            attributes: $attributes
           }
         ) {
           publishResult {
@@ -260,6 +274,7 @@ export const publishDefinition = async (
       connections: connectionDefinitions,
       comment,
       customer,
+      attributes: attributes ? JSON.stringify(attributes) : undefined,
     },
   });
 
