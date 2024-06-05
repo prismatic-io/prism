@@ -40,13 +40,17 @@ export default class PublishCommand extends Command {
       required: false,
       description: "Commit hash corresponding to the component version being published",
     }),
+    commitUrl: Flags.string({
+      required: false,
+      description: "URL to the commit details for this component version",
+    }),
     repoUrl: Flags.string({
       required: false,
       description: "URL to the repository containing the component definition",
     }),
     pullRequestUrl: Flags.string({
       required: false,
-      description: "URL to the pull request that modified this version of the component",
+      description: "URL to the pull request that modified this component version",
     }),
   };
 
@@ -59,6 +63,7 @@ export default class PublishCommand extends Command {
         "skip-on-signature-match": skipOnSignatureMatch,
         customer: flagCustomer,
         commitHash,
+        commitUrl,
         repoUrl,
         pullRequestUrl,
       },
@@ -67,9 +72,11 @@ export default class PublishCommand extends Command {
     const me = await whoAmI();
     const customer = flagCustomer ?? me.customer?.id;
 
-    const didProvideAttributes = Boolean(commitHash) || Boolean(repoUrl) || Boolean(pullRequestUrl);
+    const didProvideAttributes =
+      Boolean(commitHash) || Boolean(repoUrl) || Boolean(pullRequestUrl) || Boolean(commitUrl);
     const attributes = {
       commitHash,
+      commitUrl,
       repoUrl,
       pullRequestUrl,
     };

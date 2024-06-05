@@ -21,25 +21,31 @@ export default class PublishCommand extends Command {
       required: false,
       description: "Commit hash corresponding to the integration version being published",
     }),
+    commitUrl: Flags.string({
+      required: false,
+      description: "URL to the commit details corresponding to this integration version",
+    }),
     repoUrl: Flags.string({
       required: false,
-      description: "URL to the repository containing the YML definition for this integration",
+      description: "URL to the repository containing the definition for this integration",
     }),
     pullRequestUrl: Flags.string({
       required: false,
-      description: "URL to the pull request that modified this version of the integration YML",
+      description: "URL to the pull request that modified this integration version",
     }),
   };
 
   async run() {
     const {
       args: { integration },
-      flags: { comment, commitHash, repoUrl, pullRequestUrl },
+      flags: { comment, commitHash, commitUrl, repoUrl, pullRequestUrl },
     } = await this.parse(PublishCommand);
 
-    const didProvideAttributes = Boolean(commitHash) || Boolean(repoUrl) || Boolean(pullRequestUrl);
+    const didProvideAttributes =
+      Boolean(commitHash) || Boolean(repoUrl) || Boolean(pullRequestUrl) || Boolean(commitUrl);
     const attributes = {
       commitHash,
+      commitUrl,
       repoUrl,
       pullRequestUrl,
     };
