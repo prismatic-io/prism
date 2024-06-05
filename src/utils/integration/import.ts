@@ -147,7 +147,9 @@ export const importCodeNativeIntegration = async (integrationId?: string): Promi
   const packagePath = await createComponentPackage();
 
   const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls, versionNumber } =
-    await publishComponentDefinition(componentDefinition, undefined, undefined, true);
+    await publishComponentDefinition(componentDefinition, {
+      forCodeNativeIntegration: true,
+    });
 
   ux.action.start("Uploading package for Code Native Integration");
   await uploadFile(packagePath, packageUploadUrl);

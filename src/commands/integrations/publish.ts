@@ -17,18 +17,49 @@ export default class PublishCommand extends Command {
       required: false,
       description: "comment about changes in this publication",
     }),
+    commitHash: Flags.string({
+      required: false,
+      description: "Commit hash corresponding to the integration version being published",
+    }),
+    commitUrl: Flags.string({
+      required: false,
+      description: "URL to the commit details corresponding to this integration version",
+    }),
+    repoUrl: Flags.string({
+      required: false,
+      description: "URL to the repository containing the definition for this integration",
+    }),
+    pullRequestUrl: Flags.string({
+      required: false,
+      description: "URL to the pull request that modified this integration version",
+    }),
   };
 
   async run() {
     const {
       args: { integration },
-      flags: { comment },
+      flags: { comment, commitHash, commitUrl, repoUrl, pullRequestUrl },
     } = await this.parse(PublishCommand);
+
+    const didProvideAttributes =
+      Boolean(commitHash) || Boolean(repoUrl) || Boolean(pullRequestUrl) || Boolean(commitUrl);
+    const attributes = {
+      commitHash,
+      commitUrl,
+      repoUrl,
+      pullRequestUrl,
+    };
 
     const result = await gqlRequest({
       document: gql`
-        mutation publishIntegration($id: ID!, $comment: String) {
-          publishIntegration(input: { id: $id, comment: $comment }) {
+        mutation publishIntegration(
+          $id: ID!
+          $comment: String
+          $attributes: String
+        ) {
+          publishIntegration(
+            input: { id: $id, comment: $comment, attributes: $attributes }
+          ) {
             integration {
               id
             }
@@ -42,6 +73,7 @@ export default class PublishCommand extends Command {
       variables: {
         id: integration,
         comment,
+        attributes: didProvideAttributes ? JSON.stringify(attributes) : undefined,
       },
     });
 
