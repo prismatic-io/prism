@@ -11,22 +11,28 @@ export default class ExportCommand extends Command {
       description: "ID of an integration to export",
     }),
   };
+
   static flags = {
     "latest-components": Flags.boolean({
       char: "l",
       description: "Use the latest available version of each Component upon import",
+    }),
+    "clean-keys": Flags.boolean({
+      char: "c",
+      description: "Replace clientId, clientSecret values with example strings",
     }),
   };
 
   async run() {
     const {
       args: { integration },
-      flags: { "latest-components": useLatestComponentVersions },
+      flags: { "latest-components": useLatestComponentVersions, "clean-keys": useClean },
     } = await this.parse(ExportCommand);
 
     const definition = await exportDefinition({
       integrationId: integration,
       latestComponents: useLatestComponentVersions,
+      isClean: useClean,
     });
     this.log(dumpYaml(definition));
   }

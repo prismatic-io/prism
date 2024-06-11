@@ -2,10 +2,7 @@
   "name": "@prismatic-io/prism",
   "version": "6.1.0",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
-  "keywords": [
-    "prismatic",
-    "cli"
-  ],
+  "keywords": ["prismatic", "cli"],
   "homepage": "https://prismatic.io",
   "bugs": {
     "url": "https://github.com/prismatic-io/prism"
@@ -38,11 +35,7 @@
     "test": "bun run clean-test-temp && bun test src",
     "test:snapshots": "bun run clean-test-temp && bun test --update-snapshots"
   },
-  "files": [
-    "oclif.manifest.json",
-    "bin",
-    "lib"
-  ],
+  "files": ["oclif.manifest.json", "bin", "lib"],
   "dependencies": {
     "@apidevtools/swagger-parser": "10.1.0",
     "@msgpack/msgpack": "2.3.0",
@@ -66,7 +59,6 @@
     "http-status-codes": "2.1.2",
     "inquirer": "9.2.16",
     "inquirer-autocomplete-standalone": "0.8.1",
-    "js-yaml": "4.1.0",
     "jwt-decode": "2.2.0",
     "lodash-es": "4.17.21",
     "mime-types": "2.1.27",
@@ -76,7 +68,8 @@
     "tempy": "0.5.0",
     "ts-morph": "22.0.0",
     "uuid": "9.0.1",
-    "wsdl-tsclient": "1.5.0"
+    "wsdl-tsclient": "1.5.0",
+    "yaml": "^2.4.5"
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.3",
