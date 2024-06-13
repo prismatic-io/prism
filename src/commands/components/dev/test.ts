@@ -6,12 +6,9 @@ import inquirer, { DistinctQuestion } from "inquirer";
 import { snakeCase, upperCase, kebabCase } from "lodash-es";
 import { serverTypes } from "@prismatic-io/spectral"; // FIXME: Get rid of this and stop exporting it in Spectral.
 import {
-  loadEntrypoint,
-  createComponentPackage,
   publishDefinition,
   uploadConnectionIcons,
   uploadFile,
-  validateDefinition,
   checkPackageSignature,
 } from "../../../utils/component/publish.js";
 import { displayLogs } from "../../../utils/execution/logs.js";
@@ -32,6 +29,11 @@ import {
   writeFinalStepResults,
 } from "../../../utils/execution/stepResults.js";
 import { deleteComponentByKey } from "../../../utils/component/deleteByKey.js";
+import {
+  createComponentPackage,
+  loadEntrypoint,
+  validateDefinition,
+} from "../../../utils/component/index.js";
 
 const setTimeoutPromise = promisify(setTimeout);
 
