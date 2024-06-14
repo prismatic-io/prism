@@ -97,7 +97,12 @@ export const exportDefinition = async ({
       const parsedYaml: any = YAML.parse(definition);
 
       // list of keys that probably contain sensitive information
-      const filteredKeys = ["clientId", "clientSecret", "password", "username"];
+      const filteredKeys = [
+        "applicationId", "tokenUrl", "apiKey", "base", "host", "clientId", "username",
+        "accessKeyId", "accountName", "email", "partnerUserID", "token", "projectId",
+        "clientEmail", "apiToken", "accessToken", "apiUrl", "accountToken", "senderId",
+        "password", "privateKey", "accountSid", "endpoint"
+      ];
 
       filteredKeys.forEach((key) => {
         parsedYaml.requiredConfigVars.forEach((configVar: any) => {
