@@ -109,7 +109,6 @@ export default class GenerateIntegrationCommand extends Command {
       scripts: {
         build: "webpack",
         import: "npm run build && prism integrations:import",
-        "generate:manifest": "npm run build && npx @prismatic-io/spectral component-manifest",
         test: "jest",
         lint: "eslint --ext .ts .",
       },
