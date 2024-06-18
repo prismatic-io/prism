@@ -1,7 +1,7 @@
 import { filter } from "lodash-es";
 import { gqlRequest, gql } from "../../graphql.js";
 import { loadYaml } from "../serialize.js";
-import YAML from "yaml";
+import YAML from "js-yaml";
 
 /** The version of the Integration definition to request.
  *  It's important to request a version that corresponds with the
@@ -94,7 +94,7 @@ export const exportDefinition = async ({
 
   if (isClean) {
     try {
-      const parsedYaml: any = YAML.parse(definition);
+      const parsedYaml: any = YAML.load(definition);
 
       // list of keys that probably contain sensitive information
       const filteredKeys = [
@@ -131,7 +131,7 @@ export const exportDefinition = async ({
         });
       });
 
-      return loadYaml(YAML.stringify(parsedYaml)) as IntegrationDefinition;
+      return loadYaml(YAML.dump(parsedYaml)) as IntegrationDefinition;
     } catch (e) {
       console.log(e);
       return loadYaml(definition) as IntegrationDefinition;
