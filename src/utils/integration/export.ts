@@ -98,10 +98,29 @@ export const exportDefinition = async ({
 
       // list of keys that probably contain sensitive information
       const filteredKeys = [
-        "applicationId", "tokenUrl", "apiKey", "base", "host", "clientId", "username",
-        "accessKeyId", "accountName", "email", "partnerUserID", "token", "projectId",
-        "clientEmail", "apiToken", "accessToken", "apiUrl", "accountToken", "senderId",
-        "password", "privateKey", "accountSid", "endpoint"
+        "applicationId",
+        "tokenUrl",
+        "apiKey",
+        "base",
+        "host",
+        "clientId",
+        "username",
+        "accessKeyId",
+        "accountName",
+        "email",
+        "partnerUserID",
+        "token",
+        "projectId",
+        "clientEmail",
+        "apiToken",
+        "accessToken",
+        "apiUrl",
+        "accountToken",
+        "senderId",
+        "password",
+        "privateKey",
+        "accountSid",
+        "endpoint",
       ];
 
       filteredKeys.forEach((key) => {
