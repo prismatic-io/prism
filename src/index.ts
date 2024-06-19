@@ -75,7 +75,6 @@ import IntegrationsFlowsTestCommand from "./commands/integrations/flows/test.js"
 import IntegrationsInitFlowCommand from "./commands/integrations/init/flow.js";
 import IntegrationsInitCommand from "./commands/integrations/init/index.js";
 import IntegrationsInitIntegrationCommand from "./commands/integrations/init/integration.js";
-import IntegrationsInitSelectorCommand from "./commands/integrations/init/selector/selector.js";
 import IntegrationsVersionsCommand from "./commands/integrations/versions/index.js";
 import LogsSeveritiesListCommand from "./commands/logs/severities/list.js";
 import MeTokenRevokeCommand from "./commands/me/token/revoke.js";
@@ -171,7 +170,6 @@ export const Commands = {
   "integrations:init:flow": IntegrationsInitFlowCommand,
   "integrations:init": IntegrationsInitCommand,
   "integrations:init:integration": IntegrationsInitIntegrationCommand,
-  "integrations:init:selector": IntegrationsInitSelectorCommand,
   "integrations:versions": IntegrationsVersionsCommand,
   "logs:severities:list": LogsSeveritiesListCommand,
   "me:token:revoke": MeTokenRevokeCommand,
