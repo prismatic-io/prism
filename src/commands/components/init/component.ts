@@ -116,7 +116,8 @@ export default class GenerateComponentCommand extends Command {
       scripts: {
         build: "webpack",
         publish: "npm run build && prism components:publish",
-        "generate:manifest": "npm run build && npx @prismatic-io/spectral component-manifest",
+        "generate:manifest": "npm run build && npx @prismatic-io/spectral component-manifest --include-signature",
+        "generate:manifest:dev": "npm run build && npx @prismatic-io/spectral component-manifest",
         test: "jest",
         lint: "eslint --ext .ts .",
       },
