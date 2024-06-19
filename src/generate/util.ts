@@ -33,6 +33,7 @@ export const template = async (
     process.env.NODE_ENV === "test"
       ? path.join(__dirname, "..", "..")
       : path.dirname(fileURLToPath(import.meta.url));
+
   const templatePath = path.join(basePath, "templates", source);
 
   const isTemplate = [".js", ".ts", ".json"].includes(path.extname(destination));
