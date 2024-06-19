@@ -41,7 +41,7 @@ export default class ComponentsSignatureCommand extends Command {
       .digest("hex");
 
     if (skipSignatureVerification) {
-      return process.stdout.write(packageSignature);
+      return this.log(packageSignature);
     }
 
     const packageSignatureFromApi = await getPackageSignatureFromApi({
@@ -50,6 +50,6 @@ export default class ComponentsSignatureCommand extends Command {
       packageSignature,
     });
 
-    return process.stdout.write(packageSignatureFromApi ?? "");
+    return this.log(packageSignatureFromApi ?? "");
   }
 }
