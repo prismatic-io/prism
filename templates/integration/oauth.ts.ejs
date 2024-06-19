@@ -7,7 +7,7 @@ import {
 export const configPages = {
   Connections: configPage({
     elements: {
-      "<%= configVar.key %>": connectionConfigVar({
+      <%= configVar.key %>: connectionConfigVar({
         stableKey: "<%= configVar.stableKey %>",
         oauth2Type: OAuth2Type.AuthorizationCode,
         dataType: "connection",
