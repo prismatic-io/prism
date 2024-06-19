@@ -6,13 +6,15 @@ import { exists, fs } from "../../fs.js";
 import { resolve } from "path";
 import { seekPackageDistDirectory } from "../import.js";
 import {
-  createComponentPackage,
   publishDefinition as publishComponentDefinition,
-  validateDefinition as validateComponentDefinition,
   uploadFile,
   uploadConnectionIcons,
-  ComponentDefinition,
 } from "../component/publish.js";
+import {
+  ComponentDefinition,
+  createComponentPackage,
+  validateDefinition,
+} from "../component/index.js";
 
 interface ImportDefinitionResult {
   integrationId: string;
@@ -142,7 +144,7 @@ export const importCodeNativeIntegration = async (integrationId?: string): Promi
     );
   }
 
-  await validateComponentDefinition(componentDefinition);
+  await validateDefinition(componentDefinition);
 
   const packagePath = await createComponentPackage();
 

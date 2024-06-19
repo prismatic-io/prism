@@ -55,6 +55,7 @@ import ComponentsInitConnectionCommand from "./commands/components/init/connecti
 import ComponentsInitDataSourceCommand from "./commands/components/init/dataSource.js";
 import ComponentsInitCommand from "./commands/components/init/index.js";
 import ComponentsInitTriggerCommand from "./commands/components/init/trigger.js";
+import ComponentsSignatureCommand from "./commands/components/signature.js";
 import ComponentsTriggersListCommand from "./commands/components/triggers/list.js";
 import CustomersCredentialsCreateCommand from "./commands/customers/credentials/create.js";
 import CustomersCredentialsDeleteCommand from "./commands/customers/credentials/delete.js";
@@ -150,6 +151,7 @@ export const Commands = {
   "components:init:data-source": ComponentsInitDataSourceCommand,
   "components:init": ComponentsInitCommand,
   "components:init:trigger": ComponentsInitTriggerCommand,
+  "components:signature": ComponentsSignatureCommand,
   "components:triggers:list": ComponentsTriggersListCommand,
   "customers:credentials:create": CustomersCredentialsCreateCommand,
   "customers:credentials:delete": CustomersCredentialsDeleteCommand,

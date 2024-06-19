@@ -1,15 +1,18 @@
 import { Command, Flags, ux } from "@oclif/core";
+
+import { whoAmI } from "../../utils/user/query.js";
+import {
+  createComponentPackage,
+  loadEntrypoint,
+  validateDefinition,
+} from "../../utils/component/index.js";
 import {
   checkPackageSignature,
   confirmPublish,
-  createComponentPackage,
-  loadEntrypoint,
   publishDefinition,
   uploadConnectionIcons,
   uploadFile,
-  validateDefinition,
 } from "../../utils/component/publish.js";
-import { whoAmI } from "../../utils/user/query.js";
 
 export default class PublishCommand extends Command {
   static description = "Publish a Component to Prismatic";
