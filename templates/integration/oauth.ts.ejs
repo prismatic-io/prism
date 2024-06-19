@@ -10,6 +10,7 @@ export const configPages = {
       "<%= configVar.key %>": connectionConfigVar({
         stableKey: "<%= configVar.stableKey %>",
         oauth2Type: OAuth2Type.AuthorizationCode,
+        dataType: "connection",
         inputs: {
           authorizeUrl: {
             label: "Authorize URL",
