@@ -1,10 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-<<<<<<< HEAD
-  "version": "6.2.1",
-=======
   "version": "7.0.0",
->>>>>>> 6b99020 (bumps to v 7)
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": ["prismatic", "cli"],
   "homepage": "https://prismatic.io",
