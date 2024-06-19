@@ -3,7 +3,7 @@ import { configPage, connectionConfigVar } from "@prismatic-io/spectral";
 export const configPages = {
   Connections: configPage({
     elements: {
-      <%= configVar.key %>: connectionConfigVar({
+      "<%= configVar.key %>": connectionConfigVar({
         stableKey: "<%= configVar.stableKey %>",
         dataType: "connection",
         inputs: {
