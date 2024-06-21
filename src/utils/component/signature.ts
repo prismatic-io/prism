@@ -3,19 +3,17 @@ import { ComponentDefinition } from "./index.js";
 
 interface GetPackageSignatureFromApiProps {
   componentDefinition: ComponentDefinition;
-  customer?: string;
   packageSignature: string;
 }
 
 export const getPackageSignatureFromApi = async ({
   componentDefinition,
-  customer,
   packageSignature,
 }: GetPackageSignatureFromApiProps): Promise<string | null> => {
   const results = await gqlRequest({
     document: gql`
-      query component($key: String!, $public: Boolean!, $customer: ID) {
-        components(key: $key, public: $public, customer: $customer) {
+      query component($key: String!, $public: Boolean!) {
+        components(key: $key, public: $public) {
           nodes {
             signature
           }
@@ -25,7 +23,6 @@ export const getPackageSignatureFromApi = async ({
     variables: {
       key: componentDefinition.key,
       public: componentDefinition.public ?? false,
-      customer,
     },
   });
 

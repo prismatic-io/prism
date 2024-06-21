@@ -23,13 +23,12 @@ const componentDefinitionShape: Record<keyof ComponentDefinition, true> = {
 export const checkPackageSignature = async (
   { key, public: isPublic }: ComponentDefinition,
   packagePath: string,
-  customer?: string,
 ): Promise<boolean> => {
   // Retrieve the existing signature of the component if it exists.
   const results = await gqlRequest({
     document: gql`
-      query component($key: String!, $public: Boolean!, $customer: ID) {
-        components(key: $key, public: $public, customer: $customer) {
+      query component($key: String!, $public: Boolean!) {
+        components(key: $key, public: $public) {
           nodes {
             signature
           }
@@ -39,7 +38,6 @@ export const checkPackageSignature = async (
     variables: {
       key,
       public: isPublic ?? false,
-      customer,
     },
   });
 
