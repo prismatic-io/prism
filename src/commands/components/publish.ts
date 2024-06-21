@@ -90,7 +90,7 @@ export default class PublishCommand extends Command {
     const packagePath = await createComponentPackage();
 
     if (checkSignature) {
-      const signatureMatches = await checkPackageSignature(definition, packagePath, customer);
+      const signatureMatches = await checkPackageSignature(definition, packagePath);
       if (signatureMatches) {
         if (
           skipOnSignatureMatch ||
