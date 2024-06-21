@@ -2,7 +2,6 @@ import { Command, Flags } from "@oclif/core";
 import crypto from "crypto";
 
 import { getPackageSignatureFromApi } from "../../utils/component/signature.js";
-import { whoAmI } from "../../utils/user/query.js";
 import { fs } from "../../fs.js";
 import {
   createComponentPackage,
@@ -14,9 +13,6 @@ export default class ComponentsSignatureCommand extends Command {
   static description = "Generate a Component signature";
 
   static flags = {
-    customer: Flags.string({
-      description: "ID of customer with which to associate the component",
-    }),
     "skip-signature-verify": Flags.boolean({
       required: false,
       description:
@@ -26,14 +22,12 @@ export default class ComponentsSignatureCommand extends Command {
 
   async run() {
     const {
-      flags: { customer: flagCustomer, "skip-signature-verify": skipSignatureVerification },
+      flags: { "skip-signature-verify": skipSignatureVerification },
     } = await this.parse(ComponentsSignatureCommand);
 
     const componentDefinition = await loadEntrypoint();
     await validateDefinition(componentDefinition);
     const packagePath = await createComponentPackage();
-    const me = await whoAmI();
-    const customer = flagCustomer ?? me.customer?.id;
 
     const packageSignature = crypto
       .createHash("sha1")
@@ -46,7 +40,6 @@ export default class ComponentsSignatureCommand extends Command {
 
     const packageSignatureFromApi = await getPackageSignatureFromApi({
       componentDefinition,
-      customer,
       packageSignature,
     });
 
