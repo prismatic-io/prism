@@ -50,9 +50,9 @@ export default class GenerateFormatsCommand extends Command {
       version: "0.0.1",
       scripts: {
         build: "webpack",
-        "generate:manifest":
-          "npm run build && npx @prismatic-io/spectral component-manifest --include-signature",
-        "generate:manifest:dev": "npm run build && npx @prismatic-io/spectral component-manifest",
+        "generate:manifest": "npm run build && npx @prismatic-io/spectral component-manifest",
+        "generate:manifest:dev":
+          "npm run build && npx @prismatic-io/spectral component-manifest --skip-signature-verify",
         test: "jest --runInBand",
         lint: "eslint --quiet --ext .ts .",
         "lint-fix": "eslint --quiet --ext .ts --fix .",
