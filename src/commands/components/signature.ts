@@ -16,13 +16,13 @@ export default class ComponentsSignatureCommand extends Command {
     "skip-signature-verify": Flags.boolean({
       required: false,
       description:
-        "This consistently returns a signature, regardless of whether the corresponding component signature is actually present in the API or not.",
+        "This consistently returns a signature, regardless of whether the corresponding component has been published to the platform or not.",
     }),
   };
 
   async run() {
     const {
-      flags: { "skip-signature-verify": skipSignatureVerification },
+      flags: { "skip-signature-verify": skipSignatureVerify },
     } = await this.parse(ComponentsSignatureCommand);
 
     const componentDefinition = await loadEntrypoint();
@@ -34,7 +34,7 @@ export default class ComponentsSignatureCommand extends Command {
       .update(await fs.readFile(packagePath))
       .digest("hex");
 
-    if (skipSignatureVerification) {
+    if (skipSignatureVerify) {
       return this.log(packageSignature);
     }
 
