@@ -6,6 +6,7 @@ import { v4 as uuid4 } from "uuid";
 import path from "path";
 import { template, toArgv, updatePackageJson } from "../../../generate/util.js";
 import GenerateFlowCommand from "./flow.js";
+import { prismaticUrl } from "../../../auth.js";
 
 export default class GenerateIntegrationCommand extends Command {
   static description = "Initialize a new Code Native Integration";
@@ -27,6 +28,7 @@ export default class GenerateIntegrationCommand extends Command {
 
   async run() {
     const { flags } = await this.parse(GenerateIntegrationCommand);
+
     const { name, description, connectionType } = await inquirer.prompt<{
       name: string;
       description: string;
@@ -71,6 +73,10 @@ export default class GenerateIntegrationCommand extends Command {
         connectionType,
       },
       flow: { name: flowName },
+      registry: {
+        url: new URL("/packages/npm", prismaticUrl).toString(),
+        scope: "@component-manifests",
+      },
     };
 
     const templateFiles = [
@@ -80,6 +86,7 @@ export default class GenerateIntegrationCommand extends Command {
       path.join("src", "client.ts"),
       path.join("src", "componentRegistry.ts"),
       path.join(".spectral", "index.ts"),
+      ".npmrc",
       "jest.config.js",
       "package.json",
       "tsconfig.json",
