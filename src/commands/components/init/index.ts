@@ -106,9 +106,6 @@ export default class InitializeComponent extends Command {
             path: path.resolve(name, "package.json"),
             dependencies: { soap: "0.40.0" },
           });
-
-          const filesToFormat = await getFilesToFormat(name);
-          await formatSourceFiles(name, filesToFormat);
         }
 
         this.log(`
@@ -121,6 +118,9 @@ To publish the component, run "prism components:publish"
 For documentation on writing custom components, visit https://prismatic.io/docs/custom-components/writing-custom-components/
     `);
       }
+
+      const filesToFormat = await getFilesToFormat(name);
+      await formatSourceFiles(name, filesToFormat);
     } finally {
       process.chdir(cwd);
     }
