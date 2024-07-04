@@ -8,41 +8,6 @@ exports[`component generation tests openApi - petstore-expanded should match sca
 "
 `;
 
-exports[`component generation tests openApi - petstore-expanded should match scaffolding snapshots: petstore-expanded/package.json 1`] = `
-"{
-  "name": "petstoreExpanded",
-  "private": true,
-  "version": "0.0.1",
-  "scripts": {
-    "build": "webpack",
-    "test": "jest --runInBand",
-    "lint": "eslint --quiet --ext .ts .",
-    "lint-fix": "eslint --quiet --ext .ts --fix .",
-    "format": "npm run lint-fix && prettier --log-level error --write ."
-  },
-  "eslintConfig": {
-    "root": true,
-    "extends": ["@prismatic-io/eslint-config-spectral"]
-  },
-  "dependencies": {
-    "@prismatic-io/spectral": "8.0.6"
-  },
-  "devDependencies": {
-    "@prismatic-io/eslint-config-spectral": "2.0.1",
-    "@types/jest": "25.2.3",
-    "copy-webpack-plugin": "10.2.4",
-    "jest": "26.6.3",
-    "ts-jest": "26.4.0",
-    "ts-loader": "9.3.0",
-    "typescript": "4.6.3",
-    "webpack": "5.72.0",
-    "webpack-cli": "4.9.2",
-    "prettier": "3.0.3"
-  }
-}
-"
-`;
-
 exports[`component generation tests openApi - petstore-expanded should match scaffolding snapshots: petstore-expanded/petstoreExpanded-openapi-spec.json 1`] = `
 "{
   "openapi": "3.0.0",
@@ -314,48 +279,56 @@ export default [];
 
 exports[`component generation tests openApi - petstore-expanded should match scaffolding snapshots: petstore-expanded/src/client.ts 1`] = `
 "import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
-import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/dist/clients/http";
-import {  } from "./connections.js";
+import {
+  HttpClient,
+  createClient as createHttpClient,
+} from "@prismatic-io/spectral/dist/clients/http";
+import {} from "./connections";
 
 export const baseUrl = "https://petstore.swagger.io/v2";
 
-const toAuthorizationHeaders = (connection: Connection): { Authorization: string } => {
-const accessToken = util.types.toString(connection.token?.access_token);
-if (accessToken) {
-return { Authorization: \`Bearer ${accessToken}\` };
-}
+const toAuthorizationHeaders = (
+  connection: Connection,
+): { Authorization: string } => {
+  const accessToken = util.types.toString(connection.token?.access_token);
+  if (accessToken) {
+    return { Authorization: \`Bearer ${accessToken}\` };
+  }
 
-const apiKey = util.types.toString(connection.fields?.apiKey);
-if (apiKey) {
-return { Authorization: \`Bearer ${apiKey}\` };
-}
+  const apiKey = util.types.toString(connection.fields?.apiKey);
+  if (apiKey) {
+    return { Authorization: \`Bearer ${apiKey}\` };
+  }
 
-const username = util.types.toString(connection.fields?.username);
-const password = util.types.toString(connection.fields?.password);
-if (username && password) {
-const encoded = Buffer.from(\`${username}:${password}\`).toString("base64");
-return { Authorization: \`Basic ${encoded}\` };
-}
+  const username = util.types.toString(connection.fields?.username);
+  const password = util.types.toString(connection.fields?.password);
+  if (username && password) {
+    const encoded = Buffer.from(\`${username}:${password}\`).toString("base64");
+    return { Authorization: \`Basic ${encoded}\` };
+  }
 
-throw new Error(
-\`Failed to guess at authorization parameters for Connection: ${connection.key}\`
-);
+  throw new Error(
+    \`Failed to guess at authorization parameters for Connection: ${connection.key}\`,
+  );
 };
 
 export const createClient = (connection: Connection): HttpClient => {
-if (![].includes(connection.key)) {
-throw new ConnectionError(connection, \`Received unexpected connection type: ${connection.key}\`);
-}
+  if (![].includes(connection.key)) {
+    throw new ConnectionError(
+      connection,
+      \`Received unexpected connection type: ${connection.key}\`,
+    );
+  }
 
-const client = createHttpClient({
-baseUrl,
-headers: {
-...toAuthorizationHeaders(connection),
-Accept: "application/json",
-},
-responseType: "json",
-});
-return client;
+  const client = createHttpClient({
+    baseUrl,
+    headers: {
+      ...toAuthorizationHeaders(connection),
+      Accept: "application/json",
+    },
+    responseType: "json",
+  });
+  return client;
 };
 "
 `;
@@ -364,153 +337,132 @@ exports[`component generation tests openApi - petstore-expanded should match sca
 "import { action, input, util } from "@prismatic-io/spectral";
 import { createClient } from "../client";
 
-const 
+const findPets = action({
+  display: {
+    label: "Find Pets",
+    description: "Returns all pets from the system that the user has access to",
+  },
+  perform: async (context, { connection, tags, limit }) => {
+    const client = createClient(connection);
+    const { data } = await client.get(\`/pets\`, { params: { tags, limit } });
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    tags: input({
+      label: "Tags",
+      type: "string",
+      required: false,
+      clean: (value): string | undefined =>
+        util.types.toString(value) || undefined,
+      comments: "tags to filter by",
+    }),
+    limit: input({
+      label: "Limit",
+      type: "string",
+      required: false,
+      clean: (value): number => util.types.toNumber(value),
+      comments: "maximum number of results to return",
+    }),
+  },
+});
 
-    findPets = action({
-        display: {
-            label: "Find Pets",
-            description: "Returns all pets from the system that the user has access to",
-        }
-        ,perform: 
-        async (context, { connection, tags, limit }) => {
+const addPet = action({
+  display: {
+    label: "Add Pet",
+    description: "Creates a new pet in the store",
+  },
+  perform: async (context, { connection, name, tag }) => {
+    const client = createClient(connection);
+    const { data } = await client.post(\`/pets\`, { name, tag });
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    name: input({
+      label: "Name",
+      type: "string",
+      required: true,
+      clean: (value): string | undefined =>
+        util.types.toString(value) || undefined,
+    }),
+    tag: input({
+      label: "Tag",
+      type: "string",
+      required: false,
+      clean: (value): string | undefined =>
+        util.types.toString(value) || undefined,
+    }),
+  },
+});
 
-        const client = createClient(connection);
-        const {data} = await client.get(\`/pets\`, { params: { tags, limit } });
-        return {data};
-        }
-        ,inputs: {
-            connection: input({
-            label: "Connection",
-            type: "connection",
-            required: true,
-            }),
-            tags: input({
-            label: "Tags",
-            type: "string",
-            required: false,
-            clean: (value): string | undefined => util.types.toString(value) || undefined,
-            comments: "tags to filter by",
-            }),
-            limit: input({
-            label: "Limit",
-            type: "string",
-            required: false,
-            clean: (value): number => util.types.toNumber(value),
-            comments: "maximum number of results to return",
-            }),
-        }
-        ,
-        })
+const findPetById = action({
+  display: {
+    label: "Find Pet By Id",
+    description:
+      "Returns a user based on a single ID, if the user does not have access to the pet",
+  },
+  perform: async (context, { connection, id }) => {
+    const client = createClient(connection);
+    const { data } = await client.get(\`/pets/${id}\`);
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    id: input({
+      label: "Id",
+      type: "string",
+      required: true,
+      clean: (value): number => util.types.toNumber(value),
+      comments: "ID of pet to fetch",
+    }),
+  },
+});
 
-    ;
-const 
-
-    addPet = action({
-        display: {
-            label: "Add Pet",
-            description: "Creates a new pet in the store",
-        }
-        ,perform: 
-        async (context, { connection, name, tag }) => {
-
-        const client = createClient(connection);
-        const {data} = await client.post(\`/pets\`, { name,tag });
-        return {data};
-        }
-        ,inputs: {
-            connection: input({
-            label: "Connection",
-            type: "connection",
-            required: true,
-            }),
-            name: input({
-            label: "Name",
-            type: "string",
-            required: true,
-            clean: (value): string | undefined => util.types.toString(value) || undefined,
-            }),
-            tag: input({
-            label: "Tag",
-            type: "string",
-            required: false,
-            clean: (value): string | undefined => util.types.toString(value) || undefined,
-            }),
-        }
-        ,
-        })
-
-    ;
-const 
-
-    findPetById = action({
-        display: {
-            label: "Find Pet By Id",
-            description: "Returns a user based on a single ID, if the user does not have access to the pet",
-        }
-        ,perform: 
-        async (context, { connection, id }) => {
-
-        const client = createClient(connection);
-        const {data} = await client.get(\`/pets/${id}\`);
-        return {data};
-        }
-        ,inputs: {
-            connection: input({
-            label: "Connection",
-            type: "connection",
-            required: true,
-            }),
-            id: input({
-            label: "Id",
-            type: "string",
-            required: true,
-            clean: (value): number => util.types.toNumber(value),
-            comments: "ID of pet to fetch",
-            }),
-        }
-        ,
-        })
-
-    ;
-const 
-
-    deletePet = action({
-        display: {
-            label: "Delete Pet",
-            description: "deletes a single pet based on the ID supplied",
-        }
-        ,perform: 
-        async (context, { connection, id }) => {
-
-        const client = createClient(connection);
-        const {data} = await client.delete(\`/pets/${id}\`);
-        return {data};
-        }
-        ,inputs: {
-            connection: input({
-            label: "Connection",
-            type: "connection",
-            required: true,
-            }),
-            id: input({
-            label: "Id",
-            type: "string",
-            required: true,
-            clean: (value): number => util.types.toNumber(value),
-            comments: "ID of pet to delete",
-            }),
-        }
-        ,
-        })
-
-    ;
+const deletePet = action({
+  display: {
+    label: "Delete Pet",
+    description: "deletes a single pet based on the ID supplied",
+  },
+  perform: async (context, { connection, id }) => {
+    const client = createClient(connection);
+    const { data } = await client.delete(\`/pets/${id}\`);
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    id: input({
+      label: "Id",
+      type: "string",
+      required: true,
+      clean: (value): number => util.types.toNumber(value),
+      comments: "ID of pet to delete",
+    }),
+  },
+});
 
 export default {
-        findPets,
-        addPet,
-        findPetById,
-        deletePet,
-    };
+  findPets,
+  addPet,
+  findPetById,
+  deletePet,
+};
 "
 `;
 
@@ -520,9 +472,9 @@ import { baseUrl } from "../client";
 import pets from "./pets";
 
 export default {
-        ...pets,
-        rawRequest: buildRawRequestAction(baseUrl),
-    };
+  ...pets,
+  rawRequest: buildRawRequestAction(baseUrl),
+};
 "
 `;
 
@@ -533,17 +485,17 @@ import actions from "./actions";
 import connections from "./connections";
 
 export default component({
-    key: "petstoreExpanded",
-    display: {
+  key: "petstoreExpanded",
+  display: {
     label: "Swagger Petstore",
-    description: "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
+    description:
+      "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
     iconPath: "icon.png",
-    },
-    hooks: { error: handleErrors },
-    actions,
-    connections,
-    })
-;
+  },
+  hooks: { error: handleErrors },
+  actions,
+  connections,
+});
 "
 `;
 
@@ -552,17 +504,15 @@ exports[`component generation tests openApi - petstore-expanded should match sca
 import component from ".";
 
 describe("petstoreExpanded", () => {
-const harness = testing.createHarness(component);
+  const harness = testing.createHarness(component);
 
-it("should invoke action", async () => {
-const result = await harness.action("findPets", 
-{
-    tags: undefined,
-    limit: undefined,
-}
-);
-expect(result?.data).toBeDefined();
-});
+  it("should invoke action", async () => {
+    const result = await harness.action("findPets", {
+      tags: undefined,
+      limit: undefined,
+    });
+    expect(result?.data).toBeDefined();
+  });
 });
 "
 `;
@@ -685,42 +635,6 @@ exports[`component generation tests wsdl - numberconversion should match scaffol
   preset: "ts-jest",
   testEnvironment: "node",
 };
-"
-`;
-
-exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/package.json 1`] = `
-"{
-  "name": "numberconversion",
-  "version": "0.0.1",
-  "main": "index.js",
-  "private": true,
-  "scripts": {
-    "build": "webpack",
-    "publish": "npm run build && prism components:publish",
-    "test": "jest",
-    "lint": "eslint --ext .ts ."
-  },
-  "eslintConfig": {
-    "root": true,
-    "extends": ["@prismatic-io/eslint-config-spectral"]
-  },
-  "dependencies": {
-    "@prismatic-io/spectral": "8.0.6",
-    "soap": "0.40.0"
-  },
-  "devDependencies": {
-    "@prismatic-io/eslint-config-spectral": "2.0.1",
-    "@types/jest": "29.5.11",
-    "copy-webpack-plugin": "11.0.0",
-    "eslint": "8.57.0",
-    "jest": "29.7.0",
-    "ts-jest": "29.1.1",
-    "ts-loader": "9.2.3",
-    "typescript": "4.3.5",
-    "webpack": "5.76.3",
-    "webpack-cli": "5.0.1"
-  }
-}
 "
 `;
 
@@ -1398,41 +1312,6 @@ exports[`component generation tests openApi - petstore-expanded-uuid-paths shoul
 "
 `;
 
-exports[`component generation tests openApi - petstore-expanded-uuid-paths should match scaffolding snapshots: petstore-expanded-uuid-paths/package.json 1`] = `
-"{
-  "name": "petstoreExpandedUuidPaths",
-  "private": true,
-  "version": "0.0.1",
-  "scripts": {
-    "build": "webpack",
-    "test": "jest --runInBand",
-    "lint": "eslint --quiet --ext .ts .",
-    "lint-fix": "eslint --quiet --ext .ts --fix .",
-    "format": "npm run lint-fix && prettier --log-level error --write ."
-  },
-  "eslintConfig": {
-    "root": true,
-    "extends": ["@prismatic-io/eslint-config-spectral"]
-  },
-  "dependencies": {
-    "@prismatic-io/spectral": "8.0.6"
-  },
-  "devDependencies": {
-    "@prismatic-io/eslint-config-spectral": "2.0.1",
-    "@types/jest": "25.2.3",
-    "copy-webpack-plugin": "10.2.4",
-    "jest": "26.6.3",
-    "ts-jest": "26.4.0",
-    "ts-loader": "9.3.0",
-    "typescript": "4.6.3",
-    "webpack": "5.72.0",
-    "webpack-cli": "4.9.2",
-    "prettier": "3.0.3"
-  }
-}
-"
-`;
-
 exports[`component generation tests openApi - petstore-expanded-uuid-paths should match scaffolding snapshots: petstore-expanded-uuid-paths/tsconfig.json 1`] = `
 "{
   "compilerOptions": {
@@ -1458,48 +1337,56 @@ export default [];
 
 exports[`component generation tests openApi - petstore-expanded-uuid-paths should match scaffolding snapshots: petstore-expanded-uuid-paths/src/client.ts 1`] = `
 "import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
-import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/dist/clients/http";
-import {  } from "./connections.js";
+import {
+  HttpClient,
+  createClient as createHttpClient,
+} from "@prismatic-io/spectral/dist/clients/http";
+import {} from "./connections";
 
 export const baseUrl = "https://petstore.swagger.io/v2";
 
-const toAuthorizationHeaders = (connection: Connection): { Authorization: string } => {
-const accessToken = util.types.toString(connection.token?.access_token);
-if (accessToken) {
-return { Authorization: \`Bearer ${accessToken}\` };
-}
+const toAuthorizationHeaders = (
+  connection: Connection,
+): { Authorization: string } => {
+  const accessToken = util.types.toString(connection.token?.access_token);
+  if (accessToken) {
+    return { Authorization: \`Bearer ${accessToken}\` };
+  }
 
-const apiKey = util.types.toString(connection.fields?.apiKey);
-if (apiKey) {
-return { Authorization: \`Bearer ${apiKey}\` };
-}
+  const apiKey = util.types.toString(connection.fields?.apiKey);
+  if (apiKey) {
+    return { Authorization: \`Bearer ${apiKey}\` };
+  }
 
-const username = util.types.toString(connection.fields?.username);
-const password = util.types.toString(connection.fields?.password);
-if (username && password) {
-const encoded = Buffer.from(\`${username}:${password}\`).toString("base64");
-return { Authorization: \`Basic ${encoded}\` };
-}
+  const username = util.types.toString(connection.fields?.username);
+  const password = util.types.toString(connection.fields?.password);
+  if (username && password) {
+    const encoded = Buffer.from(\`${username}:${password}\`).toString("base64");
+    return { Authorization: \`Basic ${encoded}\` };
+  }
 
-throw new Error(
-\`Failed to guess at authorization parameters for Connection: ${connection.key}\`
-);
+  throw new Error(
+    \`Failed to guess at authorization parameters for Connection: ${connection.key}\`,
+  );
 };
 
 export const createClient = (connection: Connection): HttpClient => {
-if (![].includes(connection.key)) {
-throw new ConnectionError(connection, \`Received unexpected connection type: ${connection.key}\`);
-}
+  if (![].includes(connection.key)) {
+    throw new ConnectionError(
+      connection,
+      \`Received unexpected connection type: ${connection.key}\`,
+    );
+  }
 
-const client = createHttpClient({
-baseUrl,
-headers: {
-...toAuthorizationHeaders(connection),
-Accept: "application/json",
-},
-responseType: "json",
-});
-return client;
+  const client = createHttpClient({
+    baseUrl,
+    headers: {
+      ...toAuthorizationHeaders(connection),
+      Accept: "application/json",
+    },
+    responseType: "json",
+  });
+  return client;
 };
 "
 `;
@@ -1508,153 +1395,141 @@ exports[`component generation tests openApi - petstore-expanded-uuid-paths shoul
 "import { action, input, util } from "@prismatic-io/spectral";
 import { createClient } from "../client";
 
-const 
+const findPets = action({
+  display: {
+    label: "Find Pets",
+    description: "Returns all pets from the system that the user has access to",
+  },
+  perform: async (context, { connection, tags, limit }) => {
+    const client = createClient(connection);
+    const { data } = await client.get(\`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2\`, {
+      params: { tags, limit },
+    });
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    tags: input({
+      label: "Tags",
+      type: "string",
+      required: false,
+      clean: (value): string | undefined =>
+        util.types.toString(value) || undefined,
+      comments: "tags to filter by",
+    }),
+    limit: input({
+      label: "Limit",
+      type: "string",
+      required: false,
+      clean: (value): number => util.types.toNumber(value),
+      comments: "maximum number of results to return",
+    }),
+  },
+});
 
-    findPets = action({
-        display: {
-            label: "Find Pets",
-            description: "Returns all pets from the system that the user has access to",
-        }
-        ,perform: 
-        async (context, { connection, tags, limit }) => {
+const addPet = action({
+  display: {
+    label: "Add Pet",
+    description: "Creates a new pet in the store",
+  },
+  perform: async (context, { connection, name, tag }) => {
+    const client = createClient(connection);
+    const { data } = await client.post(
+      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2\`,
+      { name, tag },
+    );
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    name: input({
+      label: "Name",
+      type: "string",
+      required: true,
+      clean: (value): string | undefined =>
+        util.types.toString(value) || undefined,
+    }),
+    tag: input({
+      label: "Tag",
+      type: "string",
+      required: false,
+      clean: (value): string | undefined =>
+        util.types.toString(value) || undefined,
+    }),
+  },
+});
 
-        const client = createClient(connection);
-        const {data} = await client.get(\`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2\`, { params: { tags, limit } });
-        return {data};
-        }
-        ,inputs: {
-            connection: input({
-            label: "Connection",
-            type: "connection",
-            required: true,
-            }),
-            tags: input({
-            label: "Tags",
-            type: "string",
-            required: false,
-            clean: (value): string | undefined => util.types.toString(value) || undefined,
-            comments: "tags to filter by",
-            }),
-            limit: input({
-            label: "Limit",
-            type: "string",
-            required: false,
-            clean: (value): number => util.types.toNumber(value),
-            comments: "maximum number of results to return",
-            }),
-        }
-        ,
-        })
+const findPetById = action({
+  display: {
+    label: "Find Pet By Id",
+    description:
+      "Returns a user based on a single ID, if the user does not have access to the pet",
+  },
+  perform: async (context, { connection, id }) => {
+    const client = createClient(connection);
+    const { data } = await client.get(
+      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/${id}\`,
+    );
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    id: input({
+      label: "Id",
+      type: "string",
+      required: true,
+      clean: (value): number => util.types.toNumber(value),
+      comments: "ID of pet to fetch",
+    }),
+  },
+});
 
-    ;
-const 
-
-    addPet = action({
-        display: {
-            label: "Add Pet",
-            description: "Creates a new pet in the store",
-        }
-        ,perform: 
-        async (context, { connection, name, tag }) => {
-
-        const client = createClient(connection);
-        const {data} = await client.post(\`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2\`, { name,tag });
-        return {data};
-        }
-        ,inputs: {
-            connection: input({
-            label: "Connection",
-            type: "connection",
-            required: true,
-            }),
-            name: input({
-            label: "Name",
-            type: "string",
-            required: true,
-            clean: (value): string | undefined => util.types.toString(value) || undefined,
-            }),
-            tag: input({
-            label: "Tag",
-            type: "string",
-            required: false,
-            clean: (value): string | undefined => util.types.toString(value) || undefined,
-            }),
-        }
-        ,
-        })
-
-    ;
-const 
-
-    findPetById = action({
-        display: {
-            label: "Find Pet By Id",
-            description: "Returns a user based on a single ID, if the user does not have access to the pet",
-        }
-        ,perform: 
-        async (context, { connection, id }) => {
-
-        const client = createClient(connection);
-        const {data} = await client.get(\`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/${id}\`);
-        return {data};
-        }
-        ,inputs: {
-            connection: input({
-            label: "Connection",
-            type: "connection",
-            required: true,
-            }),
-            id: input({
-            label: "Id",
-            type: "string",
-            required: true,
-            clean: (value): number => util.types.toNumber(value),
-            comments: "ID of pet to fetch",
-            }),
-        }
-        ,
-        })
-
-    ;
-const 
-
-    deletePet = action({
-        display: {
-            label: "Delete Pet",
-            description: "deletes a single pet based on the ID supplied",
-        }
-        ,perform: 
-        async (context, { connection, id }) => {
-
-        const client = createClient(connection);
-        const {data} = await client.delete(\`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/${id}\`);
-        return {data};
-        }
-        ,inputs: {
-            connection: input({
-            label: "Connection",
-            type: "connection",
-            required: true,
-            }),
-            id: input({
-            label: "Id",
-            type: "string",
-            required: true,
-            clean: (value): number => util.types.toNumber(value),
-            comments: "ID of pet to delete",
-            }),
-        }
-        ,
-        })
-
-    ;
+const deletePet = action({
+  display: {
+    label: "Delete Pet",
+    description: "deletes a single pet based on the ID supplied",
+  },
+  perform: async (context, { connection, id }) => {
+    const client = createClient(connection);
+    const { data } = await client.delete(
+      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/${id}\`,
+    );
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    id: input({
+      label: "Id",
+      type: "string",
+      required: true,
+      clean: (value): number => util.types.toNumber(value),
+      comments: "ID of pet to delete",
+    }),
+  },
+});
 
 export default {
-        findPets,
-        addPet,
-        findPetById,
-        deletePet,
-    };
+  findPets,
+  addPet,
+  findPetById,
+  deletePet,
+};
 "
 `;
 
@@ -1664,9 +1539,9 @@ import { baseUrl } from "../client";
 import a82Dbb5D5B5Fb47EaB3Dc1748750470E2 from "./a82Dbb5D5B5Fb47EaB3Dc1748750470E2";
 
 export default {
-        ...a82Dbb5D5B5Fb47EaB3Dc1748750470E2,
-        rawRequest: buildRawRequestAction(baseUrl),
-    };
+  ...a82Dbb5D5B5Fb47EaB3Dc1748750470E2,
+  rawRequest: buildRawRequestAction(baseUrl),
+};
 "
 `;
 
@@ -1677,17 +1552,17 @@ import actions from "./actions";
 import connections from "./connections";
 
 export default component({
-    key: "petstoreExpandedUuidPaths",
-    display: {
+  key: "petstoreExpandedUuidPaths",
+  display: {
     label: "Swagger Petstore",
-    description: "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
+    description:
+      "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
     iconPath: "icon.png",
-    },
-    hooks: { error: handleErrors },
-    actions,
-    connections,
-    })
-;
+  },
+  hooks: { error: handleErrors },
+  actions,
+  connections,
+});
 "
 `;
 
@@ -1696,17 +1571,15 @@ exports[`component generation tests openApi - petstore-expanded-uuid-paths shoul
 import component from ".";
 
 describe("petstoreExpandedUuidPaths", () => {
-const harness = testing.createHarness(component);
+  const harness = testing.createHarness(component);
 
-it("should invoke action", async () => {
-const result = await harness.action("findPets", 
-{
-    tags: undefined,
-    limit: undefined,
-}
-);
-expect(result?.data).toBeDefined();
-});
+  it("should invoke action", async () => {
+    const result = await harness.action("findPets", {
+      tags: undefined,
+      limit: undefined,
+    });
+    expect(result?.data).toBeDefined();
+  });
 });
 "
 `;
@@ -3446,42 +3319,6 @@ import { CountryInfoServiceSoap12 } from "../ports/CountryInfoServiceSoap12";
 export interface CountryInfoService {
   readonly CountryInfoServiceSoap: CountryInfoServiceSoap;
   readonly CountryInfoServiceSoap12: CountryInfoServiceSoap12;
-}
-"
-`;
-
-exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/package.json 1`] = `
-"{
-  "name": "countryinfoservice",
-  "version": "0.0.1",
-  "main": "index.js",
-  "private": true,
-  "scripts": {
-    "build": "webpack",
-    "publish": "npm run build && prism components:publish",
-    "test": "jest",
-    "lint": "eslint --ext .ts ."
-  },
-  "eslintConfig": {
-    "root": true,
-    "extends": ["@prismatic-io/eslint-config-spectral"]
-  },
-  "dependencies": {
-    "@prismatic-io/spectral": "8.0.6",
-    "soap": "0.40.0"
-  },
-  "devDependencies": {
-    "@prismatic-io/eslint-config-spectral": "2.0.1",
-    "@types/jest": "29.5.11",
-    "copy-webpack-plugin": "11.0.0",
-    "eslint": "8.57.0",
-    "jest": "29.7.0",
-    "ts-jest": "29.1.1",
-    "ts-loader": "9.2.3",
-    "typescript": "4.3.5",
-    "webpack": "5.76.3",
-    "webpack-cli": "5.0.1"
-  }
 }
 "
 `;
