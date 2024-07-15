@@ -13,7 +13,8 @@ interface ExportDefinitionProps {
   integrationId: string;
   latestComponents?: boolean;
   definitionVersion?: number;
-  isClean?: boolean;
+  sanitizeConnectionInputs?: boolean;
+  sanitizeInput?: string;
 }
 
 export interface ComponentInfo {
@@ -66,7 +67,8 @@ export interface IntegrationDefinition {
 export const exportDefinition = async ({
   integrationId,
   latestComponents = false,
-  isClean,
+  sanitizeConnectionInputs,
+  sanitizeInput,
   definitionVersion = INTEGRATION_DEFINITION_VERSION,
 }: ExportDefinitionProps): Promise<IntegrationDefinition> => {
   const result = await gqlRequest({
@@ -92,43 +94,33 @@ export const exportDefinition = async ({
   });
   const definition: string = result.integration.definition;
 
-  if (isClean) {
+  if (sanitizeConnectionInputs) {
     try {
       const parsedYaml: any = YAML.load(definition);
 
-      // list of keys that probably contain sensitive information
-      const filteredKeys = [
-        "applicationId",
-        "tokenUrl",
-        "apiKey",
-        "base",
-        "host",
-        "clientId",
-        "username",
-        "accessKeyId",
-        "accountName",
-        "email",
-        "partnerUserID",
-        "token",
-        "projectId",
-        "clientEmail",
-        "apiToken",
-        "accessToken",
-        "apiUrl",
-        "accountToken",
-        "senderId",
-        "password",
-        "privateKey",
-        "accountSid",
-        "endpoint",
-      ];
-
-      filteredKeys.forEach((key) => {
-        parsedYaml.requiredConfigVars.forEach((configVar: any) => {
-          if (configVar.inputs != null && configVar.inputs[key] != null) {
+      parsedYaml.requiredConfigVars?.forEach((configVar: any) => {
+        const keys = Object.keys(configVar.inputs);
+        keys.forEach((key) => {
+          if (configVar.inputs?.[key] && configVar.dataType === "connection" && key !== "scopes") {
             configVar.inputs[key].value = `Add your ${key} here`;
           }
         });
+      });
+
+      return loadYaml(YAML.dump(parsedYaml)) as IntegrationDefinition;
+    } catch (e) {
+      console.log(e);
+      return loadYaml(definition) as IntegrationDefinition;
+    }
+  } else if (sanitizeInput) {
+    try {
+      const parsedYaml: any = YAML.load(definition);
+      const input = sanitizeInput;
+
+      parsedYaml.requiredConfigVars?.forEach((configVar: any) => {
+        if (configVar.inputs?.[input]) {
+          configVar.inputs[input].value = `Add your ${input} here`;
+        }
       });
 
       return loadYaml(YAML.dump(parsedYaml)) as IntegrationDefinition;
