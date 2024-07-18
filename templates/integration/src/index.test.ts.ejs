@@ -13,8 +13,6 @@ describe("test my flow", () => {
         },
       },
     });
-    expect(result?.data).toBe(
-      "Hello, <%= flow.name %> using connection connection1",
-    );
+    expect(result?.data).toBe("Hello, <%= flow.name %> using connection connection1");
   });
 });

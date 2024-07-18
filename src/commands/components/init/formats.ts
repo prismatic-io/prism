@@ -72,7 +72,7 @@ export default class GenerateFormatsCommand extends Command {
         jest: "26.6.3",
         "ts-jest": "26.4.0",
         "ts-loader": "9.3.0",
-        typescript: "4.6.3",
+        typescript: "5.5.3",
         webpack: "5.72.0",
         "webpack-cli": "4.9.2",
         prettier: "3.0.3",
