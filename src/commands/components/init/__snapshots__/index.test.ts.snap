@@ -999,7 +999,7 @@ export default [myConnection];
 `;
 
 exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/src/client.ts 1`] = `
-"import { Connection } from "@prismatic-io/spectral";
+"import type { Connection } from "@prismatic-io/spectral";
 
 export const createClient = (connection: Connection) => {
   // Create a client using the provided Connection for the
@@ -5038,7 +5038,7 @@ export default [myConnection];
 `;
 
 exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/src/client.ts 1`] = `
-"import { Connection } from "@prismatic-io/spectral";
+"import type { Connection } from "@prismatic-io/spectral";
 
 export const createClient = (connection: Connection) => {
   // Create a client using the provided Connection for the

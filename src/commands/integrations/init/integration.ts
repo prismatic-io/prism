@@ -133,7 +133,7 @@ export default class GenerateIntegrationCommand extends Command {
         jest: "29.7.0",
         "ts-jest": "29.1.2",
         "ts-loader": "9.5.1",
-        typescript: "5.4.5",
+        typescript: "5.5.3",
         webpack: "5.91.0",
         "webpack-cli": "5.1.4",
       },

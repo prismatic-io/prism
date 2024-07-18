@@ -137,7 +137,7 @@ export default class GenerateComponentCommand extends Command {
         jest: "29.7.0",
         "ts-jest": "29.1.1",
         "ts-loader": "9.2.3",
-        typescript: "4.3.5",
+        typescript: "5.5.3",
         webpack: "5.76.3",
         "webpack-cli": "5.0.1",
       },
