@@ -1,8 +1,11 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "7.0.2",
+  "version": "7.1.0",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
-  "keywords": ["prismatic", "cli"],
+  "keywords": [
+    "prismatic",
+    "cli"
+  ],
   "homepage": "https://prismatic.io",
   "bugs": {
     "url": "https://github.com/prismatic-io/prism"
@@ -35,7 +38,11 @@
     "test": "bun run clean-test-temp && bun test src",
     "test:snapshots": "bun run clean-test-temp && bun test --update-snapshots"
   },
-  "files": ["oclif.manifest.json", "bin", "lib"],
+  "files": [
+    "oclif.manifest.json",
+    "bin",
+    "lib"
+  ],
   "dependencies": {
     "@apidevtools/swagger-parser": "10.1.0",
     "@msgpack/msgpack": "2.3.0",
