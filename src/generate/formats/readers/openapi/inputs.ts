@@ -10,32 +10,32 @@ const toInputType: {
     type: InputFieldType;
     cleanFn: string;
     cleanReturnType: string;
-    coalesceFalsyValues: boolean;
+    allowOptional: boolean;
   };
 } = {
   string: {
     type: "string",
     cleanFn: "toString",
-    cleanReturnType: "string | undefined",
-    coalesceFalsyValues: true,
+    cleanReturnType: "string",
+    allowOptional: true,
   },
   integer: {
     type: "string",
     cleanFn: "toNumber",
     cleanReturnType: "number",
-    coalesceFalsyValues: false,
+    allowOptional: true,
   },
   number: {
     type: "string",
     cleanFn: "toNumber",
     cleanReturnType: "number",
-    coalesceFalsyValues: false,
+    allowOptional: true,
   },
   boolean: {
     type: "boolean",
     cleanFn: "toBool",
     cleanReturnType: "boolean",
-    coalesceFalsyValues: false,
+    allowOptional: false,
   },
 };
 
@@ -71,9 +71,13 @@ const buildInput = (parameter: OpenAPI.Parameter, seenKeys: Set<string>): Input 
   }
 
   const schemaType = parameter.schema?.type;
-  const { type, cleanFn, cleanReturnType, coalesceFalsyValues } =
+  const { type, cleanFn, cleanReturnType, allowOptional } =
     toInputType[schemaType] ?? toInputType.string;
-  const coalescePart = coalesceFalsyValues ? " || undefined" : "";
+
+  const required = parameter.required || !allowOptional;
+  const clean = required
+    ? `(value): ${cleanReturnType} => util.types.${cleanFn}(value)`
+    : `(value): ${cleanReturnType} | undefined => value !== undefined && value !== null ? util.types.${cleanFn}(value) : undefined`;
 
   const { name: paramKey } = parameter;
   const key = seenKeys.has(cleanIdentifier(paramKey))
@@ -81,19 +85,17 @@ const buildInput = (parameter: OpenAPI.Parameter, seenKeys: Set<string>): Input 
     : cleanIdentifier(paramKey);
   seenKeys.add(key);
 
-  const model = getInputModel(parameter.schema);
-
   const input = stripUndefined<Input>({
     upstreamKey: paramKey,
     key,
     label: startCase(paramKey),
     type,
-    required: parameter.required,
+    required,
     comments: parameter.description,
     default: parameter.schema?.default,
     example: parameter.schema?.example,
-    model,
-    clean: `(value): ${cleanReturnType} => util.types.${cleanFn}(value)${coalescePart}`,
+    model: getInputModel(parameter.schema),
+    clean,
   });
   return input;
 };
@@ -118,11 +120,13 @@ const buildBodyInputs = (
     .filter(([, prop]) => !prop.readOnly) // Don't create inputs for readonly properties
     .map<Input>(([propKey, prop]) => {
       const schemaType = prop?.type;
-      const { type, cleanFn, cleanReturnType, coalesceFalsyValues } =
+      const { type, cleanFn, cleanReturnType, allowOptional } =
         toInputType[schemaType as string] ?? toInputType.string;
-      const coalescePart = coalesceFalsyValues ? " || undefined" : "";
 
-      const model = getInputModel(prop);
+      const required = requiredKeys.has(propKey) || !allowOptional;
+      const clean = required
+        ? `(value): ${cleanReturnType} => util.types.${cleanFn}(value)`
+        : `(value): ${cleanReturnType} | undefined => value !== undefined && value !== null ? util.types.${cleanFn}(value) : undefined`;
 
       const key = seenKeys.has(cleanIdentifier(propKey))
         ? cleanIdentifier(`other ${propKey}`)
@@ -134,12 +138,12 @@ const buildBodyInputs = (
         key,
         label: startCase(propKey),
         type,
-        required: requiredKeys.has(propKey),
+        required,
         comments: prop.description,
         default: prop.default,
         example: prop.example,
-        model,
-        clean: `(value): ${cleanReturnType} => util.types.${cleanFn}(value)${coalescePart}`,
+        model: getInputModel(prop),
+        clean,
       });
     });
 };
