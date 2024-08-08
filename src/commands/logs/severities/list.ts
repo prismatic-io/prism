@@ -1,7 +1,8 @@
-import { Command, ux } from "@oclif/core";
+import { ux } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class ListCommand extends Command {
+export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Log Severities for use by Alert Triggers";
   static flags = { ...ux.table.flags() };
 

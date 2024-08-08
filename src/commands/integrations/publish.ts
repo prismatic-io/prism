@@ -1,7 +1,8 @@
-import { Command, Args, Flags } from "@oclif/core";
+import { Args, Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class PublishCommand extends Command {
+export default class PublishCommand extends PrismaticBaseCommand {
   static description = "Publish a version of an Integration for use in Instances";
 
   static args = {

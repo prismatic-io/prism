@@ -1,6 +1,6 @@
-import { Command, Flags, ux } from "@oclif/core";
+import { Flags, ux } from "@oclif/core";
 
-import { whoAmI } from "../../utils/user/query.js";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import {
   createComponentPackage,
   loadEntrypoint,
@@ -13,8 +13,9 @@ import {
   uploadConnectionIcons,
   uploadFile,
 } from "../../utils/component/publish.js";
+import { whoAmI } from "../../utils/user/query.js";
 
-export default class PublishCommand extends Command {
+export default class PublishCommand extends PrismaticBaseCommand {
   static description = "Publish a Component to Prismatic";
   static flags = {
     comment: Flags.string({

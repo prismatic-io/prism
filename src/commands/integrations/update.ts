@@ -1,8 +1,9 @@
-import { Command, Args, Flags } from "@oclif/core";
-import { gqlRequest, gql } from "../../graphql.js";
+import { Args, Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { parseJsonOrUndefined } from "../../fields.js";
+import { gql, gqlRequest } from "../../graphql.js";
 
-export default class UpdateCommand extends Command {
+export default class UpdateCommand extends PrismaticBaseCommand {
   static description = "Update an Integration's name or description";
   static args = {
     integration: Args.string({

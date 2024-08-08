@@ -1,7 +1,8 @@
-import { Command, Args } from "@oclif/core";
+import { Args } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class DeleteCommand extends Command {
+export default class DeleteCommand extends PrismaticBaseCommand {
   static description = "Delete an Integration";
   static args = {
     integration: Args.string({
