@@ -36,6 +36,13 @@ export const gqlRequest = async <T = any>({ document, variables }: GQLRequest): 
   const accessToken = await getAccessToken();
   const url = new URL("/api", prismaticUrl).toString();
 
+  if (process.env.PRISMATIC_PRINT_REQUESTS) {
+    console.log("=================================");
+    console.log(`GraphQL Request: ${document}`);
+    console.log(`Variables: ${JSON.stringify(variables)}`);
+    console.log("=================================");
+  }
+
   const result = await request<T>(url, document, variables, {
     Authorization: `Bearer ${accessToken}`,
     "Prismatic-Client": "prism",
