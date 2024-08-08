@@ -1,9 +1,10 @@
-import { Command, Flags } from "@oclif/core";
+import { Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest, gql } from "../../graphql.js";
 
 const onlyWhenOrgUser = "Only valid for Organization users.";
 
-export default class CreateCommand extends Command {
+export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create a JWT that may be used to register an On-Premise Resource.";
   static flags = {
     customerId: Flags.string({

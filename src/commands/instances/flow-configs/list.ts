@@ -1,7 +1,8 @@
-import { Command, ux, Args } from "@oclif/core";
+import { Args, ux } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class ListCommand extends Command {
+export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Instance Flow Configs";
   static args = {
     instance: Args.string({ description: "ID of an Instance", required: true }),

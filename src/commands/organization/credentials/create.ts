@@ -1,8 +1,9 @@
-import { Command, Flags } from "@oclif/core";
+import { Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { toValues } from "../../../fields.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class CreateCommand extends Command {
+export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create a set of Organization-level Credentials for use by Instance Actions";
 
   static flags = {

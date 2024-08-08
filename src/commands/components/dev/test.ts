@@ -1,39 +1,40 @@
-import { promisify } from "util";
-import dotenv from "dotenv";
-import { Command, Flags, ux } from "@oclif/core";
-import open from "open";
-import inquirer, { DistinctQuestion } from "inquirer";
-import { snakeCase, upperCase, kebabCase } from "lodash-es";
+import { Flags, ux } from "@oclif/core";
 import { serverTypes } from "@prismatic-io/spectral"; // FIXME: Get rid of this and stop exporting it in Spectral.
-import {
-  publishDefinition,
-  uploadConnectionIcons,
-  uploadFile,
-  checkPackageSignature,
-} from "../../../utils/component/publish.js";
-import { displayLogs } from "../../../utils/execution/logs.js";
-import {
-  buildComponentTestHarnessIntegration,
-  componentTestIntegrationName,
-  ComponentTestInfo,
-} from "../../../utils/integration/definition.js";
-import { importDefinition } from "../../../utils/integration/import.js";
-import { deleteIntegration, runIntegrationFlow } from "../../../utils/integration/invoke.js";
-import { pollForActiveConfigVarState } from "../../../utils/integration/query.js";
-import { Expression } from "../../../utils/integration/export.js";
+import dotenv from "dotenv";
+import inquirer, { DistinctQuestion } from "inquirer";
+import { kebabCase, snakeCase, upperCase } from "lodash-es";
+import open from "open";
+import { promisify } from "util";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { exists } from "../../../fs.js";
-import { whoAmI } from "../../../utils/user/query.js";
-import { spawnProcess } from "../../../utils/process.js";
-import {
-  printFinalStepResults,
-  writeFinalStepResults,
-} from "../../../utils/execution/stepResults.js";
 import { deleteComponentByKey } from "../../../utils/component/deleteByKey.js";
 import {
   createComponentPackage,
   loadEntrypoint,
   validateDefinition,
 } from "../../../utils/component/index.js";
+import {
+  checkPackageSignature,
+  publishDefinition,
+  uploadConnectionIcons,
+  uploadFile,
+} from "../../../utils/component/publish.js";
+import { displayLogs } from "../../../utils/execution/logs.js";
+import {
+  printFinalStepResults,
+  writeFinalStepResults,
+} from "../../../utils/execution/stepResults.js";
+import {
+  buildComponentTestHarnessIntegration,
+  ComponentTestInfo,
+  componentTestIntegrationName,
+} from "../../../utils/integration/definition.js";
+import { Expression } from "../../../utils/integration/export.js";
+import { importDefinition } from "../../../utils/integration/import.js";
+import { deleteIntegration, runIntegrationFlow } from "../../../utils/integration/invoke.js";
+import { pollForActiveConfigVarState } from "../../../utils/integration/query.js";
+import { spawnProcess } from "../../../utils/process.js";
+import { whoAmI } from "../../../utils/user/query.js";
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -142,7 +143,7 @@ const valuesFromAnswers = ({
   };
 };
 
-export default class TestCommand extends Command {
+export default class TestCommand extends PrismaticBaseCommand {
   static description =
     "Run an action of a component within a test integration in the integration runner";
   static flags = {

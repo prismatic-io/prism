@@ -1,4 +1,5 @@
-import { Command, ux, Args, Flags } from "@oclif/core";
+import { Args, Flags, ux } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
 interface DataSourceNode {
@@ -11,7 +12,7 @@ interface DataSourceNode {
   detailDataSource?: string;
 }
 
-export default class ListCommand extends Command {
+export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Data Sources that Components implement";
   static flags = {
     ...ux.table.flags(),

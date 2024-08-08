@@ -1,4 +1,5 @@
-import { Command, Flags } from "@oclif/core";
+import { Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 
 import { gqlRequest } from "../../graphql.js";
 import { MarketplaceTranslations } from "../../types.js";
@@ -6,7 +7,7 @@ import { processIntegrationsForTranslations } from "../../utils/translations/pro
 import { GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS } from "../../queries.graphql.js";
 import { fs } from "../../fs.js";
 
-export default class TranslationsCommand extends Command {
+export default class TranslationsCommand extends PrismaticBaseCommand {
   static description = "Generate Dynamic Phrases for Embedded Marketplace";
   static flags = {
     "output-file": Flags.string({

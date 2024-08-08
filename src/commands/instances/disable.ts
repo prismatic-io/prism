@@ -1,7 +1,8 @@
-import { Command, Args } from "@oclif/core";
+import { Args } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class DisableCommand extends Command {
+export default class DisableCommand extends PrismaticBaseCommand {
   static description = "Disable an Instance";
   static args = {
     instance: Args.string({

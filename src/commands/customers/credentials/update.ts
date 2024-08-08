@@ -1,8 +1,9 @@
-import { Command, Args, Flags } from "@oclif/core";
+import { Args, Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { toValues } from "../../../fields.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class UpdateCommand extends Command {
+export default class UpdateCommand extends PrismaticBaseCommand {
   static description = "Update a Customer-specific Credential for use by Instance Actions";
   static args = {
     credential: Args.string({
