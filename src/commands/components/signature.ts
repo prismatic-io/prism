@@ -1,15 +1,15 @@
-import { Command, Flags } from "@oclif/core";
+import { Flags } from "@oclif/core";
 import crypto from "crypto";
-
-import { getPackageSignatureFromApi } from "../../utils/component/signature.js";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { fs } from "../../fs.js";
 import {
   createComponentPackage,
   loadEntrypoint,
   validateDefinition,
 } from "../../utils/component/index.js";
+import { getPackageSignatureFromApi } from "../../utils/component/signature.js";
 
-export default class ComponentsSignatureCommand extends Command {
+export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
   static description = "Generate a Component signature";
 
   static flags = {

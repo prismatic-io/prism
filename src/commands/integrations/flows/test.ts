@@ -1,4 +1,5 @@
-import { Command, Flags, Args, ux } from "@oclif/core";
+import { Args, Flags, ux } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
 interface LogNode {
@@ -14,7 +15,7 @@ interface FetchLogsResult {
   executionComplete: boolean;
 }
 
-export default class TestCommand extends Command {
+export default class TestCommand extends PrismaticBaseCommand {
   static description = "Run a test of an Integration Flow";
   static args = {
     flow: Args.string({ description: "ID of a flow to test", required: true }),

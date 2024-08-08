@@ -1,10 +1,11 @@
 import { fs } from "../../../fs.js";
-import { Command, Flags } from "@oclif/core";
+import { Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 import axios from "axios";
 import { deserialize, DeserializeResult, parseData } from "../../../utils/execution/stepResults.js";
 
-export default class GetCommand extends Command {
+export default class GetCommand extends PrismaticBaseCommand {
   static description = "Gets the Result of a specified Step in an Instance Execution";
   static flags = {
     executionId: Flags.string({

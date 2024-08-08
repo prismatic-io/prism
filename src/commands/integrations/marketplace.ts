@@ -1,7 +1,8 @@
-import { Command, Args, Flags } from "@oclif/core";
+import { Args, Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class MarketplaceCommand extends Command {
+export default class MarketplaceCommand extends PrismaticBaseCommand {
   static description = "Make a version of an Integration available in the Marketplace";
 
   static args = {

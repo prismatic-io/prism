@@ -1,7 +1,8 @@
-import { Command, Args, Flags } from "@oclif/core";
+import { Args, Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class UpdateCommand extends Command {
+export default class UpdateCommand extends PrismaticBaseCommand {
   // TODO: Add more flags once optional updates are implemented
   static description = "Update an Instance";
   static args = {

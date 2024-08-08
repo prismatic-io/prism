@@ -1,8 +1,9 @@
-import { Command, Args, Flags } from "@oclif/core";
+import { Args, Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { exportDefinition } from "../../utils/integration/export.js";
 import { dumpYaml } from "../../utils/serialize.js";
 
-export default class ExportCommand extends Command {
+export default class ExportCommand extends PrismaticBaseCommand {
   static description = "Export an integration to YAML definition";
 
   static args = {

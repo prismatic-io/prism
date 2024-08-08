@@ -1,7 +1,8 @@
-import { Command, Args } from "@oclif/core";
-import { gqlRequest, gql } from "../../graphql.js";
+import { Args } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { gql, gqlRequest } from "../../graphql.js";
 
-export default class DeleteCommand extends Command {
+export default class DeleteCommand extends PrismaticBaseCommand {
   static description = "Delete an Instance";
   static args = {
     instance: Args.string({

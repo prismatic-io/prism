@@ -28,7 +28,8 @@
         "useImportType": "off"
       },
       "complexity": {
-        "noForEach": "off"
+        "noForEach": "off",
+        "noStaticOnlyClass": "off"
       },
       "performance": {
         "noAccumulatingSpread": "off"

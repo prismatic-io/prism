@@ -1,8 +1,9 @@
-import { Command, Flags } from "@oclif/core";
-import { gqlRequest, gql } from "../../../graphql.js";
+import { Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { parseJsonOrUndefined } from "../../../fields.js";
+import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class CreateCommand extends Command {
+export default class CreateCommand extends PrismaticBaseCommand {
   static description =
     "Create an Alert Monitor by attaching an Alert Trigger and a set of users and webhooks to an Instance";
 

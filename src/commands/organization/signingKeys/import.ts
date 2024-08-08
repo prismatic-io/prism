@@ -1,8 +1,9 @@
-import { Command, Flags } from "@oclif/core";
+import { Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { readFileSync } from "fs";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class ImportCommand extends Command {
+export default class ImportCommand extends PrismaticBaseCommand {
   static description = "Import a RSA public key for use with embedded marketplace";
 
   static flags = {

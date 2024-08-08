@@ -1,9 +1,10 @@
-import { Command, Flags, ux } from "@oclif/core";
+import { Flags, ux } from "@oclif/core";
 import { isEmpty } from "lodash-es";
-import { gqlRequest, gql } from "../../../graphql.js";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { gql, gqlRequest } from "../../../graphql.js";
 import { spawnProcess } from "../../../utils/process.js";
 
-export default class RunCommand extends Command {
+export default class RunCommand extends PrismaticBaseCommand {
   static description =
     `Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.`;
   static usage = "components:dev:run -i <value> -c <value> -- /command/to/run";

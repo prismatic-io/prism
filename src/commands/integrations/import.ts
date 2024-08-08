@@ -1,4 +1,5 @@
-import { Command, Flags } from "@oclif/core";
+import { Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { exists } from "../../fs.js";
 import {
   importYamlIntegration,
@@ -6,7 +7,7 @@ import {
 } from "../../utils/integration/import.js";
 import { openIntegration } from "../../utils/integration/open.js";
 
-export default class ImportCommand extends Command {
+export default class ImportCommand extends PrismaticBaseCommand {
   static description =
     "Import an Integration using a YAML definition file or a Code Native Integration";
   static flags = {

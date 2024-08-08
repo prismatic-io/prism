@@ -1,7 +1,8 @@
-import { Command, Args, Flags } from "@oclif/core";
-import { gqlRequest, gql } from "../../graphql.js";
+import { Args, Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { gql, gqlRequest } from "../../graphql.js";
 
-export default class ForkCommand extends Command {
+export default class ForkCommand extends PrismaticBaseCommand {
   static description = "Fork an Integration";
 
   static flags = {

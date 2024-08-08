@@ -1,7 +1,8 @@
-import { Command, Args, Flags } from "@oclif/core";
+import { Args, Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class AvailableCommand extends Command {
+export default class AvailableCommand extends PrismaticBaseCommand {
   static description = "Mark an Integration version as available or unavailable";
   static args = {
     integration: Args.string({
