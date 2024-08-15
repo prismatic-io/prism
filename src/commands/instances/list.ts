@@ -47,6 +47,12 @@ export default class ListCommand extends Command {
                   name
                   externalId
                 }
+                integration {
+                  versionNumber
+                  versions {
+                    totalCount
+                  }
+                }
               }
               pageInfo {
                 hasNextPage
@@ -87,6 +93,12 @@ export default class ListCommand extends Command {
         },
         description: {},
         enabled: { extended: true },
+        version: {
+          get: ({ integration }) => integration.versionNumber,
+        },
+        latest: {
+          get: ({ integration }) => integration.versions.totalCount,
+        },
       },
       { ...flags },
     );
