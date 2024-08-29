@@ -8,12 +8,17 @@ import { toGroupTag } from "./util.js";
 const buildPerformFunction = (
   pathTemplate: string,
   verb: string,
+  headerInputs: Input[],
   pathInputs: Input[],
   queryInputs: Input[],
   bodyInputs: Input[],
 ): WriterFunction => {
-  const destructureNames = [...pathInputs, ...queryInputs, ...bodyInputs]
+  const destructureNames = [...headerInputs, ...pathInputs, ...queryInputs, ...bodyInputs]
     .map(({ key }) => key)
+    .join(", ");
+
+  const headerMapping = headerInputs
+    .map(({ key, upstreamKey }) => (key === upstreamKey ? key : `"${upstreamKey}": ${key}`))
     .join(", ");
 
   // Path inputs are handled by matching casing and using string interpolation.
@@ -35,6 +40,8 @@ const buildPerformFunction = (
     key === upstreamKey ? key : `"${upstreamKey}": ${key}`,
   );
 
+  const includesConfig = !isEmpty(queryMapping) || !isEmpty(headerMapping);
+
   return (writer) =>
     writer
       .writeLine(`async (context, { connection, ${destructureNames} }) => {`)
@@ -46,7 +53,11 @@ const buildPerformFunction = (
       .write(path)
       .write("`")
       .conditionalWrite(["post", "put", "patch"].includes(verb), () => `, { ${bodyMapping} }`)
-      .conditionalWrite(!isEmpty(queryMapping), () => `, { params: { ${queryMapping} } }`)
+      .conditionalWrite(includesConfig, () => ", { ")
+      .conditionalWrite(!isEmpty(queryMapping), () => `params: { ${queryMapping} }`)
+      .conditionalWrite(!isEmpty(queryMapping) && !isEmpty(headerMapping), () => ", ")
+      .conditionalWrite(!isEmpty(headerMapping), () => `headers: { ${headerMapping} }`)
+      .conditionalWrite(includesConfig, () => " } ")
       .write(");")
       .writeLine("return {data};")
       .writeLine("}");
@@ -60,11 +71,14 @@ const buildAction = (
 ): Action => {
   const operationName = cleanIdentifier(operation.operationId || `${verb} ${path}`);
 
-  const { pathInputs, queryInputs, bodyInputs } = getInputs(operation, sharedParameters);
+  const { headerInputs, pathInputs, queryInputs, bodyInputs } = getInputs(
+    operation,
+    sharedParameters,
+  );
   const groupTag = toGroupTag(operation.tags?.[0] ?? path);
 
   // Repackage inputs; need to ensure we camelCase to handle hyphenated identifiers.
-  const inputs = [...pathInputs, ...queryInputs, ...bodyInputs].reduce(
+  const inputs = [...headerInputs, ...pathInputs, ...queryInputs, ...bodyInputs].reduce(
     (result, i) => ({ ...result, [camelCase(i.key)]: i }),
     {},
   );
@@ -80,7 +94,7 @@ const buildAction = (
       connection: { label: "Connection", type: "connection", required: true },
       ...inputs,
     },
-    perform: buildPerformFunction(path, verb, pathInputs, queryInputs, bodyInputs),
+    perform: buildPerformFunction(path, verb, headerInputs, pathInputs, queryInputs, bodyInputs),
   });
   return action;
 };

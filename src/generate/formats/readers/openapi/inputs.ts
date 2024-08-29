@@ -152,6 +152,7 @@ export const getInputs = (
   operation: OpenAPIV3.OperationObject | OpenAPIV3_1.OperationObject,
   sharedParameters: ParameterObject[] = [],
 ): {
+  headerInputs: Input[];
   pathInputs: Input[];
   queryInputs: Input[];
   bodyInputs: Input[];
@@ -176,6 +177,10 @@ export const getInputs = (
     }, {}),
   );
 
+  const headerInputs = (parameters ?? [])
+    .filter((p) => p.in === "header")
+    .map((p) => buildInput(p, seenKeys));
+
   const pathInputs = (parameters ?? [])
     .filter((p) => p.in === "path")
     .map((p) => buildInput(p, seenKeys));
@@ -192,6 +197,7 @@ export const getInputs = (
     requestBodySchema === undefined ? [] : buildBodyInputs(requestBodySchema, seenKeys);
 
   return {
+    headerInputs,
     pathInputs,
     queryInputs,
     bodyInputs,
