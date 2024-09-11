@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "7.1.0",
+  "version": "7.1.1",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": ["prismatic", "cli"],
   "homepage": "https://prismatic.io",
@@ -46,7 +46,7 @@
     "@oclif/plugin-warn-if-update-available": "3.0.15",
     "@prismatic-io/spectral": "8.0.6",
     "archiver": "6.0.1",
-    "axios": "1.6.8",
+    "axios": "1.7.7",
     "chardet": "1.5.1",
     "dayjs": "1.11.10",
     "dotenv": "16.0.0",
