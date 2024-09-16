@@ -167,8 +167,5 @@
         "description": "Generates phrases for all marketplace integrations"
       }
     }
-  },
-  "overrides": {
-    "axios": "1.6.8"
   }
 }
