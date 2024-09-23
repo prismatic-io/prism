@@ -59,6 +59,16 @@ export default class RunCommand extends Command {
               nodes {
                 requiredConfigVariable {
                   key
+                  connectionTemplate {
+                    inputFieldTemplates {
+                      nodes {
+                        inputField {
+                          key
+                        }
+                        value
+                      }
+                    }
+                  }
                 }
                 inputs {
                   nodes {
@@ -78,7 +88,12 @@ export default class RunCommand extends Command {
     });
 
     const nodes: {
-      requiredConfigVariable: { key: string };
+      requiredConfigVariable: {
+        key: string;
+        connectionTemplate?: {
+          inputFieldTemplates: { nodes: { inputField: { key: string }; value: string }[] };
+        };
+      };
       inputs: { nodes: { name: string; value: string }[] };
       meta: string;
     }[] = result.integration.testConfigVariables.nodes;
@@ -87,15 +102,21 @@ export default class RunCommand extends Command {
       ({ requiredConfigVariable: { key } }) => key === connectionKey,
     );
     if (!connection) {
-      ux.error("Failed to find active connection.", { exit: 1 });
+      ux.error("Failed to find active connection with that name.", { exit: 1 });
     }
 
-    const { meta, inputs } = connection;
+    const { meta, inputs, requiredConfigVariable } = connection;
 
-    const fields = inputs.nodes.reduce<Record<string, unknown>>(
-      (result, { name, value }) => ({ ...result, [name]: value }),
-      {},
-    );
+    // Combine templated connection field values with the test instance's field values
+    const fields = {
+      ...requiredConfigVariable.connectionTemplate?.inputFieldTemplates.nodes.reduce<
+        Record<string, unknown>
+      >((result, { inputField, value }) => ({ ...result, [inputField.key]: value }), {}),
+      ...inputs.nodes.reduce<Record<string, unknown>>(
+        (result, { name, value }) => ({ ...result, [name]: value }),
+        {},
+      ),
+    };
 
     const value = JSON.stringify({
       ...JSON.parse(meta),
