@@ -142,7 +142,9 @@ const writeClient = (project: Project, baseUrl: string, connections: Connection[
         .writeLine(");")
         .writeLine("};")
         .blankLine()
-        .writeLine("export const createClient = (connection: Connection): HttpClient => {")
+        .writeLine(
+          "export const createClient = async (connection: Connection): Promise<HttpClient> => {",
+        )
         .writeLine(
           `if (![${connections
             .map(({ key }) => `${key}.key`)
