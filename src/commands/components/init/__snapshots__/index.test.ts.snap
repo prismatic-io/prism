@@ -288,7 +288,7 @@ import {} from "./connections";
 export const baseUrl = "https://petstore.swagger.io/v2";
 
 const toAuthorizationHeaders = (
-  connection: Connection,
+  connection: Connection
 ): { Authorization: string } => {
   const accessToken = util.types.toString(connection.token?.access_token);
   if (accessToken) {
@@ -308,15 +308,17 @@ const toAuthorizationHeaders = (
   }
 
   throw new Error(
-    \`Failed to guess at authorization parameters for Connection: ${connection.key}\`,
+    \`Failed to guess at authorization parameters for Connection: ${connection.key}\`
   );
 };
 
-export const createClient = (connection: Connection): HttpClient => {
+export const createClient = async (
+  connection: Connection
+): Promise<HttpClient> => {
   if (![].includes(connection.key)) {
     throw new ConnectionError(
       connection,
-      \`Received unexpected connection type: ${connection.key}\`,
+      \`Received unexpected connection type: ${connection.key}\`
     );
   }
 
@@ -358,14 +360,19 @@ const findPets = action({
       type: "string",
       required: false,
       clean: (value): string | undefined =>
-        util.types.toString(value) || undefined,
+        value !== undefined && value !== null
+          ? util.types.toString(value)
+          : undefined,
       comments: "tags to filter by",
     }),
     limit: input({
       label: "Limit",
       type: "string",
       required: false,
-      clean: (value): number => util.types.toNumber(value),
+      clean: (value): number | undefined =>
+        value !== undefined && value !== null
+          ? util.types.toNumber(value)
+          : undefined,
       comments: "maximum number of results to return",
     }),
   },
@@ -391,15 +398,16 @@ const addPet = action({
       label: "Name",
       type: "string",
       required: true,
-      clean: (value): string | undefined =>
-        util.types.toString(value) || undefined,
+      clean: (value): string => util.types.toString(value),
     }),
     tag: input({
       label: "Tag",
       type: "string",
       required: false,
       clean: (value): string | undefined =>
-        util.types.toString(value) || undefined,
+        value !== undefined && value !== null
+          ? util.types.toString(value)
+          : undefined,
     }),
   },
 });
@@ -670,46 +678,46 @@ export interface NumberConversionClient extends SoapClient {
   NumberConversion: NumberConversion;
   NumberToWordsAsync(
     numberToWords: NumberToWords,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: NumberToWordsResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   NumberToDollarsAsync(
     numberToDollars: NumberToDollars,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: NumberToDollarsResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   NumberToWordsAsync(
     numberToWords: NumberToWords,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: NumberToWordsResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   NumberToDollarsAsync(
     numberToDollars: NumberToDollars,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: NumberToDollarsResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
 }
@@ -785,8 +793,8 @@ export interface NumberConversionSoap12 {
       result: NumberToWordsResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   NumberToDollars(
     numberToDollars: NumberToDollars,
@@ -795,8 +803,8 @@ export interface NumberConversionSoap12 {
       result: NumberToDollarsResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
 }
 "
@@ -816,8 +824,8 @@ export interface NumberConversionSoap {
       result: NumberToWordsResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   NumberToDollars(
     numberToDollars: NumberToDollars,
@@ -826,8 +834,8 @@ export interface NumberConversionSoap {
       result: NumberToDollarsResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
 }
 "
@@ -914,11 +922,11 @@ export const numberToDollarsAsync = action({
   },
   perform: async (
     { logger },
-    { dNum, options, headers }: Record<string, any>,
+    { dNum, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "numberConversion.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.NumberToDollarsAsync({ dNum }, { options });
     return { data: result };
@@ -941,11 +949,11 @@ export const numberToWordsAsync = action({
   },
   perform: async (
     { logger },
-    { ubiNum, options, headers }: Record<string, any>,
+    { ubiNum, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "numberConversion.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.NumberToWordsAsync({ ubiNum }, { options });
     return { data: result };
@@ -1346,7 +1354,7 @@ import {} from "./connections";
 export const baseUrl = "https://petstore.swagger.io/v2";
 
 const toAuthorizationHeaders = (
-  connection: Connection,
+  connection: Connection
 ): { Authorization: string } => {
   const accessToken = util.types.toString(connection.token?.access_token);
   if (accessToken) {
@@ -1366,15 +1374,17 @@ const toAuthorizationHeaders = (
   }
 
   throw new Error(
-    \`Failed to guess at authorization parameters for Connection: ${connection.key}\`,
+    \`Failed to guess at authorization parameters for Connection: ${connection.key}\`
   );
 };
 
-export const createClient = (connection: Connection): HttpClient => {
+export const createClient = async (
+  connection: Connection
+): Promise<HttpClient> => {
   if (![].includes(connection.key)) {
     throw new ConnectionError(
       connection,
-      \`Received unexpected connection type: ${connection.key}\`,
+      \`Received unexpected connection type: ${connection.key}\`
     );
   }
 
@@ -1418,14 +1428,19 @@ const findPets = action({
       type: "string",
       required: false,
       clean: (value): string | undefined =>
-        util.types.toString(value) || undefined,
+        value !== undefined && value !== null
+          ? util.types.toString(value)
+          : undefined,
       comments: "tags to filter by",
     }),
     limit: input({
       label: "Limit",
       type: "string",
       required: false,
-      clean: (value): number => util.types.toNumber(value),
+      clean: (value): number | undefined =>
+        value !== undefined && value !== null
+          ? util.types.toNumber(value)
+          : undefined,
       comments: "maximum number of results to return",
     }),
   },
@@ -1440,7 +1455,7 @@ const addPet = action({
     const client = createClient(connection);
     const { data } = await client.post(
       \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2\`,
-      { name, tag },
+      { name, tag }
     );
     return { data };
   },
@@ -1454,15 +1469,16 @@ const addPet = action({
       label: "Name",
       type: "string",
       required: true,
-      clean: (value): string | undefined =>
-        util.types.toString(value) || undefined,
+      clean: (value): string => util.types.toString(value),
     }),
     tag: input({
       label: "Tag",
       type: "string",
       required: false,
       clean: (value): string | undefined =>
-        util.types.toString(value) || undefined,
+        value !== undefined && value !== null
+          ? util.types.toString(value)
+          : undefined,
     }),
   },
 });
@@ -1476,7 +1492,7 @@ const findPetById = action({
   perform: async (context, { connection, id }) => {
     const client = createClient(connection);
     const { data } = await client.get(
-      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/${id}\`,
+      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/${id}\`
     );
     return { data };
   },
@@ -1504,7 +1520,7 @@ const deletePet = action({
   perform: async (context, { connection, id }) => {
     const client = createClient(connection);
     const { data } = await client.delete(
-      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/${id}\`,
+      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/${id}\`
     );
     return { data };
   },
@@ -1650,464 +1666,464 @@ export interface CountryInfoServiceClient extends SoapClient {
   CountryInfoService: CountryInfoService;
   ListOfContinentsByNameAsync(
     listOfContinentsByName: ListOfContinentsByName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfContinentsByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfContinentsByCodeAsync(
     listOfContinentsByCode: ListOfContinentsByCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfContinentsByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfCurrenciesByNameAsync(
     listOfCurrenciesByName: ListOfCurrenciesByName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfCurrenciesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfCurrenciesByCodeAsync(
     listOfCurrenciesByCode: ListOfCurrenciesByCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfCurrenciesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CurrencyNameAsync(
     currencyName: CurrencyName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CurrencyNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfCountryNamesByCodeAsync(
     listOfCountryNamesByCode: ListOfCountryNamesByCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfCountryNamesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfCountryNamesByNameAsync(
     listOfCountryNamesByName: ListOfCountryNamesByName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfCountryNamesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfCountryNamesGroupedByContinentAsync(
     listOfCountryNamesGroupedByContinent: ListOfCountryNamesGroupedByContinent,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfCountryNamesGroupedByContinentResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountryNameAsync(
     countryName: CountryName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountryNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountryISOCodeAsync(
     countryIsoCode: CountryIsoCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountryIsoCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CapitalCityAsync(
     capitalCity: CapitalCity,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CapitalCityResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountryCurrencyAsync(
     countryCurrency: CountryCurrency,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountryCurrencyResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountryFlagAsync(
     countryFlag: CountryFlag,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountryFlagResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountryIntPhoneCodeAsync(
     countryIntPhoneCode: CountryIntPhoneCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountryIntPhoneCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   FullCountryInfoAsync(
     fullCountryInfo: FullCountryInfo,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: FullCountryInfoResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   FullCountryInfoAllCountriesAsync(
     fullCountryInfoAllCountries: FullCountryInfoAllCountries,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: FullCountryInfoAllCountriesResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountriesUsingCurrencyAsync(
     countriesUsingCurrency: CountriesUsingCurrency,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountriesUsingCurrencyResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfLanguagesByNameAsync(
     listOfLanguagesByName: ListOfLanguagesByName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfLanguagesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfLanguagesByCodeAsync(
     listOfLanguagesByCode: ListOfLanguagesByCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfLanguagesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   LanguageNameAsync(
     languageName: LanguageName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: LanguageNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   LanguageISOCodeAsync(
     languageIsoCode: LanguageIsoCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: LanguageIsoCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfContinentsByNameAsync(
     listOfContinentsByName: ListOfContinentsByName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfContinentsByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfContinentsByCodeAsync(
     listOfContinentsByCode: ListOfContinentsByCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfContinentsByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfCurrenciesByNameAsync(
     listOfCurrenciesByName: ListOfCurrenciesByName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfCurrenciesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfCurrenciesByCodeAsync(
     listOfCurrenciesByCode: ListOfCurrenciesByCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfCurrenciesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CurrencyNameAsync(
     currencyName: CurrencyName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CurrencyNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfCountryNamesByCodeAsync(
     listOfCountryNamesByCode: ListOfCountryNamesByCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfCountryNamesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfCountryNamesByNameAsync(
     listOfCountryNamesByName: ListOfCountryNamesByName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfCountryNamesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfCountryNamesGroupedByContinentAsync(
     listOfCountryNamesGroupedByContinent: ListOfCountryNamesGroupedByContinent,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfCountryNamesGroupedByContinentResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountryNameAsync(
     countryName: CountryName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountryNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountryISOCodeAsync(
     countryIsoCode: CountryIsoCode1,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountryIsoCodeResponse1,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CapitalCityAsync(
     capitalCity: CapitalCity,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CapitalCityResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountryCurrencyAsync(
     countryCurrency: CountryCurrency,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountryCurrencyResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountryFlagAsync(
     countryFlag: CountryFlag,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountryFlagResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountryIntPhoneCodeAsync(
     countryIntPhoneCode: CountryIntPhoneCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountryIntPhoneCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   FullCountryInfoAsync(
     fullCountryInfo: FullCountryInfo,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: FullCountryInfoResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   FullCountryInfoAllCountriesAsync(
     fullCountryInfoAllCountries: FullCountryInfoAllCountries,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: FullCountryInfoAllCountriesResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   CountriesUsingCurrencyAsync(
     countriesUsingCurrency: CountriesUsingCurrency,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: CountriesUsingCurrencyResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfLanguagesByNameAsync(
     listOfLanguagesByName: ListOfLanguagesByName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfLanguagesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   ListOfLanguagesByCodeAsync(
     listOfLanguagesByCode: ListOfLanguagesByCode,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: ListOfLanguagesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   LanguageNameAsync(
     languageName: LanguageName,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: LanguageNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
   LanguageISOCodeAsync(
     languageIsoCode: LanguageIsoCode1,
-    options?: ISoapExOptions,
+    options?: ISoapExOptions
   ): Promise<
     [
       result: LanguageIsoCodeResponse1,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
+      rawRequest: any
     ]
   >;
 }
@@ -2846,8 +2862,8 @@ export interface CountryInfoServiceSoap {
       result: ListOfContinentsByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfContinentsByCode(
     listOfContinentsByCode: ListOfContinentsByCode,
@@ -2856,8 +2872,8 @@ export interface CountryInfoServiceSoap {
       result: ListOfContinentsByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfCurrenciesByName(
     listOfCurrenciesByName: ListOfCurrenciesByName,
@@ -2866,8 +2882,8 @@ export interface CountryInfoServiceSoap {
       result: ListOfCurrenciesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfCurrenciesByCode(
     listOfCurrenciesByCode: ListOfCurrenciesByCode,
@@ -2876,8 +2892,8 @@ export interface CountryInfoServiceSoap {
       result: ListOfCurrenciesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CurrencyName(
     currencyName: CurrencyName,
@@ -2886,8 +2902,8 @@ export interface CountryInfoServiceSoap {
       result: CurrencyNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfCountryNamesByCode(
     listOfCountryNamesByCode: ListOfCountryNamesByCode,
@@ -2896,8 +2912,8 @@ export interface CountryInfoServiceSoap {
       result: ListOfCountryNamesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfCountryNamesByName(
     listOfCountryNamesByName: ListOfCountryNamesByName,
@@ -2906,8 +2922,8 @@ export interface CountryInfoServiceSoap {
       result: ListOfCountryNamesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfCountryNamesGroupedByContinent(
     listOfCountryNamesGroupedByContinent: ListOfCountryNamesGroupedByContinent,
@@ -2916,8 +2932,8 @@ export interface CountryInfoServiceSoap {
       result: ListOfCountryNamesGroupedByContinentResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountryName(
     countryName: CountryName,
@@ -2926,8 +2942,8 @@ export interface CountryInfoServiceSoap {
       result: CountryNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountryISOCode(
     countryIsoCode: CountryIsoCode,
@@ -2936,8 +2952,8 @@ export interface CountryInfoServiceSoap {
       result: CountryIsoCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CapitalCity(
     capitalCity: CapitalCity,
@@ -2946,8 +2962,8 @@ export interface CountryInfoServiceSoap {
       result: CapitalCityResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountryCurrency(
     countryCurrency: CountryCurrency,
@@ -2956,8 +2972,8 @@ export interface CountryInfoServiceSoap {
       result: CountryCurrencyResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountryFlag(
     countryFlag: CountryFlag,
@@ -2966,8 +2982,8 @@ export interface CountryInfoServiceSoap {
       result: CountryFlagResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountryIntPhoneCode(
     countryIntPhoneCode: CountryIntPhoneCode,
@@ -2976,8 +2992,8 @@ export interface CountryInfoServiceSoap {
       result: CountryIntPhoneCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   FullCountryInfo(
     fullCountryInfo: FullCountryInfo,
@@ -2986,8 +3002,8 @@ export interface CountryInfoServiceSoap {
       result: FullCountryInfoResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   FullCountryInfoAllCountries(
     fullCountryInfoAllCountries: FullCountryInfoAllCountries,
@@ -2996,8 +3012,8 @@ export interface CountryInfoServiceSoap {
       result: FullCountryInfoAllCountriesResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountriesUsingCurrency(
     countriesUsingCurrency: CountriesUsingCurrency,
@@ -3006,8 +3022,8 @@ export interface CountryInfoServiceSoap {
       result: CountriesUsingCurrencyResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfLanguagesByName(
     listOfLanguagesByName: ListOfLanguagesByName,
@@ -3016,8 +3032,8 @@ export interface CountryInfoServiceSoap {
       result: ListOfLanguagesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfLanguagesByCode(
     listOfLanguagesByCode: ListOfLanguagesByCode,
@@ -3026,8 +3042,8 @@ export interface CountryInfoServiceSoap {
       result: ListOfLanguagesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   LanguageName(
     languageName: LanguageName,
@@ -3036,8 +3052,8 @@ export interface CountryInfoServiceSoap {
       result: LanguageNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   LanguageISOCode(
     languageIsoCode: LanguageIsoCode,
@@ -3046,8 +3062,8 @@ export interface CountryInfoServiceSoap {
       result: LanguageIsoCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
 }
 "
@@ -3105,8 +3121,8 @@ export interface CountryInfoServiceSoap12 {
       result: ListOfContinentsByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfContinentsByCode(
     listOfContinentsByCode: ListOfContinentsByCode,
@@ -3115,8 +3131,8 @@ export interface CountryInfoServiceSoap12 {
       result: ListOfContinentsByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfCurrenciesByName(
     listOfCurrenciesByName: ListOfCurrenciesByName,
@@ -3125,8 +3141,8 @@ export interface CountryInfoServiceSoap12 {
       result: ListOfCurrenciesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfCurrenciesByCode(
     listOfCurrenciesByCode: ListOfCurrenciesByCode,
@@ -3135,8 +3151,8 @@ export interface CountryInfoServiceSoap12 {
       result: ListOfCurrenciesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CurrencyName(
     currencyName: CurrencyName,
@@ -3145,8 +3161,8 @@ export interface CountryInfoServiceSoap12 {
       result: CurrencyNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfCountryNamesByCode(
     listOfCountryNamesByCode: ListOfCountryNamesByCode,
@@ -3155,8 +3171,8 @@ export interface CountryInfoServiceSoap12 {
       result: ListOfCountryNamesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfCountryNamesByName(
     listOfCountryNamesByName: ListOfCountryNamesByName,
@@ -3165,8 +3181,8 @@ export interface CountryInfoServiceSoap12 {
       result: ListOfCountryNamesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfCountryNamesGroupedByContinent(
     listOfCountryNamesGroupedByContinent: ListOfCountryNamesGroupedByContinent,
@@ -3175,8 +3191,8 @@ export interface CountryInfoServiceSoap12 {
       result: ListOfCountryNamesGroupedByContinentResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountryName(
     countryName: CountryName,
@@ -3185,8 +3201,8 @@ export interface CountryInfoServiceSoap12 {
       result: CountryNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountryISOCode(
     countryIsoCode: CountryIsoCode1,
@@ -3195,8 +3211,8 @@ export interface CountryInfoServiceSoap12 {
       result: CountryIsoCodeResponse1,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CapitalCity(
     capitalCity: CapitalCity,
@@ -3205,8 +3221,8 @@ export interface CountryInfoServiceSoap12 {
       result: CapitalCityResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountryCurrency(
     countryCurrency: CountryCurrency,
@@ -3215,8 +3231,8 @@ export interface CountryInfoServiceSoap12 {
       result: CountryCurrencyResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountryFlag(
     countryFlag: CountryFlag,
@@ -3225,8 +3241,8 @@ export interface CountryInfoServiceSoap12 {
       result: CountryFlagResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountryIntPhoneCode(
     countryIntPhoneCode: CountryIntPhoneCode,
@@ -3235,8 +3251,8 @@ export interface CountryInfoServiceSoap12 {
       result: CountryIntPhoneCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   FullCountryInfo(
     fullCountryInfo: FullCountryInfo,
@@ -3245,8 +3261,8 @@ export interface CountryInfoServiceSoap12 {
       result: FullCountryInfoResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   FullCountryInfoAllCountries(
     fullCountryInfoAllCountries: FullCountryInfoAllCountries,
@@ -3255,8 +3271,8 @@ export interface CountryInfoServiceSoap12 {
       result: FullCountryInfoAllCountriesResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   CountriesUsingCurrency(
     countriesUsingCurrency: CountriesUsingCurrency,
@@ -3265,8 +3281,8 @@ export interface CountryInfoServiceSoap12 {
       result: CountriesUsingCurrencyResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfLanguagesByName(
     listOfLanguagesByName: ListOfLanguagesByName,
@@ -3275,8 +3291,8 @@ export interface CountryInfoServiceSoap12 {
       result: ListOfLanguagesByNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   ListOfLanguagesByCode(
     listOfLanguagesByCode: ListOfLanguagesByCode,
@@ -3285,8 +3301,8 @@ export interface CountryInfoServiceSoap12 {
       result: ListOfLanguagesByCodeResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   LanguageName(
     languageName: LanguageName,
@@ -3295,8 +3311,8 @@ export interface CountryInfoServiceSoap12 {
       result: LanguageNameResponse,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
   LanguageISOCode(
     languageIsoCode: LanguageIsoCode1,
@@ -3305,8 +3321,8 @@ export interface CountryInfoServiceSoap12 {
       result: LanguageIsoCodeResponse1,
       rawResponse: any,
       soapHeader: any,
-      rawRequest: any,
-    ) => void,
+      rawRequest: any
+    ) => void
   ): void;
 }
 "
@@ -4419,15 +4435,15 @@ export const capitalCityAsync = action({
   },
   perform: async (
     { logger },
-    { sCountryISOCode, options, headers }: Record<string, any>,
+    { sCountryISOCode, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.CapitalCityAsync(
       { sCountryISOCode },
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4449,15 +4465,15 @@ export const countriesUsingCurrencyAsync = action({
   },
   perform: async (
     { logger },
-    { sISOCurrencyCode, options, headers }: Record<string, any>,
+    { sISOCurrencyCode, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.CountriesUsingCurrencyAsync(
       { sISOCurrencyCode },
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4479,15 +4495,15 @@ export const countryCurrencyAsync = action({
   },
   perform: async (
     { logger },
-    { sCountryISOCode, options, headers }: Record<string, any>,
+    { sCountryISOCode, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.CountryCurrencyAsync(
       { sCountryISOCode },
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4509,15 +4525,15 @@ export const countryFlagAsync = action({
   },
   perform: async (
     { logger },
-    { sCountryISOCode, options, headers }: Record<string, any>,
+    { sCountryISOCode, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.CountryFlagAsync(
       { sCountryISOCode },
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4539,15 +4555,15 @@ export const countryIntPhoneCodeAsync = action({
   },
   perform: async (
     { logger },
-    { sCountryISOCode, options, headers }: Record<string, any>,
+    { sCountryISOCode, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.CountryIntPhoneCodeAsync(
       { sCountryISOCode },
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4569,15 +4585,15 @@ export const countryIsoCodeAsync = action({
   },
   perform: async (
     { logger },
-    { sCountryName, options, headers }: Record<string, any>,
+    { sCountryName, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.CountryISOCodeAsync(
       { sCountryName },
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4599,15 +4615,15 @@ export const countryNameAsync = action({
   },
   perform: async (
     { logger },
-    { sCountryISOCode, options, headers }: Record<string, any>,
+    { sCountryISOCode, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.CountryNameAsync(
       { sCountryISOCode },
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4629,15 +4645,15 @@ export const currencyNameAsync = action({
   },
   perform: async (
     { logger },
-    { sCurrencyISOCode, options, headers }: Record<string, any>,
+    { sCurrencyISOCode, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.CurrencyNameAsync(
       { sCurrencyISOCode },
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4660,11 +4676,11 @@ export const fullCountryInfoAllCountriesAsync = action({
   perform: async ({ logger }, { options, headers }: Record<string, any>) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.FullCountryInfoAllCountriesAsync(
       {},
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4685,15 +4701,15 @@ export const fullCountryInfoAsync = action({
   },
   perform: async (
     { logger },
-    { sCountryISOCode, options, headers }: Record<string, any>,
+    { sCountryISOCode, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.FullCountryInfoAsync(
       { sCountryISOCode },
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4715,15 +4731,15 @@ export const languageIsoCodeAsync = action({
   },
   perform: async (
     { logger },
-    { sLanguageName, options, headers }: Record<string, any>,
+    { sLanguageName, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.LanguageISOCodeAsync(
       { sLanguageName },
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4745,11 +4761,11 @@ export const languageNameAsync = action({
   },
   perform: async (
     { logger },
-    { sISOCode, options, headers }: Record<string, any>,
+    { sISOCode, options, headers }: Record<string, any>
   ) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.LanguageNameAsync({ sISOCode }, { options });
     return { data: result };
@@ -4773,7 +4789,7 @@ export const listOfContinentsByCodeAsync = action({
   perform: async ({ logger }, { options, headers }: Record<string, any>) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.ListOfContinentsByCodeAsync({}, { options });
     return { data: result };
@@ -4796,7 +4812,7 @@ export const listOfContinentsByNameAsync = action({
   perform: async ({ logger }, { options, headers }: Record<string, any>) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.ListOfContinentsByNameAsync({}, { options });
     return { data: result };
@@ -4819,11 +4835,11 @@ export const listOfCountryNamesByCodeAsync = action({
   perform: async ({ logger }, { options, headers }: Record<string, any>) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.ListOfCountryNamesByCodeAsync(
       {},
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4845,11 +4861,11 @@ export const listOfCountryNamesByNameAsync = action({
   perform: async ({ logger }, { options, headers }: Record<string, any>) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.ListOfCountryNamesByNameAsync(
       {},
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4871,11 +4887,11 @@ export const listOfCountryNamesGroupedByContinentAsync = action({
   perform: async ({ logger }, { options, headers }: Record<string, any>) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.ListOfCountryNamesGroupedByContinentAsync(
       {},
-      { options },
+      { options }
     );
     return { data: result };
   },
@@ -4897,7 +4913,7 @@ export const listOfCurrenciesByCodeAsync = action({
   perform: async ({ logger }, { options, headers }: Record<string, any>) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.ListOfCurrenciesByCodeAsync({}, { options });
     return { data: result };
@@ -4920,7 +4936,7 @@ export const listOfCurrenciesByNameAsync = action({
   perform: async ({ logger }, { options, headers }: Record<string, any>) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.ListOfCurrenciesByNameAsync({}, { options });
     return { data: result };
@@ -4943,7 +4959,7 @@ export const listOfLanguagesByCodeAsync = action({
   perform: async ({ logger }, { options, headers }: Record<string, any>) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.ListOfLanguagesByCodeAsync({}, { options });
     return { data: result };
@@ -4966,7 +4982,7 @@ export const listOfLanguagesByNameAsync = action({
   perform: async ({ logger }, { options, headers }: Record<string, any>) => {
     const client = await createClientAsync(
       path.join(__dirname, "countryInfoService.wsdl"),
-      headers,
+      headers
     );
     const [result] = await client.ListOfLanguagesByNameAsync({}, { options });
     return { data: result };
