@@ -119,6 +119,7 @@ For documentation on writing custom components, visit https://prismatic.io/docs/
     `);
       }
 
+      process.chdir(path.join(cwd, name));
       const filesToFormat = await getFilesToFormat(name);
       await formatSourceFiles(name, filesToFormat);
     } finally {
