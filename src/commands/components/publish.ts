@@ -119,7 +119,10 @@ export default class PublishCommand extends PrismaticBaseCommand {
       display: { iconPath },
     } = definition;
     await uploadFile(packagePath, packageUploadUrl);
-    await uploadFile(iconPath, iconUploadUrl);
+    if (iconPath) {
+      await uploadFile(iconPath, iconUploadUrl);
+    }
+
     await uploadConnectionIcons(definition, connectionIconUploadUrls);
 
     const {

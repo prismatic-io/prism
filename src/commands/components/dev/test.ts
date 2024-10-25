@@ -236,7 +236,10 @@ export default class TestCommand extends PrismaticBaseCommand {
       const {
         display: { iconPath },
       } = definition;
-      await uploadFile(iconPath, iconUploadUrl);
+      if (iconPath) {
+        await uploadFile(iconPath, iconUploadUrl);
+      }
+
       await uploadConnectionIcons(definition, connectionIconUploadUrls);
       await uploadFile(packagePath, packageUploadUrl);
 

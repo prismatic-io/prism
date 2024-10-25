@@ -2,7 +2,7 @@ import { extname } from "path";
 import crypto from "crypto";
 import { ux } from "@oclif/core";
 import mimetypes from "mime-types";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 
 import { ComponentDefinition } from "./index.js";
 import { fs } from "../../fs.js";
@@ -18,6 +18,7 @@ const componentDefinitionShape: Record<keyof ComponentDefinition, true> = {
   key: true,
   public: true,
   triggers: true,
+  codeNativeIntegrationYAML: true,
 };
 
 export const checkPackageSignature = async (
@@ -88,7 +89,13 @@ export const publishDefinition = async (
 ): Promise<{
   iconUploadUrl: string;
   packageUploadUrl: string;
-  connectionIconUploadUrls: Record<string, string>;
+  connectionIconUploadUrls: Record<
+    string,
+    {
+      iconUploadUrl?: string;
+      avatarIconUploadUrl?: string;
+    }
+  >;
   versionNumber: string;
 }> => {
   const componentDefinition: Record<string, unknown> = Object.entries(rest).reduce(
@@ -165,6 +172,10 @@ export const publishDefinition = async (
               connectionKey
               iconUploadUrl
             }
+            connectionAvatarIconUploadUrls {
+              connectionKey
+              iconUploadUrl
+            }
           }
           errors {
             field
@@ -189,21 +200,32 @@ export const publishDefinition = async (
     iconUploadUrl,
     packageUploadUrl,
     connectionIconUploadUrls,
+    connectionAvatarIconUploadUrls,
     component: { versionNumber },
   } = result.publishComponent.publishResult;
 
-  const uploadUrls = (
-    connectionIconUploadUrls as {
+  const uploadUrls: Record<string, { iconUploadUrl?: string; avatarIconUploadUrl?: string }> = {};
+
+  (
+    connectionIconUploadUrls as Array<{
       connectionKey: string;
       iconUploadUrl: string;
-    }[]
-  ).reduce<Record<string, string>>(
-    (result, { connectionKey, iconUploadUrl }) => ({
-      ...result,
-      [connectionKey]: iconUploadUrl,
-    }),
-    {},
-  );
+    }>
+  ).forEach(({ connectionKey, iconUploadUrl }) => {
+    uploadUrls[connectionKey] = { iconUploadUrl };
+  });
+
+  (
+    connectionAvatarIconUploadUrls as Array<{
+      connectionKey: string;
+      iconUploadUrl: string;
+    }>
+  ).forEach(({ connectionKey, iconUploadUrl }) => {
+    uploadUrls[connectionKey] = {
+      ...uploadUrls[connectionKey],
+      avatarIconUploadUrl: iconUploadUrl,
+    };
+  });
 
   return {
     iconUploadUrl,
@@ -231,7 +253,10 @@ export const uploadFile = async (filePath: string, destinationUrl: string) => {
 
 export const uploadConnectionIcons = async (
   { connections }: ComponentDefinition,
-  connectionIconUploadUrls: Record<string, string>,
+  connectionIconUploadUrls: Record<
+    string,
+    { iconUploadUrl?: string; avatarIconUploadUrl?: string }
+  >,
 ): Promise<void> => {
   if (
     !connections ||
@@ -242,18 +267,36 @@ export const uploadConnectionIcons = async (
     return;
   }
 
-  const iconPaths = connections.reduce<Record<string, string>>((result, { key, iconPath }) => {
-    if (!iconPath) {
+  const iconPaths = connections.reduce<
+    Record<string, { avatarIconPath?: string; iconPath?: string }>
+  >((result, { key, iconPath, avatarIconPath }) => {
+    if (!iconPath && !avatarIconPath) {
       return result;
     }
     return {
       ...result,
-      [key]: iconPath,
+      [key]: {
+        iconPath,
+        avatarIconPath,
+      },
     };
   }, {});
 
-  const promises = Object.entries(connectionIconUploadUrls).map(
-    async ([connectionKey, uploadUrl]) => uploadFile(iconPaths[connectionKey], uploadUrl),
-  );
+  const promises = Object.entries(connectionIconUploadUrls).reduce<
+    Array<Promise<AxiosResponse<any, any>>>
+  >((acc, [connectionKey, { iconUploadUrl, avatarIconUploadUrl }]) => {
+    const connectionIconPaths = iconPaths[connectionKey];
+
+    if (connectionIconPaths.iconPath && iconUploadUrl) {
+      acc.push(uploadFile(connectionIconPaths.iconPath, iconUploadUrl));
+    }
+
+    if (connectionIconPaths.avatarIconPath && avatarIconUploadUrl) {
+      acc.push(uploadFile(connectionIconPaths.avatarIconPath, avatarIconUploadUrl));
+    }
+
+    return acc;
+  }, []);
+
   await Promise.all(promises);
 };

@@ -1,4 +1,4 @@
-import { ComponentDefinition as ComponentDefinitionTemplate } from "@prismatic-io/spectral";
+import { Component as ComponentDefinitionTemplate } from "@prismatic-io/spectral/dist/serverTypes";
 import { ux } from "@oclif/core";
 import { resolve } from "path";
 import tempy from "tempy";
@@ -22,8 +22,8 @@ type LegacyDefinition = {
  * Prism must be capable of publishing all past component definitions and
  * gracefully publish future component definitions.
  */
-export type ComponentDefinition = Omit<ComponentDefinitionTemplate<false, any>, "hooks"> &
-  Pick<ComponentDefinitionTemplate<true, any>, "documentationUrl"> &
+export type ComponentDefinition = Omit<ComponentDefinitionTemplate, "hooks"> &
+  Pick<ComponentDefinitionTemplate, "documentationUrl"> &
   LegacyDefinition;
 
 interface ComponentEntrypoint {
@@ -86,7 +86,10 @@ export const validateDefinition = async (definition: ComponentDefinition): Promi
   }
 
   const connectionIconsValid = await Promise.all(
-    (connections ?? []).map(({ iconPath }) => validateIcon(iconPath)),
+    (connections ?? []).map(({ iconPath, avatarIconPath }) => [
+      validateIcon(iconPath),
+      validateIcon(avatarIconPath),
+    ]),
   );
   if (connectionIconsValid.some((v) => !v)) {
     ux.error("One or more connection icons do not exist or are not a png. Exiting.", {
