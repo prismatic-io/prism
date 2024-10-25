@@ -40,12 +40,11 @@ const writeInput = (
 
 const buildConnectionDeclaration = ({
   key,
-  label,
+  display,
   oauth2Type,
-  iconPath,
-  comments,
   inputs,
 }: Connection): VariableDeclarationStructure => {
+  const { label, description, icons } = display;
   const connectionFn = oauth2Type === undefined ? "connection" : "oauth2Connection";
 
   return {
@@ -57,9 +56,25 @@ const buildConnectionDeclaration = ({
       writer
         .writeLine(`${connectionFn}({`)
         .writeLine(`key: "${key}",`)
-        .writeLine(`label: "${label}",`)
-        .conditionalWriteLine(comments !== undefined, `comments: "${escapeText(comments)}",`)
-        .conditionalWriteLine(iconPath !== undefined, `iconPath: "${iconPath}",`)
+        .write("display: ")
+        .block(() => {
+          writer
+            .writeLine(`label: "${label}",`)
+            .writeLine(`description: "${escapeText(description)}",`)
+            .write("icons: ")
+            .block(() => {
+              writer
+                .conditionalWriteLine(
+                  icons?.avatarPath !== undefined,
+                  `avatarPath: "${icons?.avatarPath}",`,
+                )
+                .conditionalWriteLine(
+                  icons?.oauth2ConnectionIconPath !== undefined,
+                  `oauth2ConnectionIconPath: "${icons?.oauth2ConnectionIconPath}",`,
+                );
+            });
+        })
+        .writeLine(",")
         .conditionalWriteLine(oauth2Type !== undefined, () => {
           if (oauth2Type === OAuth2Type.AuthorizationCode) {
             return "oauth2Type: OAuth2Type.AuthorizationCode,";

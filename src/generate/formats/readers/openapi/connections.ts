@@ -15,8 +15,10 @@ export const buildConnections = (
     const connection = stripUndefined<Connection>({
       orderPriority: 50,
       key: camelCase(key),
-      label: startCase(key),
-      comments: createDescription(scheme.description),
+      display: {
+        label: startCase(key),
+        description: createDescription(scheme.description),
+      },
       inputs: {
         apiKey: {
           label: startCase(scheme.type === "apiKey" ? scheme.name : "Token"),
@@ -32,8 +34,10 @@ export const buildConnections = (
     const connection = stripUndefined<Connection>({
       orderPriority: 1000,
       key: camelCase(key),
-      label: startCase(key),
-      comments: createDescription(scheme.description),
+      display: {
+        label: startCase(key),
+        description: createDescription(scheme.description),
+      },
       inputs: {
         username: {
           label: "Username",
@@ -57,7 +61,10 @@ export const buildConnections = (
       const connection = stripUndefined<Connection>({
         orderPriority: 0,
         key: camelCase(key),
-        label: "OAuth 2.0", // TODO: Apparently OpenAPI lacks a name/description for this scheme? Ok.
+        display: {
+          label: "OAuth 2.0", // TODO: Apparently OpenAPI lacks a name/description for this scheme? Ok.
+          description: "",
+        },
         oauth2Type: OAuth2Type.AuthorizationCode,
         inputs: {
           authorizeUrl: stripUndefined<ConnectionInput>({
@@ -109,7 +116,10 @@ export const buildConnections = (
       const connection = stripUndefined<Connection>({
         orderPriority: 10,
         key: camelCase(key),
-        label: "OAuth 2.0 Client Credentials",
+        display: {
+          label: "OAuth 2.0 Client Credentials",
+          description: "",
+        },
         oauth2Type: OAuth2Type.ClientCredentials,
         inputs: {
           tokenUrl: stripUndefined<ConnectionInput>({
