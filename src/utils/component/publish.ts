@@ -8,7 +8,7 @@ import { ComponentDefinition } from "./index.js";
 import { fs } from "../../fs.js";
 import { gqlRequest, gql } from "../../graphql.js";
 
-const componentDefinitionShape: Record<keyof ComponentDefinition, true> = {
+const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {
   actions: true,
   authorization: true,
   connections: true,
@@ -18,7 +18,6 @@ const componentDefinitionShape: Record<keyof ComponentDefinition, true> = {
   key: true,
   public: true,
   triggers: true,
-  codeNativeIntegrationYAML: true,
 };
 
 export const checkPackageSignature = async (
