@@ -69,7 +69,14 @@ export const confirmPublish = async (
 };
 
 export const publishDefinition = async (
-  { actions, triggers, dataSources, connections, ...rest }: ComponentDefinition,
+  {
+    actions,
+    triggers,
+    dataSources,
+    connections,
+    codeNativeIntegrationStableKey,
+    ...rest
+  }: ComponentDefinition,
   {
     comment,
     customer,
