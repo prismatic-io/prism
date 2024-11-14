@@ -41,12 +41,13 @@ interface Integration {
 export const importDefinition = async (
   definition: string,
   integrationId?: string,
+  stableKey?: string,
 ): Promise<ImportDefinitionResult> => {
   const result = await gqlRequest({
     document: gql`
-      mutation importIntegration($definition: String!, $integrationId: ID) {
+      mutation importIntegration($definition: String!, $integrationId: ID, $stableKey: String) {
         importIntegration(
-          input: { definition: $definition, integrationId: $integrationId }
+          input: { definition: $definition, integrationId: $integrationId, stableKey: $stableKey }
         ) {
           integration {
             id
@@ -73,6 +74,7 @@ export const importDefinition = async (
     variables: {
       definition,
       integrationId,
+      stableKey,
     },
   });
 
@@ -168,9 +170,11 @@ export const importCodeNativeIntegration = async (integrationId?: string): Promi
   }
 
   ux.action.start("Importing definition for Code Native Integration into Prismatic");
+  const { codeNativeIntegrationStableKey } = componentDefinition;
   const { integrationId: integrationImportId } = await importDefinition(
     integrationDefinition,
     integrationId,
+    codeNativeIntegrationStableKey,
   );
 
   const {
