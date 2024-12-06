@@ -74,7 +74,11 @@ export default class GenerateComponentCommand extends Command {
     ];
     await Promise.all([
       ...templateFiles.map((file) =>
-        template(path.join("component", `${file}.ejs`), file, context),
+        template(
+          path.join("component", file.endsWith("icon.png") ? file : `${file}.ejs`),
+          file,
+          context,
+        ),
       ),
       GenerateActionCommand.invoke(
         {
