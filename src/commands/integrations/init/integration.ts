@@ -94,7 +94,11 @@ export default class GenerateIntegrationCommand extends Command {
     ];
     await Promise.all([
       ...templateFiles.map((file) =>
-        template(path.join("integration", `${file}.ejs`), file, context),
+        template(
+          path.join("integration", file.endsWith("icon.png") ? file : `${file}.ejs`),
+          file,
+          context,
+        ),
       ),
       template(
         path.join("integration", `${connectionType}.ts.ejs`),

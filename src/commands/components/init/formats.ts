@@ -41,7 +41,11 @@ export default class GenerateFormatsCommand extends Command {
       "jest.config.js",
       path.join("assets", "icon.png"),
     ];
-    await Promise.all(templateFiles.map((f) => template(path.join("formats", `${f}.ejs`), f)));
+    await Promise.all(
+      templateFiles.map((f) =>
+        template(path.join("formats", f.endsWith("icon.png") ? f : `${f}.ejs`), f),
+      ),
+    );
 
     await updatePackageJson({
       path: "package.json",
