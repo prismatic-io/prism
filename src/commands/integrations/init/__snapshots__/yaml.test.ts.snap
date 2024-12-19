@@ -1,0 +1,180 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/jest.config.js 1`] = `
+"module.exports = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+};
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/.npmrc 1`] = `
+"@component-manifests:registry=https://app.dev.prismatic-dev.io/packages/npm
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/.prettierignore 1`] = `
+"# Ignore artifacts:
+build
+coverage
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/.prettierrc 1`] = `
+"{}
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/tsconfig.json 1`] = `
+"{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["esnext"],
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "node"
+  },
+  "include": ["src", ".spectral/*"]
+}
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/.spectral/index.ts 1`] = `
+"import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
+
+// @ts-ignore
+import type { configPages, componentRegistry, userLevelConfigPages, scopedConfigVars } from "../src";
+
+type IsAny<T> = 0 extends 1 & T ? true : false;
+
+type TConfigPages =
+  IsAny<typeof configPages> extends true
+    ? { [key: string]: ConfigPage }
+    : typeof configPages;
+
+type TUserLevelConfigPages =
+  IsAny<typeof userLevelConfigPages> extends true
+    ? { [key: string]: ConfigPage }
+    : typeof userLevelConfigPages;
+
+type TComponentRegistry =
+  IsAny<typeof componentRegistry> extends true
+    ? { [key: string]: ComponentManifest }
+    : typeof componentRegistry;
+
+type TScopedConfigVarMap =
+  IsAny<typeof scopedConfigVars> extends true
+    ? { [key: string]: ScopedConfigVar }
+    : typeof scopedConfigVars;
+
+declare module "@prismatic-io/spectral" {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionConfigPages extends TConfigPages {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionUserLevelConfigPages
+    extends TUserLevelConfigPages {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionComponentRegistry extends TComponentRegistry {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionScopedConfigVars extends TScopedConfigVarMap {}
+}
+
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/flows/basic.ts 1`] = `
+"import { flow } from "@prismatic-io/spectral";
+
+export const basic = flow({
+  name: "Basic",
+  stableKey: "basic",
+  description: "",
+  isSynchronous: false,
+  endpointSecurityType: "customer_optional",
+  onTrigger: {
+    component: "webhook-triggers",
+    key: "webhook",
+    values: {
+      
+body: { value: false, },
+contentType: { value: 7, },
+headers: { value: [], },
+testObj: { value: {someKey: "someValue",someKey2: "someValue2",}, },
+    },
+  },
+  onExecution: async (context, params) => {
+    context.components.log.writeLog({
+      
+level: "info",
+message: "Log message 1",
+    });
+    context.components.helloWorldComponent.helloAction({
+      
+arrayTest: ["listItem1","listItem2","listItem3",],
+kvTest: {someKey: "someValue",someKey2: "someValue2",},
+todoListId: "",
+    });
+
+    // @TODO - what's a reasonable return object?
+    return {
+      data: [],
+    };
+  },
+});
+
+export default basic;
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/client.ts 1`] = `
+"import type { Connection } from "@prismatic-io/spectral";
+
+export const createClient = (connection: Connection) => {
+  // Create a client using the provided Connection for the
+  // service you're consuming from this Integration.
+  return {
+    call: async (name: unknown) =>
+      Promise.resolve(\`Hello, \${name} using connection \${connection.key}\`),
+  };
+};
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/componentRegistry.ts 1`] = `
+"import { componentManifests } from "@prismatic-io/spectral";
+
+export const componentRegistry = componentManifests({
+  // this is where you'll register your component manifests
+});
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/index.ts 1`] = `
+"import { integration } from "@prismatic-io/spectral";
+import flows from "./flows";
+import { configPages } from "./configPages";
+import { componentRegistry } from "./componentRegistry";
+
+export { configPages } from "./configPages";
+export { componentRegistry } from "./componentRegistry";
+
+export default integration({
+  name: "Simple Integration",
+  description: "",
+  iconPath: "icon.png",
+  flows,
+  configPages,
+  componentRegistry,
+});
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/flows/index.ts 1`] = `
+"TODO
+"
+`;
