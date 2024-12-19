@@ -1,0 +1,30 @@
+import { flow } from "@prismatic-io/spectral";
+
+export const <%= key %> = flow({
+  name: "<%= flow.name %>",
+  stableKey: "<%= flow.stableKey %>",
+  description: "<%= flow.description %>",
+  isSynchronous: <%= flow.isSynchronous %>,
+  endpointSecurityType: "<%= flow.endpointSecurityType %>",
+  onTrigger: {
+    component: "<%= trigger.action.component.key %>",
+    key: "<%= trigger.action.key %>",
+    values: {
+      <%- trigger.formattedInputs %>
+    },
+  },
+  onExecution: async (context, params) => {
+    <%_ steps.forEach((step) => { _%>
+    context.components.<%= utils.camelCase(step.action.component.key) %>.<%= step.action.key %>({
+      <%- step.formattedInputs %>
+    });
+    <%_ }) _%>
+
+    // @TODO - what's a reasonable return object?
+    return {
+      data: [],
+    };
+  },
+});
+
+export default <%= key %>;
