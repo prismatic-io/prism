@@ -1,0 +1,94 @@
+category: ''
+defaultInstanceProfile: Default Instance Profile
+definitionVersion: 7
+description: ''
+documentation: '> Some description'
+endpointType: flow_specific
+flows:
+  - description: ''
+    endpointSecurityType: customer_optional
+    isSynchronous: false
+    name: Basic
+    steps:
+      - action:
+          component:
+            isPublic: true
+            key: webhook-triggers
+            version: 14
+          key: webhook
+        description: ''
+        inputs:
+          body:
+            type: value
+            value: false
+          contentType:
+            type: value
+            value: 7
+          headers:
+            type: complex
+            value: []
+          testObj:
+            type: complex
+            value:
+              - name:
+                  type: value
+                  value: someKey
+                type: value
+                value: someValue
+              - name:
+                  type: value
+                  value: someKey2
+                type: value
+                value: someValue2
+        isTrigger: true
+        name: Trigger
+      - action:
+          component:
+            isPublic: true
+            key: log
+            version: 7
+          key: writeLog
+        description: ''
+        inputs:
+          level:
+            type: value
+            value: info
+          message:
+            type: value
+            value: Log message 1
+        name: Write Log Message
+      - action:
+          component:
+            isPublic: false
+            key: helloWorldComponent
+            version: 118
+          key: helloAction
+        description: ''
+        inputs:
+          arrayTest:
+            type: complex
+            value:
+              - type: value
+                value: listItem1
+              - type: value
+                value: listItem2
+              - type: value
+                value: listItem3
+          kvTest:
+            type: complex
+            value:
+              - name:
+                  type: value
+                  value: someKey
+                type: value
+                value: someValue
+              - name:
+                  type: value
+                  value: someKey2
+                type: value
+                value: someValue2
+          todoListId:
+            type: value
+            value: ''
+        name: Hello World Action
+name: Simple Integration

@@ -34,7 +34,7 @@ exports[`component generation tests openApi - petstore-expanded should match sca
   "paths": {
     "/pets": {
       "get": {
-        "description": "Returns all pets from the system that the user has access to\nNam sed condimentum est. Maecenas tempor sagittis sapien, nec rhoncus sem sagittis sit amet. Aenean at gravida augue, ac iaculis sem. Curabitur odio lorem, ornare eget elementum nec, cursus id lectus. Duis mi turpis, pulvinar ac eros ac, tincidunt varius justo. In hac habitasse platea dictumst. Integer at adipiscing ante, a sagittis ligula. Aenean pharetra tempor ante molestie imperdiet. Vivamus id aliquam diam. Cras quis velit non tortor eleifend sagittis. Praesent at enim pharetra urna volutpat venenatis eget eget mauris. In eleifend fermentum facilisis. Praesent enim enim, gravida ac sodales sed, placerat id erat. Suspendisse lacus dolor, consectetur non augue vel, vehicula interdum libero. Morbi euismod sagittis libero sed lacinia.\n\nSed tempus felis lobortis leo pulvinar rutrum. Nam mattis velit nisl, eu condimentum ligula luctus nec. Phasellus semper velit eget aliquet faucibus. In a mattis elit. Phasellus vel urna viverra, condimentum lorem id, rhoncus nibh. Ut pellentesque posuere elementum. Sed a varius odio. Morbi rhoncus ligula libero, vel eleifend nunc tristique vitae. Fusce et sem dui. Aenean nec scelerisque tortor. Fusce malesuada accumsan magna vel tempus. Quisque mollis felis eu dolor tristique, sit amet auctor felis gravida. Sed libero lorem, molestie sed nisl in, accumsan tempor nisi. Fusce sollicitudin massa ut lacinia mattis. Sed vel eleifend lorem. Pellentesque vitae felis pretium, pulvinar elit eu, euismod sapien.\n",
+        "description": "Returns all pets from the system that the user has access to\\nNam sed condimentum est. Maecenas tempor sagittis sapien, nec rhoncus sem sagittis sit amet. Aenean at gravida augue, ac iaculis sem. Curabitur odio lorem, ornare eget elementum nec, cursus id lectus. Duis mi turpis, pulvinar ac eros ac, tincidunt varius justo. In hac habitasse platea dictumst. Integer at adipiscing ante, a sagittis ligula. Aenean pharetra tempor ante molestie imperdiet. Vivamus id aliquam diam. Cras quis velit non tortor eleifend sagittis. Praesent at enim pharetra urna volutpat venenatis eget eget mauris. In eleifend fermentum facilisis. Praesent enim enim, gravida ac sodales sed, placerat id erat. Suspendisse lacus dolor, consectetur non augue vel, vehicula interdum libero. Morbi euismod sagittis libero sed lacinia.\\n\\nSed tempus felis lobortis leo pulvinar rutrum. Nam mattis velit nisl, eu condimentum ligula luctus nec. Phasellus semper velit eget aliquet faucibus. In a mattis elit. Phasellus vel urna viverra, condimentum lorem id, rhoncus nibh. Ut pellentesque posuere elementum. Sed a varius odio. Morbi rhoncus ligula libero, vel eleifend nunc tristique vitae. Fusce et sem dui. Aenean nec scelerisque tortor. Fusce malesuada accumsan magna vel tempus. Quisque mollis felis eu dolor tristique, sit amet auctor felis gravida. Sed libero lorem, molestie sed nisl in, accumsan tempor nisi. Fusce sollicitudin massa ut lacinia mattis. Sed vel eleifend lorem. Pellentesque vitae felis pretium, pulvinar elit eu, euismod sapien.\\n",
         "operationId": "findPets",
         "parameters": [
           {
@@ -292,23 +292,23 @@ const toAuthorizationHeaders = (
 ): { Authorization: string } => {
   const accessToken = util.types.toString(connection.token?.access_token);
   if (accessToken) {
-    return { Authorization: \`Bearer ${accessToken}\` };
+    return { Authorization: \`Bearer \${accessToken}\` };
   }
 
   const apiKey = util.types.toString(connection.fields?.apiKey);
   if (apiKey) {
-    return { Authorization: \`Bearer ${apiKey}\` };
+    return { Authorization: \`Bearer \${apiKey}\` };
   }
 
   const username = util.types.toString(connection.fields?.username);
   const password = util.types.toString(connection.fields?.password);
   if (username && password) {
-    const encoded = Buffer.from(\`${username}:${password}\`).toString("base64");
-    return { Authorization: \`Basic ${encoded}\` };
+    const encoded = Buffer.from(\`\${username}:\${password}\`).toString("base64");
+    return { Authorization: \`Basic \${encoded}\` };
   }
 
   throw new Error(
-    \`Failed to guess at authorization parameters for Connection: ${connection.key}\`
+    \`Failed to guess at authorization parameters for Connection: \${connection.key}\`
   );
 };
 
@@ -318,7 +318,7 @@ export const createClient = async (
   if (![].includes(connection.key)) {
     throw new ConnectionError(
       connection,
-      \`Received unexpected connection type: ${connection.key}\`
+      \`Received unexpected connection type: \${connection.key}\`
     );
   }
 
@@ -420,7 +420,7 @@ const findPetById = action({
   },
   perform: async (context, { connection, id }) => {
     const client = createClient(connection);
-    const { data } = await client.get(\`/pets/${id}\`);
+    const { data } = await client.get(\`/pets/\${id}\`);
     return { data };
   },
   inputs: {
@@ -446,7 +446,7 @@ const deletePet = action({
   },
   perform: async (context, { connection, id }) => {
     const client = createClient(connection);
-    const { data } = await client.delete(\`/pets/${id}\`);
+    const { data } = await client.delete(\`/pets/\${id}\`);
     return { data };
   },
   inputs: {
@@ -1016,7 +1016,7 @@ export const createClient = (connection: Connection) => {
   // service you're consuming from this Component.
   return {
     call: async (name: unknown) =>
-      Promise.resolve(\`Hello, ${name} using connection ${connection.key}\`),
+      Promise.resolve(\`Hello, \${name} using connection \${connection.key}\`),
   };
 };
 "
@@ -1102,7 +1102,7 @@ exports[`component generation tests openApi - petstore-expanded-uuid-paths shoul
   "paths": {
     "/82dbb5d5-b5fb-47ea-b3dc-1748750470e2": {
       "get": {
-        "description": "Returns all pets from the system that the user has access to\nNam sed condimentum est. Maecenas tempor sagittis sapien, nec rhoncus sem sagittis sit amet. Aenean at gravida augue, ac iaculis sem. Curabitur odio lorem, ornare eget elementum nec, cursus id lectus. Duis mi turpis, pulvinar ac eros ac, tincidunt varius justo. In hac habitasse platea dictumst. Integer at adipiscing ante, a sagittis ligula. Aenean pharetra tempor ante molestie imperdiet. Vivamus id aliquam diam. Cras quis velit non tortor eleifend sagittis. Praesent at enim pharetra urna volutpat venenatis eget eget mauris. In eleifend fermentum facilisis. Praesent enim enim, gravida ac sodales sed, placerat id erat. Suspendisse lacus dolor, consectetur non augue vel, vehicula interdum libero. Morbi euismod sagittis libero sed lacinia.\n\nSed tempus felis lobortis leo pulvinar rutrum. Nam mattis velit nisl, eu condimentum ligula luctus nec. Phasellus semper velit eget aliquet faucibus. In a mattis elit. Phasellus vel urna viverra, condimentum lorem id, rhoncus nibh. Ut pellentesque posuere elementum. Sed a varius odio. Morbi rhoncus ligula libero, vel eleifend nunc tristique vitae. Fusce et sem dui. Aenean nec scelerisque tortor. Fusce malesuada accumsan magna vel tempus. Quisque mollis felis eu dolor tristique, sit amet auctor felis gravida. Sed libero lorem, molestie sed nisl in, accumsan tempor nisi. Fusce sollicitudin massa ut lacinia mattis. Sed vel eleifend lorem. Pellentesque vitae felis pretium, pulvinar elit eu, euismod sapien.\n",
+        "description": "Returns all pets from the system that the user has access to\\nNam sed condimentum est. Maecenas tempor sagittis sapien, nec rhoncus sem sagittis sit amet. Aenean at gravida augue, ac iaculis sem. Curabitur odio lorem, ornare eget elementum nec, cursus id lectus. Duis mi turpis, pulvinar ac eros ac, tincidunt varius justo. In hac habitasse platea dictumst. Integer at adipiscing ante, a sagittis ligula. Aenean pharetra tempor ante molestie imperdiet. Vivamus id aliquam diam. Cras quis velit non tortor eleifend sagittis. Praesent at enim pharetra urna volutpat venenatis eget eget mauris. In eleifend fermentum facilisis. Praesent enim enim, gravida ac sodales sed, placerat id erat. Suspendisse lacus dolor, consectetur non augue vel, vehicula interdum libero. Morbi euismod sagittis libero sed lacinia.\\n\\nSed tempus felis lobortis leo pulvinar rutrum. Nam mattis velit nisl, eu condimentum ligula luctus nec. Phasellus semper velit eget aliquet faucibus. In a mattis elit. Phasellus vel urna viverra, condimentum lorem id, rhoncus nibh. Ut pellentesque posuere elementum. Sed a varius odio. Morbi rhoncus ligula libero, vel eleifend nunc tristique vitae. Fusce et sem dui. Aenean nec scelerisque tortor. Fusce malesuada accumsan magna vel tempus. Quisque mollis felis eu dolor tristique, sit amet auctor felis gravida. Sed libero lorem, molestie sed nisl in, accumsan tempor nisi. Fusce sollicitudin massa ut lacinia mattis. Sed vel eleifend lorem. Pellentesque vitae felis pretium, pulvinar elit eu, euismod sapien.\\n",
         "operationId": "findPets",
         "parameters": [
           {
@@ -1360,23 +1360,23 @@ const toAuthorizationHeaders = (
 ): { Authorization: string } => {
   const accessToken = util.types.toString(connection.token?.access_token);
   if (accessToken) {
-    return { Authorization: \`Bearer ${accessToken}\` };
+    return { Authorization: \`Bearer \${accessToken}\` };
   }
 
   const apiKey = util.types.toString(connection.fields?.apiKey);
   if (apiKey) {
-    return { Authorization: \`Bearer ${apiKey}\` };
+    return { Authorization: \`Bearer \${apiKey}\` };
   }
 
   const username = util.types.toString(connection.fields?.username);
   const password = util.types.toString(connection.fields?.password);
   if (username && password) {
-    const encoded = Buffer.from(\`${username}:${password}\`).toString("base64");
-    return { Authorization: \`Basic ${encoded}\` };
+    const encoded = Buffer.from(\`\${username}:\${password}\`).toString("base64");
+    return { Authorization: \`Basic \${encoded}\` };
   }
 
   throw new Error(
-    \`Failed to guess at authorization parameters for Connection: ${connection.key}\`
+    \`Failed to guess at authorization parameters for Connection: \${connection.key}\`
   );
 };
 
@@ -1386,7 +1386,7 @@ export const createClient = async (
   if (![].includes(connection.key)) {
     throw new ConnectionError(
       connection,
-      \`Received unexpected connection type: ${connection.key}\`
+      \`Received unexpected connection type: \${connection.key}\`
     );
   }
 
@@ -1494,7 +1494,7 @@ const findPetById = action({
   perform: async (context, { connection, id }) => {
     const client = createClient(connection);
     const { data } = await client.get(
-      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/${id}\`
+      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${id}\`
     );
     return { data };
   },
@@ -1522,7 +1522,7 @@ const deletePet = action({
   perform: async (context, { connection, id }) => {
     const client = createClient(connection);
     const { data } = await client.delete(
-      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/${id}\`
+      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${id}\`
     );
     return { data };
   },
@@ -5065,7 +5065,7 @@ export const createClient = (connection: Connection) => {
   // service you're consuming from this Component.
   return {
     call: async (name: unknown) =>
-      Promise.resolve(\`Hello, ${name} using connection ${connection.key}\`),
+      Promise.resolve(\`Hello, \${name} using connection \${connection.key}\`),
   };
 };
 "
