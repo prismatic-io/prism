@@ -87,50 +87,6 @@ declare module "@prismatic-io/spectral" {
 "
 `;
 
-exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/flows/basic.ts 1`] = `
-"import { flow } from "@prismatic-io/spectral";
-
-export const basic = flow({
-  name: "Basic",
-  stableKey: "basic",
-  description: "",
-  isSynchronous: false,
-  endpointSecurityType: "customer_optional",
-  onTrigger: {
-    component: "webhook-triggers",
-    key: "webhook",
-    values: {
-      
-body: { value: false, },
-contentType: { value: 7, },
-headers: { value: [], },
-testObj: { value: {someKey: "someValue",someKey2: "someValue2",}, },
-    },
-  },
-  onExecution: async (context, params) => {
-    context.components.log.writeLog({
-      
-level: "info",
-message: "Log message 1",
-    });
-    context.components.helloWorldComponent.helloAction({
-      
-arrayTest: ["listItem1","listItem2","listItem3",],
-kvTest: {someKey: "someValue",someKey2: "someValue2",},
-todoListId: "",
-    });
-
-    // @TODO - what's a reasonable return object?
-    return {
-      data: [],
-    };
-  },
-});
-
-export default basic;
-"
-`;
-
 exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/client.ts 1`] = `
 "import type { Connection } from "@prismatic-io/spectral";
 
@@ -171,6 +127,50 @@ export default integration({
   configPages,
   componentRegistry,
 });
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/flows/basic.ts 1`] = `
+"import { flow } from "@prismatic-io/spectral";
+
+export const basic = flow({
+  name: "Basic",
+  stableKey: "basic",
+  description: "",
+  isSynchronous: false,
+  endpointSecurityType: "customer_optional",
+  onTrigger: {
+    component: "webhook-triggers",
+    key: "webhook",
+    values: {
+      
+body: { value: false, },
+contentType: { value: 7, },
+headers: { value: [], },
+testObj: { value: {someKey: "someValue",someKey2: "someValue2",}, },
+    },
+  },
+  onExecution: async (context, params) => {
+    context.components.log.writeLog({
+      
+level: "info",
+message: "Log message 1",
+    });
+    context.components.helloWorldComponent.helloAction({
+      
+arrayTest: ["listItem1","listItem2","listItem3",],
+kvTest: {someKey: "someValue",someKey2: "someValue2",},
+todoListId: "",
+    });
+
+    // @TODO - what's a reasonable return object?
+    return {
+      data: [],
+    };
+  },
+});
+
+export default basic;
 "
 `;
 

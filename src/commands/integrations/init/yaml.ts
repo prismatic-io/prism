@@ -43,16 +43,56 @@ type ActionObjectFromYAML = {
   steps?: Array<ActionObjectFromYAML>;
 };
 
+type ConfigPageObjectFromYAML = {
+  name: string;
+  tagline?: string;
+  elements: Array<{
+    type: string;
+    value: string;
+  }>;
+  // @TODO - what does this map to
+  userLevelConfigured?: boolean;
+};
+
 type ConfigVarObjectFromYAML = {
   dataType: string;
-  defaultValue: string;
-  description: string;
+  defaultValue?: string;
+  description?: string;
   key: string;
-  orgOnly: boolean;
-  collectionType: string;
+  orgOnly?: boolean;
+  collectionType?: string;
+  connection?: {
+    component: {
+      isPublic: boolean;
+      key: string;
+      version: number;
+    };
+    dataType: string;
+  };
+  dataSource?: {
+    component: {
+      isPublic: boolean;
+      key: string;
+      version: number;
+    };
+    dataType: string;
+  };
+  inputs?: Record<
+    string,
+    {
+      type: string;
+      value: string;
+      meta: {
+        visibleToOrgDeployer: boolean;
+        visibleToCustomerDeployer: boolean;
+        orgOnly: boolean;
+      };
+    }
+  >;
   meta: {
     visibleToOrgDeployer: boolean;
-    visibleToCutomerDeployer: boolean;
+    visibleToCustomerDeployer: boolean;
+    orgOnly?: boolean;
   };
 };
 
@@ -149,6 +189,8 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
         "webpack.config.js",
       ];
 
+      const ejsUtils = { camelCase };
+
       await Promise.all([
         ...templateFiles.map((file) =>
           template(
@@ -161,11 +203,18 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
           this.log("Converting Flow: ", flow.name);
           const ejsInputs = formatFlowForEJS(flow);
 
-          template("integration/src/flows/flow.ts.ejs", `flows/${kebabCase(flow.name)}.ts`, {
+          template("integration/src/flows/flow.ts.ejs", `src/flows/${kebabCase(flow.name)}.ts`, {
             ...ejsInputs,
-            utils: {
-              camelCase,
-            },
+            utils: ejsUtils,
+          });
+        }),
+        Promise.resolve(() => {
+          this.log("Converting config pages & required config vars...");
+          const ejsInputs = formatConfigPageForEJS(result.configPages || [], result.requiredConfigVars);
+
+          template("integration/src/configPages.ts.ejs", "src/configPages.ts", {
+            pages: ejsInputs,
+            utils: ejsUtils,
           });
         }),
         // template("integration/src/flows/index.ts.ejs", "flows/index.ts"),
@@ -213,7 +262,7 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
   }
 }
 
-export function createInputsString(action: ActionObjectFromYAML): string {
+export function createFlowInputsString(action: ActionObjectFromYAML): string {
   const inputs = action.inputs ?? {};
   let resultString = "";
 
@@ -262,7 +311,7 @@ function formatFlowForEJS(flow: FlowObjectFromYAML) {
   let trigger: ActionObjectFromYAML | undefined;
 
   flow.steps.forEach((step) => {
-    step.formattedInputs = createInputsString(step);
+    step.formattedInputs = createFlowInputsString(step);
 
     if (step.isTrigger) {
       trigger = step;
@@ -288,4 +337,74 @@ function formatFlowForEJS(flow: FlowObjectFromYAML) {
     trigger,
     steps,
   };
+}
+
+function determinePermissionAndVisibilityType(
+  meta: ConfigVarObjectFromYAML["meta"],
+  orgOnly?: boolean,
+) {
+  const { visibleToCustomerDeployer, visibleToOrgDeployer } = meta;
+  const isOrgOnly = orgOnly || meta.orgOnly;
+
+  if (visibleToCustomerDeployer) {
+    return "customer";
+  } else if (isOrgOnly) {
+    return "organization";
+  } else if (visibleToOrgDeployer && !visibleToCustomerDeployer && !isOrgOnly) {
+    return "embedded";
+  }
+
+  // @TODO: What is the default?
+  return "customer";
+}
+
+function formatConfigVarInputs(configVar: ConfigVarObjectFromYAML) {
+  return Object.entries(configVar.inputs || []).map(([key, input]) => {
+    return {
+      name: key,
+      type: input.type,
+      value: input.value,
+      meta: {
+        ...input.meta,
+        permissionAndVisibilityType: determinePermissionAndVisibilityType(input.meta),
+      },
+    };
+  });
+}
+
+function formatConfigPageForEJS(
+  configPages: Array<ConfigPageObjectFromYAML>,
+  requiredConfigVars: Array<ConfigVarObjectFromYAML>,
+) {
+  return configPages.map((configPage) => {
+    const { name, tagline, elements } = configPage;
+    const configVars = elements.map((element) => {
+      const foundConfigVar = requiredConfigVars.find((configVar) => {
+        return configVar.key === element.value;
+      });
+
+      if (!foundConfigVar) {
+        throw "TODO: Error finding config var";
+      }
+
+      return {
+        name: element.value,
+        ...foundConfigVar,
+        inputs: formatConfigVarInputs(foundConfigVar),
+        meta: {
+          ...foundConfigVar.meta,
+          permissionAndVisibilityType: determinePermissionAndVisibilityType(
+            foundConfigVar.meta,
+            foundConfigVar.orgOnly,
+          ),
+        },
+      };
+    });
+
+    return {
+      name,
+      tagline,
+      configVars,
+    };
+  });
 }

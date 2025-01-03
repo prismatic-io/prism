@@ -1,0 +1,92 @@
+import {
+  configPage,
+  configVar,
+  connectionConfigVar,
+  dataSourceConfigVar,
+} from "@prismatic-io/spectral";
+
+export const configPages = {
+  <%_ pages.forEach((page) => { _%>
+  "<%= page.name %>": configPage({
+    tagline: "<%= page.tagline %>",
+    elements: {
+      <%_ page.configVars.forEach((configVar) => { _%>
+        <%_ if (configVar.dataType === "connection") { _%>
+      "<%= configVar.name %>": connectionConfigVar({
+        stableKey: "<%= configVar.key %>",
+        dataType: "<%= configVar.dataType %>",
+        connection: {
+          component: {
+            isPublic: <%= configVar.connection.component.isPublic %>,
+            key: "<%= configVar.connection.component.key %>",
+            version: <%= configVar.connection.component.version %>,
+          },
+          key: "<%= configVar.connection.key %>",
+        },
+        values: {
+          <%_ configVar.inputs.forEach((input) => { _%>
+          "<%= input.name %>": {
+            <%_ if (input.type === "configVar") { _%>
+            configVar: "<%= input.value %>",
+            <%_ } else { _%>
+            value: "<%= input.value %>",
+            <%_ } _%>
+            permissionAndVisibilityType: "<%= input.meta.permissionAndVisibilityType %>",
+            <%_ if (input.meta.writeOnly) { _%>
+            writeOnly: <%= input.meta.writeOnly %>,
+            <%_ } _%>
+            visibleToOrgDeployer: <%= input.meta.visibleToOrgDeployer %>,
+
+          },
+          <%_ }) _%>
+        },
+      }),
+        <%_ } else if (configVar.dataSource) { _%>
+      "<%= configVar.name %>": dataSourceConfigVar({
+        stableKey: "<%= configVar.key %>",
+        dataType: "<%= configVar.dataType %>",
+        dataSource: {
+          component: {
+            isPublic: <%= configVar.dataSource.component.isPublic %>,
+            key: "<%= configVar.dataSource.component.key %>",
+            version: <%= configVar.dataSource.component.version %>,
+          },
+          key: "<%= configVar.dataSource.key %>",
+        },
+        values: {
+          <%_ configVar.inputs.forEach((input) => { _%>
+          "<%= input.name %>": {
+            <%_ if (input.type === "configVar") { _%>
+            configVar: "<%= input.value %>",
+            <%_ } else { _%>
+            value: "<%= input.value %>",
+            <%_ } _%>
+            permissionAndVisibilityType: "<%= input.meta.permissionAndVisibilityType %>",
+            <%_ if (input.meta.writeOnly) { _%>
+            writeOnly: <%= input.meta.writeOnly %>,
+            <%_ } _%>
+            visibleToOrgDeployer: <%= input.meta.visibleToOrgDeployer %>,
+          },
+          <%_ }) _%>
+        },
+      }),
+        <%_ } else { _%>
+      "<%= configVar.name %>": configVar({
+        stableKey: "<%= configVar.key %>",
+        dataType: "<%= configVar.dataType %>",
+        description: "<%= configVar.description %>",
+        permissionAndVisibilityType: "<%= configVar.meta.permissionAndVisibilityType %>",
+        visibleToOrgDeployer: <%= configVar.meta.visibleToOrgDeployer %>,
+        <%_ if (configVar.collectionType) { _%>
+        collectionType: "<%= configVar.collectionType %>",
+        defaultValue: <%- configVar.defaultValue %>,
+        <%_ } else { _%>
+        defaultValue: "<%= configVar.defaultValue %>",
+        <%_ } _%>
+      }),
+        <%_ } _%>
+      <%_ }) _%>
+    },
+  }),
+  <%_ }) _%>
+};

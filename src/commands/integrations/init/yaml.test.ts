@@ -1,11 +1,11 @@
 import { describe, it, expect } from "bun:test";
-import GenerateIntegrationFromYAMLCommand, { createInputsString } from "./yaml.js";
+import GenerateIntegrationFromYAMLCommand, { createFlowInputsString } from "./yaml.js";
 import fs from "fs";
 import path from "path";
 import { readFile } from "fs-extra";
 import { walkDir } from "../../../fs";
 
-describe("createInputsString", () => {
+describe("createFlowInputsString", () => {
   const testAction = {
     action: {
       component: {
@@ -89,7 +89,7 @@ valueListInput: { value: ["undefined","undefined","undefined",], },
 emptyValueListInput: { value: [], },`;
 
     it("correctly converts inputs", () => {
-      const resultString = createInputsString(testTrigger);
+      const resultString = createFlowInputsString(testTrigger);
       expect(resultString).toBe(expected);
     });
   });
@@ -106,7 +106,7 @@ valueListInput: ["undefined","undefined","undefined",],
 emptyValueListInput: [],`;
 
     it("correctly converts inputs", () => {
-      const resultString = createInputsString(testAction);
+      const resultString = createFlowInputsString(testAction);
       expect(resultString).toBe(expected);
     });
   });
