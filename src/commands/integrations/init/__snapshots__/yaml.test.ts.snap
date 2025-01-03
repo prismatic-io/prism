@@ -87,6 +87,172 @@ declare module "@prismatic-io/spectral" {
 "
 `;
 
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/configPages.ts 1`] = `
+"import {
+  configPage,
+  configVar,
+  connectionConfigVar,
+  dataSourceConfigVar,
+} from "@prismatic-io/spectral";
+
+export const configPages = {
+  "Connections Config Page": configPage({
+    tagline: "Connections page tagline",
+    elements: {
+      "hello-world-component Connection": connectionConfigVar({
+        stableKey: "hello-world-component Connection",
+        dataType: "connection",
+        connection: {
+          component: {
+            isPublic: false,
+            key: "helloWorldComponent",
+            version: 118,
+          },
+          key: "hello-world-basic-auth",
+        },
+        values: {
+          "environment": {
+            value: "testEnvVar",
+            permissionAndVisibilityType: "customer",
+            visibleToOrgDeployer: true,
+
+          },
+          "password": {
+            value: "testPassword",
+            permissionAndVisibilityType: "customer",
+            visibleToOrgDeployer: true,
+
+          },
+          "username": {
+            value: "testUsername",
+            permissionAndVisibilityType: "customer",
+            visibleToOrgDeployer: true,
+
+          },
+        },
+      }),
+      "Slack Connection": connectionConfigVar({
+        stableKey: "Slack Connection",
+        dataType: "connection",
+        connection: {
+          component: {
+            isPublic: true,
+            key: "slack",
+            version: 66,
+          },
+          key: "oauth2",
+        },
+        values: {
+          "authorizeUrl": {
+            value: "https://slack.com/oauth/v2/authorize",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "tokenUrl": {
+            value: "https://slack.com/api/oauth.v2.access",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "revokeUrl": {
+            value: "https://slack.com/api/auth.revoke",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "scopes": {
+            value: "chat:write chat:write.public chat:write.customize channels:read groups:read im:read mpim:read",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "clientId": {
+            value: "test",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "clientSecret": {
+            value: "test",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "signingSecret": {
+            value: "test",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "isUser": {
+            value: "false",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+        },
+      }),
+    },
+  }),
+  "Other Config Vars Page": configPage({
+    tagline: "ConfigVars tagline",
+    elements: {
+      "My Embedded Config Var": configVar({
+        stableKey: "My Embedded Config Var",
+        dataType: "timestamp",
+        description: "",
+        permissionAndVisibilityType: "embedded",
+        visibleToOrgDeployer: true,
+        defaultValue: "2024-12-09T03:00",
+      }),
+      "My org config var": configVar({
+        stableKey: "My org config var",
+        dataType: "string",
+        description: "another one",
+        permissionAndVisibilityType: "organization",
+        visibleToOrgDeployer: true,
+        defaultValue: "abc",
+      }),
+      "My collection": configVar({
+        stableKey: "My collection",
+        dataType: "string",
+        description: "",
+        permissionAndVisibilityType: "customer",
+        visibleToOrgDeployer: false,
+        collectionType: "valuelist",
+        defaultValue: ["abc","123"],
+      }),
+      "DataSource config var": dataSourceConfigVar({
+        stableKey: "DataSource config var",
+        dataType: "string",
+        dataSource: {
+          component: {
+            isPublic: false,
+            key: "dateNTime",
+            version: 1,
+          },
+          key: "myDataSource",
+        },
+        values: {
+          "connection": {
+            configVar: "hello-world-component Connection",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+          },
+          "myInput": {
+            value: "dfssh",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+          },
+        },
+      }),
+    },
+  }),
+};
+"
+`;
+
 exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/client.ts 1`] = `
 "import type { Connection } from "@prismatic-io/spectral";
 
@@ -151,12 +317,14 @@ testObj: { value: {someKey: "someValue",someKey2: "someValue2",}, },
     },
   },
   onExecution: async (context, params) => {
-    context.components.log.writeLog({
+    const { configVars } = context;
+
+    const writeLogMessage = await context.components.log.writeLog({
       
 level: "info",
 message: "Log message 1",
     });
-    context.components.helloWorldComponent.helloAction({
+    const helloWorldAction = await context.components.helloWorldComponent.helloAction({
       
 arrayTest: ["listItem1","listItem2","listItem3",],
 kvTest: {someKey: "someValue",someKey2: "someValue2",},

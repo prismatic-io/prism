@@ -14,8 +14,10 @@ export const <%= key %> = flow({
     },
   },
   onExecution: async (context, params) => {
+    const { configVars } = context;
+
     <%_ steps.forEach((step) => { _%>
-    context.components.<%= utils.camelCase(step.action.component.key) %>.<%= step.action.key %>({
+    const <%= utils.camelCase(step.name) %> = await context.components.<%= utils.camelCase(step.action.component.key) %>.<%= step.action.key %>({
       <%- step.formattedInputs %>
     });
     <%_ }) _%>

@@ -7,122 +7,22 @@ import { load } from "js-yaml";
 import { v4 as uuid4 } from "uuid";
 import { prismaticUrl } from "../../../auth.js";
 import { camelCase, kebabCase } from "lodash-es";
+import {
+  ActionObjectFromYAML,
+  ConfigPageObjectFromYAML,
+  ConfigVarObjectFromYAML,
+  FlowObjectFromYAML,
+  IntegrationObjectFromYAML,
+  ValidComplexYAMLValue,
+  ValidYAMLValue,
+} from "./types.js";
 
-type ValidComplexYAMLValue = Array<{
-  type: string;
-  value: ValidYAMLValue;
-  name?: {
-    type: string;
-    value: ValidYAMLValue;
-  };
-}>;
-type ValidYAMLValue = string | string[] | number | boolean;
-
-type ComponentObjectFromYAML = {
-  isPublic: boolean;
-  key: string;
-  version: number;
-};
-
-type ActionObjectFromYAML = {
-  action: {
-    component: ComponentObjectFromYAML;
-    key: string;
-  };
-  description: string;
-  inputs: Record<
-    string,
-    {
-      type: string;
-      value: ValidYAMLValue | ValidComplexYAMLValue;
-    }
-  >;
-  formattedInputs?: string;
-  isTrigger: boolean;
-  name: string;
-  steps?: Array<ActionObjectFromYAML>;
-};
-
-type ConfigPageObjectFromYAML = {
-  name: string;
-  tagline?: string;
-  elements: Array<{
-    type: string;
-    value: string;
-  }>;
-  // @TODO - what does this map to
-  userLevelConfigured?: boolean;
-};
-
-type ConfigVarObjectFromYAML = {
-  dataType: string;
-  defaultValue?: string;
-  description?: string;
-  key: string;
-  orgOnly?: boolean;
-  collectionType?: string;
-  connection?: {
-    component: {
-      isPublic: boolean;
-      key: string;
-      version: number;
-    };
-    dataType: string;
-  };
-  dataSource?: {
-    component: {
-      isPublic: boolean;
-      key: string;
-      version: number;
-    };
-    dataType: string;
-  };
-  inputs?: Record<
-    string,
-    {
-      type: string;
-      value: string;
-      meta: {
-        visibleToOrgDeployer: boolean;
-        visibleToCustomerDeployer: boolean;
-        orgOnly: boolean;
-      };
-    }
-  >;
-  meta: {
-    visibleToOrgDeployer: boolean;
-    visibleToCustomerDeployer: boolean;
-    orgOnly?: boolean;
-  };
-};
-
-type FlowObjectFromYAML = {
-  endpointSecurityType: string;
-  isSynchronous: boolean;
-  name: string;
-  description: string;
-  steps: Array<ActionObjectFromYAML>;
-};
-
-type IntegrationObjectFromYAML = {
-  name: string;
-  description: string;
-  flows: Array<FlowObjectFromYAML>;
-  configPages: Array<{
-    elements: Array<{
-      type: string;
-      value: string;
-    }>;
-    name: string;
-    tagline?: string;
-    userLeveLConfigured: boolean;
-  }>;
-  requiredConfigVars: Array<ConfigVarObjectFromYAML>;
-};
-
-function wrapValue(value: ValidYAMLValue) {
+function wrapValue(value: ValidYAMLValue, isMultiline?: boolean) {
   if (typeof value === "boolean" || typeof value === "number") {
     return value;
+  } else if (typeof value === "string" && isMultiline) {
+    const escapedValue = value.replace(/`/g, "\\`");
+    return `\`${escapedValue}\``;
   } else {
     return `"${value}"`;
   }
@@ -208,15 +108,20 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
             utils: ejsUtils,
           });
         }),
-        Promise.resolve(() => {
-          this.log("Converting config pages & required config vars...");
-          const ejsInputs = formatConfigPageForEJS(result.configPages || [], result.requiredConfigVars);
+        Promise.resolve(
+          (async () => {
+            this.log("Converting config pages & required config vars...");
+            const ejsInputs = formatConfigPageForEJS(
+              result.configPages || [],
+              result.requiredConfigVars,
+            );
 
-          template("integration/src/configPages.ts.ejs", "src/configPages.ts", {
-            pages: ejsInputs,
-            utils: ejsUtils,
-          });
-        }),
+            template("integration/src/configPages.ts.ejs", "src/configPages.ts", {
+              pages: ejsInputs,
+              utils: ejsUtils,
+            });
+          })(),
+        ),
         // template("integration/src/flows/index.ts.ejs", "flows/index.ts"),
       ]);
 
@@ -262,7 +167,10 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
   }
 }
 
-export function createFlowInputsString(action: ActionObjectFromYAML): string {
+export function createFlowInputsString(
+  action: ActionObjectFromYAML,
+  trigger?: ActionObjectFromYAML,
+): string {
   const inputs = action.inputs ?? {};
   let resultString = "";
 
@@ -291,8 +199,25 @@ export function createFlowInputsString(action: ActionObjectFromYAML): string {
       if (shouldWrap) {
         currentInputString = isObject ? `{${currentInputString}},` : `[${currentInputString}],`;
       }
+    } else if (input.type === "reference") {
+      const refValue = input.value as string;
+      const valuePath = refValue.split(".");
+      const [stepName, _resultsKey, ...rest] = valuePath;
+      const suffix = rest.length > 0 ? `.${rest.join(".")}` : "";
+
+      if (trigger && stepName === camelCase(trigger.name)) {
+        currentInputString += `params.onTrigger.results${suffix},`;
+      } else {
+        currentInputString += `${stepName}.data${suffix},`;
+      }
+    } else if (input.type === "configVar") {
+      currentInputString += `configVars["${input.value}"],`;
     } else {
-      currentInputString += `${wrapValue(input.value as ValidYAMLValue)},`;
+      if (typeof input.value === "string" && input.value.indexOf("\n") >= 0) {
+        currentInputString += `${wrapValue(input.value as ValidYAMLValue, true)},`;
+      } else {
+        currentInputString += `${wrapValue(input.value as ValidYAMLValue)},`;
+      }
     }
 
     if (action.isTrigger) {
@@ -311,7 +236,7 @@ function formatFlowForEJS(flow: FlowObjectFromYAML) {
   let trigger: ActionObjectFromYAML | undefined;
 
   flow.steps.forEach((step) => {
-    step.formattedInputs = createFlowInputsString(step);
+    step.formattedInputs = createFlowInputsString(step, trigger);
 
     if (step.isTrigger) {
       trigger = step;
