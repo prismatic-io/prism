@@ -160,6 +160,7 @@ const writeAction = async (action: Action, project: ProjectStructure): Promise<v
         `headers: {
             label: "Headers",
             type: "code",
+            language: "json",
             comments: "Provide headers to the SOAP client",
             default: '{}'
           }`,

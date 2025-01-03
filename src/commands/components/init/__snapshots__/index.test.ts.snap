@@ -765,7 +765,7 @@ exports[`component generation tests wsdl - numberconversion should match scaffol
 "/** NumberToDollars */
 export interface NumberToDollars {
   /** xs:decimal */
-  dNum?: string;
+  dNum?: number;
 }
 "
 `;
@@ -937,6 +937,7 @@ export const numberToDollarsAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -964,6 +965,7 @@ export const numberToWordsAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4455,6 +4457,7 @@ export const capitalCityAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4485,6 +4488,7 @@ export const countriesUsingCurrencyAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4515,6 +4519,7 @@ export const countryCurrencyAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4545,6 +4550,7 @@ export const countryFlagAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4575,6 +4581,7 @@ export const countryIntPhoneCodeAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4605,6 +4612,7 @@ export const countryIsoCodeAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4635,6 +4643,7 @@ export const countryNameAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4665,6 +4674,7 @@ export const currencyNameAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4691,6 +4701,7 @@ export const fullCountryInfoAllCountriesAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4721,6 +4732,7 @@ export const fullCountryInfoAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4751,6 +4763,7 @@ export const languageIsoCodeAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4778,6 +4791,7 @@ export const languageNameAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4801,6 +4815,7 @@ export const listOfContinentsByCodeAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4824,6 +4839,7 @@ export const listOfContinentsByNameAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4850,6 +4866,7 @@ export const listOfCountryNamesByCodeAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4876,6 +4893,7 @@ export const listOfCountryNamesByNameAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4902,6 +4920,7 @@ export const listOfCountryNamesGroupedByContinentAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4925,6 +4944,7 @@ export const listOfCurrenciesByCodeAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4948,6 +4968,7 @@ export const listOfCurrenciesByNameAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4971,6 +4992,7 @@ export const listOfLanguagesByCodeAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
@@ -4994,6 +5016,7 @@ export const listOfLanguagesByNameAsync = action({
     headers: {
       label: "Headers",
       type: "code",
+      language: "json",
       comments: "Provide headers to the SOAP client",
       default: "{}",
     },
