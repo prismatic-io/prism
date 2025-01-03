@@ -1,5 +1,5 @@
 import prettier from "prettier";
-import glob from "glob-promise";
+import { glob } from "glob";
 import { promises as fs } from "fs";
 import * as path from "path";
 
