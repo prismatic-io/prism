@@ -1,0 +1,348 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/jest.config.js 1`] = `
+"module.exports = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+};
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/.npmrc 1`] = `
+"@component-manifests:registry=https://app.dev.prismatic-dev.io/packages/npm
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/.prettierignore 1`] = `
+"# Ignore artifacts:
+build
+coverage
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/.prettierrc 1`] = `
+"{}
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/tsconfig.json 1`] = `
+"{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["esnext"],
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "node"
+  },
+  "include": ["src", ".spectral/*"]
+}
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/.spectral/index.ts 1`] = `
+"import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
+
+// @ts-ignore
+import type { configPages, componentRegistry, userLevelConfigPages, scopedConfigVars } from "../src";
+
+type IsAny<T> = 0 extends 1 & T ? true : false;
+
+type TConfigPages =
+  IsAny<typeof configPages> extends true
+    ? { [key: string]: ConfigPage }
+    : typeof configPages;
+
+type TUserLevelConfigPages =
+  IsAny<typeof userLevelConfigPages> extends true
+    ? { [key: string]: ConfigPage }
+    : typeof userLevelConfigPages;
+
+type TComponentRegistry =
+  IsAny<typeof componentRegistry> extends true
+    ? { [key: string]: ComponentManifest }
+    : typeof componentRegistry;
+
+type TScopedConfigVarMap =
+  IsAny<typeof scopedConfigVars> extends true
+    ? { [key: string]: ScopedConfigVar }
+    : typeof scopedConfigVars;
+
+declare module "@prismatic-io/spectral" {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionConfigPages extends TConfigPages {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionUserLevelConfigPages
+    extends TUserLevelConfigPages {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionComponentRegistry extends TComponentRegistry {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionScopedConfigVars extends TScopedConfigVarMap {}
+}
+
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/configPages.ts 1`] = `
+"import {
+  configPage,
+  configVar,
+  connectionConfigVar,
+  dataSourceConfigVar,
+} from "@prismatic-io/spectral";
+
+export const configPages = {
+  "Connections Config Page": configPage({
+    tagline: "Connections page tagline",
+    elements: {
+      "hello-world-component Connection": connectionConfigVar({
+        stableKey: "hello-world-component Connection",
+        dataType: "connection",
+        connection: {
+          component: {
+            isPublic: false,
+            key: "helloWorldComponent",
+            version: 118,
+          },
+          key: "hello-world-basic-auth",
+        },
+        values: {
+          "environment": {
+            value: "testEnvVar",
+            permissionAndVisibilityType: "customer",
+            visibleToOrgDeployer: true,
+
+          },
+          "password": {
+            value: "testPassword",
+            permissionAndVisibilityType: "customer",
+            visibleToOrgDeployer: true,
+
+          },
+          "username": {
+            value: "testUsername",
+            permissionAndVisibilityType: "customer",
+            visibleToOrgDeployer: true,
+
+          },
+        },
+      }),
+      "Slack Connection": connectionConfigVar({
+        stableKey: "Slack Connection",
+        dataType: "connection",
+        connection: {
+          component: {
+            isPublic: true,
+            key: "slack",
+            version: 66,
+          },
+          key: "oauth2",
+        },
+        values: {
+          "authorizeUrl": {
+            value: "https://slack.com/oauth/v2/authorize",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "tokenUrl": {
+            value: "https://slack.com/api/oauth.v2.access",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "revokeUrl": {
+            value: "https://slack.com/api/auth.revoke",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "scopes": {
+            value: "chat:write chat:write.public chat:write.customize channels:read groups:read im:read mpim:read",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "clientId": {
+            value: "test",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "clientSecret": {
+            value: "test",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "signingSecret": {
+            value: "test",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+          "isUser": {
+            value: "false",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+
+          },
+        },
+      }),
+    },
+  }),
+  "Other Config Vars Page": configPage({
+    tagline: "ConfigVars tagline",
+    elements: {
+      "My Embedded Config Var": configVar({
+        stableKey: "My Embedded Config Var",
+        dataType: "timestamp",
+        description: "",
+        permissionAndVisibilityType: "embedded",
+        visibleToOrgDeployer: true,
+        defaultValue: "2024-12-09T03:00",
+      }),
+      "My org config var": configVar({
+        stableKey: "My org config var",
+        dataType: "string",
+        description: "another one",
+        permissionAndVisibilityType: "organization",
+        visibleToOrgDeployer: true,
+        defaultValue: "abc",
+      }),
+      "My collection": configVar({
+        stableKey: "My collection",
+        dataType: "string",
+        description: "",
+        permissionAndVisibilityType: "customer",
+        visibleToOrgDeployer: false,
+        collectionType: "valuelist",
+        defaultValue: ["abc","123"],
+      }),
+      "DataSource config var": dataSourceConfigVar({
+        stableKey: "DataSource config var",
+        dataType: "string",
+        dataSource: {
+          component: {
+            isPublic: false,
+            key: "dateNTime",
+            version: 1,
+          },
+          key: "myDataSource",
+        },
+        values: {
+          "connection": {
+            configVar: "hello-world-component Connection",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+          },
+          "myInput": {
+            value: "dfssh",
+            permissionAndVisibilityType: "organization",
+            visibleToOrgDeployer: false,
+          },
+        },
+      }),
+    },
+  }),
+};
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/client.ts 1`] = `
+"import type { Connection } from "@prismatic-io/spectral";
+
+export const createClient = (connection: Connection) => {
+  // Create a client using the provided Connection for the
+  // service you're consuming from this Integration.
+  return {
+    call: async (name: unknown) =>
+      Promise.resolve(\`Hello, \${name} using connection \${connection.key}\`),
+  };
+};
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/componentRegistry.ts 1`] = `
+"import { componentManifests } from "@prismatic-io/spectral";
+
+export const componentRegistry = componentManifests({
+  // this is where you'll register your component manifests
+});
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/index.ts 1`] = `
+"import { integration } from "@prismatic-io/spectral";
+import flows from "./flows";
+import { configPages } from "./configPages";
+import { componentRegistry } from "./componentRegistry";
+
+export { configPages } from "./configPages";
+export { componentRegistry } from "./componentRegistry";
+
+export default integration({
+  name: "Simple Integration",
+  description: "",
+  iconPath: "icon.png",
+  flows,
+  configPages,
+  componentRegistry,
+});
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/flows/basic.ts 1`] = `
+"import { flow } from "@prismatic-io/spectral";
+
+export const basic = flow({
+  name: "Basic",
+  stableKey: "basic",
+  description: "",
+  isSynchronous: false,
+  endpointSecurityType: "customer_optional",
+  onTrigger: {
+    component: "webhook-triggers",
+    key: "webhook",
+    values: {
+      
+body: { value: false, },
+contentType: { value: 7, },
+headers: { value: [], },
+testObj: { value: {someKey: "someValue",someKey2: "someValue2",}, },
+    },
+  },
+  onExecution: async (context, params) => {
+    const { configVars } = context;
+
+    const writeLogMessage = await context.components.log.writeLog({
+      
+level: "info",
+message: "Log message 1",
+    });
+    const helloWorldAction = await context.components.helloWorldComponent.helloAction({
+      
+arrayTest: ["listItem1","listItem2","listItem3",],
+kvTest: {someKey: "someValue",someKey2: "someValue2",},
+todoListId: "",
+    });
+
+    // @TODO - what's a reasonable return object?
+    return {
+      data: [],
+    };
+  },
+});
+
+export default basic;
+"
+`;
+
+exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/flows/index.ts 1`] = `
+"TODO
+"
+`;

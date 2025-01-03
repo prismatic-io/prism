@@ -73,6 +73,7 @@ import InstancesFlowConfigsTestCommand from "./commands/instances/flow-configs/t
 import IntegrationsFlowsListCommand from "./commands/integrations/flows/list.js";
 import IntegrationsFlowsTestCommand from "./commands/integrations/flows/test.js";
 import IntegrationsInitFlowCommand from "./commands/integrations/init/flow.js";
+import IntegrationsInitFromYamlCommand from "./commands/integrations/init/yaml.js";
 import IntegrationsInitCommand from "./commands/integrations/init/index.js";
 import IntegrationsInitIntegrationCommand from "./commands/integrations/init/integration.js";
 import IntegrationsVersionsCommand from "./commands/integrations/versions/index.js";
@@ -168,6 +169,7 @@ export const Commands = {
   "integrations:flows:list": IntegrationsFlowsListCommand,
   "integrations:flows:test": IntegrationsFlowsTestCommand,
   "integrations:init:flow": IntegrationsInitFlowCommand,
+  "integrations:init:yaml": IntegrationsInitFromYamlCommand,
   "integrations:init": IntegrationsInitCommand,
   "integrations:init:integration": IntegrationsInitIntegrationCommand,
   "integrations:versions": IntegrationsVersionsCommand,
