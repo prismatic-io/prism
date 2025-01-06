@@ -49,8 +49,6 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
         this.error("Could not find a YAML file at the given filepath.");
       }
 
-      // @TODO - type
-      // read yaml
       const result = load(await fs.readFile(flags.yamlFile, "utf-8")) as IntegrationObjectFromYAML;
 
       const integrationKey = uuid4();
@@ -167,9 +165,35 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
   }
 }
 
+function convertYAMLReferenceValue(
+  refValue: string,
+  trigger?: ActionObjectFromYAML,
+  isLoopItem?: boolean,
+) {
+  const valuePath = refValue.split(".");
+  const [stepName, _resultsKey, ...rest] = valuePath;
+  let suffix = "";
+
+  rest.forEach((term) => {
+    const parsed = Number.parseInt(term);
+    const formattedTerm =
+      typeof parsed === "number" && !Number.isNaN(parsed) ? `[${term}]` : `.${term}`;
+    suffix += formattedTerm;
+  });
+
+  if (trigger && stepName === camelCase(trigger.name)) {
+    return `params.onTrigger.results${suffix}`;
+  } else if (isLoopItem) {
+    return `${stepName}Item${suffix}`;
+  } else {
+    return `${stepName}.data${suffix}`;
+  }
+}
+
 export function createFlowInputsString(
   action: ActionObjectFromYAML,
   trigger?: ActionObjectFromYAML,
+  isLoopItem?: boolean,
 ): string {
   const inputs = action.inputs ?? {};
   let resultString = "";
@@ -200,16 +224,11 @@ export function createFlowInputsString(
         currentInputString = isObject ? `{${currentInputString}},` : `[${currentInputString}],`;
       }
     } else if (input.type === "reference") {
-      const refValue = input.value as string;
-      const valuePath = refValue.split(".");
-      const [stepName, _resultsKey, ...rest] = valuePath;
-      const suffix = rest.length > 0 ? `.${rest.join(".")}` : "";
-
-      if (trigger && stepName === camelCase(trigger.name)) {
-        currentInputString += `params.onTrigger.results${suffix},`;
-      } else {
-        currentInputString += `${stepName}.data${suffix},`;
-      }
+      currentInputString += `${convertYAMLReferenceValue(
+        input.value as string,
+        trigger,
+        isLoopItem,
+      )},`;
     } else if (input.type === "configVar") {
       currentInputString += `configVars["${input.value}"],`;
     } else {
@@ -230,18 +249,77 @@ export function createFlowInputsString(
   return resultString;
 }
 
+type LoopActionObject = ActionObjectFromYAML & { loopString?: string; isLoop?: boolean };
+
+function createLoopString(step: LoopActionObject, trigger?: ActionObjectFromYAML) {
+  const loopStepName = camelCase(step.name);
+  let loopString = `const ${loopStepName}: { data: Array<unknown> } = { data: [] };\n`;
+
+  if (step.action.key === "loopOverItems") {
+    const items = step.inputs.items;
+    let convertedRef: string;
+    switch (items.type) {
+      case "reference":
+        convertedRef = convertYAMLReferenceValue(items.value as string, trigger);
+        loopString += `for (const ${loopStepName}Item of ${convertedRef}) {`;
+        break;
+      case "configVar":
+        loopString += `for (const ${loopStepName}Item of configVars[${items.value}]) {`;
+        break;
+      default:
+        // If you attempt to do this via the UI, you run into an error in the test runner.
+        throw "We do not support looping over string values or templates.";
+    }
+  } else if (step.action.key === "loopNTimes") {
+    const iterationCount = Number.parseInt(step.inputs.iterationCount.value as string);
+    loopString += `for (let ${loopStepName}Idx = 0; ${loopStepName}Idx < ${iterationCount}; ${loopStepName}Idx++) {`;
+  } else {
+    throw `Cannot generate loop code for a non-loop step: ${step.name}`;
+  }
+
+  (step.steps || []).forEach((loopStep) => {
+    if (loopStep.action.component.key === "loop") {
+      loopString += createLoopString(loopStep, trigger);
+    } else {
+      loopString += `
+        const ${camelCase(loopStep.name)} = await context.components.${camelCase(
+          step.action.component.key,
+        )}.${step.action.key}({
+          ${createFlowInputsString(loopStep, trigger, true)}
+        });
+      `;
+    }
+  });
+
+  const lastStep = (step.steps || []).at(-1) ?? { name: "" };
+
+  loopString += `
+    // Setting the output of the loop to the result of its last step.
+    ${loopStepName}.data.push(${camelCase(lastStep.name)});
+  }`;
+
+  return loopString;
+}
+
 function formatFlowForEJS(flow: FlowObjectFromYAML) {
   const { name, description, isSynchronous, endpointSecurityType } = flow;
-  const steps: Array<ActionObjectFromYAML> = [];
+  const steps: Array<LoopActionObject> = [];
+  let formattedStep: LoopActionObject;
   let trigger: ActionObjectFromYAML | undefined;
 
   flow.steps.forEach((step) => {
-    step.formattedInputs = createFlowInputsString(step, trigger);
+    formattedStep = step;
+
+    if (step.action.component.key === "loop") {
+      formattedStep.loopString = createLoopString(formattedStep, trigger);
+    } else {
+      formattedStep.formattedInputs = createFlowInputsString(step, trigger);
+    }
 
     if (step.isTrigger) {
-      trigger = step;
+      trigger = formattedStep;
     } else {
-      steps.push(step);
+      steps.push(formattedStep);
     }
   });
 

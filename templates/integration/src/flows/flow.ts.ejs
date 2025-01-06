@@ -17,9 +17,13 @@ export const <%= key %> = flow({
     const { configVars } = context;
 
     <%_ steps.forEach((step) => { _%>
+      <%_ if (step.loopString) { _%>
+    <%- step.loopString %>
+      <%_ } else { _%>
     const <%= utils.camelCase(step.name) %> = await context.components.<%= utils.camelCase(step.action.component.key) %>.<%= step.action.key %>({
       <%- step.formattedInputs %>
     });
+      <%_ } _%>
     <%_ }) _%>
 
     // @TODO - what's a reasonable return object?
