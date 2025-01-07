@@ -16,6 +16,7 @@ import {
   ValidComplexYAMLValue,
   ValidYAMLValue,
 } from "./types.js";
+import { ConditionalExpression } from "@prismatic-io/spectral";
 
 function wrapValue(value: ValidYAMLValue, isMultiline?: boolean) {
   if (typeof value === "boolean" || typeof value === "number") {
@@ -213,9 +214,11 @@ export function createFlowInputsString(
         castInputs.forEach((element) => {
           if (element.name) {
             isObject = true;
-            currentInputString += `${element.name.value}: ${wrapValue(element.value)},`;
+            currentInputString += `${
+              typeof element.name === "string" ? element.name : element.name.value
+            }: ${wrapValue(element.value as string)},`;
           } else {
-            currentInputString += `${wrapValue(element.value)},`;
+            currentInputString += `${wrapValue(element.value as string)},`;
           }
         });
       }
@@ -248,12 +251,11 @@ export function createFlowInputsString(
 
   return resultString;
 }
-
-type LoopActionObject = ActionObjectFromYAML & { loopString?: string; isLoop?: boolean };
-
-function createLoopString(step: LoopActionObject, trigger?: ActionObjectFromYAML) {
+function createLoopString(step: ActionObjectFromYAML, trigger?: ActionObjectFromYAML) {
   const loopStepName = camelCase(step.name);
   let loopString = `const ${loopStepName}: { data: Array<unknown> } = { data: [] };\n`;
+
+  // @TODO - handle break loop action
 
   if (step.action.key === "loopOverItems") {
     const items = step.inputs.items;
@@ -264,10 +266,11 @@ function createLoopString(step: LoopActionObject, trigger?: ActionObjectFromYAML
         loopString += `for (const ${loopStepName}Item of ${convertedRef}) {`;
         break;
       case "configVar":
-        loopString += `for (const ${loopStepName}Item of configVars[${items.value}]) {`;
+        loopString += `for (const ${loopStepName}Item of configVars["${items.value}"]) {`;
         break;
       default:
         // If you attempt to do this via the UI, you run into an error in the test runner.
+        console.log("error step", step, items.type);
         throw "We do not support looping over string values or templates.";
     }
   } else if (step.action.key === "loopNTimes") {
@@ -280,6 +283,8 @@ function createLoopString(step: LoopActionObject, trigger?: ActionObjectFromYAML
   (step.steps || []).forEach((loopStep) => {
     if (loopStep.action.component.key === "loop") {
       loopString += createLoopString(loopStep, trigger);
+    } else if (loopStep.action.component.key === "branch") {
+      loopString += createBranchString(loopStep, trigger);
     } else {
       loopString += `
         const ${camelCase(loopStep.name)} = await context.components.${camelCase(
@@ -301,17 +306,119 @@ function createLoopString(step: LoopActionObject, trigger?: ActionObjectFromYAML
   return loopString;
 }
 
+function convertObjToExpression(obj: { type: string; value: string }) {
+  const { type, value } = obj;
+
+  switch (type) {
+    case "configVar":
+      return `configVars["${value}"]`;
+    case "value":
+      if (!Number.isNaN(Number.parseInt(value))) {
+        return Number.parseInt(value);
+      } else {
+        return `"${value}"`;
+      }
+    default:
+      // @TODO
+      throw "Invalid expression object.";
+  }
+}
+
+function convertBranchInputs(inputs: ValidComplexYAMLValue) {
+  const result: Array<unknown> = [];
+
+  inputs.forEach((input, i) => {
+    if (typeof input === "string") {
+      result.push(`"${input}"`);
+    } else if (Array.isArray(input)) {
+      result.push(convertBranchInputs(input));
+    } else {
+      result.push(convertObjToExpression(input as { name: string; type: string; value: string }));
+    }
+  });
+
+  return result;
+}
+
+function stringifyCondition(input: Array<unknown>) {
+  let resultString = "[";
+
+  input.forEach((clause, i) => {
+    if (Array.isArray(clause)) {
+      resultString += stringifyCondition(clause);
+    } else {
+      resultString += clause;
+    }
+
+    resultString += ",";
+  });
+
+  return `${resultString}]`;
+}
+
+function createBranchString(step: ActionObjectFromYAML, trigger?: ActionObjectFromYAML) {
+  const branchStepName = camelCase(step.name);
+
+  let branchString = `
+    let ${branchStepName} = 'Else';
+  `;
+  const inputConditions = step.inputs.conditions.value as ValidComplexYAMLValue;
+
+  inputConditions.forEach((condition, i) => {
+    const ifStatement = i === 0 ? "if" : "else if";
+    branchString += `
+      ${ifStatement} (evaluate(${stringifyCondition(
+        convertBranchInputs(condition.value as ValidComplexYAMLValue),
+      )})) {
+        ${branchStepName} = "${condition.name}";
+      }
+    `;
+  });
+
+  const branchSteps = step.branches ?? [];
+
+  branchSteps.forEach((branch, i) => {
+    branchString += `if (${branchStepName} === "${branch.name}") {`;
+
+    branch.steps.forEach((step, i) => {
+      if (step.action.component.key === "loop") {
+        branchString += createLoopString(step, trigger);
+      } else if (step.action.component.key === "branch") {
+        branchString += createBranchString(step, trigger);
+      } else {
+        branchString += `
+          const ${camelCase(step.name)} = await context.components.${camelCase(
+            step.action.component.key,
+          )}.${step.action.key}({
+            ${createFlowInputsString(step, trigger)}
+          });
+        `;
+      }
+    });
+
+    branchString += "}";
+  });
+
+  return branchString;
+}
+
 function formatFlowForEJS(flow: FlowObjectFromYAML) {
   const { name, description, isSynchronous, endpointSecurityType } = flow;
-  const steps: Array<LoopActionObject> = [];
-  let formattedStep: LoopActionObject;
+  const steps: Array<ActionObjectFromYAML> = [];
+  let formattedStep: ActionObjectFromYAML;
   let trigger: ActionObjectFromYAML | undefined;
+  const includes = {
+    branch: false,
+  };
 
   flow.steps.forEach((step) => {
     formattedStep = step;
 
     if (step.action.component.key === "loop") {
       formattedStep.loopString = createLoopString(formattedStep, trigger);
+    } else if (step.action.component.key === "branch") {
+      formattedStep.branchString = createBranchString(formattedStep, trigger);
+      includes.branch = true;
     } else {
       formattedStep.formattedInputs = createFlowInputsString(step, trigger);
     }
@@ -330,6 +437,7 @@ function formatFlowForEJS(flow: FlowObjectFromYAML) {
 
   return {
     key: camelCase(name),
+    includes,
     flow: {
       name,
       stableKey: kebabCase(name),
@@ -346,8 +454,8 @@ function determinePermissionAndVisibilityType(
   meta: ConfigVarObjectFromYAML["meta"],
   orgOnly?: boolean,
 ) {
-  const { visibleToCustomerDeployer, visibleToOrgDeployer } = meta;
-  const isOrgOnly = orgOnly || meta.orgOnly;
+  const { visibleToCustomerDeployer, visibleToOrgDeployer } = meta ?? {};
+  const isOrgOnly = orgOnly || meta?.orgOnly;
 
   if (visibleToCustomerDeployer) {
     return "customer";

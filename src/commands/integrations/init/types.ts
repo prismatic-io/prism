@@ -1,10 +1,12 @@
 export type ValidComplexYAMLValue = Array<{
   type: string;
-  value: ValidYAMLValue;
-  name?: {
-    type: string;
-    value: ValidYAMLValue;
-  };
+  value: ValidYAMLValue | ValidComplexYAMLValue;
+  name?:
+    | string
+    | {
+        type: string;
+        value: ValidYAMLValue;
+      };
 }>;
 
 export type ValidYAMLValue = string | string[] | number | boolean;
@@ -25,13 +27,21 @@ export type ActionObjectFromYAML = {
     string,
     {
       type: string;
-      value: ValidYAMLValue | ValidComplexYAMLValue;
+      value: ValidYAMLValue | ValidComplexYAMLValue | Array<ValidComplexYAMLValue>;
     }
   >;
   formattedInputs?: string;
   isTrigger: boolean;
   name: string;
   steps?: Array<ActionObjectFromYAML>;
+  branches?: Array<{
+    name: string;
+    steps: Array<ActionObjectFromYAML>;
+  }>;
+
+  // Added by prism during CNI generation
+  loopString?: string;
+  branchString?: string;
 };
 
 export type ConfigPageObjectFromYAML = {

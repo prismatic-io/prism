@@ -1,4 +1,9 @@
 import { flow } from "@prismatic-io/spectral";
+<%_ if (includes.branch) { _%>
+import {
+  evaluate,
+} from "@prismatic-io/spectral/dist/conditionalLogic";
+<%_ } _%>
 
 export const <%= key %> = flow({
   name: "<%= flow.name %>",
@@ -19,6 +24,8 @@ export const <%= key %> = flow({
     <%_ steps.forEach((step) => { _%>
       <%_ if (step.loopString) { _%>
     <%- step.loopString %>
+      <%_ } else if (step.branchString) { _%>
+    <%- step.branchString %>
       <%_ } else { _%>
     const <%= utils.camelCase(step.name) %> = await context.components.<%= utils.camelCase(step.action.component.key) %>.<%= step.action.key %>({
       <%- step.formattedInputs %>
