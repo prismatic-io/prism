@@ -21,7 +21,7 @@
   },
   "scripts": {
     "clean": "rm -rf lib && bun run clean-test-temp",
-    "clean-test-temp": "rm -rf src/commands/components/temp src/commands/components/init/temp src/commands/integrations/init/temp",
+    "clean-test-temp": "rm -rf src/commands/components/temp src/commands/components/init/temp src/commands/integrations/init/yaml/temp",
     "copy": "copyfiles --error --all --exclude='.* !(|.spectral)' 'templates/**' 'lib' && copyfiles --error --up 1 'src/run.cmd' 'lib'",
     "build": "bun run clean && bun run format && bun run lint && tsc && bun run bundle && bun run manifest && bun run copy",
     "bundle": "bun build src/index.ts src/run.ts --external debug --minify --outdir lib --target node",

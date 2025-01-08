@@ -1,5 +1,10 @@
 import { camelCase } from "lodash-es";
-import { ActionObjectFromYAML, ConfigVarObjectFromYAML, ValidComplexYAMLValue, ValidYAMLValue } from "./types.js";
+import {
+  ActionObjectFromYAML,
+  ConfigVarObjectFromYAML,
+  ValidComplexYAMLValue,
+  ValidYAMLValue,
+} from "./types.js";
 
 /* Given a valid YAML value, wrap it in quotes, escaped backticks,
  * or nothing depending on the case. */
@@ -64,6 +69,22 @@ export function determinePermissionAndVisibilityType(
   return "customer";
 }
 
+/* Given a template input, convert it into a string that can be used in the
+ * EJS file.
+ *
+ * from: Hello this is my template: {{#My Var}}, and {{$myAction.results.testKey}}
+ * into: `Hello this is my template: ${configVars["My Var"]}, and ${myAction.data.testKey}`
+ */
+const CONFIG_VAR_REGEX = /\{{#(.*?)\}}/g;
+const STEP_REF_REGEX = /\{{\$(.*?)\}}/g;
+
+function convertTemplateInput(input: string) {
+  let resultString = input.replace(CONFIG_VAR_REGEX, '$${configVars["$1"]}');
+  resultString = resultString.replace(STEP_REF_REGEX, "$${$1}");
+
+  return `\`${resultString}\``;
+}
+
 /* Flows: Given a flow action step, convert its inputs into a CNI-compatible string
  * that will then be included in the EJS file. */
 export function createFlowInputsString(
@@ -109,6 +130,8 @@ export function createFlowInputsString(
       )},`;
     } else if (input.type === "configVar") {
       currentInputString += `configVars["${input.value}"],`;
+    } else if (input.type === "template") {
+      currentInputString += `${convertTemplateInput(input.value as string)},`;
     } else {
       if (typeof input.value === "string" && input.value.indexOf("\n") >= 0) {
         currentInputString += `${wrapValue(input.value as ValidYAMLValue, true)},`;
