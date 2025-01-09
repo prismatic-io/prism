@@ -35,8 +35,9 @@ export const configPages = {
             <%_ if (input.meta.writeOnly) { _%>
             writeOnly: <%= input.meta.writeOnly %>,
             <%_ } _%>
+            <%_ if (typeof input.meta.visibleToOrgDeployer === "boolean") { _%>
             visibleToOrgDeployer: <%= input.meta.visibleToOrgDeployer %>,
-
+            <%_ } _%>
           },
           <%_ }) _%>
         },
@@ -65,7 +66,9 @@ export const configPages = {
             <%_ if (input.meta.writeOnly) { _%>
             writeOnly: <%= input.meta.writeOnly %>,
             <%_ } _%>
+            <%_ if (typeof input.meta.visibleToOrgDeployer === "boolean") { _%>
             visibleToOrgDeployer: <%= input.meta.visibleToOrgDeployer %>,
+            <%_ } _%>
           },
           <%_ }) _%>
         },
@@ -76,7 +79,9 @@ export const configPages = {
         dataType: "<%= configVar.dataType %>",
         description: "<%= configVar.description %>",
         permissionAndVisibilityType: "<%= configVar.meta.permissionAndVisibilityType %>",
+        <%_ if (typeof configVar.meta.visibleToOrgDeployer === "boolean") { _%>
         visibleToOrgDeployer: <%= configVar.meta.visibleToOrgDeployer %>,
+        <%_ } _%>
         <%_ if (configVar.collectionType) { _%>
         collectionType: "<%= configVar.collectionType %>",
         defaultValue: <%- configVar.defaultValue %>,

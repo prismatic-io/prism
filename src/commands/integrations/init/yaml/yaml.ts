@@ -21,6 +21,7 @@ import {
   createLoopString,
   getPermissionAndVisibilityType,
   formatConfigVarInputs,
+  getBranchKind,
 } from "./utils.js";
 
 export default class GenerateIntegrationFromYAMLCommand extends Command {
@@ -87,7 +88,6 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
       const templateFiles = [
         path.join("assets", "icon.png"),
         path.join("src", "index.ts"),
-        path.join("src", "client.ts"),
         path.join(".spectral", "index.ts"),
         ".npmrc",
         ".prettierrc",
@@ -119,7 +119,7 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
               utils: ejsUtils,
             });
           } catch (e) {
-            this.log(`Error: ${e}`);
+            this.log(`${e}`);
           }
         }),
         template("integration/src/flows/index.ts.ejs", "src/flows/index.ts", {
@@ -225,8 +225,8 @@ function formatFlowForEJS(flow: FlowObjectFromYAML) {
     formattedStep = step;
 
     if (step.action.component.key === "loop") {
-      formattedStep.loopString = createLoopString(formattedStep, trigger);
-    } else if (step.action.component.key === "branch") {
+      formattedStep.loopString = createLoopString(formattedStep, trigger, step);
+    } else if (getBranchKind(step) === "branch") {
       formattedStep.branchString = createBranchString(formattedStep, trigger);
       includes.branch = true;
     } else {

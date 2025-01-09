@@ -25,10 +25,10 @@ function wrapValue(value: ValidYAMLValue, isMultiline?: boolean) {
 function convertYAMLReferenceValue(
   refValue: string,
   trigger?: ActionObjectFromYAML,
-  isLoopItem?: boolean,
+  loop?: ActionObjectFromYAML,
 ) {
   const valuePath = refValue.split(".");
-  const [stepName, _resultsKey, ...rest] = valuePath;
+  const [stepName, resultsKey, ...rest] = valuePath;
   let suffix = "";
 
   rest.forEach((term) => {
@@ -40,8 +40,16 @@ function convertYAMLReferenceValue(
 
   if (trigger && stepName === camelCase(trigger.name)) {
     return `params.onTrigger.results${suffix}`;
-  } else if (isLoopItem) {
-    return `${stepName}Item${suffix}`;
+  } else if (loop) {
+    if (resultsKey === "currentItem") {
+      if (loop.action.key === "loopOverItems") {
+        return `${stepName}Item${suffix}`;
+      } else if (loop.action.key === "loopNTimes") {
+        return `${stepName}.data[${stepName}Idx]${suffix}`;
+      }
+    }
+
+    return `${stepName}.data${suffix}`;
   } else {
     return `${stepName}.data${suffix}`;
   }
@@ -75,9 +83,17 @@ export const getPermissionAndVisibilityType = (
 const CONFIG_VAR_REGEX = /\{{#(.*?)\}}/g;
 const STEP_REF_REGEX = /\{{\$(.*?)\}}/g;
 
-function convertTemplateInput(input: string) {
+function convertTemplateInput(
+  input: string,
+  trigger?: ActionObjectFromYAML,
+  loop?: ActionObjectFromYAML,
+) {
   let resultString = input.replace(CONFIG_VAR_REGEX, '$${configVars["$1"]}');
-  resultString = resultString.replace(STEP_REF_REGEX, "$${$1}");
+  // resultString = resultString.replace(STEP_REF_REGEX, "$${$1}");
+  resultString = resultString.replace(
+    STEP_REF_REGEX,
+    `\$\${${convertYAMLReferenceValue("$1", trigger, loop)}}`,
+  );
 
   return `\`${resultString}\``;
 }
@@ -87,7 +103,7 @@ function convertTemplateInput(input: string) {
 export function createFlowInputsString(
   action: ActionObjectFromYAML,
   trigger?: ActionObjectFromYAML,
-  isLoopItem?: boolean,
+  loop?: ActionObjectFromYAML,
 ): string {
   const inputs = action.inputs ?? {};
   let resultString = "";
@@ -120,15 +136,11 @@ export function createFlowInputsString(
         currentInputString = isObject ? `{${currentInputString}},` : `[${currentInputString}],`;
       }
     } else if (input.type === "reference") {
-      currentInputString += `${convertYAMLReferenceValue(
-        input.value as string,
-        trigger,
-        isLoopItem,
-      )},`;
+      currentInputString += `${convertYAMLReferenceValue(input.value as string, trigger, loop)},`;
     } else if (input.type === "configVar") {
       currentInputString += `configVars["${input.value}"],`;
     } else if (input.type === "template") {
-      currentInputString += `${convertTemplateInput(input.value as string)},`;
+      currentInputString += `${convertTemplateInput(input.value as string, trigger, loop)},`;
     } else {
       if (typeof input.value === "string" && input.value.indexOf("\n") >= 0) {
         currentInputString += `${wrapValue(input.value as ValidYAMLValue, true)},`;
@@ -147,20 +159,17 @@ export function createFlowInputsString(
   return resultString;
 }
 
-/* Loop helper: Determines if a step is actually a loop step vs. a break loop */
-function getLoopKind(step: ActionObjectFromYAML) {
-  if (step.action.component.key === "loop") {
-    return step.action.key === "breakLoop" ? "breakLoop" : "loop";
-  }
-  return "";
-}
-
 /* Loop: Given a loop step, convert it into a string that can
  * be included in the EJS file. */
-export function createLoopString(step: ActionObjectFromYAML, trigger?: ActionObjectFromYAML) {
+export function createLoopString(
+  step: ActionObjectFromYAML,
+  trigger?: ActionObjectFromYAML,
+  loop?: ActionObjectFromYAML,
+) {
   const loopStepName = camelCase(step.name);
   let loopString = `const ${loopStepName}: { data: Array<unknown> } = { data: [] };\n`;
-  const isBreakLoop = getLoopKind(step) === "breakLoop";
+  const isBreakLoop = step.action.key === "breakLoop";
+  const parentLoop = loop ?? step;
 
   if (isBreakLoop) {
     return "break;\n";
@@ -171,7 +180,7 @@ export function createLoopString(step: ActionObjectFromYAML, trigger?: ActionObj
     let convertedRef: string;
     switch (items.type) {
       case "reference":
-        convertedRef = convertYAMLReferenceValue(items.value as string, trigger);
+        convertedRef = convertYAMLReferenceValue(items.value as string, trigger, parentLoop);
         loopString += `for (const ${loopStepName}Item of ${convertedRef}) {`;
         break;
       case "configVar":
@@ -179,8 +188,7 @@ export function createLoopString(step: ActionObjectFromYAML, trigger?: ActionObj
         break;
       default:
         // If you attempt to do this via the UI, you run into an error in the test runner.
-        console.log("error step", step, items.type);
-        throw "We do not support looping over string values or templates.";
+        throw `Error in ${loopStepName}: We do not support looping over string values or templates.`;
     }
   } else if (step.action.key === "loopNTimes") {
     const iterationCount = Number.parseInt(step.inputs.iterationCount.value as string);
@@ -190,16 +198,16 @@ export function createLoopString(step: ActionObjectFromYAML, trigger?: ActionObj
   }
 
   (step.steps || []).some((childStep) => {
-    if (getLoopKind(childStep) === "loop") {
-      loopString += createLoopString(childStep, trigger);
-    } else if (childStep.action.component.key === "branch") {
-      loopString += createBranchString(childStep, trigger);
+    if (childStep.action.component.key === "loop") {
+      loopString += createLoopString(childStep, trigger, parentLoop);
+    } else if (getBranchKind(childStep) === "branch") {
+      loopString += createBranchString(childStep, trigger, parentLoop);
     } else {
       loopString += `
         const ${camelCase(childStep.name)} = await context.components.${camelCase(
-          step.action.component.key,
-        )}.${step.action.key}({
-          ${createFlowInputsString(childStep, trigger, true)}
+          childStep.action.component.key,
+        )}.${childStep.action.key}({
+          ${createFlowInputsString(childStep, trigger, parentLoop)}
         });
       `;
     }
@@ -209,14 +217,26 @@ export function createLoopString(step: ActionObjectFromYAML, trigger?: ActionObj
 
   loopString += `
     ${loopStepName}.data.push(${camelCase(lastStep.name)});
-  }`;
+  }\n`;
 
   return loopString;
 }
 
+/* Branch helper: Determines if a step is actually branching or not. */
+export function getBranchKind(step: ActionObjectFromYAML) {
+  if (step.action.component.key === "branch") {
+    return step.action.key === "selectExecutedStepResult" ? "selectExecutedStepResult" : "branch";
+  }
+  return "";
+}
+
 /* Branch helper: Given an object that represents a conditional expression, convert
  * it into a string that can be included in the result of convertBranchInputs. */
-function convertObjToExpression(obj: { type: string; value: string }) {
+function convertObjToExpression(
+  obj: { type: string; value: string },
+  trigger?: ActionObjectFromYAML,
+  loop?: ActionObjectFromYAML,
+) {
   const { type, value } = obj;
 
   switch (type) {
@@ -229,24 +249,36 @@ function convertObjToExpression(obj: { type: string; value: string }) {
         return `"${value}"`;
       }
     case "template":
-      return convertTemplateInput(value);
+      return convertTemplateInput(value, trigger, loop);
+    case "reference":
+      return convertYAMLReferenceValue(value, trigger, loop);
     default:
-      return `"FIXME - The converter ran into an error when attemping to parse this value."`;
+      return `"@FIXME - The converter ran into an error when attemping to parse this value."`;
   }
 }
 
 /* Branch helper: Given a branch step's inputs, convert it into a condition expression,
  * e.g. ["and", ["greaterThan", 100, 0]] */
-function convertBranchInputs(inputs: ValidComplexYAMLValue) {
+function convertBranchInputs(
+  inputs: ValidComplexYAMLValue,
+  trigger?: ActionObjectFromYAML,
+  loop?: ActionObjectFromYAML,
+) {
   const result: Array<unknown> = [];
 
   inputs.forEach((input, i) => {
     if (typeof input === "string") {
       result.push(`"${input}"`);
     } else if (Array.isArray(input)) {
-      result.push(convertBranchInputs(input));
+      result.push(convertBranchInputs(input, trigger, loop));
     } else {
-      result.push(convertObjToExpression(input as { name: string; type: string; value: string }));
+      result.push(
+        convertObjToExpression(
+          input as { name: string; type: string; value: string },
+          trigger,
+          loop,
+        ),
+      );
     }
   });
 
@@ -273,7 +305,11 @@ function stringifyCondition(input: Array<unknown>) {
 
 /* Branching: Given a branch step, converts it into a formatted string that can be included
  * in the EJS file. */
-export function createBranchString(step: ActionObjectFromYAML, trigger?: ActionObjectFromYAML) {
+export function createBranchString(
+  step: ActionObjectFromYAML,
+  trigger?: ActionObjectFromYAML,
+  loop?: ActionObjectFromYAML,
+) {
   const branchStepName = camelCase(step.name);
 
   let branchString = `
@@ -285,7 +321,7 @@ export function createBranchString(step: ActionObjectFromYAML, trigger?: ActionO
     const ifStatement = i === 0 ? "if" : "else if";
     branchString += `
       ${ifStatement} (evaluate(${stringifyCondition(
-        convertBranchInputs(condition.value as ValidComplexYAMLValue),
+        convertBranchInputs(condition.value as ValidComplexYAMLValue, trigger, loop),
       )})) {
         ${branchStepName} = "${condition.name}";
       }
@@ -299,15 +335,15 @@ export function createBranchString(step: ActionObjectFromYAML, trigger?: ActionO
 
     branch.steps.forEach((step, i) => {
       if (step.action.component.key === "loop") {
-        branchString += createLoopString(step, trigger);
-      } else if (step.action.component.key === "branch") {
-        branchString += createBranchString(step, trigger);
+        branchString += createLoopString(step, trigger, loop);
+      } else if (getBranchKind(step) === "branch") {
+        branchString += createBranchString(step, trigger, loop);
       } else {
         branchString += `
           const ${camelCase(step.name)} = await context.components.${camelCase(
             step.action.component.key,
           )}.${step.action.key}({
-            ${createFlowInputsString(step, trigger)}
+            ${createFlowInputsString(step, trigger, loop)}
           });
         `;
       }
