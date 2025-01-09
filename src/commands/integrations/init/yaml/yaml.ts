@@ -6,7 +6,8 @@ import { promises as fs } from "fs";
 import { load } from "js-yaml";
 import { v4 as uuid4 } from "uuid";
 import { prismaticUrl } from "../../../../auth.js";
-import { camelCase, kebabCase } from "lodash-es";
+import { gql, gqlRequest } from "../../../../graphql.js";
+import { camelCase, kebabCase, xor } from "lodash-es";
 import {
   ActionObjectFromYAML,
   ConfigPageObjectFromYAML,
@@ -30,6 +31,11 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
       char: "f",
       description: "YAML filepath",
     }),
+    registryPrefix: Flags.string({
+      required: false,
+      char: "r",
+      description: "Optional: Your custom NPM registry prefix",
+    }),
   };
 
   async run() {
@@ -37,13 +43,15 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
 
     try {
       const { flags } = await this.parse(GenerateIntegrationFromYAMLCommand);
-      const yamlExists = await exists(flags.yamlFile);
+      const { yamlFile, registryPrefix } = flags;
+
+      const yamlExists = await exists(yamlFile);
 
       if (!yamlExists) {
         this.error("Could not find a YAML file at the given filepath.");
       }
 
-      const result = load(await fs.readFile(flags.yamlFile, "utf-8")) as IntegrationObjectFromYAML;
+      const result = load(await fs.readFile(yamlFile, "utf-8")) as IntegrationObjectFromYAML;
 
       const integrationKey = uuid4();
 
@@ -69,7 +77,6 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
         path.join("assets", "icon.png"),
         path.join("src", "index.ts"),
         path.join("src", "client.ts"),
-        path.join("src", "componentRegistry.ts"),
         path.join(".spectral", "index.ts"),
         path.join("src", "flows", "index.ts"),
         ".npmrc",
@@ -81,7 +88,9 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
         "webpack.config.js",
       ];
 
-      const ejsUtils = { camelCase };
+      const ejsUtils = { camelCase, kebabCase };
+
+      const usedComponents = await extractComponentList(result.flows);
 
       await Promise.all([
         ...templateFiles.map((file) =>
@@ -114,19 +123,42 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
             });
           })(),
         ),
+        Promise.resolve(
+          (async () => {
+            this.log("Creating the component manifest...");
+
+            template("integration/src/componentRegistry.ts.ejs", "src/componentRegistry.ts", {
+              components: usedComponents,
+              customPrefix: registryPrefix ?? "@FIXME-YOUR-CUSTOM-NPM-REGISTRY",
+              utils: ejsUtils,
+            });
+          })(),
+        ),
         // template("integration/src/flows/index.ts.ejs", "flows/index.ts"),
       ]);
 
-      // @TODO: update dependencies with component manifests...
-      // this may be weird when it comes to custom components?
+      const packageJsonManifests: Record<string, string> = {};
+
+      usedComponents.public.forEach((componentKey) => {
+        const packageName = `@component-manifests/${componentKey}`;
+        packageJsonManifests[packageName] = "*";
+      });
+
+      usedComponents.private.forEach((componentKey) => {
+        const packageName = `${
+          registryPrefix ?? "@FIXME-YOUR-CUSTOM-NPM-REGISTRY"
+        }/${componentKey}`;
+        packageJsonManifests[packageName] = "*";
+      });
+
       await updatePackageJson({
-        // @TODO - name formatting
         path: "package.json",
         scripts: {
           build: "webpack",
           import: "npm run build && prism integrations:import",
           test: "jest",
           lint: "eslint --ext .ts .",
+          "lint-fix": "eslint --fix --quiet --ext .ts .",
           format: "prettier . --write",
         },
         eslintConfig: {
@@ -137,6 +169,7 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
           "@prismatic-io/spectral": "*",
         },
         devDependencies: {
+          ...packageJsonManifests,
           "@prismatic-io/eslint-config-spectral": "2.0.1",
           "@types/jest": "29.5.12",
           "copy-webpack-plugin": "12.0.2",
@@ -242,4 +275,45 @@ function formatConfigPageForEJS(
       configVars,
     };
   });
+}
+
+/* Returns of map of component names and a boolean denoting if the component is public. */
+async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
+  const componentMap: Record<string, boolean> = {};
+
+  flows.forEach((flow) => {
+    flow.steps.forEach((step) => {
+      const key = step.action.component.key;
+      if (!componentMap[key]) {
+        componentMap[key] = true;
+      }
+    });
+  });
+
+  const componentKeys = Object.keys(componentMap);
+
+  const response = await gqlRequest({
+    document: gql`
+      query getPublicComponents($componentKeys: [String]) {
+        components(public: true, key_In: $componentKeys) {
+          nodes {
+            key
+          }
+        }
+      }
+    `,
+    variables: {
+      componentKeys,
+    },
+  });
+
+  const publicComponents: Array<string> = response.components.nodes.map(
+    (node: { key: string }) => node.key,
+  );
+  const privateComponents: Array<string> = xor(publicComponents, componentKeys);
+
+  return {
+    public: publicComponents,
+    private: privateComponents,
+  };
 }

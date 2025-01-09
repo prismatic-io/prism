@@ -269,9 +269,14 @@ export const createClient = (connection: Connection) => {
 
 exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/componentRegistry.ts 1`] = `
 "import { componentManifests } from "@prismatic-io/spectral";
+import log from "@component-manifests/log";
+import webhookTriggers from "@component-manifests/webhook-triggers";
+import helloWorldComponent from "@FIXME-YOUR-CUSTOM-NPM-REGISTRY/helloWorldComponent";
 
 export const componentRegistry = componentManifests({
-  // this is where you'll register your component manifests
+  log,
+  webhookTriggers,
+  helloWorldComponent,
 });
 "
 `;

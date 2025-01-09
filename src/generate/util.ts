@@ -49,10 +49,15 @@ export const template = async (
 
 const updateDependencies = async (dependencies: Record<string, string>) => {
   const promises = Object.entries(dependencies).map(async ([name, version]) => {
-    if (version === "*") {
-      const { data } = await axios.get(`https://registry.npmjs.org/${name}/latest`);
-      return [name, data.version];
+    try {
+      if (version === "*" && !name.includes("@component-manifests")) {
+        const { data } = await axios.get(`https://registry.npmjs.org/${name}/latest`);
+        return [name, data.version];
+      }
+    } catch {
+      // If we do not find a latest version, continue with "*".
     }
+
     return [name, version];
   });
   const resolved = await Promise.all(promises);
