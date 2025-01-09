@@ -48,26 +48,23 @@ function convertYAMLReferenceValue(
 }
 
 /* Given a config var's meta & orgOnly properties, determine the
- * permission and visibility type. */
-export function determinePermissionAndVisibilityType(
+ * permission and visibility type. Implementation taken from frontend. */
+export const getPermissionAndVisibilityType = (
   meta: ConfigVarObjectFromYAML["meta"],
   orgOnly?: boolean,
-) {
-  // @TODO: check with FE implementation
-  const { visibleToCustomerDeployer, visibleToOrgDeployer } = meta ?? {};
-  const isOrgOnly = orgOnly || meta?.orgOnly;
+) => {
+  const { visibleToCustomerDeployer } = meta ?? {};
+
+  if (orgOnly) {
+    return "organization";
+  }
 
   if (visibleToCustomerDeployer) {
     return "customer";
-  } else if (isOrgOnly) {
-    return "organization";
-  } else if (visibleToOrgDeployer && !visibleToCustomerDeployer && !isOrgOnly) {
-    return "embedded";
   }
 
-  // @TODO: What is the default?
-  return "customer";
-}
+  return "embedded";
+};
 
 /* Given a template input, convert it into a string that can be used in the
  * EJS file.
@@ -150,14 +147,24 @@ export function createFlowInputsString(
   return resultString;
 }
 
-/* Looping: Given a loop step, convert it into a string that can
+/* Loop helper: Determines if a step is actually a loop step vs. a break loop */
+function getLoopKind(step: ActionObjectFromYAML) {
+  if (step.action.component.key === "loop") {
+    return step.action.key === "breakLoop" ? "breakLoop" : "loop";
+  }
+  return "";
+}
+
+/* Loop: Given a loop step, convert it into a string that can
  * be included in the EJS file. */
 export function createLoopString(step: ActionObjectFromYAML, trigger?: ActionObjectFromYAML) {
   const loopStepName = camelCase(step.name);
   let loopString = `const ${loopStepName}: { data: Array<unknown> } = { data: [] };\n`;
+  const isBreakLoop = getLoopKind(step) === "breakLoop";
 
-  // @TODO - handle break loop action
-  // @TODO - ensure references to loop items work
+  if (isBreakLoop) {
+    return "break;\n";
+  }
 
   if (step.action.key === "loopOverItems") {
     const items = step.inputs.items;
@@ -182,17 +189,17 @@ export function createLoopString(step: ActionObjectFromYAML, trigger?: ActionObj
     throw `Cannot generate loop code for a non-loop step: ${step.name}`;
   }
 
-  (step.steps || []).forEach((loopStep) => {
-    if (loopStep.action.component.key === "loop") {
-      loopString += createLoopString(loopStep, trigger);
-    } else if (loopStep.action.component.key === "branch") {
-      loopString += createBranchString(loopStep, trigger);
+  (step.steps || []).some((childStep) => {
+    if (getLoopKind(childStep) === "loop") {
+      loopString += createLoopString(childStep, trigger);
+    } else if (childStep.action.component.key === "branch") {
+      loopString += createBranchString(childStep, trigger);
     } else {
       loopString += `
-        const ${camelCase(loopStep.name)} = await context.components.${camelCase(
+        const ${camelCase(childStep.name)} = await context.components.${camelCase(
           step.action.component.key,
         )}.${step.action.key}({
-          ${createFlowInputsString(loopStep, trigger, true)}
+          ${createFlowInputsString(childStep, trigger, true)}
         });
       `;
     }
@@ -201,7 +208,6 @@ export function createLoopString(step: ActionObjectFromYAML, trigger?: ActionObj
   const lastStep = (step.steps || []).at(-1) ?? { name: "" };
 
   loopString += `
-    // Setting the output of the loop to the result of its last step.
     ${loopStepName}.data.push(${camelCase(lastStep.name)});
   }`;
 
@@ -222,9 +228,10 @@ function convertObjToExpression(obj: { type: string; value: string }) {
       } else {
         return `"${value}"`;
       }
+    case "template":
+      return convertTemplateInput(value);
     default:
-      // @TODO
-      throw "Invalid expression object.";
+      return `"FIXME - The converter ran into an error when attemping to parse this value."`;
   }
 }
 
@@ -322,7 +329,7 @@ export function formatConfigVarInputs(configVar: ConfigVarObjectFromYAML) {
       value: input.value,
       meta: {
         ...input.meta,
-        permissionAndVisibilityType: determinePermissionAndVisibilityType(input.meta),
+        permissionAndVisibilityType: getPermissionAndVisibilityType(input.meta),
       },
     };
   });

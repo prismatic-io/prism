@@ -19,7 +19,7 @@ import {
   createBranchString,
   createFlowInputsString,
   createLoopString,
-  determinePermissionAndVisibilityType,
+  getPermissionAndVisibilityType,
   formatConfigVarInputs,
 } from "./utils.js";
 
@@ -28,8 +28,14 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
   static flags = {
     yamlFile: Flags.string({
       required: true,
-      char: "f",
+      char: "y",
       description: "YAML filepath",
+    }),
+    folder: Flags.string({
+      required: false,
+      char: "f",
+      description:
+        "Optional: Folder name to install the integration into (by default we will kebab-case your integration name)",
     }),
     registryPrefix: Flags.string({
       required: false,
@@ -43,7 +49,7 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
 
     try {
       const { flags } = await this.parse(GenerateIntegrationFromYAMLCommand);
-      const { yamlFile, registryPrefix } = flags;
+      const { yamlFile, registryPrefix, folder } = flags;
 
       const yamlExists = await exists(yamlFile);
 
@@ -67,9 +73,14 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
         },
       };
 
-      // @TODO - prompt for a folder name
-      const folderName = result.name.replaceAll(" ", "-");
-      await fs.mkdir(folderName);
+      const folderName = folder ?? result.name.replaceAll(" ", "-");
+
+      try {
+        await fs.mkdir(folderName);
+      } catch (e) {
+        throw `A folder named ${folderName} already exists. Rename it, or use the -f flag to specify a different folder name.`;
+      }
+
       process.chdir(folderName);
 
       // Create template files based on YAML
@@ -78,7 +89,6 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
         path.join("src", "index.ts"),
         path.join("src", "client.ts"),
         path.join(".spectral", "index.ts"),
-        path.join("src", "flows", "index.ts"),
         ".npmrc",
         ".prettierrc",
         ".prettierignore",
@@ -101,31 +111,42 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
           ),
         ),
         ...result.flows.map(async (flow) => {
-          this.log("Converting Flow: ", flow.name);
-          const ejsInputs = formatFlowForEJS(flow);
-
-          template("integration/src/flows/flow.ts.ejs", `src/flows/${kebabCase(flow.name)}.ts`, {
-            ...ejsInputs,
-            utils: ejsUtils,
-          });
+          this.log("Converting Flow:", flow.name);
+          try {
+            const ejsInputs = formatFlowForEJS(flow);
+            template("integration/src/flows/flow.ts.ejs", `src/flows/${kebabCase(flow.name)}.ts`, {
+              ...ejsInputs,
+              utils: ejsUtils,
+            });
+          } catch (e) {
+            this.log(`Error: ${e}`);
+          }
+        }),
+        template("integration/src/flows/index.ts.ejs", "src/flows/index.ts", {
+          flows: result.flows.map((flow) => flow.name),
+          utils: ejsUtils,
         }),
         Promise.resolve(
           (async () => {
-            this.log("Converting config pages & required config vars...");
-            const ejsInputs = formatConfigPageForEJS(
-              result.configPages || [],
-              result.requiredConfigVars,
-            );
+            this.log("Converting ConfigPages...");
+            try {
+              const ejsInputs = formatConfigPageForEJS(
+                result.configPages || [],
+                result.requiredConfigVars,
+              );
 
-            template("integration/src/configPages.ts.ejs", "src/configPages.ts", {
-              pages: ejsInputs,
-              utils: ejsUtils,
-            });
+              template("integration/src/configPages.ts.ejs", "src/configPages.ts", {
+                pages: ejsInputs,
+                utils: ejsUtils,
+              });
+            } catch (e) {
+              this.log(`Error: ${e}`);
+            }
           })(),
         ),
         Promise.resolve(
           (async () => {
-            this.log("Creating the component manifest...");
+            this.log("Generating component manifest...");
 
             template("integration/src/componentRegistry.ts.ejs", "src/componentRegistry.ts", {
               components: usedComponents,
@@ -134,7 +155,6 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
             });
           })(),
         ),
-        // template("integration/src/flows/index.ts.ejs", "flows/index.ts"),
       ]);
 
       const packageJsonManifests: Record<string, string> = {};
@@ -221,8 +241,7 @@ function formatFlowForEJS(flow: FlowObjectFromYAML) {
   });
 
   if (!trigger) {
-    // @TODO - we can maybe make this more forgiving
-    throw "No trigger found on flow.";
+    throw `Unable to find a trigger step for flow: ${flow.name}. Skipping file generation step.`;
   }
 
   return {
@@ -237,6 +256,7 @@ function formatFlowForEJS(flow: FlowObjectFromYAML) {
     },
     trigger,
     steps,
+    result: camelCase(steps.at(-1)?.name ?? ""),
   };
 }
 
@@ -252,7 +272,7 @@ function formatConfigPageForEJS(
       });
 
       if (!foundConfigVar) {
-        throw "TODO: Error finding config var";
+        throw `The ${configPage.name} config page references a config var named ${element.value}. We could not find a ${element.value} in your YAML's "requiredConfigVars" block.\nSkipping generation of configPages file.`;
       }
 
       return {
@@ -261,7 +281,7 @@ function formatConfigPageForEJS(
         inputs: formatConfigVarInputs(foundConfigVar),
         meta: {
           ...foundConfigVar.meta,
-          permissionAndVisibilityType: determinePermissionAndVisibilityType(
+          permissionAndVisibilityType: getPermissionAndVisibilityType(
             foundConfigVar.meta,
             foundConfigVar.orgOnly,
           ),

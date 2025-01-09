@@ -51,7 +51,6 @@ export type ConfigPageObjectFromYAML = {
     type: string;
     value: string;
   }>;
-  // @TODO - what does this map to
   userLevelConfigured?: boolean;
 };
 

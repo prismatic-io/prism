@@ -145,49 +145,49 @@ export const configPages = {
         values: {
           "authorizeUrl": {
             value: "https://slack.com/oauth/v2/authorize",
-            permissionAndVisibilityType: "organization",
+            permissionAndVisibilityType: "embedded",
             visibleToOrgDeployer: false,
 
           },
           "tokenUrl": {
             value: "https://slack.com/api/oauth.v2.access",
-            permissionAndVisibilityType: "organization",
+            permissionAndVisibilityType: "embedded",
             visibleToOrgDeployer: false,
 
           },
           "revokeUrl": {
             value: "https://slack.com/api/auth.revoke",
-            permissionAndVisibilityType: "organization",
+            permissionAndVisibilityType: "embedded",
             visibleToOrgDeployer: false,
 
           },
           "scopes": {
             value: "chat:write chat:write.public chat:write.customize channels:read groups:read im:read mpim:read",
-            permissionAndVisibilityType: "organization",
+            permissionAndVisibilityType: "embedded",
             visibleToOrgDeployer: false,
 
           },
           "clientId": {
             value: "test",
-            permissionAndVisibilityType: "organization",
+            permissionAndVisibilityType: "embedded",
             visibleToOrgDeployer: false,
 
           },
           "clientSecret": {
             value: "test",
-            permissionAndVisibilityType: "organization",
+            permissionAndVisibilityType: "embedded",
             visibleToOrgDeployer: false,
 
           },
           "signingSecret": {
             value: "test",
-            permissionAndVisibilityType: "organization",
+            permissionAndVisibilityType: "embedded",
             visibleToOrgDeployer: false,
 
           },
           "isUser": {
             value: "false",
-            permissionAndVisibilityType: "organization",
+            permissionAndVisibilityType: "embedded",
             visibleToOrgDeployer: false,
 
           },
@@ -218,7 +218,7 @@ export const configPages = {
         stableKey: "My collection",
         dataType: "string",
         description: "",
-        permissionAndVisibilityType: "customer",
+        permissionAndVisibilityType: "embedded",
         visibleToOrgDeployer: false,
         collectionType: "valuelist",
         defaultValue: ["abc","123"],
@@ -237,12 +237,12 @@ export const configPages = {
         values: {
           "connection": {
             configVar: "hello-world-component Connection",
-            permissionAndVisibilityType: "organization",
+            permissionAndVisibilityType: "embedded",
             visibleToOrgDeployer: false,
           },
           "myInput": {
             value: "dfssh",
-            permissionAndVisibilityType: "organization",
+            permissionAndVisibilityType: "embedded",
             visibleToOrgDeployer: false,
           },
         },
@@ -336,9 +336,8 @@ kvTest: {someKey: "someValue",someKey2: "someValue2",},
 todoListId: "",
     });
 
-    // @TODO - what's a reasonable return object?
     return {
-      data: [],
+      data: helloWorldAction,
     };
   },
 });
@@ -348,6 +347,10 @@ export default basic;
 `;
 
 exports[`YAML CNI generation tests simple-integration should match scaffolding snapshots: simple-integration/src/flows/index.ts 1`] = `
-"TODO
+"import { basic } from "./basic";
+
+export default [
+  basic,
+];
 "
 `;
