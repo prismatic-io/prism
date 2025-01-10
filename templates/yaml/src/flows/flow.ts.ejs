@@ -1,4 +1,11 @@
-import { flow } from "@prismatic-io/spectral";
+import {
+  flow,
+<%_ if (includes.branch) { _%>
+  BinaryOperator,
+  BooleanOperator,
+  UnaryOperator,
+<%_ } _%>
+} from "@prismatic-io/spectral";
 <%_ if (includes.branch) { _%>
 import {
   evaluate,
@@ -6,18 +13,31 @@ import {
 <%_ } _%>
 
 export const <%= key %> = flow({
-  name: "<%= flow.name %>",
+  name: "<%- flow.name -%>",
   stableKey: "<%= flow.stableKey %>",
   description: "<%= flow.description %>",
   isSynchronous: <%= flow.isSynchronous %>,
   endpointSecurityType: "<%= flow.endpointSecurityType %>",
+  <%_ if (trigger.schedule) { _%>
+  schedule: {
+    <%_ if (trigger.schedule.type === "configVar") { _%>
+    configVar: "<%- trigger.schedule.value -%>",
+    <%_ } else { _%>
+    value: "<%- trigger.schedule.value -%>",
+      <%_ if (trigger.schedule.meta && trigger.schedule.meta.timeZone) { _%>
+    timezone: "<%- trigger.schedule.meta.timeZone -%>",
+      <%_ } _%>
+    <%_ } _%>
+  },
+  <%_ } else { _%>
   onTrigger: {
-    component: "<%= trigger.action.component.key %>",
+    component: "<%= utils.camelCase(trigger.action.component.key) %>",
     key: "<%= trigger.action.key %>",
     values: {
       <%- trigger.formattedInputs %>
     },
   },
+  <%_ } _%>
   onExecution: async (context, params) => {
     const { configVars } = context;
 
@@ -27,9 +47,10 @@ export const <%= key %> = flow({
       <%_ } else if (step.branchString) { _%>
     <%- step.branchString %>
       <%_ } else { _%>
-    const <%= utils.camelCase(step.name) %> = await context.components.<%= utils.camelCase(step.action.component.key) %>.<%= step.action.key %>({
+    const <%= utils.camelCase(step.name) %>: any = await context.components.<%= utils.camelCase(step.action.component.key) %>.<%= step.action.key %>({
       <%- step.formattedInputs %>
     });
+
       <%_ } _%>
     <%_ }) _%>
 

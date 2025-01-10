@@ -2,7 +2,6 @@ import { Command, Args } from "@oclif/core";
 import fs from "fs/promises";
 import { VALID_NAME_REGEX } from "../../../utils/generate.js";
 import GenerateIntegrationCommand from "./integration.js";
-import GenerateIntegrationFromYAMLCommand from "./yaml/yaml.js";
 
 export default class InitializeIntegration extends Command {
   static description = "Initialize a new Code Native Integration";

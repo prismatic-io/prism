@@ -22,6 +22,7 @@ import {
   getPermissionAndVisibilityType,
   formatConfigVarInputs,
   getBranchKind,
+  wrapValue,
 } from "./utils.js";
 
 export default class GenerateIntegrationFromYAMLCommand extends Command {
@@ -98,14 +99,14 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
         "webpack.config.js",
       ];
 
-      const ejsUtils = { camelCase, kebabCase };
+      const ejsUtils = { camelCase, kebabCase, wrapValue };
 
       const usedComponents = await extractComponentList(result.flows);
 
       await Promise.all([
         ...templateFiles.map((file) =>
           template(
-            path.join("integration", file.endsWith("icon.png") ? file : `${file}.ejs`),
+            path.join("yaml", file.endsWith("icon.png") ? file : `${file}.ejs`),
             file,
             context,
           ),
@@ -114,15 +115,18 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
           this.log("Converting Flow:", flow.name);
           try {
             const ejsInputs = formatFlowForEJS(flow);
-            template("integration/src/flows/flow.ts.ejs", `src/flows/${kebabCase(flow.name)}.ts`, {
+            template("yaml/src/flows/flow.ts.ejs", `src/flows/${kebabCase(flow.name)}.ts`, {
               ...ejsInputs,
               utils: ejsUtils,
+              includes: {
+                branch: usedComponents.public.includes("branch"),
+              },
             });
           } catch (e) {
             this.log(`${e}`);
           }
         }),
-        template("integration/src/flows/index.ts.ejs", "src/flows/index.ts", {
+        template("yaml/src/flows/index.ts.ejs", "src/flows/index.ts", {
           flows: result.flows.map((flow) => flow.name),
           utils: ejsUtils,
         }),
@@ -135,7 +139,7 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
                 result.requiredConfigVars,
               );
 
-              template("integration/src/configPages.ts.ejs", "src/configPages.ts", {
+              template("yaml/src/configPages.ts.ejs", "src/configPages.ts", {
                 pages: ejsInputs,
                 utils: ejsUtils,
               });
@@ -148,7 +152,7 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
           (async () => {
             this.log("Generating component manifest...");
 
-            template("integration/src/componentRegistry.ts.ejs", "src/componentRegistry.ts", {
+            template("yaml/src/componentRegistry.ts.ejs", "src/componentRegistry.ts", {
               components: usedComponents,
               customPrefix: registryPrefix ?? "@FIXME-YOUR-CUSTOM-NPM-REGISTRY",
               utils: ejsUtils,
@@ -172,6 +176,7 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
       });
 
       await updatePackageJson({
+        name: kebabCase(result.name),
         path: "package.json",
         scripts: {
           build: "webpack",
@@ -217,9 +222,6 @@ function formatFlowForEJS(flow: FlowObjectFromYAML) {
   const steps: Array<ActionObjectFromYAML> = [];
   let formattedStep: ActionObjectFromYAML;
   let trigger: ActionObjectFromYAML | undefined;
-  const includes = {
-    branch: false,
-  };
 
   flow.steps.forEach((step) => {
     formattedStep = step;
@@ -228,7 +230,6 @@ function formatFlowForEJS(flow: FlowObjectFromYAML) {
       formattedStep.loopString = createLoopString(formattedStep, trigger, step);
     } else if (getBranchKind(step) === "branch") {
       formattedStep.branchString = createBranchString(formattedStep, trigger);
-      includes.branch = true;
     } else {
       formattedStep.formattedInputs = createFlowInputsString(step, trigger);
     }
@@ -246,7 +247,6 @@ function formatFlowForEJS(flow: FlowObjectFromYAML) {
 
   return {
     key: camelCase(name),
-    includes,
     flow: {
       name,
       stableKey: kebabCase(name),
@@ -300,6 +300,7 @@ function formatConfigPageForEJS(
 /* Returns of map of component names and a boolean denoting if the component is public. */
 async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
   const componentMap: Record<string, boolean> = {};
+  const stepListsToProcess: Array<Array<ActionObjectFromYAML>> = [];
 
   flows.forEach((flow) => {
     flow.steps.forEach((step) => {
@@ -307,8 +308,27 @@ async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
       if (!componentMap[key]) {
         componentMap[key] = true;
       }
+
+      if (step.steps) {
+        stepListsToProcess.push(step.steps);
+      }
     });
   });
+
+  while (stepListsToProcess.length > 0) {
+    const current = stepListsToProcess.pop();
+
+    (current ?? []).forEach((step) => {
+      const key = step.action.component.key;
+      if (!componentMap[key]) {
+        componentMap[key] = true;
+      }
+
+      if (step.steps) {
+        stepListsToProcess.push(step.steps);
+      }
+    });
+  }
 
   const componentKeys = Object.keys(componentMap);
 

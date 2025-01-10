@@ -5,13 +5,26 @@ import {
   ValidComplexYAMLValue,
   ValidYAMLValue,
 } from "./types.js";
+import { BinaryOperator, BooleanOperator, UnaryOperator } from "@prismatic-io/spectral";
+
+function valueIsNumber(value: unknown) {
+  return typeof value === "number" || (typeof value === "string" && !Number.isNaN(Number(value)));
+}
+
+function valueIsBoolean(value: unknown) {
+  return typeof value === "boolean" || value === "false" || value === "true";
+}
 
 /* Given a valid YAML value, wrap it in quotes, escaped backticks,
  * or nothing depending on the case. */
-function wrapValue(value: ValidYAMLValue, isMultiline?: boolean) {
-  if (typeof value === "boolean" || typeof value === "number") {
+export function wrapValue(value: ValidYAMLValue, ignoreNumbers?: boolean) {
+  if (value === "") {
+    return `""`;
+  } else if (valueIsBoolean(value) || (valueIsNumber(value) && !ignoreNumbers)) {
+    // Booleans and numbers shouldn't be wrapped
     return value;
-  } else if (typeof value === "string" && isMultiline) {
+  } else if (typeof value === "string" && value.indexOf("\n") >= 0) {
+    // Multiline strings
     const escapedValue = value.replace(/`/g, "\\`");
     return `\`${escapedValue}\``;
   } else {
@@ -32,9 +45,7 @@ function convertYAMLReferenceValue(
   let suffix = "";
 
   rest.forEach((term) => {
-    const parsed = Number.parseInt(term);
-    const formattedTerm =
-      typeof parsed === "number" && !Number.isNaN(parsed) ? `[${term}]` : `.${term}`;
+    const formattedTerm = valueIsNumber(term) ? `[${term}]` : `.${term}`;
     suffix += formattedTerm;
   });
 
@@ -89,11 +100,12 @@ function convertTemplateInput(
   loop?: ActionObjectFromYAML,
 ) {
   let resultString = input.replace(CONFIG_VAR_REGEX, '$${configVars["$1"]}');
-  // resultString = resultString.replace(STEP_REF_REGEX, "$${$1}");
-  resultString = resultString.replace(
-    STEP_REF_REGEX,
-    `\$\${${convertYAMLReferenceValue("$1", trigger, loop)}}`,
-  );
+
+  const referenceMatches = resultString.match(STEP_REF_REGEX);
+  (referenceMatches || []).forEach((match) => {
+    resultString = resultString.replace(match, convertYAMLReferenceValue(match, trigger, loop));
+    resultString = resultString.replace(STEP_REF_REGEX, "$${$1}");
+  });
 
   return `\`${resultString}\``;
 }
@@ -142,11 +154,7 @@ export function createFlowInputsString(
     } else if (input.type === "template") {
       currentInputString += `${convertTemplateInput(input.value as string, trigger, loop)},`;
     } else {
-      if (typeof input.value === "string" && input.value.indexOf("\n") >= 0) {
-        currentInputString += `${wrapValue(input.value as ValidYAMLValue, true)},`;
-      } else {
-        currentInputString += `${wrapValue(input.value as ValidYAMLValue)},`;
-      }
+      currentInputString += `${wrapValue(input.value as ValidYAMLValue)},`;
     }
 
     if (action.isTrigger) {
@@ -167,7 +175,7 @@ export function createLoopString(
   loop?: ActionObjectFromYAML,
 ) {
   const loopStepName = camelCase(step.name);
-  let loopString = `const ${loopStepName}: { data: Array<unknown> } = { data: [] };\n`;
+  let loopString = `const ${loopStepName}: { data: Array<any> } = { data: [] };\n`;
   const isBreakLoop = step.action.key === "breakLoop";
   const parentLoop = loop ?? step;
 
@@ -213,11 +221,13 @@ export function createLoopString(
     }
   });
 
-  const lastStep = (step.steps || []).at(-1) ?? { name: "" };
+  const lastStep = (step.steps || []).at(-1);
 
-  loopString += `
-    ${loopStepName}.data.push(${camelCase(lastStep.name)});
-  }\n`;
+  if (lastStep) {
+    loopString += `
+      ${loopStepName}.data.push(${camelCase(lastStep.name)}.data);
+    }\n`;
+  }
 
   return loopString;
 }
@@ -228,6 +238,19 @@ export function getBranchKind(step: ActionObjectFromYAML) {
     return step.action.key === "selectExecutedStepResult" ? "selectExecutedStepResult" : "branch";
   }
   return "";
+}
+
+/* Branch helper: Converts plain strings into operators compatible with the evaluate fn */
+function convertOperator(value: string) {
+  if (Object.keys(UnaryOperator).includes(value)) {
+    return `UnaryOperator.${value}`;
+  } else if (Object.keys(BinaryOperator).includes(value)) {
+    return `BinaryOperator.${value}`;
+  } else if (Object.keys(BooleanOperator).includes(value)) {
+    return `BooleanOperator.${value}`;
+  } else {
+    return value;
+  }
 }
 
 /* Branch helper: Given an object that represents a conditional expression, convert
@@ -243,7 +266,7 @@ function convertObjToExpression(
     case "configVar":
       return `configVars["${value}"]`;
     case "value":
-      if (!Number.isNaN(Number.parseInt(value))) {
+      if (valueIsNumber(value)) {
         return Number.parseInt(value);
       } else {
         return `"${value}"`;
@@ -268,7 +291,7 @@ function convertBranchInputs(
 
   inputs.forEach((input, i) => {
     if (typeof input === "string") {
-      result.push(`"${input}"`);
+      result.push(convertOperator(input));
     } else if (Array.isArray(input)) {
       result.push(convertBranchInputs(input, trigger, loop));
     } else {
@@ -313,7 +336,8 @@ export function createBranchString(
   const branchStepName = camelCase(step.name);
 
   let branchString = `
-    let ${branchStepName} = 'Else';
+    let ${branchStepName}Branch = 'Else';
+    let ${branchStepName}: any;
   `;
   const inputConditions = step.inputs.conditions.value as ValidComplexYAMLValue;
 
@@ -323,7 +347,7 @@ export function createBranchString(
       ${ifStatement} (evaluate(${stringifyCondition(
         convertBranchInputs(condition.value as ValidComplexYAMLValue, trigger, loop),
       )})) {
-        ${branchStepName} = "${condition.name}";
+        ${branchStepName}Branch = "${condition.name}";
       }
     `;
   });
@@ -331,7 +355,7 @@ export function createBranchString(
   const branchSteps = step.branches ?? [];
 
   branchSteps.forEach((branch, i) => {
-    branchString += `if (${branchStepName} === "${branch.name}") {`;
+    branchString += `if (${branchStepName}Branch === "${branch.name}") {`;
 
     branch.steps.forEach((step, i) => {
       if (step.action.component.key === "loop") {
@@ -340,7 +364,7 @@ export function createBranchString(
         branchString += createBranchString(step, trigger, loop);
       } else {
         branchString += `
-          const ${camelCase(step.name)} = await context.components.${camelCase(
+          const ${camelCase(step.name)}: any = await context.components.${camelCase(
             step.action.component.key,
           )}.${step.action.key}({
             ${createFlowInputsString(step, trigger, loop)}
@@ -348,6 +372,14 @@ export function createBranchString(
         `;
       }
     });
+
+    if (!branchString.includes("break;")) {
+      const lastStep = branch.steps.at(-1);
+
+      if (lastStep) {
+        branchString += `${branchStepName} = ${camelCase(lastStep.name)}\n`;
+      }
+    }
 
     branchString += "}";
   });
