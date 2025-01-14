@@ -387,12 +387,12 @@ teamId: "",
 
     const loopOverItems: { data: Array<any> } = { data: [] };
 for (const loopOverItemsItem of listUsers.data.members) {
-        const writeLogMessage = await context.components.log.writeLog({
-          
+      const writeLogMessage: any = await context.components.log.writeLog({
+        
 level: "info",
 message: loopOverItemsItem.name,
-        });
-      
+      });
+    
     let branchOnExpressionBranch = 'Else';
     let branchOnExpression: any;
   
@@ -400,14 +400,14 @@ message: loopOverItemsItem.name,
         branchOnExpressionBranch = "it is slackbot";
       }
     if (branchOnExpressionBranch === "it is slackbot") {
-          const codeBlock: any = await context.components.code.runCode({
-            
+      const codeBlock: any = await context.components.code.runCode({
+        
 code: \`module.exports = async ({ logger, configVars }, stepResults) => {
   return { data: true };
 };
 \`,
-          });
-        branchOnExpression = codeBlock
+      });
+    branchOnExpression = codeBlock
 }if (branchOnExpressionBranch === "Else") {break;
 }
       loopOverItems.data.push(branchOnExpression.data);
@@ -415,20 +415,20 @@ code: \`module.exports = async ({ logger, configVars }, stepResults) => {
 
     const loopNTimes: { data: Array<any> } = { data: [] };
 for (let loopNTimesIdx = 0; loopNTimesIdx < 100; loopNTimesIdx++) {
-        const writeLogMessage2 = await context.components.log.writeLog({
-          
+      const writeLogMessage2: any = await context.components.log.writeLog({
+        
 level: "info",
 message: loopOverItems.data[0],
-        });
-      
-        const codeBlock2 = await context.components.code.runCode({
-          
+      });
+    
+      const codeBlock2: any = await context.components.code.runCode({
+        
 code: \`module.exports = async ({ logger, configVars }, stepResults) => {
   return { data: 100 };
 };
 \`,
-        });
-      
+      });
+    
       loopNTimes.data.push(codeBlock2.data);
     }
 

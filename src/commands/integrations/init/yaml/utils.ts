@@ -110,6 +110,31 @@ function convertTemplateInput(
   return `\`${resultString}\``;
 }
 
+function convertBody(
+  step: ActionObjectFromYAML,
+  bodyString: string,
+  trigger?: ActionObjectFromYAML,
+  loop?: ActionObjectFromYAML,
+) {
+  let result = bodyString;
+
+  if (step.action.component.key === "loop") {
+    result += createLoopString(step, trigger, loop);
+  } else if (getBranchKind(step) === "branch") {
+    result += createBranchString(step, trigger, loop);
+  } else {
+    result += `
+      const ${camelCase(step.name)}: any = await context.components.${camelCase(
+        step.action.component.key,
+      )}.${step.action.key}({
+        ${createFlowInputsString(step, trigger, loop)}
+      });
+    `;
+  }
+
+  return result;
+}
+
 /* Flows: Given a flow action step, convert its inputs into a CNI-compatible string
  * that will then be included in the EJS file. */
 export function createFlowInputsString(
@@ -206,19 +231,7 @@ export function createLoopString(
   }
 
   (step.steps || []).some((childStep) => {
-    if (childStep.action.component.key === "loop") {
-      loopString += createLoopString(childStep, trigger, parentLoop);
-    } else if (getBranchKind(childStep) === "branch") {
-      loopString += createBranchString(childStep, trigger, parentLoop);
-    } else {
-      loopString += `
-        const ${camelCase(childStep.name)} = await context.components.${camelCase(
-          childStep.action.component.key,
-        )}.${childStep.action.key}({
-          ${createFlowInputsString(childStep, trigger, parentLoop)}
-        });
-      `;
-    }
+    loopString = convertBody(childStep, loopString, trigger, loop);
   });
 
   const lastStep = (step.steps || []).at(-1);
@@ -358,19 +371,7 @@ export function createBranchString(
     branchString += `if (${branchStepName}Branch === "${branch.name}") {`;
 
     branch.steps.forEach((step, i) => {
-      if (step.action.component.key === "loop") {
-        branchString += createLoopString(step, trigger, loop);
-      } else if (getBranchKind(step) === "branch") {
-        branchString += createBranchString(step, trigger, loop);
-      } else {
-        branchString += `
-          const ${camelCase(step.name)}: any = await context.components.${camelCase(
-            step.action.component.key,
-          )}.${step.action.key}({
-            ${createFlowInputsString(step, trigger, loop)}
-          });
-        `;
-      }
+      branchString = convertBody(step, branchString, trigger, loop);
     });
 
     if (!branchString.includes("break;")) {
