@@ -86,6 +86,8 @@ export default class GenerateIntegrationCommand extends Command {
       path.join("src", "client.ts"),
       path.join("src", "componentRegistry.ts"),
       path.join(".spectral", "index.ts"),
+      path.join(".vscode", "extensions.json"),
+      path.join(".vscode", "settings.json"),
       ".npmrc",
       "jest.config.js",
       "package.json",
