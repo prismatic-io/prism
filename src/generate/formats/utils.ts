@@ -57,7 +57,7 @@ export const escapeText = (text?: unknown): string => {
 
 export type GeneratedFunction = string | WriterFunction;
 
-export type Input = Omit<InputFieldDefinition, "clean" | "collection" | "model"> & {
+export type Input = Omit<InputFieldDefinition, "clean" | "model"> & {
   clean: GeneratedFunction;
   /** Upstream API key for this input */
   upstreamKey: string;
