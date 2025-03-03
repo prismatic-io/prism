@@ -141,7 +141,7 @@ const buildBodyInputs = (
       let clean: string | undefined;
 
       if (schemaType === "array") {
-        clean = `(values) => ((values as string[]) || []).map((value) => util.types.${cleanFn}(value))`;
+        clean = `(values) => ((values as unknown[]) || []).map((value) => util.types.${cleanFn}(value))`;
       } else {
         clean = required
           ? `(value): ${cleanReturnType} => util.types.${cleanFn}(value)`
