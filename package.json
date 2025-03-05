@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "7.2.3-alpha.0",
+  "version": "7.2.5",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": ["prismatic", "cli"],
   "homepage": "https://prismatic.io",
@@ -45,15 +45,14 @@
     "@oclif/plugin-plugins": "5.0.9",
     "@oclif/plugin-warn-if-update-available": "3.1.18",
     "@prismatic-io/spectral": "10.0.0",
-    "archiver": "6.0.1",
+    "archiver": "7.0.1",
     "axios": "1.7.7",
     "chardet": "1.5.1",
     "dayjs": "1.11.10",
     "dotenv": "16.0.0",
     "ejs": "3.1.10",
     "fs-extra": "9.0.0",
-    "glob": "7.1.6",
-    "glob-promise": "4.2.2",
+    "glob": "10.4.5",
     "graphql": "16.8.1",
     "graphql-request": "6.1.0",
     "http-status-codes": "2.1.2",
@@ -70,7 +69,7 @@
     "tempy": "0.5.0",
     "ts-morph": "22.0.0",
     "uuid": "9.0.1",
-    "wsdl-tsclient": "1.5.0"
+    "wsdl-tsclient": "1.7.1"
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.3",

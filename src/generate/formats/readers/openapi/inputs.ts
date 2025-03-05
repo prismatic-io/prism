@@ -1,17 +1,20 @@
 import { OpenAPI, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 import { startCase, merge } from "lodash-es";
 import { Input, cleanIdentifier, stripUndefined } from "../../utils.js";
-import { InputFieldChoice, InputFieldType } from "@prismatic-io/spectral";
+import { InputFieldChoice, InputFieldCollection, InputFieldType } from "@prismatic-io/spectral";
 
 type ParameterObject = OpenAPIV3.ParameterObject | OpenAPIV3_1.ParameterObject;
 
+type InputType = {
+  type: InputFieldType;
+  cleanFn: string;
+  cleanReturnType?: string;
+  allowOptional?: boolean;
+  collection?: InputFieldCollection;
+};
+
 const toInputType: {
-  [x: string]: {
-    type: InputFieldType;
-    cleanFn: string;
-    cleanReturnType: string;
-    allowOptional: boolean;
-  };
+  [x: string]: InputType;
 } = {
   string: {
     type: "string",
@@ -47,8 +50,10 @@ const getInputModel = (
     return undefined;
   }
 
-  if (schema?.enum) {
-    return (schema?.enum ?? []).map<InputFieldChoice>((v) => ({
+  const schemaItems =
+    "items" in schema && schema.items && "enum" in schema.items ? schema.items.enum : undefined;
+  if (schema?.enum || schemaItems) {
+    return (schema?.enum || schemaItems || []).map<InputFieldChoice>((v) => ({
       label: startCase(v),
       value: v,
     }));
@@ -120,13 +125,28 @@ const buildBodyInputs = (
     .filter(([, prop]) => !prop.readOnly) // Don't create inputs for readonly properties
     .map<Input>(([propKey, prop]) => {
       const schemaType = prop?.type;
-      const { type, cleanFn, cleanReturnType, allowOptional } =
-        toInputType[schemaType as string] ?? toInputType.string;
+      let inputType: InputType;
+
+      if (schemaType === "array") {
+        inputType = formatArrayInput(
+          prop as OpenAPIV3.ArraySchemaObject | OpenAPIV3_1.ArraySchemaObject,
+        );
+      } else {
+        inputType = toInputType[schemaType as string] ?? toInputType.string;
+      }
+
+      const { type, cleanFn, cleanReturnType, allowOptional, collection } = inputType;
 
       const required = requiredKeys.has(propKey) || !allowOptional;
-      const clean = required
-        ? `(value): ${cleanReturnType} => util.types.${cleanFn}(value)`
-        : `(value): ${cleanReturnType} | undefined => value !== undefined && value !== null ? util.types.${cleanFn}(value) : undefined`;
+      let clean: string | undefined;
+
+      if (schemaType === "array") {
+        clean = `(values) => ((values as unknown[]) || []).map((value) => util.types.${cleanFn}(value))`;
+      } else {
+        clean = required
+          ? `(value): ${cleanReturnType} => util.types.${cleanFn}(value)`
+          : `(value): ${cleanReturnType} | undefined => value !== undefined && value !== null ? util.types.${cleanFn}(value) : undefined`;
+      }
 
       const key = seenKeys.has(cleanIdentifier(propKey))
         ? cleanIdentifier(`other ${propKey}`)
@@ -138,6 +158,7 @@ const buildBodyInputs = (
         key,
         label: startCase(propKey),
         type,
+        collection,
         required,
         comments: prop.description,
         default: prop.default,
@@ -203,4 +224,29 @@ export const getInputs = (
     bodyInputs,
     payloadContentType: "application/json",
   };
+};
+
+const formatArrayInput = (schema: OpenAPIV3.ArraySchemaObject | OpenAPIV3_1.ArraySchemaObject) => {
+  const { items } = schema;
+  if ("type" in items) {
+    if (items.type === "object") {
+      // TODO: Inputs that are arrays of objects with validations on the object are not in scope
+      // at this time. This approach provides bare bones support.
+      return {
+        type: "code" as InputFieldType,
+        language: "json",
+        cleanFn: "toObject",
+      };
+    } else {
+      const type = items.type as unknown as InputFieldType;
+      return {
+        type,
+        collection: "valuelist" as InputFieldCollection,
+        required: "minimum" in items && items.minimum,
+        cleanFn: type in toInputType ? toInputType[type].cleanFn : toInputType.string.cleanFn,
+      };
+    }
+  } else {
+    return toInputType.string;
+  }
 };

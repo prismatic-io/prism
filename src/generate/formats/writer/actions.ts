@@ -18,6 +18,7 @@ const writeInput = (
   {
     label,
     type,
+    collection,
     comments,
     clean,
     default: defaultValue,
@@ -34,6 +35,7 @@ const writeInput = (
     .conditionalWriteLine(required !== undefined, `required: ${required},`)
     .conditionalWriteLine(placeholder !== undefined, `placeholder: "${placeholder}",`)
     .conditionalWriteLine(defaultValue !== undefined, `default: "${defaultValue}",`)
+    .conditionalWriteLine(collection !== undefined, `collection: "${collection}",`)
     .conditionalWriteLine(model !== undefined && model.length > 0, () => {
       const options = (model ?? []).map<string>(
         ({ label, value }) => `{label: "${label}", value: "${value}"}`,
