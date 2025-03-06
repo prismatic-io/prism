@@ -1,9 +1,0 @@
-<%_ flows.forEach((flow) => { _%>
-import { <%= utils.camelCase(flow) %> } from "./<%= utils.kebabCase(flow) %>";
-<%_ }) _%>
-
-export default [
-<%_ flows.forEach((flow) => { _%>
-  <%= utils.camelCase(flow) %>,
-<%_ }) _%>
-];

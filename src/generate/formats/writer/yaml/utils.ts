@@ -1,11 +1,13 @@
-import { camelCase } from "lodash-es";
+import { BinaryOperator, BooleanOperator, UnaryOperator } from "@prismatic-io/spectral";
 import {
   ActionObjectFromYAML,
   ConfigVarObjectFromYAML,
+  FlowObjectFromYAML,
   ValidComplexYAMLValue,
   ValidYAMLValue,
 } from "./types.js";
-import { BinaryOperator, BooleanOperator, UnaryOperator } from "@prismatic-io/spectral";
+import { gql, gqlRequest } from "../../../../graphql.js";
+import { camelCase, xor } from "lodash-es";
 
 function valueIsNumber(value: unknown) {
   return typeof value === "number" || (typeof value === "string" && !Number.isNaN(Number(value)));
@@ -85,8 +87,7 @@ export const getPermissionAndVisibilityType = (
   return "embedded";
 };
 
-/* Given a template input, convert it into a string that can be used in the
- * EJS file.
+/* Given a template input, convert it into a template string.
  *
  * from: Hello this is my template: {{#My Var}}, and {{$myAction.results.testKey}}
  * into: `Hello this is my template: ${configVars["My Var"]}, and ${myAction.data.testKey}`
@@ -124,7 +125,7 @@ function convertBody(
     result += createBranchString(step, trigger, loop);
   } else {
     result += `
-      const ${camelCase(step.name)}: any = await context.components.${camelCase(
+      const ${camelCase(step.name)} = await context.components.${camelCase(
         step.action.component.key,
       )}.${step.action.key}({
         ${createFlowInputsString(step, trigger, loop)}
@@ -135,8 +136,7 @@ function convertBody(
   return result;
 }
 
-/* Flows: Given a flow action step, convert its inputs into a CNI-compatible string
- * that will then be included in the EJS file. */
+/* Flows: Given a flow action step, convert its inputs into a template string. */
 export function createFlowInputsString(
   action: ActionObjectFromYAML,
   trigger?: ActionObjectFromYAML,
@@ -189,18 +189,18 @@ export function createFlowInputsString(
     }
   });
 
-  return resultString;
+  // Replace first new line.
+  return resultString.replace(/^\n/, "");
 }
 
-/* Loop: Given a loop step, convert it into a string that can
- * be included in the EJS file. */
+/* Loop: Given a loop step, convert it into a template string. */
 export function createLoopString(
   step: ActionObjectFromYAML,
   trigger?: ActionObjectFromYAML,
   loop?: ActionObjectFromYAML,
 ) {
   const loopStepName = camelCase(step.name);
-  let loopString = `const ${loopStepName}: { data: Array<any> } = { data: [] };\n`;
+  let loopString = `const ${loopStepName}: { data: Array<unknown> } = { data: [] };\n`;
   const isBreakLoop = step.action.key === "breakLoop";
   const parentLoop = loop ?? step;
 
@@ -321,8 +321,7 @@ function convertBranchInputs(
   return result;
 }
 
-/* Branch helper: Converts the output of `convertBranchInputs` into a formatted string
- * that can be used in the EJS file. */
+/* Branch helper: Converts the output of `convertBranchInputs` into a template string. */
 function stringifyCondition(input: Array<unknown>) {
   let resultString = "[";
 
@@ -339,8 +338,7 @@ function stringifyCondition(input: Array<unknown>) {
   return `${resultString}]`;
 }
 
-/* Branching: Given a branch step, converts it into a formatted string that can be included
- * in the EJS file. */
+/* Branching: Given a branch step, converts it into a template string. */
 export function createBranchString(
   step: ActionObjectFromYAML,
   trigger?: ActionObjectFromYAML,
@@ -350,7 +348,7 @@ export function createBranchString(
 
   let branchString = `
     let ${branchStepName}Branch = 'Else';
-    let ${branchStepName}: any;
+    let ${branchStepName}: { data: unknown; };
   `;
   const inputConditions = step.inputs.conditions.value as ValidComplexYAMLValue;
 
@@ -378,7 +376,7 @@ export function createBranchString(
       const lastStep = branch.steps.at(-1);
 
       if (lastStep) {
-        branchString += `${branchStepName} = ${camelCase(lastStep.name)}\n`;
+        branchString += `${branchStepName} = ${camelCase(lastStep.name)};\n`;
       }
     }
 
@@ -388,8 +386,7 @@ export function createBranchString(
   return branchString;
 }
 
-/* Config Vars: Given a config var, convert its inputs into a formatted string that can be
- * included in the EJS file. */
+/* Config Vars: Given a config var, convert its inputs into a template string. */
 export function formatConfigVarInputs(configVar: ConfigVarObjectFromYAML) {
   return Object.entries(configVar.inputs || []).map(([key, input]) => {
     return {
@@ -402,4 +399,65 @@ export function formatConfigVarInputs(configVar: ConfigVarObjectFromYAML) {
       },
     };
   });
+}
+
+/* Returns of map of component names and a boolean denoting if the component is public. */
+export async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
+  const componentMap: Record<string, boolean> = {};
+  const stepListsToProcess: Array<Array<ActionObjectFromYAML>> = [];
+
+  flows.forEach((flow) => {
+    flow.steps.forEach((step) => {
+      const key = step.action.component.key;
+      if (!componentMap[key]) {
+        componentMap[key] = true;
+      }
+
+      if (step.steps) {
+        stepListsToProcess.push(step.steps);
+      }
+    });
+  });
+
+  while (stepListsToProcess.length > 0) {
+    const current = stepListsToProcess.pop();
+
+    (current ?? []).forEach((step) => {
+      const key = step.action.component.key;
+      if (!componentMap[key]) {
+        componentMap[key] = true;
+      }
+
+      if (step.steps) {
+        stepListsToProcess.push(step.steps);
+      }
+    });
+  }
+
+  const componentKeys = Object.keys(componentMap);
+
+  const response = await gqlRequest({
+    document: gql`
+      query getPublicComponents($componentKeys: [String]) {
+        components(public: true, key_In: $componentKeys) {
+          nodes {
+            key
+          }
+        }
+      }
+    `,
+    variables: {
+      componentKeys,
+    },
+  });
+
+  const publicComponents: Array<string> = response.components.nodes.map(
+    (node: { key: string }) => node.key,
+  );
+  const privateComponents: Array<string> = xor(publicComponents, componentKeys);
+
+  return {
+    public: publicComponents,
+    private: privateComponents,
+  };
 }

@@ -662,6 +662,25 @@ exports[`component generation tests wsdl - numberconversion should match scaffol
 "
 `;
 
+exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/.vscode/settings.json 1`] = `
+"{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
+}
+"
+`;
+
+exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/.vscode/extensions.json 1`] = `
+"{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "visualstudioexptteam.vscodeintellicode",
+    "esbenp.prettier-vscode"
+  ]
+}
+"
+`;
+
 exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/numberconversion/client.ts 1`] = `
 "import {
   Client as SoapClient,
@@ -3355,6 +3374,25 @@ exports[`component generation tests wsdl - countryinfoservice should match scaff
     "moduleResolution": "node"
   },
   "include": ["src"]
+}
+"
+`;
+
+exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/.vscode/settings.json 1`] = `
+"{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true
+}
+"
+`;
+
+exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/.vscode/extensions.json 1`] = `
+"{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "visualstudioexptteam.vscodeintellicode",
+    "esbenp.prettier-vscode"
+  ]
 }
 "
 `;

@@ -38,6 +38,11 @@ export type ActionObjectFromYAML = {
     name: string;
     steps: Array<ActionObjectFromYAML>;
   }>;
+  schedule?: {
+    type?: string;
+    value?: string;
+    timezone: string;
+  };
 
   // Added by prism during CNI generation
   loopString?: string;
@@ -67,6 +72,7 @@ export type ConfigVarObjectFromYAML = {
       key: string;
       version: number;
     };
+    key: string;
     dataType: string;
   };
   dataSource?: {
@@ -75,6 +81,7 @@ export type ConfigVarObjectFromYAML = {
       key: string;
       version: number;
     };
+    key: string;
     dataType: string;
   };
   inputs?: Record<
@@ -86,6 +93,7 @@ export type ConfigVarObjectFromYAML = {
         visibleToOrgDeployer: boolean;
         visibleToCustomerDeployer: boolean;
         orgOnly: boolean;
+        writeOnly: boolean;
       };
     }
   >;
