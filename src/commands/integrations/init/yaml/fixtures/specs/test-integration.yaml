@@ -1,0 +1,553 @@
+category: ''
+configPages:
+  - elements:
+      - type: configVar
+        value: Slack Connection
+    name: Connections Page
+    tagline: ''
+  - elements:
+      - type: configVar
+        value: Simple string
+      - type: configVar
+        value: Simple number
+      - type: configVar
+        value: Simple list
+      - type: configVar
+        value: Simple key value list
+    name: Config Vars Page
+    tagline: ''
+    userLevelConfigured: false
+  - elements:
+      - type: configVar
+        value: Slack Channels Data Source
+    name: Data Sources Page
+    tagline: ''
+    userLevelConfigured: false
+defaultInstanceProfile: Default Instance Profile
+definitionVersion: 7
+description: ''
+documentation: ''
+endpointType: flow_specific
+flows:
+  - description: ''
+    endpointSecurityType: customer_optional
+    isSynchronous: false
+    name: Basic
+    steps:
+      - action:
+          component:
+            isPublic: true
+            key: webhook-triggers
+            version: 14
+          key: webhook
+        description: ''
+        inputs:
+          body:
+            type: value
+            value: ''
+          contentType:
+            type: value
+            value: ''
+          headers:
+            type: complex
+            value: []
+          statusCode:
+            type: value
+            value: ''
+        isTrigger: true
+        name: Trigger
+      - action:
+          component:
+            isPublic: true
+            key: slack
+            version: 66
+          key: postMessage
+        description: ''
+        inputs:
+          channelName:
+            type: value
+            value: general
+          connection:
+            type: configVar
+            value: Slack Connection
+          debug:
+            type: value
+            value: 'false'
+          message:
+            type: value
+            value: Hello this is my Slack message
+          messageId:
+            type: value
+            value: ''
+          username:
+            type: value
+            value: myTestSlackBot
+        name: Post Message
+      - action:
+          component:
+            isPublic: true
+            key: log
+            version: 7
+          key: writeLog
+        description: ''
+        inputs:
+          level:
+            type: value
+            value: info
+          message:
+            type: value
+            value: Here is a simple log message at the end of my flow
+        name: Write Log Message
+  - description: ''
+    endpointSecurityType: customer_optional
+    isSynchronous: false
+    name: Step & configVar references
+    steps:
+      - action:
+          component:
+            isPublic: true
+            key: webhook-triggers
+            version: 14
+          key: webhook
+        description: ''
+        inputs:
+          body:
+            type: value
+            value: ''
+          contentType:
+            type: value
+            value: ''
+          headers:
+            type: complex
+            value: []
+          statusCode:
+            type: value
+            value: ''
+        isTrigger: true
+        name: Step & configVar references Trigger
+      - action:
+          component:
+            isPublic: true
+            key: code
+            version: 33
+          key: runCode
+        description: ''
+        inputs:
+          code:
+            type: value
+            value: |
+              module.exports = async ({ logger, configVars }, stepResults) => {
+                return { data: { testKey: "My return value" } };
+              };
+        name: Code Block
+      - action:
+          component:
+            isPublic: true
+            key: log
+            version: 7
+          key: writeLog
+        description: ''
+        inputs:
+          level:
+            type: value
+            value: info
+          message:
+            type: template
+            value: >-
+              The response of the code block action was:
+              {{$codeBlock.results.testKey}}. This config var value is:
+              {{#Simple string}}.
+        name: Template references
+      - action:
+          component:
+            isPublic: true
+            key: log
+            version: 7
+          key: writeLog
+        description: ''
+        inputs:
+          level:
+            type: value
+            value: info
+          message:
+            type: configVar
+            value: Simple string
+        name: Direct config var reference
+      - action:
+          component:
+            isPublic: true
+            key: log
+            version: 7
+          key: writeLog
+        description: ''
+        inputs:
+          level:
+            type: value
+            value: info
+          message:
+            type: reference
+            value: codeBlock.results.testKey
+        name: Direct step reference
+      - action:
+          component:
+            isPublic: true
+            key: log
+            version: 7
+          key: writeLog
+        description: ''
+        inputs:
+          level:
+            type: value
+            value: info
+          message:
+            type: configVar
+            value: Slack Channels Data Source
+        name: Data source reference
+  - description: ''
+    endpointSecurityType: customer_optional
+    isSynchronous: false
+    name: Loop & branch tests
+    steps:
+      - action:
+          component:
+            isPublic: true
+            key: schedule-triggers
+            version: 8
+          key: schedule
+        description: ''
+        inputs: {}
+        isTrigger: true
+        name: Loop tests Trigger
+        schedule:
+          meta:
+            scheduleType: minute
+            timeZone: ''
+          type: value
+          value: '*/10 * * * *'
+      - action:
+          component:
+            isPublic: true
+            key: slack
+            version: 66
+          key: listUsers
+        description: ''
+        inputs:
+          connection:
+            type: configVar
+            value: Slack Connection
+          cursor:
+            type: value
+            value: ''
+          debug:
+            type: value
+            value: 'false'
+          limit:
+            type: value
+            value: ''
+          teamId:
+            type: value
+            value: ''
+        name: List Users
+      - action:
+          component:
+            isPublic: true
+            key: loop
+            version: 5
+          key: loopOverItems
+        description: ''
+        inputs:
+          items:
+            type: reference
+            value: listUsers.results.members
+        name: Loop Over Items
+        steps:
+          - action:
+              component:
+                isPublic: true
+                key: log
+                version: 7
+              key: writeLog
+            description: ''
+            inputs:
+              level:
+                type: value
+                value: info
+              message:
+                type: reference
+                value: loopOverItems.currentItem.name
+            name: Write Log Message
+          - action:
+              component:
+                isPublic: true
+                key: branch
+                version: 27
+              key: branchOnExpression
+            branches:
+              - name: it is slackbot
+                steps:
+                  - action:
+                      component:
+                        isPublic: true
+                        key: code
+                        version: 33
+                      key: runCode
+                    description: ''
+                    inputs:
+                      code:
+                        type: value
+                        value: >
+                          module.exports = async ({ logger, configVars },
+                          stepResults) => {
+                            return { data: true };
+                          };
+                    name: Code Block
+              - name: Else
+                steps:
+                  - action:
+                      component:
+                        isPublic: true
+                        key: loop
+                        version: 5
+                      key: breakLoop
+                    description: ''
+                    inputs: {}
+                    name: Break Loop
+            description: ''
+            inputs:
+              conditions:
+                type: complex
+                value:
+                  - name: it is slackbot
+                    type: complex
+                    value:
+                      - and
+                      - - equal
+                        - name: ''
+                          type: reference
+                          value: loopOverItems.currentItem.name
+                        - name: ''
+                          type: value
+                          value: slackbot
+            name: Branch on Expression
+      - action:
+          component:
+            isPublic: true
+            key: loop
+            version: 5
+          key: loopNTimes
+        description: ''
+        inputs:
+          iterationCount:
+            type: value
+            value: '100'
+        name: Loop N Times
+        steps:
+          - action:
+              component:
+                isPublic: true
+                key: log
+                version: 7
+              key: writeLog
+            description: ''
+            inputs:
+              level:
+                type: value
+                value: info
+              message:
+                type: reference
+                value: loopOverItems.results.0
+            name: Write Log Message 2
+          - action:
+              component:
+                isPublic: true
+                key: code
+                version: 33
+              key: runCode
+            description: ''
+            inputs:
+              code:
+                type: value
+                value: >
+                  module.exports = async ({ logger, configVars }, stepResults)
+                  => {
+                    return { data: 100 };
+                  };
+            name: Code Block 2
+      - action:
+          component:
+            isPublic: true
+            key: log
+            version: 7
+          key: writeLog
+        description: ''
+        inputs:
+          level:
+            type: value
+            value: info
+          message:
+            type: reference
+            value: loopNTimes.results.5
+        name: Write Log Message 3
+      - action:
+          component:
+            isPublic: true
+            key: branch
+            version: 27
+          key: selectExecutedStepResult
+        description: ''
+        inputs:
+          stepResults:
+            type: complex
+            value:
+              - type: value
+                value: aTestValue
+        name: Select Executed Step Result
+name: Test Integration
+requiredConfigVars:
+  - connection:
+      component:
+        isPublic: true
+        key: slack
+        version: 66
+      key: oauth2
+    dataType: connection
+    inputs:
+      authorizeUrl:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'https://slack.com/oauth/v2/authorize'
+      clientId:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: '7610303900993.7610321662833'
+      clientSecret:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: b6acb317302a8ce8a01fbf24ab371338
+      isUser:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'false'
+      revokeUrl:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'https://slack.com/api/auth.revoke'
+      scopes:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: >-
+          chat:write chat:write.public chat:write.customize channels:read
+          groups:read im:read mpim:read users:read
+      signingSecret:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 32cf662b1f05eb9a4472ef6900f0bb53
+      tokenUrl:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'https://slack.com/api/oauth.v2.access'
+    key: Slack Connection
+    meta:
+      visibleToCustomerDeployer: true
+      visibleToOrgDeployer: true
+    onPremiseConnectionConfig: disallowed
+    orgOnly: false
+  - dataType: string
+    defaultValue: The quick brown fox jumps over the lazy dog.
+    key: Simple string
+    meta:
+      visibleToCustomerDeployer: false
+      visibleToOrgDeployer: true
+    orgOnly: true
+  - dataType: number
+    defaultValue: '1'
+    key: Simple number
+    orgOnly: false
+  - collectionType: valuelist
+    dataType: string
+    defaultValue: '["abc","def","ghi"]'
+    key: Simple list
+    orgOnly: false
+  - collectionType: keyvaluelist
+    dataType: string
+    defaultValue: >-
+      [{"key":"key1","value":"myvalue"},{"key":"key2","value":"myothervalue"},{"key":"key3","value":"myotherothervalue"}]
+    key: Simple key value list
+    orgOnly: false
+  - dataSource:
+      component:
+        isPublic: true
+        key: slack
+        version: 66
+      key: selectChannels
+    dataType: picklist
+    defaultValue: ''
+    inputs:
+      connection:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: configVar
+        value: Slack Connection
+      includeImChannels:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'false'
+      includeMultiPartyImchannels:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'false'
+      includePrivateChannels:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'false'
+      includePublicChannels:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'true'
+      showIdInDropdown:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'false'
+    key: Slack Channels Data Source
+    orgOnly: false
