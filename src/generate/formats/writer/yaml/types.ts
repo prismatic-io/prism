@@ -31,7 +31,7 @@ export type ActionObjectFromYAML = {
     }
   >;
   formattedInputs?: string;
-  isTrigger: boolean;
+  isTrigger?: boolean;
   name: string;
   steps?: Array<ActionObjectFromYAML>;
   branches?: Array<{

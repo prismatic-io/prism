@@ -19,12 +19,15 @@ function valueIsBoolean(value: unknown) {
 
 /* Given a valid YAML value, wrap it in quotes, escaped backticks,
  * or nothing depending on the case. */
-export function wrapValue(value: ValidYAMLValue, ignoreNumbers?: boolean) {
-  if (value === "") {
+export function wrapValue(value: ValidYAMLValue | undefined, ignoreNumbers?: boolean) {
+  if (valueIsBoolean(value)) {
+    // Boolean-like values shouldn't be wrapped
+    return value as boolean;
+  } else if (value === "" || !value) {
     return `""`;
-  } else if (valueIsBoolean(value) || (valueIsNumber(value) && !ignoreNumbers)) {
-    // Booleans and numbers shouldn't be wrapped
-    return value;
+  } else if (valueIsNumber(value) && !ignoreNumbers) {
+    // Number-like values shouldn't be wrapped
+    return value as number;
   } else if (typeof value === "string" && value.indexOf("\n") >= 0) {
     // Multiline strings
     const escapedValue = value.replace(/`/g, "\\`");
@@ -37,7 +40,7 @@ export function wrapValue(value: ValidYAMLValue, ignoreNumbers?: boolean) {
 /* Convert a YAML reference path into one that will work in CNI code. Examples:
  *   myAction.results.1 => myAction.data[1]
  *   myTriggerStepName.results => params.onTrigger.results */
-function convertYAMLReferenceValue(
+export function convertYAMLReferenceValue(
   refValue: string,
   trigger?: ActionObjectFromYAML,
   loop?: ActionObjectFromYAML,
@@ -47,7 +50,11 @@ function convertYAMLReferenceValue(
   let suffix = "";
 
   rest.forEach((term) => {
-    const formattedTerm = valueIsNumber(term) ? `[${term}]` : `.${term}`;
+    const formattedTerm = valueIsNumber(term)
+      ? `[${term}]`
+      : term.indexOf(" ") > 0
+        ? `["${term}"]`
+        : `.${term}`;
     suffix += formattedTerm;
   });
 
@@ -87,15 +94,15 @@ export const getPermissionAndVisibilityType = (
   return "embedded";
 };
 
-/* Given a template input, convert it into a template string.
+const CONFIG_VAR_REGEX = /\{{#(.*?)\}}/g;
+const STEP_REF_REGEX = /\{{\$(.*?)\}}/g;
+
+/* Given a template input, convert it into an interpolated string.
  *
  * from: Hello this is my template: {{#My Var}}, and {{$myAction.results.testKey}}
  * into: `Hello this is my template: ${configVars["My Var"]}, and ${myAction.data.testKey}`
  */
-const CONFIG_VAR_REGEX = /\{{#(.*?)\}}/g;
-const STEP_REF_REGEX = /\{{\$(.*?)\}}/g;
-
-function convertTemplateInput(
+export function convertTemplateInput(
   input: string,
   trigger?: ActionObjectFromYAML,
   loop?: ActionObjectFromYAML,
@@ -386,7 +393,7 @@ export function createBranchString(
   return branchString;
 }
 
-/* Config Vars: Given a config var, convert its inputs into a template string. */
+/* Config Vars: Given a config var object, format its inputs so it is consumable by the writers. */
 export function formatConfigVarInputs(configVar: ConfigVarObjectFromYAML) {
   return Object.entries(configVar.inputs || []).map(([key, input]) => {
     return {
