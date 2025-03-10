@@ -48,6 +48,12 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
 
       const result = load(await fs.readFile(yamlFile, "utf-8")) as IntegrationObjectFromYAML;
 
+      if (result.definitionVersion !== 7) {
+        throw `
+The provided YAML definition version is incompatible with the CNI generator.
+Use "prism integrations:version:download $INTEGRATION_ID" to download a compatible version.`;
+      }
+
       const integrationKey = uuid4();
 
       const context = {

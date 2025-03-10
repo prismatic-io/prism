@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import GenerateIntegrationFromYAMLCommand from "./yaml.js";
+import GenerateIntegrationFromYAMLCommand from "./index.js";
 import fs from "fs";
 import path from "path";
 import { readFile } from "fs-extra";

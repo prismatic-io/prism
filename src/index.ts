@@ -73,7 +73,8 @@ import InstancesFlowConfigsTestCommand from "./commands/instances/flow-configs/t
 import IntegrationsFlowsListCommand from "./commands/integrations/flows/list.js";
 import IntegrationsFlowsTestCommand from "./commands/integrations/flows/test.js";
 import IntegrationsInitFlowCommand from "./commands/integrations/init/flow.js";
-import IntegrationsInitFromYamlCommand from "./commands/integrations/init/yaml/yaml.js";
+import IntegrationsInitFromYamlCommand from "./commands/integrations/init/yaml/index.js";
+import IntegrationDownloadYamlCommand from "./commands/integrations/versions/download.js";
 import IntegrationsInitCommand from "./commands/integrations/init/index.js";
 import IntegrationsInitIntegrationCommand from "./commands/integrations/init/integration.js";
 import IntegrationsVersionsCommand from "./commands/integrations/versions/index.js";
@@ -173,6 +174,7 @@ export const Commands = {
   "integrations:init": IntegrationsInitCommand,
   "integrations:init:integration": IntegrationsInitIntegrationCommand,
   "integrations:versions": IntegrationsVersionsCommand,
+  "integrations:versions:download": IntegrationDownloadYamlCommand,
   "logs:severities:list": LogsSeveritiesListCommand,
   "me:token:revoke": MeTokenRevokeCommand,
   "organization:credentials:create": OrganizationCredentialsCreateCommand,

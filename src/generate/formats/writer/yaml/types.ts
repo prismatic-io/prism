@@ -115,6 +115,7 @@ export type FlowObjectFromYAML = {
 export type IntegrationObjectFromYAML = {
   name: string;
   description: string;
+  definitionVersion: number;
   flows: Array<FlowObjectFromYAML>;
   configPages: Array<{
     elements: Array<{
