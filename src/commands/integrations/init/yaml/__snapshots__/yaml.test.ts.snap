@@ -9,7 +9,7 @@ exports[`YAML CNI generation tests test-integration should match scaffolding sna
 `;
 
 exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/.npmrc 1`] = `
-"@component-manifests:registry=https://app.pattraa.prismatic-dev.io/packages/npm
+"@component-manifests:registry=https://app.dev.prismatic-dev.io/packages/npm
 "
 `;
 
@@ -275,8 +275,7 @@ export default integration({
 `;
 
 exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/src/flows/basic.ts 1`] = `
-"import { flow, BinaryOperator, BooleanOperator, UnaryOperator } from "@prismatic-io/spectral";
-import { evaluate } from "@prismatic-io/spectral/dist/conditionalLogic";
+"import { flow } from "@prismatic-io/spectral";
 
 export const basic = flow({
   name: "Basic",
@@ -328,8 +327,7 @@ export default [basic, stepConfigVarReferences, loopBranchTests]
 `;
 
 exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/src/flows/stepConfigVarReferences.ts 1`] = `
-"import { flow, BinaryOperator, BooleanOperator, UnaryOperator } from "@prismatic-io/spectral";
-import { evaluate } from "@prismatic-io/spectral/dist/conditionalLogic";
+"import { flow } from "@prismatic-io/spectral";
 
 export const stepConfigVarReferences = flow({
   name: "Step & configVar references",
@@ -381,8 +379,8 @@ export default stepConfigVarReferences;
 `;
 
 exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/src/flows/loopBranchTests.ts 1`] = `
-"import { flow, BinaryOperator, BooleanOperator, UnaryOperator } from "@prismatic-io/spectral";
-import { evaluate } from "@prismatic-io/spectral/dist/conditionalLogic";
+"import { isEqual } from "@prismatic-io/spectral/dist/conditionalLogic";
+import { flow } from "@prismatic-io/spectral";
 
 export const loopBranchTests = flow({
   name: "Loop & branch tests",
@@ -410,21 +408,17 @@ export const loopBranchTests = flow({
         message: loopOverItemsItem.name,
       });
 
-      let branchOnExpressionBranch = 'Else';
-      let branchOnExpression: { data: unknown; };
-
-      if (evaluate([BooleanOperator.and, [BinaryOperator.equal, loopOverItemsItem.name, "slackbot",],])) {
-        branchOnExpressionBranch = "it is slackbot";
-      }
-      if (branchOnExpressionBranch === "it is slackbot") {
+      /* This string is the name of the branch that this conditional block resolves to. */
+      let branchOnExpression: string;
+      if (isEqual(loopOverItemsItem.name, "slackbot")) {
         const codeBlock = await context.components.code.runCode({
           code: \`module.exports = async ({ logger, configVars }, stepResults) => {
   return { data: true };
 };
 \`,
         });
-        branchOnExpression = codeBlock;
-      } if (branchOnExpressionBranch === "Else") {
+        branchOnExpression = "it is slackbot";
+      } else {
         break;
       }
       loopOverItems.data.push(branchOnExpression.data);

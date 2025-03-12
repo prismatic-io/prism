@@ -7,18 +7,23 @@ import {
   IntegrationObjectFromYAML,
 } from "./types.js";
 import {
-  createBranchString,
   createFlowInputsString,
-  createLoopString,
+  writeLoopString,
   extractComponentList,
   formatConfigVarInputs,
-  getBranchKind,
   getPermissionAndVisibilityType,
   wrapValue,
 } from "./utils.js";
-import { IndentationText, Project, ScriptKind, VariableDeclarationKind } from "ts-morph";
+import {
+  IndentationText,
+  Project,
+  ScriptKind,
+  SourceFile,
+  VariableDeclarationKind,
+} from "ts-morph";
 import path from "path";
 import { updatePackageJson } from "../../../util.js";
+import { writeBranchString, getBranchKind } from "./branching.js";
 
 type UsedComponents = { public: string[]; private: string[] };
 
@@ -41,7 +46,7 @@ export async function writeIntegration(
 
   const usedComponents = await extractComponentList(integration.flows);
 
-  writeFlows(project, usedComponents, integration);
+  writeFlows(project, integration);
   writeComponentRegistry(project, usedComponents, registryPrefix);
   writeConfigPages(project, integration);
 
@@ -104,41 +109,26 @@ export async function writePackageJson(
   });
 }
 
-function writeFlows(
-  project: Project,
-  components: UsedComponents,
-  integration: IntegrationObjectFromYAML,
-) {
+function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
   const flowKeys: Array<string> = [];
   integration.flows.forEach((parsedFlow) => {
     try {
-      const flow = formatFlow(parsedFlow);
-      flowKeys.push(flow.key);
       const file = project.createSourceFile(
-        path.join("src", "flows", `${flow.key}.ts`),
+        path.join("src", "flows", `${camelCase(parsedFlow.name)}.ts`),
         undefined,
         {
           scriptKind: ScriptKind.TS,
         },
       );
-      const includesBranch = components.public.includes("branch");
-      const additionalImports = includesBranch
-        ? ["BinaryOperator", "BooleanOperator", "UnaryOperator"]
-        : [];
+
+      const flow = formatFlow(parsedFlow, file);
+      flowKeys.push(flow.key);
 
       file.addImportDeclarations([
         {
           moduleSpecifier: "@prismatic-io/spectral",
-          namedImports: ["flow", ...additionalImports],
+          namedImports: ["flow"],
         },
-        ...(includesBranch
-          ? [
-              {
-                moduleSpecifier: "@prismatic-io/spectral/dist/conditionalLogic",
-                namedImports: ["evaluate"],
-              },
-            ]
-          : []),
       ]);
 
       file.addVariableStatement({
@@ -454,7 +444,7 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
 }
 
 /* Format a parsed flow object into data that can be consumed by the writer. */
-function formatFlow(flow: FlowObjectFromYAML) {
+function formatFlow(flow: FlowObjectFromYAML, file: SourceFile) {
   const { name, description, isSynchronous, endpointSecurityType } = flow;
   const steps: Array<ActionObjectFromYAML> = [];
   let formattedStep: ActionObjectFromYAML;
@@ -464,9 +454,9 @@ function formatFlow(flow: FlowObjectFromYAML) {
     formattedStep = step;
 
     if (step.action.component.key === "loop") {
-      formattedStep.loopString = createLoopString(formattedStep, trigger, step);
+      formattedStep.loopString = writeLoopString(formattedStep, file, trigger, step);
     } else if (getBranchKind(step) === "branch") {
-      formattedStep.branchString = createBranchString(formattedStep, trigger);
+      formattedStep.branchString = writeBranchString(formattedStep, file, trigger);
     } else {
       formattedStep.formattedInputs = createFlowInputsString(step, trigger);
     }

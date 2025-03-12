@@ -3,9 +3,11 @@ import {
   convertTemplateInput,
   convertYAMLReferenceValue,
   createFlowInputsString,
-  createLoopString,
+  writeLoopString,
   wrapValue,
 } from "./utils";
+import { _convertInputIntoConditionObject, _formatConditionObject } from "./branching";
+import { SourceFile } from "ts-morph";
 
 describe("wrapValue", () => {
   it.each([
@@ -53,6 +55,12 @@ describe("convertYAMLReferenceValue", () => {
       trigger: undefined,
       loop: undefined,
       expected: "myAction.data[1]",
+    },
+    {
+      refValue: "codeBlock.results",
+      trigger: undefined,
+      loop: undefined,
+      expected: "codeBlock.data",
     },
     {
       refValue: "myTrigger.results",
@@ -141,10 +149,12 @@ describe("convertYAMLReferenceValue", () => {
 describe("convertTemplateInput", () => {
   it.each([
     {
-      input: "My template: {{#My Var}}, and {{$myAction.results.testKey}}",
+      input:
+        "My template: {{#My Var}}, and {{$myAction.results.testKey}}, and {{$codeBlock.results}}",
       trigger: undefined,
       loop: undefined,
-      expected: '`My template: ${configVars["My Var"]}, and ${myAction.data.testKey}`',
+      expected:
+        '`My template: ${configVars["My Var"]}, and ${myAction.data.testKey}, and ${codeBlock.data}`',
     },
   ])(
     "correctly converts template inputs into interpolated strings",
@@ -260,7 +270,7 @@ describe("createFlowInputsString", () => {
   );
 });
 
-describe("createLoopString", () => {
+describe("writeLoopString", () => {
   it.each([
     {
       step: {
@@ -319,6 +329,7 @@ describe("createLoopString", () => {
           },
         ],
       },
+      file: undefined as unknown as SourceFile,
       trigger: undefined,
       loop: {
         action: {
@@ -338,11 +349,142 @@ describe("createLoopString", () => {
     },
   ])(
     "correctly converts loop step objects into an interpolated string",
-    ({ step, trigger, loop, expected }) => {
-      expect(createLoopString(step, trigger, loop)).toStrictEqual(expected);
+    ({ step, file, trigger, loop, expected }) => {
+      expect(writeLoopString(step, file, trigger, loop)).toStrictEqual(expected);
     },
   );
 });
 
-// @TODO - Unit tests for branching. We're likely to change how conditional branches
-// get generated soon, so skipping for now.
+describe("_convertInputIntoConditionObject", () => {
+  it.each([
+    {
+      inputs: [
+        "and",
+        [
+          "greaterThan",
+          {
+            type: "reference",
+            value: "codeBlock.results",
+            name: "",
+          },
+          {
+            type: "value",
+            value: "100",
+            name: "",
+          },
+        ],
+      ],
+      trigger: undefined,
+      loop: undefined,
+      expected: {
+        clause: "and",
+        values: [
+          {
+            clause: "greaterThan",
+            values: ["codeBlock.data", "100"],
+          },
+        ],
+      },
+    },
+  ])(
+    "correctly converts condition input into a condition object",
+    ({ inputs, trigger, loop, expected }) => {
+      expect(_convertInputIntoConditionObject(inputs, trigger, loop)).toStrictEqual(expected);
+    },
+  );
+});
+
+describe("_formatConditionObject", () => {
+  it.each([
+    {
+      input: {
+        clause: "and",
+        values: [
+          {
+            clause: "greaterThan",
+            values: ["codeBlock.data.data", "100"],
+          },
+        ],
+      },
+      expected: {
+        string: "codeBlock.data.data > 100",
+        includes: [],
+      },
+    },
+    {
+      input: {
+        clause: "and",
+        values: [
+          {
+            clause: "or",
+            values: [
+              "stepResult.data",
+              {
+                clause: "and",
+                values: ["stepResult2.data", "stepResult3.data"],
+              },
+            ],
+          },
+        ],
+      },
+      expected: {
+        string: "stepResult.data || (stepResult2.data && stepResult3.data)",
+        includes: [],
+      },
+    },
+    {
+      input: {
+        clause: "and",
+        values: [
+          {
+            clause: "and",
+            values: [
+              {
+                clause: "or",
+                values: ["stepResult.data", "stepResult2.data"],
+              },
+              "stepResult3.data",
+            ],
+          },
+        ],
+      },
+      expected: {
+        string: "(stepResult.data || stepResult2.data) && stepResult3.data",
+        includes: [],
+      },
+    },
+    {
+      input: {
+        clause: "and",
+        values: [
+          {
+            clause: "doesNotExist",
+            values: ["stepResult.data"],
+          },
+        ],
+      },
+      expected: {
+        string: "evaluatesNull(stepResult.data)",
+        includes: ["evaluatesNull"],
+      },
+    },
+    {
+      input: {
+        clause: "and",
+        values: [
+          {
+            clause: "dateTimeBefore",
+            values: ["stepResult.data", "stepResult2.data"],
+          },
+        ],
+      },
+      expected: {
+        string: "dateIsBefore(stepResult.data, stepResult2.data)",
+        includes: ["dateIsBefore"],
+      },
+    },
+  ])("correctly converts condition input into a condition object", ({ input, expected }) => {
+    expect(_formatConditionObject(input).string).toStrictEqual(expected.string);
+    expect(_formatConditionObject(input).includes).toStrictEqual(expected.includes);
+  });
+});

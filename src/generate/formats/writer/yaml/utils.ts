@@ -1,4 +1,3 @@
-import { BinaryOperator, BooleanOperator, UnaryOperator } from "@prismatic-io/spectral";
 import {
   ActionObjectFromYAML,
   ConfigVarObjectFromYAML,
@@ -8,12 +7,14 @@ import {
 } from "./types.js";
 import { gql, gqlRequest } from "../../../../graphql.js";
 import { camelCase, xor } from "lodash-es";
+import { writeBranchString, getBranchKind } from "./branching.js";
+import { SourceFile } from "ts-morph";
 
-function valueIsNumber(value: unknown) {
+export function valueIsNumber(value: unknown) {
   return typeof value === "number" || (typeof value === "string" && !Number.isNaN(Number(value)));
 }
 
-function valueIsBoolean(value: unknown) {
+export function valueIsBoolean(value: unknown) {
   return typeof value === "boolean" || value === "false" || value === "true";
 }
 
@@ -111,25 +112,33 @@ export function convertTemplateInput(
 
   const referenceMatches = resultString.match(STEP_REF_REGEX);
   (referenceMatches || []).forEach((match) => {
-    resultString = resultString.replace(match, convertYAMLReferenceValue(match, trigger, loop));
+    const body = STEP_REF_REGEX.exec(match);
+    if (body) {
+      const toReplace = body[1];
+      resultString = resultString.replace(
+        toReplace,
+        convertYAMLReferenceValue(toReplace, trigger, loop),
+      );
+    }
     resultString = resultString.replace(STEP_REF_REGEX, "$${$1}");
   });
 
   return `\`${resultString}\``;
 }
 
-function convertBody(
+export function convertBody(
   step: ActionObjectFromYAML,
   bodyString: string,
+  file: SourceFile,
   trigger?: ActionObjectFromYAML,
   loop?: ActionObjectFromYAML,
 ) {
   let result = bodyString;
 
   if (step.action.component.key === "loop") {
-    result += createLoopString(step, trigger, loop);
+    result += writeLoopString(step, file, trigger, loop);
   } else if (getBranchKind(step) === "branch") {
-    result += createBranchString(step, trigger, loop);
+    result += writeBranchString(step, file, trigger, loop);
   } else {
     result += `
       const ${camelCase(step.name)} = await context.components.${camelCase(
@@ -201,8 +210,9 @@ export function createFlowInputsString(
 }
 
 /* Loop: Given a loop step, convert it into a template string. */
-export function createLoopString(
+export function writeLoopString(
   step: ActionObjectFromYAML,
+  file: SourceFile,
   trigger?: ActionObjectFromYAML,
   loop?: ActionObjectFromYAML,
 ) {
@@ -238,7 +248,7 @@ export function createLoopString(
   }
 
   (step.steps || []).some((childStep) => {
-    loopString = convertBody(childStep, loopString, trigger, loop);
+    loopString = convertBody(childStep, loopString, file, trigger, loop);
   });
 
   const lastStep = (step.steps || []).at(-1);
@@ -250,147 +260,6 @@ export function createLoopString(
   }
 
   return loopString;
-}
-
-/* Branch helper: Determines if a step is actually branching or not. */
-export function getBranchKind(step: ActionObjectFromYAML) {
-  if (step.action.component.key === "branch") {
-    return step.action.key === "selectExecutedStepResult" ? "selectExecutedStepResult" : "branch";
-  }
-  return "";
-}
-
-/* Branch helper: Converts plain strings into operators compatible with the evaluate fn */
-function convertOperator(value: string) {
-  if (Object.keys(UnaryOperator).includes(value)) {
-    return `UnaryOperator.${value}`;
-  } else if (Object.keys(BinaryOperator).includes(value)) {
-    return `BinaryOperator.${value}`;
-  } else if (Object.keys(BooleanOperator).includes(value)) {
-    return `BooleanOperator.${value}`;
-  } else {
-    return value;
-  }
-}
-
-/* Branch helper: Given an object that represents a conditional expression, convert
- * it into a string that can be included in the result of convertBranchInputs. */
-function convertObjToExpression(
-  obj: { type: string; value: string },
-  trigger?: ActionObjectFromYAML,
-  loop?: ActionObjectFromYAML,
-) {
-  const { type, value } = obj;
-
-  switch (type) {
-    case "configVar":
-      return `configVars["${value}"]`;
-    case "value":
-      if (valueIsNumber(value)) {
-        return Number.parseInt(value);
-      } else {
-        return `"${value}"`;
-      }
-    case "template":
-      return convertTemplateInput(value, trigger, loop);
-    case "reference":
-      return convertYAMLReferenceValue(value, trigger, loop);
-    default:
-      return `"@FIXME - The converter ran into an error when attemping to parse this value."`;
-  }
-}
-
-/* Branch helper: Given a branch step's inputs, convert it into a condition expression,
- * e.g. ["and", ["greaterThan", 100, 0]] */
-function convertBranchInputs(
-  inputs: ValidComplexYAMLValue,
-  trigger?: ActionObjectFromYAML,
-  loop?: ActionObjectFromYAML,
-) {
-  const result: Array<unknown> = [];
-
-  inputs.forEach((input, i) => {
-    if (typeof input === "string") {
-      result.push(convertOperator(input));
-    } else if (Array.isArray(input)) {
-      result.push(convertBranchInputs(input, trigger, loop));
-    } else {
-      result.push(
-        convertObjToExpression(
-          input as { name: string; type: string; value: string },
-          trigger,
-          loop,
-        ),
-      );
-    }
-  });
-
-  return result;
-}
-
-/* Branch helper: Converts the output of `convertBranchInputs` into a template string. */
-function stringifyCondition(input: Array<unknown>) {
-  let resultString = "[";
-
-  input.forEach((clause, i) => {
-    if (Array.isArray(clause)) {
-      resultString += stringifyCondition(clause);
-    } else {
-      resultString += clause;
-    }
-
-    resultString += ",";
-  });
-
-  return `${resultString}]`;
-}
-
-/* Branching: Given a branch step, converts it into a template string. */
-export function createBranchString(
-  step: ActionObjectFromYAML,
-  trigger?: ActionObjectFromYAML,
-  loop?: ActionObjectFromYAML,
-) {
-  const branchStepName = camelCase(step.name);
-
-  let branchString = `
-    let ${branchStepName}Branch = 'Else';
-    let ${branchStepName}: { data: unknown; };
-  `;
-  const inputConditions = step.inputs.conditions.value as ValidComplexYAMLValue;
-
-  inputConditions.forEach((condition, i) => {
-    const ifStatement = i === 0 ? "if" : "else if";
-    branchString += `
-      ${ifStatement} (evaluate(${stringifyCondition(
-        convertBranchInputs(condition.value as ValidComplexYAMLValue, trigger, loop),
-      )})) {
-        ${branchStepName}Branch = "${condition.name}";
-      }
-    `;
-  });
-
-  const branchSteps = step.branches ?? [];
-
-  branchSteps.forEach((branch, i) => {
-    branchString += `if (${branchStepName}Branch === "${branch.name}") {`;
-
-    branch.steps.forEach((step, i) => {
-      branchString = convertBody(step, branchString, trigger, loop);
-    });
-
-    if (!branchString.includes("break;")) {
-      const lastStep = branch.steps.at(-1);
-
-      if (lastStep) {
-        branchString += `${branchStepName} = ${camelCase(lastStep.name)};\n`;
-      }
-    }
-
-    branchString += "}";
-  });
-
-  return branchString;
 }
 
 /* Config Vars: Given a config var object, format its inputs so it is consumable by the writers. */
