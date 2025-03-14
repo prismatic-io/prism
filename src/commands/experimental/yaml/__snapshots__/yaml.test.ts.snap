@@ -390,7 +390,6 @@ export const loopBranchTests = flow({
   endpointSecurityType: "customer_optional",
   schedule: {
     value: "*/10 * * * *",
-    timezone: "undefined",
   },
   onExecution: async (context, params) => {
     const { configVars } = context;
@@ -401,7 +400,7 @@ export const loopBranchTests = flow({
       limit: "",
       teamId: "",
     });
-    const loopOverItems: { data: Array<unknown> } = { data: [] };
+    const loopOverItems: { data: unknown[] } = { data: [] };
     for (const loopOverItemsItem of listUsers.data.members) {
       const writeLogMessage = await context.components.log.writeLog({
         level: "info",
@@ -421,10 +420,10 @@ export const loopBranchTests = flow({
       } else {
         break;
       }
-      loopOverItems.data.push(branchOnExpression.data);
+      loopOverItems.data.push(branchOnExpression);
     }
 
-    const loopNTimes: { data: Array<unknown> } = { data: [] };
+    const loopNTimes: { data: unknown[] } = { data: [] };
     for (let loopNTimesIdx = 0; loopNTimesIdx < 100; loopNTimesIdx++) {
       const writeLogMessage2 = await context.components.log.writeLog({
         level: "info",

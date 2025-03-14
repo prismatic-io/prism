@@ -345,7 +345,7 @@ describe("writeLoopString", () => {
         name: "",
       },
       expected:
-        'const myLoopStep: { data: Array<unknown> } = { data: [] };\nfor (let myLoopStepIdx = 0; myLoopStepIdx < 10; myLoopStepIdx++) {\n      const myStep = await context.components.myComponent.doSomething({\n        someInput: "abc",\n      });\n    \n      const myStep2 = await context.components.myComponent.doSomethingElse({\n        someInput: "def",\n      });\n    \n      myLoopStep.data.push(myStep2.data);\n    }\n',
+        'const myLoopStep: { data: unknown[] } = { data: [] };\nfor (let myLoopStepIdx = 0; myLoopStepIdx < 10; myLoopStepIdx++) {\n      const myStep = await context.components.myComponent.doSomething({\n        someInput: "abc",\n      });\n    \n      const myStep2 = await context.components.myComponent.doSomethingElse({\n        someInput: "def",\n      });\n    \n      myLoopStep.data.push(myStep2.data);\n    }\n',
     },
   ])(
     "correctly converts loop step objects into an interpolated string",

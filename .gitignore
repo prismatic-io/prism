@@ -58,7 +58,7 @@ build/Release
 
 # Test component generator files
 src/commands/components/init/temp
-src/commands/integrations/init/yaml/temp
+src/commands/experimental/yaml/temp
 
 # output created by translation
 translations_output.json

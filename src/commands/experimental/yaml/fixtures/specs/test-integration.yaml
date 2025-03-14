@@ -38,7 +38,7 @@ flows:
           component:
             isPublic: true
             key: webhook-triggers
-            version: 14
+            version: LATEST
           key: webhook
         description: ''
         inputs:
@@ -60,7 +60,7 @@ flows:
           component:
             isPublic: true
             key: slack
-            version: 66
+            version: LATEST
           key: postMessage
         description: ''
         inputs:
@@ -87,7 +87,7 @@ flows:
           component:
             isPublic: true
             key: log
-            version: 7
+            version: LATEST
           key: writeLog
         description: ''
         inputs:
@@ -107,7 +107,7 @@ flows:
           component:
             isPublic: true
             key: webhook-triggers
-            version: 14
+            version: LATEST
           key: webhook
         description: ''
         inputs:
@@ -129,7 +129,7 @@ flows:
           component:
             isPublic: true
             key: code
-            version: 33
+            version: LATEST
           key: runCode
         description: ''
         inputs:
@@ -144,7 +144,7 @@ flows:
           component:
             isPublic: true
             key: log
-            version: 7
+            version: LATEST
           key: writeLog
         description: ''
         inputs:
@@ -162,7 +162,7 @@ flows:
           component:
             isPublic: true
             key: log
-            version: 7
+            version: LATEST
           key: writeLog
         description: ''
         inputs:
@@ -177,7 +177,7 @@ flows:
           component:
             isPublic: true
             key: log
-            version: 7
+            version: LATEST
           key: writeLog
         description: ''
         inputs:
@@ -192,7 +192,7 @@ flows:
           component:
             isPublic: true
             key: log
-            version: 7
+            version: LATEST
           key: writeLog
         description: ''
         inputs:
@@ -212,7 +212,7 @@ flows:
           component:
             isPublic: true
             key: schedule-triggers
-            version: 8
+            version: LATEST
           key: schedule
         description: ''
         inputs: {}
@@ -228,7 +228,7 @@ flows:
           component:
             isPublic: true
             key: slack
-            version: 66
+            version: LATEST
           key: listUsers
         description: ''
         inputs:
@@ -252,7 +252,7 @@ flows:
           component:
             isPublic: true
             key: loop
-            version: 5
+            version: LATEST
           key: loopOverItems
         description: ''
         inputs:
@@ -265,7 +265,7 @@ flows:
               component:
                 isPublic: true
                 key: log
-                version: 7
+                version: LATEST
               key: writeLog
             description: ''
             inputs:
@@ -280,7 +280,7 @@ flows:
               component:
                 isPublic: true
                 key: branch
-                version: 27
+                version: LATEST
               key: branchOnExpression
             branches:
               - name: it is slackbot
@@ -289,7 +289,7 @@ flows:
                       component:
                         isPublic: true
                         key: code
-                        version: 33
+                        version: LATEST
                       key: runCode
                     description: ''
                     inputs:
@@ -307,7 +307,7 @@ flows:
                       component:
                         isPublic: true
                         key: loop
-                        version: 5
+                        version: LATEST
                       key: breakLoop
                     description: ''
                     inputs: {}
@@ -333,7 +333,7 @@ flows:
           component:
             isPublic: true
             key: loop
-            version: 5
+            version: LATEST
           key: loopNTimes
         description: ''
         inputs:
@@ -346,7 +346,7 @@ flows:
               component:
                 isPublic: true
                 key: log
-                version: 7
+                version: LATEST
               key: writeLog
             description: ''
             inputs:
@@ -361,7 +361,7 @@ flows:
               component:
                 isPublic: true
                 key: code
-                version: 33
+                version: LATEST
               key: runCode
             description: ''
             inputs:
@@ -377,7 +377,7 @@ flows:
           component:
             isPublic: true
             key: log
-            version: 7
+            version: LATEST
           key: writeLog
         description: ''
         inputs:
@@ -392,15 +392,15 @@ flows:
           component:
             isPublic: true
             key: branch
-            version: 27
+            version: LATEST
           key: selectExecutedStepResult
         description: ''
         inputs:
           stepResults:
             type: complex
             value:
-              - type: value
-                value: aTestValue
+              - type: reference
+                value: codeBlock2.results
         name: Select Executed Step Result
 name: Test Integration
 requiredConfigVars:
@@ -408,7 +408,7 @@ requiredConfigVars:
       component:
         isPublic: true
         key: slack
-        version: 66
+        version: LATEST
       key: oauth2
     dataType: connection
     inputs:
@@ -502,7 +502,7 @@ requiredConfigVars:
       component:
         isPublic: true
         key: slack
-        version: 66
+        version: LATEST
       key: selectChannels
     dataType: picklist
     defaultValue: ''

@@ -217,7 +217,7 @@ export function writeLoopString(
   loop?: ActionObjectFromYAML,
 ) {
   const loopStepName = camelCase(step.name);
-  let loopString = `const ${loopStepName}: { data: Array<unknown> } = { data: [] };\n`;
+  let loopString = `const ${loopStepName}: { data: unknown[] } = { data: [] };\n`;
   const isBreakLoop = step.action.key === "breakLoop";
   const parentLoop = loop ?? step;
 
@@ -254,8 +254,12 @@ export function writeLoopString(
   const lastStep = (step.steps || []).at(-1);
 
   if (lastStep) {
+    const lastStepResultRef =
+      getBranchKind(lastStep) === "branch"
+        ? camelCase(lastStep.name)
+        : `${camelCase(lastStep.name)}.data`;
     loopString += `
-      ${loopStepName}.data.push(${camelCase(lastStep.name)}.data);
+      ${loopStepName}.data.push(${lastStepResultRef});
     }\n`;
   }
 
