@@ -67,13 +67,13 @@ import CustomersUsersListCommand from "./commands/customers/users/list.js";
 import CustomersUsersRolesCommand from "./commands/customers/users/roles.js";
 import CustomersUsersUpdateCommand from "./commands/customers/users/update.js";
 import ExecutionsStepResultGetCommand from "./commands/executions/step-result/get.js";
+import ExperimentalYamlInitCommand from "./commands/experimental/yaml/index.js";
 import InstancesConfigVarsListCommand from "./commands/instances/config-vars/list.js";
 import InstancesFlowConfigsListCommand from "./commands/instances/flow-configs/list.js";
 import InstancesFlowConfigsTestCommand from "./commands/instances/flow-configs/test.js";
 import IntegrationsFlowsListCommand from "./commands/integrations/flows/list.js";
 import IntegrationsFlowsTestCommand from "./commands/integrations/flows/test.js";
 import IntegrationsInitFlowCommand from "./commands/integrations/init/flow.js";
-import IntegrationsInitFromYamlCommand from "./commands/integrations/init/yaml/index.js";
 import IntegrationDownloadYamlCommand from "./commands/integrations/versions/download.js";
 import IntegrationsInitCommand from "./commands/integrations/init/index.js";
 import IntegrationsInitIntegrationCommand from "./commands/integrations/init/integration.js";
@@ -164,13 +164,13 @@ export const Commands = {
   "customers:users:roles": CustomersUsersRolesCommand,
   "customers:users:update": CustomersUsersUpdateCommand,
   "executions:step-result:get": ExecutionsStepResultGetCommand,
+  "experimental:yaml": ExperimentalYamlInitCommand,
   "instances:config-vars:list": InstancesConfigVarsListCommand,
   "instances:flow-configs:list": InstancesFlowConfigsListCommand,
   "instances:flow-configs:test": InstancesFlowConfigsTestCommand,
   "integrations:flows:list": IntegrationsFlowsListCommand,
   "integrations:flows:test": IntegrationsFlowsTestCommand,
   "integrations:init:flow": IntegrationsInitFlowCommand,
-  "integrations:init:yaml": IntegrationsInitFromYamlCommand,
   "integrations:init": IntegrationsInitCommand,
   "integrations:init:integration": IntegrationsInitIntegrationCommand,
   "integrations:versions": IntegrationsVersionsCommand,

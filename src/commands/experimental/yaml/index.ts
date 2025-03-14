@@ -1,16 +1,13 @@
 import { Command, Config, Flags } from "@oclif/core";
 import path from "path";
-import { template, toArgv } from "../../../../generate/util.js";
-import { exists } from "../../../../fs.js";
+import { template, toArgv } from "../../../generate/util.js";
+import { exists } from "../../../fs.js";
 import { promises as fs } from "fs";
 import { load } from "js-yaml";
 import { v4 as uuid4 } from "uuid";
-import { prismaticUrl } from "../../../../auth.js";
-import {
-  writeIntegration,
-  writePackageJson,
-} from "../../../../generate/formats/writer/yaml/index.js";
-import { IntegrationObjectFromYAML } from "../../../../generate/formats/writer/yaml/types.js";
+import { prismaticUrl } from "../../../auth.js";
+import { writeIntegration, writePackageJson } from "../../../generate/formats/writer/yaml/index.js";
+import { IntegrationObjectFromYAML } from "../../../generate/formats/writer/yaml/types.js";
 
 export default class GenerateIntegrationFromYAMLCommand extends Command {
   static description = "Initialize a new Code Native Integration based on a YAML file";

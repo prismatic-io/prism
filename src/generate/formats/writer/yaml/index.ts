@@ -157,7 +157,10 @@ function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
                     flow.trigger.schedule.type !== "configVar",
                     `value: "${flow.trigger.schedule.value}",`,
                   )
-                  .writeLine(`timezone: "${flow.trigger.schedule.timezone}",`)
+                  .conditionalWriteLine(
+                    !!flow.trigger.schedule?.timezone,
+                    `timezone: "${flow.trigger.schedule.timezone}",`,
+                  )
                   .writeLine("},");
               } else {
                 writer
