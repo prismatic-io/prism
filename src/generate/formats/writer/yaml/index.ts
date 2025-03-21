@@ -162,6 +162,11 @@ function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
                     `timezone: "${flow.trigger.schedule.timezone}",`,
                   )
                   .writeLine("},");
+              } else if (
+                flow.trigger.action.component.key === "webhook-triggers" &&
+                flow.trigger.action.key === "webhook"
+              ) {
+                // No-op. Do not write anything and fall back to default trigger.
               } else {
                 writer
                   .writeLine("onTrigger: {")
@@ -252,11 +257,13 @@ function writeComponentRegistry(project: Project, components: UsedComponents, pr
           writer.writeLine("componentManifests({");
 
           components.public.forEach((component) => {
-            componentImports.push({
-              moduleSpecifier: `@component-manifests/${component}`,
-              defaultImport: camelCase(component),
-            });
-            writer.writeLine(`${camelCase(component)},`);
+            if (component !== "webhook-triggers") {
+              componentImports.push({
+                moduleSpecifier: `@component-manifests/${component}`,
+                defaultImport: camelCase(component),
+              });
+              writer.writeLine(`${camelCase(component)},`);
+            }
           });
 
           components.private.forEach((component) => {
@@ -316,15 +323,15 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                 .writeLine("elements: {");
 
               page.configVars.forEach((configVar) => {
-                if (configVar.dataType === "connection") {
+                if ("connection" in configVar && configVar.connection) {
                   includes.connectionConfigVar = true;
                   writer
                     .writeLine(`"${configVar.name}": connectionConfigVar({`)
                     .writeLine(`stableKey: "${configVar.key}",`)
                     .writeLine(`dataType: "${configVar.dataType}",`)
                     .writeLine("connection: {")
-                    .writeLine(`component: "${camelCase(configVar.connection?.component.key)}",`)
-                    .writeLine(`key: "${configVar.connection?.key}",`)
+                    .writeLine(`component: "${camelCase(configVar.connection.component.key)}",`)
+                    .writeLine(`key: "${configVar.connection.key}",`)
                     .writeLine("values: {");
 
                   configVar.inputs.forEach((input) => {
@@ -354,7 +361,7 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                   });
 
                   writer.writeLine("},").writeLine("},").writeLine("}),");
-                } else if (configVar.dataSource) {
+                } else if ("dataSource" in configVar && configVar.dataSource) {
                   includes.dataSourceConfigVar = true;
                   writer
                     .writeLine(`"${configVar.name}": dataSourceConfigVar({`)
@@ -398,21 +405,21 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                     .writeLine(`"${configVar.name}": configVar({`)
                     .writeLine(`stableKey: "${configVar.key}",`)
                     .writeLine(`dataType: "${configVar.dataType}",`)
-                    .writeLine(`description: "${configVar.description}",`)
+                    .writeLine(`description: "${configVar.description || ""}",`)
                     .conditionalWriteLine(
-                      !!configVar.meta.permissionAndVisibilityType,
-                      `permissionAndVisibilityType: "${configVar.meta.permissionAndVisibilityType}",`,
+                      !!configVar.meta?.permissionAndVisibilityType,
+                      `permissionAndVisibilityType: "${configVar.meta?.permissionAndVisibilityType}",`,
                     )
                     .conditionalWriteLine(
-                      configVar.meta.visibleToOrgDeployer !== undefined,
-                      `visibleToOrgDeployer: ${configVar.meta.visibleToOrgDeployer},`,
+                      configVar.meta?.visibleToOrgDeployer !== undefined,
+                      `visibleToOrgDeployer: ${configVar.meta?.visibleToOrgDeployer},`,
                     )
                     .conditionalWriteLine(
                       !!configVar.collectionType,
                       `collectionType: "${configVar.collectionType}", defaultValue: ${configVar.defaultValue},`,
                     )
                     .conditionalWriteLine(
-                      !configVar.collectionType,
+                      !configVar.collectionType && !!configVar.defaultValue,
                       `defaultValue: ${wrapValue(configVar.defaultValue || "")},`,
                     )
                     .writeLine("}),");
@@ -442,7 +449,7 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
 
     file.formatText();
   } catch (e) {
-    console.error(e);
+    console.error("Error generating config page:", e);
   }
 }
 
@@ -500,22 +507,32 @@ function formatConfigPages(
         return configVar.key === element.value;
       });
 
-      if (!foundConfigVar) {
-        throw `The ${configPage.name} config page references a config var named ${element.value}. We could not find a ${element.value} in your YAML's "requiredConfigVars" block.\nSkipping generation of configPages file.`;
-      }
-
-      return {
-        name: element.value,
-        ...foundConfigVar,
-        inputs: formatConfigVarInputs(foundConfigVar),
-        meta: {
-          ...foundConfigVar.meta,
-          permissionAndVisibilityType: getPermissionAndVisibilityType(
-            foundConfigVar.meta,
-            foundConfigVar.orgOnly,
-          ),
-        },
-      };
+      return foundConfigVar
+        ? {
+            name: element.value,
+            ...foundConfigVar,
+            inputs: formatConfigVarInputs(foundConfigVar),
+            meta: {
+              ...foundConfigVar.meta,
+              permissionAndVisibilityType: getPermissionAndVisibilityType(
+                foundConfigVar.meta,
+                foundConfigVar.orgOnly,
+              ),
+            },
+          }
+        : {
+            // Non-required config vars will be pretty sparse.
+            key: camelCase(element.value),
+            name: element.value,
+            collectionType: undefined,
+            connection: undefined,
+            dataSource: undefined,
+            dataType: element.type,
+            defaultValue: undefined,
+            description: undefined,
+            inputs: [],
+            meta: undefined,
+          };
     });
 
     return {

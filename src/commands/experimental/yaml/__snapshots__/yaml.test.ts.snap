@@ -150,10 +150,15 @@ export const configPages = {
   "Config Vars Page": configPage({
     tagline: "",
     elements: {
+      "<h3>Set up your configVars</h3>": configVar({
+        stableKey: "h3SetUpYourConfigVarsH3",
+        dataType: "htmlElement",
+        description: "",
+      }),
       "Simple string": configVar({
         stableKey: "Simple string",
         dataType: "string",
-        description: "undefined",
+        description: "",
         permissionAndVisibilityType: "organization",
         visibleToOrgDeployer: true,
         defaultValue: "The quick brown fox jumps over the lazy dog.",
@@ -161,21 +166,21 @@ export const configPages = {
       "Simple number": configVar({
         stableKey: "Simple number",
         dataType: "number",
-        description: "undefined",
+        description: "",
         permissionAndVisibilityType: "embedded",
         defaultValue: 1,
       }),
       "Simple list": configVar({
         stableKey: "Simple list",
         dataType: "string",
-        description: "undefined",
+        description: "",
         permissionAndVisibilityType: "embedded",
         collectionType: "valuelist", defaultValue: ["abc", "def", "ghi"],
       }),
       "Simple key value list": configVar({
         stableKey: "Simple key value list",
         dataType: "string",
-        description: "undefined",
+        description: "",
         permissionAndVisibilityType: "embedded",
         collectionType: "keyvaluelist", defaultValue: [{ "key": "key1", "value": "myvalue" }, { "key": "key2", "value": "myothervalue" }, { "key": "key3", "value": "myotherothervalue" }],
       }),
@@ -239,7 +244,6 @@ import log from "@component-manifests/log";
 import loop from "@component-manifests/loop";
 import scheduleTriggers from "@component-manifests/schedule-triggers";
 import slack from "@component-manifests/slack";
-import webhookTriggers from "@component-manifests/webhook-triggers";
 
 export const componentRegistry = componentManifests({
   branch,
@@ -248,7 +252,6 @@ export const componentRegistry = componentManifests({
   loop,
   scheduleTriggers,
   slack,
-  webhookTriggers,
 })
   ;
 "
@@ -283,16 +286,6 @@ export const basic = flow({
   description: "",
   isSynchronous: false,
   endpointSecurityType: "customer_optional",
-  onTrigger: {
-    component: "webhookTriggers",
-    key: "webhook",
-    values: {
-      body: { value: "", },
-      contentType: { value: "", },
-      headers: { value: [], },
-      statusCode: { value: "", },
-    },
-  },
   onExecution: async (context, params) => {
     const { configVars } = context;
     const postMessage = await context.components.slack.postMessage({
@@ -335,16 +328,6 @@ export const stepConfigVarReferences = flow({
   description: "",
   isSynchronous: false,
   endpointSecurityType: "customer_optional",
-  onTrigger: {
-    component: "webhookTriggers",
-    key: "webhook",
-    values: {
-      body: { value: "", },
-      contentType: { value: "", },
-      headers: { value: [], },
-      statusCode: { value: "", },
-    },
-  },
   onExecution: async (context, params) => {
     const { configVars } = context;
     const codeBlock = await context.components.code.runCode({
@@ -444,7 +427,7 @@ export const loopBranchTests = flow({
       level: "info",
       message: loopNTimes.data[5],
     });
-    const selectExecutedStepResult = await context.components.branch.selectExecutedStepResult({ stepResults: ["aTestValue",], });
+    const selectExecutedStepResult = await context.components.branch.selectExecutedStepResult({ stepResults: ["codeBlock2.results",], });
     return { data: selectExecutedStepResult };
   },
 })
