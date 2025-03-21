@@ -3,6 +3,7 @@ import {
   ConditionObjectFromYAML,
   OPERATOR_PHRASE_TO_EXPRESSION,
   ValidComplexYAMLValue,
+  ValidYAMLValue,
 } from "./types.js";
 import {
   convertBody,
@@ -30,27 +31,55 @@ export function writeBranchString(
 ) {
   const branchStepName = camelCase(step.name);
   const branchData: Record<string, { ifStatement: string; condition: string; body: string }> = {};
-  const inputConditions = step.inputs.conditions.value as ValidComplexYAMLValue;
 
-  inputConditions.forEach((condition, i) => {
-    const ifStatement = i === 0 ? "if" : "else if";
-    const formattedCondition = _formatConditionObject(
-      _convertInputIntoConditionObject(condition.value as ConditionObjectFromYAML, trigger, loop),
+  if (step.inputs.conditions) {
+    const inputConditions = step.inputs.conditions.value as ValidComplexYAMLValue;
+
+    inputConditions.forEach((condition, i) => {
+      const ifStatement = i === 0 ? "if" : "else if";
+      const formattedCondition = _formatConditionObject(
+        _convertInputIntoConditionObject(condition.value as ConditionObjectFromYAML, trigger, loop),
+      );
+
+      branchData[condition.name as string] = {
+        ifStatement: ifStatement,
+        condition: `(${formattedCondition.string})`,
+        body: "",
+      };
+
+      file.addImportDeclarations([
+        {
+          moduleSpecifier: "@prismatic-io/spectral/dist/conditionalLogic",
+          namedImports: formattedCondition.includes,
+        },
+      ]);
+    });
+  } else if (step.inputs.branchValueMappings) {
+    const inputConditions = step.inputs.branchValueMappings.value as ValidComplexYAMLValue;
+    const valueToCompare = _convertConditionIntoTermExpression(
+      step.inputs.inputValue,
+      trigger,
+      loop,
     );
 
-    branchData[condition.name as string] = {
-      ifStatement: ifStatement,
-      condition: `(${formattedCondition.string})`,
-      body: "",
-    };
+    inputConditions.forEach((condition, i) => {
+      const ifStatement = i === 0 ? "if" : "else if";
+      const formattedCondition = `${valueToCompare} === ${_convertConditionIntoTermExpression(
+        {
+          type: condition.type,
+          value: condition.value,
+        },
+        trigger,
+        loop,
+      )}`;
 
-    file.addImportDeclarations([
-      {
-        moduleSpecifier: "@prismatic-io/spectral/dist/conditionalLogic",
-        namedImports: formattedCondition.includes,
-      },
-    ]);
-  });
+      branchData[condition.name as string] = {
+        ifStatement: ifStatement,
+        condition: `(${formattedCondition})`,
+        body: "",
+      };
+    });
+  }
 
   const branchSteps = step.branches ?? [];
 
@@ -100,7 +129,7 @@ export function getBranchKind(step: ActionObjectFromYAML) {
 /* Given a parsed YAML object that represents a condition value, convert it
  * into a term expression. */
 function _convertConditionIntoTermExpression(
-  obj: { type: string; value: string },
+  obj: { type: string; value: ValidYAMLValue },
   trigger?: ActionObjectFromYAML,
   loop?: ActionObjectFromYAML,
 ) {
@@ -112,9 +141,9 @@ function _convertConditionIntoTermExpression(
     case "value":
       return `${wrapValue(value)}`;
     case "template":
-      return convertTemplateInput(value, trigger, loop);
+      return convertTemplateInput(value as string, trigger, loop);
     case "reference":
-      return convertYAMLReferenceValue(value, trigger, loop);
+      return convertYAMLReferenceValue(value as string, trigger, loop);
     default:
       return `"@FIXME - The converter ran into an error when attemping to parse this value."`;
   }

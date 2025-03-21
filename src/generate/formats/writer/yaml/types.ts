@@ -102,7 +102,7 @@ export type ConfigVarObjectFromYAML = {
       };
     }
   >;
-  meta: {
+  meta?: {
     visibleToOrgDeployer: boolean;
     visibleToCustomerDeployer: boolean;
     orgOnly?: boolean;

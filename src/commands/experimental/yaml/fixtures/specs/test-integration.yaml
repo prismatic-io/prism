@@ -6,6 +6,8 @@ configPages:
     name: Connections Page
     tagline: ''
   - elements:
+      - type: htmlElement
+        value: <h3>Set up your configVars</h3>
       - type: configVar
         value: Simple string
       - type: configVar

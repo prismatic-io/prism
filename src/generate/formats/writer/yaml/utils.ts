@@ -53,7 +53,7 @@ export function convertYAMLReferenceValue(
   rest.forEach((term) => {
     const formattedTerm = valueIsNumber(term)
       ? `[${term}]`
-      : term.indexOf(" ") > 0
+      : camelCase(term) !== term
         ? `["${term}"]`
         : `.${term}`;
     suffix += formattedTerm;
@@ -191,7 +191,11 @@ export function createFlowInputsString(
     } else if (input.type === "reference") {
       currentInputString += `${convertYAMLReferenceValue(input.value as string, trigger, loop)},`;
     } else if (input.type === "configVar") {
-      currentInputString += `configVars["${input.value}"],`;
+      if (action.isTrigger) {
+        currentInputString += `"${input.value}"`;
+      } else {
+        currentInputString += `configVars["${input.value}"],`;
+      }
     } else if (input.type === "template") {
       currentInputString += `${convertTemplateInput(input.value as string, trigger, loop)},`;
     } else {
@@ -199,7 +203,11 @@ export function createFlowInputsString(
     }
 
     if (action.isTrigger) {
-      resultString += `\n${key}: { value: ${currentInputString} },`;
+      if (input.type === "configVar") {
+        resultString += `\n${key}: { configVar: ${currentInputString} },`;
+      } else {
+        resultString += `\n${key}: { value: ${currentInputString} },`;
+      }
     } else {
       resultString += `\n${key}: ${currentInputString}`;
     }
