@@ -29,6 +29,11 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
       char: "r",
       description: "Optional: Your custom NPM registry prefix",
     }),
+    offline: Flags.string({
+      required: false,
+      char: "o",
+      description: "Runs this tool in an offline mode that skips component registry validation.",
+    }),
   };
 
   async run() {
@@ -36,7 +41,7 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
 
     try {
       const { flags } = await this.parse(GenerateIntegrationFromYAMLCommand);
-      const { yamlFile, registryPrefix, folder } = flags;
+      const { yamlFile, registryPrefix, folder, offline } = flags;
 
       const yamlExists = await exists(yamlFile);
 
@@ -90,7 +95,7 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
         "webpack.config.js",
       ];
 
-      const { usedComponents } = await writeIntegration(result, registryPrefix);
+      const { usedComponents } = await writeIntegration(result, registryPrefix, !!offline);
 
       await Promise.all([
         ...templateFiles.map((file) =>

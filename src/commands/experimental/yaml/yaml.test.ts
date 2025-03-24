@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect, beforeEach, spyOn } from "bun:test";
 import GenerateIntegrationFromYAMLCommand from "./index.js";
 import fs from "fs";
 import path from "path";
@@ -34,6 +34,7 @@ describe("YAML CNI generation tests", () => {
 
           await GenerateIntegrationFromYAMLCommand.run([
             `--yamlFile=../fixtures/specs/${fileName}`,
+            "--offline=true",
           ]);
 
           expect(process.cwd()).toStrictEqual(tempPath);
@@ -43,16 +44,16 @@ describe("YAML CNI generation tests", () => {
         CONVERT_GENERATION_TIMEOUT,
       );
 
-      // it("should match scaffolding snapshots", async () => {
-      //   process.chdir(tempPath);
-      //   const targets = await walkDir(name, [".png", "webpack.config.js", "package.json"]);
-      //   for (const target of targets) {
-      //     const contents = await readFile(target, "utf-8");
-      //     expect(contents).toMatchSnapshot(target);
-      //   }
+      it("should match scaffolding snapshots", async () => {
+        process.chdir(tempPath);
+        const targets = await walkDir(name, [".png", "webpack.config.js", "package.json"]);
+        for (const target of targets) {
+          const contents = await readFile(target, "utf-8");
+          expect(contents).toMatchSnapshot(target);
+        }
 
-      //   process.chdir(basePath);
-      // });
+        process.chdir(basePath);
+      });
     });
   }
 });

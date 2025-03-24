@@ -238,20 +238,8 @@ export const configPages = {
 
 exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/src/componentRegistry.ts 1`] = `
 "import { componentManifests } from "@prismatic-io/spectral";
-import branch from "@component-manifests/branch";
-import code from "@component-manifests/code";
-import log from "@component-manifests/log";
-import loop from "@component-manifests/loop";
-import scheduleTriggers from "@component-manifests/schedule-triggers";
-import slack from "@component-manifests/slack";
 
 export const componentRegistry = componentManifests({
-  branch,
-  code,
-  log,
-  loop,
-  scheduleTriggers,
-  slack,
 })
   ;
 "

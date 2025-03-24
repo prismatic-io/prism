@@ -290,7 +290,7 @@ export function formatConfigVarInputs(configVar: ConfigVarObjectFromYAML) {
 }
 
 /* Returns of map of component names and a boolean denoting if the component is public. */
-export async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
+export async function extractComponentList(flows: Array<FlowObjectFromYAML>, offline?: boolean) {
   const componentMap: Record<string, boolean> = {};
   const stepListsToProcess: Array<Array<ActionObjectFromYAML>> = [];
 
@@ -324,28 +324,42 @@ export async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
 
   const componentKeys = Object.keys(componentMap);
 
-  const response = await gqlRequest({
-    document: gql`
-      query getPublicComponents($componentKeys: [String]) {
-        components(public: true, key_In: $componentKeys) {
-          nodes {
-            key
+  if (!offline) {
+    try {
+      const response = await gqlRequest({
+        document: gql`
+          query getPublicComponents($componentKeys: [String]) {
+            components(public: true, key_In: $componentKeys) {
+              nodes {
+                key
+              }
+            }
           }
-        }
-      }
-    `,
-    variables: {
-      componentKeys,
-    },
-  });
+        `,
+        variables: {
+          componentKeys,
+        },
+      });
 
-  const publicComponents: Array<string> = response.components.nodes.map(
-    (node: { key: string }) => node.key,
-  );
-  const privateComponents: Array<string> = xor(publicComponents, componentKeys);
+      const publicComponents: Array<string> = response.components.nodes.map(
+        (node: { key: string }) => node.key,
+      );
+      const privateComponents: Array<string> = xor(publicComponents, componentKeys);
+
+      return {
+        public: publicComponents,
+        private: privateComponents,
+      };
+    } catch (e) {
+      console.error(
+        "Error fetching component registry info. Skipping component registry generation.",
+      );
+      console.error(e);
+    }
+  }
 
   return {
-    public: publicComponents,
-    private: privateComponents,
+    public: [],
+    private: [],
   };
 }

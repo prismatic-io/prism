@@ -36,6 +36,7 @@ type ImportDeclaration = {
 export async function writeIntegration(
   integration: IntegrationObjectFromYAML,
   registryPrefix?: string,
+  offline?: boolean,
 ) {
   const project = new Project({
     manipulationSettings: {
@@ -44,7 +45,7 @@ export async function writeIntegration(
   });
   project.createDirectory("src");
 
-  const usedComponents = await extractComponentList(integration.flows);
+  const usedComponents = await extractComponentList(integration.flows, offline);
 
   writeFlows(project, integration);
   writeComponentRegistry(project, usedComponents, registryPrefix);
