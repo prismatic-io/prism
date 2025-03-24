@@ -324,28 +324,40 @@ export async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
 
   const componentKeys = Object.keys(componentMap);
 
-  const response = await gqlRequest({
-    document: gql`
-      query getPublicComponents($componentKeys: [String]) {
-        components(public: true, key_In: $componentKeys) {
-          nodes {
-            key
+  try {
+    const response = await gqlRequest({
+      document: gql`
+          query getPublicComponents($componentKeys: [String]) {
+            components(public: true, key_In: $componentKeys) {
+              nodes {
+                key
+              }
+            }
           }
-        }
-      }
-    `,
-    variables: {
-      componentKeys,
-    },
-  });
+        `,
+      variables: {
+        componentKeys,
+      },
+    });
 
-  const publicComponents: Array<string> = response.components.nodes.map(
-    (node: { key: string }) => node.key,
-  );
-  const privateComponents: Array<string> = xor(publicComponents, componentKeys);
+    const publicComponents: Array<string> = response.components.nodes.map(
+      (node: { key: string }) => node.key,
+    );
+    const privateComponents: Array<string> = xor(publicComponents, componentKeys);
 
-  return {
-    public: publicComponents,
-    private: privateComponents,
-  };
+    return {
+      public: publicComponents,
+      private: privateComponents,
+    };
+  } catch (e) {
+    console.error(
+      "Error fetching component registry info. Skipping component registry generation.",
+    );
+    console.error(e);
+
+    return {
+      public: [],
+      private: [],
+    };
+  }
 }

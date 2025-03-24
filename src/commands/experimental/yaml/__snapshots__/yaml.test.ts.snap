@@ -1,6 +1,6 @@
 // Bun Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/jest.config.js 1`] = `
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/jest.config.js 1`] = `
 "module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
@@ -8,12 +8,7 @@ exports[`YAML CNI generation tests test-integration should match scaffolding sna
 "
 `;
 
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/.npmrc 1`] = `
-"@component-manifests:registry=https://app.dev.prismatic-dev.io/packages/npm
-"
-`;
-
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/.prettierignore 1`] = `
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.prettierignore 1`] = `
 "# Ignore artifacts:
 .spectral
 build
@@ -21,12 +16,12 @@ coverage
 "
 `;
 
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/.prettierrc 1`] = `
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.prettierrc 1`] = `
 "{}
 "
 `;
 
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/tsconfig.json 1`] = `
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/tsconfig.json 1`] = `
 "{
   "compilerOptions": {
     "target": "es6",
@@ -42,7 +37,7 @@ exports[`YAML CNI generation tests test-integration should match scaffolding sna
 "
 `;
 
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/.spectral/index.ts 1`] = `
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.spectral/index.ts 1`] = `
 "import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
 
 // @ts-ignore
@@ -88,7 +83,7 @@ declare module "@prismatic-io/spectral" {
 "
 `;
 
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/src/configPages.ts 1`] = `
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/configPages.ts 1`] = `
 "import { configPage, configVar, connectionConfigVar, dataSourceConfigVar } from "@prismatic-io/spectral";
 
 export const configPages = {
@@ -236,28 +231,7 @@ export const configPages = {
 "
 `;
 
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/src/componentRegistry.ts 1`] = `
-"import { componentManifests } from "@prismatic-io/spectral";
-import branch from "@component-manifests/branch";
-import code from "@component-manifests/code";
-import log from "@component-manifests/log";
-import loop from "@component-manifests/loop";
-import scheduleTriggers from "@component-manifests/schedule-triggers";
-import slack from "@component-manifests/slack";
-
-export const componentRegistry = componentManifests({
-  branch,
-  code,
-  log,
-  loop,
-  scheduleTriggers,
-  slack,
-})
-  ;
-"
-`;
-
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/src/index.ts 1`] = `
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/index.ts 1`] = `
 "import { integration } from "@prismatic-io/spectral";
 import flows from "./flows";
 import { configPages } from "./configPages";
@@ -277,7 +251,7 @@ export default integration({
 "
 `;
 
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/src/flows/basic.ts 1`] = `
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/flows/basic.ts 1`] = `
 "import { flow } from "@prismatic-io/spectral";
 
 export const basic = flow({
@@ -309,7 +283,7 @@ export default basic;
 "
 `;
 
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/src/flows/index.ts 1`] = `
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/flows/index.ts 1`] = `
 "import { basic } from "./basic";
 import { stepConfigVarReferences } from "./stepConfigVarReferences";
 import { loopBranchTests } from "./loopBranchTests";
@@ -319,7 +293,7 @@ export default [basic, stepConfigVarReferences, loopBranchTests]
 "
 `;
 
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/src/flows/stepConfigVarReferences.ts 1`] = `
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/flows/stepConfigVarReferences.ts 1`] = `
 "import { flow } from "@prismatic-io/spectral";
 
 export const stepConfigVarReferences = flow({
@@ -361,7 +335,7 @@ export default stepConfigVarReferences;
 "
 `;
 
-exports[`YAML CNI generation tests test-integration should match scaffolding snapshots: test-integration/src/flows/loopBranchTests.ts 1`] = `
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/flows/loopBranchTests.ts 1`] = `
 "import { isEqual } from "@prismatic-io/spectral/dist/conditionalLogic";
 import { flow } from "@prismatic-io/spectral";
 
