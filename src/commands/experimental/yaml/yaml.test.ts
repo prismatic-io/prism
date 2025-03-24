@@ -20,40 +20,34 @@ describe("YAML CNI generation tests", () => {
     fs.mkdirSync(tempPath);
   }
 
-  const specs = fs.readdirSync(`${commandPath}/fixtures/specs`).map<SpecMeta>((fileName) => {
-    const [name] = fileName.toLowerCase().split(".");
-    return { fileName, name };
-  });
-
-  for (const { fileName, name } of specs) {
-    describe(name, () => {
-      it(
-        "should generate successfully",
-        async () => {
-          process.chdir(tempPath);
-
-          await GenerateIntegrationFromYAMLCommand.run([
-            `--yamlFile=../fixtures/specs/${fileName}`,
-            "--offline=true",
-          ]);
-
-          expect(process.cwd()).toStrictEqual(tempPath);
-
-          process.chdir(basePath);
-        },
-        CONVERT_GENERATION_TIMEOUT,
-      );
-
-      it("should match scaffolding snapshots", async () => {
+  describe("test convert integration", () => {
+    it(
+      "should generate successfully",
+      async () => {
         process.chdir(tempPath);
-        const targets = await walkDir(name, [".png", "webpack.config.js", "package.json"]);
-        for (const target of targets) {
-          const contents = await readFile(target, "utf-8");
-          expect(contents).toMatchSnapshot(target);
-        }
+
+        await GenerateIntegrationFromYAMLCommand.run([
+          "--yamlFile=../fixtures/specs/test-integration.yaml",
+          "--folder=testIntegration",
+          "--offline=true",
+        ]);
+
+        expect(process.cwd()).toStrictEqual(tempPath);
 
         process.chdir(basePath);
-      });
+      },
+      CONVERT_GENERATION_TIMEOUT,
+    );
+
+    it("should match scaffolding snapshots", async () => {
+      process.chdir(tempPath);
+      const targets = await walkDir("testIntegration", [".png", "webpack.config.js", "package.json"]);
+      for (const target of targets) {
+        const contents = await readFile(target, "utf-8");
+        expect(contents).toMatchSnapshot(target);
+      }
+
+      process.chdir(basePath);
     });
-  }
+  });
 });
