@@ -8,6 +8,7 @@ import { v4 as uuid4 } from "uuid";
 import { prismaticUrl } from "../../../auth.js";
 import { writeIntegration, writePackageJson } from "../../../generate/formats/writer/yaml/index.js";
 import { IntegrationObjectFromYAML } from "../../../generate/formats/writer/yaml/types.js";
+import { wrapValue } from "../../../generate/formats/writer/yaml/utils.js";
 
 export default class GenerateIntegrationFromYAMLCommand extends Command {
   static description = "Initialize a new Code Native Integration based on a YAML file";
@@ -56,7 +57,7 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
       const context = {
         integration: {
           name: result.name,
-          description: result.description,
+          description: result.description ? wrapValue(result.description) : undefined,
           key: integrationKey,
         },
         registry: {

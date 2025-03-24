@@ -8,7 +8,7 @@ export { componentRegistry } from "./componentRegistry";
 
 export default integration({
   name: "<%= integration.name %>",
-  description: "<%= integration.description %>",
+  description: <% if (integration.description) { %><%= integration.description %><% } else { %>""<% } %>,
   iconPath: "icon.png",
   flows,
   configPages,

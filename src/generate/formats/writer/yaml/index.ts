@@ -142,7 +142,7 @@ function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
                 .writeLine("flow({")
                 .writeLine(`name: "${flow.name}",`)
                 .writeLine(`stableKey: "${flow.stableKey}",`)
-                .writeLine(`description: "${flow.description || ""}",`)
+                .writeLine(`description: ${wrapValue(flow.description)},`)
                 .writeLine(`isSynchronous: ${flow.isSynchronous},`)
                 .writeLine(`endpointSecurityType: "${flow.endpointSecurityType}",`);
 
@@ -405,7 +405,7 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                     .writeLine(`"${configVar.name}": configVar({`)
                     .writeLine(`stableKey: "${configVar.key}",`)
                     .writeLine(`dataType: "${configVar.dataType}",`)
-                    .writeLine(`description: "${configVar.description || ""}",`)
+                    .writeLine(`description: ${wrapValue(configVar.description)},`)
                     .conditionalWriteLine(
                       !!configVar.meta?.permissionAndVisibilityType,
                       `permissionAndVisibilityType: "${configVar.meta?.permissionAndVisibilityType}",`,
