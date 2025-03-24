@@ -8,11 +8,6 @@ exports[`YAML CNI generation tests test convert integration should match scaffol
 "
 `;
 
-exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.npmrc 1`] = `
-"@component-manifests:registry=https://app.dev.prismatic-dev.io/packages/npm
-"
-`;
-
 exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.prettierignore 1`] = `
 "# Ignore artifacts:
 .spectral
@@ -232,15 +227,6 @@ export const configPages = {
     },
   }),
 }
-  ;
-"
-`;
-
-exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/componentRegistry.ts 1`] = `
-"import { componentManifests } from "@prismatic-io/spectral";
-
-export const componentRegistry = componentManifests({
-})
   ;
 "
 `;

@@ -29,7 +29,6 @@ describe("YAML CNI generation tests", () => {
         await GenerateIntegrationFromYAMLCommand.run([
           "--yamlFile=../fixtures/specs/test-integration.yaml",
           "--folder=testIntegration",
-          "--offline=true",
         ]);
 
         expect(process.cwd()).toStrictEqual(tempPath);
@@ -42,9 +41,11 @@ describe("YAML CNI generation tests", () => {
     it("should match scaffolding snapshots", async () => {
       process.chdir(tempPath);
       const targets = await walkDir("testIntegration", [
+        ".npmrc",
         ".png",
         "webpack.config.js",
         "package.json",
+        "src/componentRegistry.ts",
       ]);
       for (const target of targets) {
         const contents = await readFile(target, "utf-8");
