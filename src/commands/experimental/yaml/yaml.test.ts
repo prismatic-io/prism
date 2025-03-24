@@ -41,7 +41,11 @@ describe("YAML CNI generation tests", () => {
 
     it("should match scaffolding snapshots", async () => {
       process.chdir(tempPath);
-      const targets = await walkDir("testIntegration", [".png", "webpack.config.js", "package.json"]);
+      const targets = await walkDir("testIntegration", [
+        ".png",
+        "webpack.config.js",
+        "package.json",
+      ]);
       for (const target of targets) {
         const contents = await readFile(target, "utf-8");
         expect(contents).toMatchSnapshot(target);
