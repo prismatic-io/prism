@@ -206,7 +206,7 @@ function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
                 .writeLine(`isSynchronous: ${flow.isSynchronous},`)
                 .writeLine(`endpointSecurityType: "${flow.endpointSecurityType}",`);
 
-              if (flow.trigger.schedule) {
+              if (flow.trigger.schedule && flow.trigger.schedule.meta?.scheduleType !== "none") {
                 writer
                   .writeLine("schedule: {")
                   .conditionalWriteLine(
@@ -317,7 +317,7 @@ function writeComponentRegistry(project: Project, components: UsedComponents, pr
           writer.writeLine("componentManifests({");
 
           components.public.forEach((component) => {
-            if (component !== "webhook-triggers") {
+            if (component !== "webhook-triggers" && component !== "branch") {
               componentImports.push({
                 moduleSpecifier: `@component-manifests/${component}`,
                 defaultImport: camelCase(component),

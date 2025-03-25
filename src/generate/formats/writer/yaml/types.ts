@@ -47,6 +47,9 @@ export type ActionObjectFromYAML = {
     type?: string;
     value?: string;
     timezone: string;
+    meta?: {
+      scheduleType: string;
+    };
   };
 
   // Added by prism during CNI generation
