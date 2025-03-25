@@ -79,7 +79,6 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
       // Create template files based on YAML
       const templateFiles = [
         path.join("assets", "icon.png"),
-        path.join("src", "index.ts"),
         path.join(".spectral", "index.ts"),
         ".npmrc",
         ".prettierrc",

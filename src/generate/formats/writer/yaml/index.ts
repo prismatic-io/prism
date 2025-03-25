@@ -46,6 +46,7 @@ export async function writeIntegration(
 
   const usedComponents = await extractComponentList(integration.flows);
 
+  writeIndex(project, integration);
   writeFlows(project, integration);
   writeComponentRegistry(project, usedComponents, registryPrefix);
   writeConfigPages(project, integration);
@@ -106,6 +107,65 @@ export async function writePackageJson(
       webpack: "5.91.0",
       "webpack-cli": "5.1.4",
     },
+  });
+}
+
+function writeIndex(project: Project, integration: IntegrationObjectFromYAML) {
+  const file = project.createSourceFile(path.join("src", "index.ts"), undefined, {
+    scriptKind: ScriptKind.TS,
+  });
+
+  file.addImportDeclarations([
+    {
+      moduleSpecifier: "@prismatic-io/spectral",
+      namedImports: ["integration"],
+    },
+    {
+      moduleSpecifier: "./flows",
+      defaultImport: "flows",
+    },
+    {
+      moduleSpecifier: "./configPages",
+      namedImports: ["configPages"],
+    },
+    {
+      moduleSpecifier: "./componentRegistry",
+      namedImports: ["componentRegistry"],
+    },
+  ]);
+
+  file.addExportDeclarations([
+    {
+      moduleSpecifier: "./configPages",
+      namedExports: ["configPages"],
+    },
+    {
+      moduleSpecifier: "./componentRegistry",
+      namedExports: ["componentRegistry"],
+    },
+  ]);
+
+  const integrationVarName = `${camelCase(integration.name)}Integration`;
+
+  file.addVariableStatement({
+    declarationKind: VariableDeclarationKind.Const,
+    declarations: [
+      {
+        name: integrationVarName,
+        initializer: (writer) => {
+          writer
+            .writeLine("integration({")
+            .writeLine(`name: "${integration.name}",`)
+            .writeLine(`description: ${wrapValue(integration.description) || ""},`)
+            .writeLine(`iconPath: "icon.png",`)
+            .writeLine("flows,")
+            .writeLine("configPages,")
+            .writeLine("componentRegistry,")
+            .writeLine("});")
+            .writeLine(`export default ${integrationVarName}`);
+        },
+      },
+    ],
   });
 }
 
@@ -382,18 +442,6 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                       .conditionalWriteLine(
                         input.type !== "configVar",
                         `value: ${wrapValue(input.value, true)},`,
-                      )
-                      .conditionalWriteLine(
-                        !!input.meta.permissionAndVisibilityType,
-                        `permissionAndVisibilityType: "${input.meta.permissionAndVisibilityType}",`,
-                      )
-                      .conditionalWriteLine(
-                        input.meta.writeOnly,
-                        `writeOnly: ${input.meta.writeOnly},`,
-                      )
-                      .conditionalWriteLine(
-                        input.meta.visibleToOrgDeployer !== undefined,
-                        `visibleToOrgDeployer: ${input.meta.visibleToOrgDeployer},`,
                       )
                       .writeLine("},");
                   });

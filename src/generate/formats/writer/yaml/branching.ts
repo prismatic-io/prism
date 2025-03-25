@@ -11,7 +11,7 @@ import {
   convertYAMLReferenceValue,
   wrapValue,
 } from "./utils.js";
-import { camelCase, uniq } from "lodash-es";
+import { camelCase, uniq, difference } from "lodash-es";
 import { SourceFile } from "ts-morph";
 
 type ParsedConditionalValue = string | ParsedCondition;
@@ -47,12 +47,23 @@ export function writeBranchString(
         body: "",
       };
 
-      file.addImportDeclarations([
-        {
-          moduleSpecifier: "@prismatic-io/spectral/dist/conditionalLogic",
-          namedImports: formattedCondition.includes,
-        },
-      ]);
+      const currentImports = file.getImportDeclaration(
+        "@prismatic-io/spectral/dist/conditionalLogic",
+      );
+
+      if (currentImports) {
+        const namedImports = currentImports.getNamedImports();
+        const currentNames = namedImports.map((value) => value.getName());
+
+        currentImports.addNamedImports(difference(formattedCondition.includes, currentNames));
+      } else {
+        file.addImportDeclarations([
+          {
+            moduleSpecifier: "@prismatic-io/spectral/dist/conditionalLogic",
+            namedImports: formattedCondition.includes,
+          },
+        ]);
+      }
     });
   } else if (step.inputs.branchValueMappings) {
     const inputConditions = step.inputs.branchValueMappings.value as ValidComplexYAMLValue;
@@ -103,7 +114,7 @@ export function writeBranchString(
       branchData.Else = {
         ifStatement: "else",
         condition: "",
-        body: bodyString,
+        body: bodyString || `${branchStepName} = "Else";`,
       };
     }
   });

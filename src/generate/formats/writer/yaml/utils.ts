@@ -15,27 +15,59 @@ export function valueIsNumber(value: unknown) {
 }
 
 export function valueIsBoolean(value: unknown) {
-  return typeof value === "boolean" || value === "false" || value === "true";
+  let isBoolean = false;
+
+  if (typeof value === "boolean") {
+    isBoolean = true;
+  } else if (typeof value === "string") {
+    const lowercased = value.toLowerCase();
+    if (lowercased === "false" || lowercased === "true") {
+      isBoolean = true;
+    }
+  }
+
+  return isBoolean;
 }
 
 /* Given a valid YAML value, wrap it in quotes, escaped backticks,
  * or nothing depending on the case. */
-export function wrapValue(value: ValidYAMLValue | undefined, ignoreNumbers?: boolean) {
+export function wrapValue(
+  value: ValidYAMLValue | ValidComplexYAMLValue | undefined,
+  ignoreNumbers?: boolean,
+) {
   if (valueIsBoolean(value)) {
+    const formattedValue = typeof value === "string" ? value.toLowerCase() : value;
     // Boolean-like values shouldn't be wrapped
-    return value as boolean;
+    return formattedValue;
   } else if (value === "" || !value) {
     return `""`;
   } else if (valueIsNumber(value) && !ignoreNumbers) {
     // Number-like values shouldn't be wrapped
-    return value as number;
+    return value;
   } else if (typeof value === "string" && value.indexOf("\n") >= 0) {
     // Multiline strings
     const escapedValue = value.replace(/`/g, "\\`");
     return `\`${escapedValue}\``;
+  } else if (typeof value === "object") {
+    return convertYAMLObjectIntoString(value as ValidComplexYAMLValue);
   } else {
     return `"${value}"`;
   }
+}
+
+const EXCEPTION_CHARACTERS = [" ", "-", ":"];
+
+function includesExceptionChars(input: string) {
+  let hasChars = false;
+
+  for (const char of EXCEPTION_CHARACTERS) {
+    if (input.indexOf(char) !== -1) {
+      hasChars = true;
+      break;
+    }
+  }
+
+  return hasChars;
 }
 
 /* Convert a YAML reference path into one that will work in CNI code. Examples:
@@ -53,7 +85,7 @@ export function convertYAMLReferenceValue(
   rest.forEach((term) => {
     const formattedTerm = valueIsNumber(term)
       ? `[${term}]`
-      : camelCase(term) !== term
+      : includesExceptionChars(term)
         ? `["${term}"]`
         : `.${term}`;
     suffix += formattedTerm;
@@ -152,6 +184,35 @@ export function convertBody(
   return result;
 }
 
+export function convertYAMLObjectIntoString(value: ValidComplexYAMLValue) {
+  let shouldWrap = true;
+  let isObject = false;
+  let resultString = "";
+
+  if (!value || value.length === 0) {
+    shouldWrap = false;
+    resultString = `${JSON.stringify(value)}`;
+  } else {
+    value.forEach((element) => {
+      if (element.name) {
+        isObject = true;
+        const key =
+          typeof element.name === "string" ? element.name : (element.name.value as string);
+        const formattedKey = includesExceptionChars(key) ? `"${key}"` : key;
+        resultString += `${formattedKey}: ${wrapValue(element.value as string)},`;
+      } else {
+        resultString += `${wrapValue(element.value as string)},`;
+      }
+    });
+  }
+
+  if (shouldWrap) {
+    resultString = isObject ? `{${resultString}}` : `[${resultString}]`;
+  }
+
+  return resultString;
+}
+
 /* Flows: Given a flow action step, convert its inputs into a template string. */
 export function createFlowInputsString(
   action: ActionObjectFromYAML,
@@ -165,29 +226,7 @@ export function createFlowInputsString(
     let currentInputString = "";
 
     if (input.type === "complex") {
-      let shouldWrap = true;
-      let isObject = false;
-
-      const castInputs = input.value as ValidComplexYAMLValue;
-      if (!castInputs || castInputs.length === 0) {
-        shouldWrap = false;
-        currentInputString = `${JSON.stringify(input.value)},`;
-      } else {
-        castInputs.forEach((element) => {
-          if (element.name) {
-            isObject = true;
-            currentInputString += `${
-              typeof element.name === "string" ? element.name : element.name.value
-            }: ${wrapValue(element.value as string)},`;
-          } else {
-            currentInputString += `${wrapValue(element.value as string)},`;
-          }
-        });
-      }
-
-      if (shouldWrap) {
-        currentInputString = isObject ? `{${currentInputString}},` : `[${currentInputString}],`;
-      }
+      currentInputString += `${convertYAMLObjectIntoString(input.value as ValidComplexYAMLValue)},`;
     } else if (input.type === "reference") {
       currentInputString += `${convertYAMLReferenceValue(input.value as string, trigger, loop)},`;
     } else if (input.type === "configVar") {
