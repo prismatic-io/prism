@@ -139,7 +139,7 @@ export function getBranchKind(step: ActionObjectFromYAML) {
 
 /* Given a parsed YAML object that represents a condition value, convert it
  * into a term expression. */
-function _convertConditionIntoTermExpression(
+export function _convertConditionIntoTermExpression(
   obj: { type: string; value: ValidYAMLValue },
   trigger?: ActionObjectFromYAML,
   loop?: ActionObjectFromYAML,
