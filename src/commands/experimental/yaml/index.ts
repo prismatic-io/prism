@@ -80,6 +80,7 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
       const templateFiles = [
         path.join("assets", "icon.png"),
         path.join(".spectral", "index.ts"),
+        path.join(".spectral", "metadata.json"),
         ".npmrc",
         ".prettierrc",
         ".prettierignore",
