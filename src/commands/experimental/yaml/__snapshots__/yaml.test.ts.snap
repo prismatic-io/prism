@@ -39,7 +39,7 @@ exports[`YAML CNI generation tests test convert integration should match scaffol
 
 exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.spectral/metadata.json 1`] = `
 "{
-  "convertedFromYAML": true
+  "convertedFromLowCode": true
 }
 "
 `;
