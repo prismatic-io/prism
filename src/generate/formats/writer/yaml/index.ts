@@ -317,7 +317,7 @@ function writeComponentRegistry(project: Project, components: UsedComponents, pr
           writer.writeLine("componentManifests({");
 
           components.public.forEach((component) => {
-            if (component !== "webhook-triggers" && component !== "branch") {
+            if (component !== "webhook-triggers") {
               componentImports.push({
                 moduleSpecifier: `@component-manifests/${component}`,
                 defaultImport: camelCase(component),

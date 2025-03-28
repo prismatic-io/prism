@@ -37,6 +37,13 @@ exports[`YAML CNI generation tests test convert integration should match scaffol
 "
 `;
 
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.spectral/metadata.json 1`] = `
+"{
+  "convertedFromYAML": true
+}
+"
+`;
+
 exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.spectral/index.ts 1`] = `
 "import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
 
