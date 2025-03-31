@@ -44,6 +44,7 @@ export async function writeIntegration(
   });
   project.createDirectory("src");
 
+  // @TODO - also grab components from connections and configvars
   const usedComponents = await extractComponentList(integration.flows);
 
   writeIndex(project, integration);

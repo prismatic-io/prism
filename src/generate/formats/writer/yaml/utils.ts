@@ -364,6 +364,7 @@ export async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
   const componentKeys = Object.keys(componentMap);
 
   try {
+    // @TODO - just look at component public: true/false
     const response = await gqlRequest({
       document: gql`
           query getPublicComponents($componentKeys: [String]) {
