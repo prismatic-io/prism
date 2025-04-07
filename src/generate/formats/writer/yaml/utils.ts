@@ -127,8 +127,7 @@ export const getPermissionAndVisibilityType = (
   return "embedded";
 };
 
-const CONFIG_VAR_REGEX = /\{{#(.*?)\}}/g;
-const STEP_REF_REGEX = /\{{\$(.*?)\}}/g;
+const TEMPLATE_PLACEHOLDER_REGEX = /\{\{([#\$])([^\}]+)\}\}/g;
 
 /* Given a template input, convert it into an interpolated string.
  *
@@ -140,22 +139,19 @@ export function convertTemplateInput(
   trigger?: ActionObjectFromYAML,
   loop?: ActionObjectFromYAML,
 ) {
-  let resultString = input.replace(CONFIG_VAR_REGEX, '$${configVars["$1"]}');
-
-  const referenceMatches = resultString.match(STEP_REF_REGEX);
-  (referenceMatches || []).forEach((match) => {
-    const body = STEP_REF_REGEX.exec(match);
-    if (body) {
-      const toReplace = body[1];
-      resultString = resultString.replace(
-        toReplace,
-        convertYAMLReferenceValue(toReplace, trigger, loop),
-      );
+  const result = input.replace(TEMPLATE_PLACEHOLDER_REGEX, (_, refTypeChar, name) => {
+    if (refTypeChar === "#") {
+      // Config variable reference
+      return `\$\{configVars["${name}"]\}`;
+    } else if (refTypeChar === "$") {
+      // Step result reference
+      const replacement = convertYAMLReferenceValue(name, trigger, loop);
+      return `\$\{${replacement}\}`;
+    } else {
+      throw `Unexpected reference type character: ${refTypeChar}`;
     }
-    resultString = resultString.replace(STEP_REF_REGEX, "$${$1}");
   });
-
-  return `\`${resultString}\``;
+  return `\`${result}\``;
 }
 
 export function convertBody(

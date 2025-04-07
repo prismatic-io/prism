@@ -155,6 +155,12 @@ describe("convertTemplateInput", () => {
       expected:
         '`My template: ${configVars["My Var"]}, and ${myAction.data.testKey}, and ${codeBlock.data}`',
     },
+    {
+      input: "{{#My Var}}{{$myAction.results.testKey}}{{$codeBlock.results}}",
+      trigger: undefined,
+      loop: undefined,
+      expected: '`${configVars["My Var"]}${myAction.data.testKey}${codeBlock.data}`',
+    },
   ])(
     "correctly converts template inputs into interpolated strings",
     ({ input, trigger, loop, expected }) => {
