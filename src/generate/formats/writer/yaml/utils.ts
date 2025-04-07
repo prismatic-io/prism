@@ -33,15 +33,15 @@ export function valueIsBoolean(value: unknown) {
  * or nothing depending on the case. */
 export function wrapValue(
   value: ValidYAMLValue | ValidComplexYAMLValue | undefined,
-  ignoreNumbers?: boolean,
+  useQuotes?: boolean,
 ) {
-  if (valueIsBoolean(value)) {
+  if (valueIsBoolean(value) && !useQuotes) {
     const formattedValue = typeof value === "string" ? value.toLowerCase() : value;
     // Boolean-like values shouldn't be wrapped
     return formattedValue;
-  } else if (value === "" || !value) {
+  } else if (value === "" || (!value && value !== false && value !== 0)) {
     return `""`;
-  } else if (valueIsNumber(value) && !ignoreNumbers) {
+  } else if (valueIsNumber(value) && !useQuotes) {
     // Number-like values shouldn't be wrapped
     return value;
   } else if (typeof value === "string" && value.indexOf("\n") >= 0) {

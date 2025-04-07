@@ -120,7 +120,7 @@ export const configPages = {
               visibleToOrgDeployer: false,
             },
             "isUser": {
-              value: false,
+              value: "false",
               permissionAndVisibilityType: "embedded",
               visibleToOrgDeployer: false,
             },
@@ -202,19 +202,19 @@ export const configPages = {
               configVar: "Slack Connection",
             },
             "includeImChannels": {
-              value: false,
+              value: "false",
             },
             "includeMultiPartyImchannels": {
-              value: false,
+              value: "false",
             },
             "includePrivateChannels": {
-              value: false,
+              value: "false",
             },
             "includePublicChannels": {
-              value: true,
+              value: "true",
             },
             "showIdInDropdown": {
-              value: false,
+              value: "false",
             },
           },
         },
