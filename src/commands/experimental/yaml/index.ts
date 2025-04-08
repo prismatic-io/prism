@@ -9,6 +9,8 @@ import { prismaticUrl } from "../../../auth.js";
 import { writeIntegration, writePackageJson } from "../../../generate/formats/writer/yaml/index.js";
 import { IntegrationObjectFromYAML } from "../../../generate/formats/writer/yaml/types.js";
 import { wrapValue } from "../../../generate/formats/writer/yaml/utils.js";
+import { kebabCase } from "lodash-es";
+import { formatSourceFiles, getFilesToFormat } from "../../../utils/generate.js";
 
 export default class GenerateIntegrationFromYAMLCommand extends Command {
   static description = "Initialize a new Code Native Integration based on a YAML file";
@@ -66,12 +68,12 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
         },
       };
 
-      const folderName = folder ?? result.name.replaceAll(" ", "-");
+      const folderName = folder ?? kebabCase(result.name);
 
       try {
         await fs.mkdir(folderName);
       } catch (e) {
-        throw `A folder named ${folderName} already exists. Rename it, or use the -f flag to specify a different folder name.`;
+        throw `A folder named ${folderName} already exists. Rename it, or use the --folder flag to specify a different folder name.`;
       }
 
       process.chdir(folderName);
@@ -82,7 +84,6 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
         path.join(".spectral", "index.ts"),
         path.join(".spectral", "metadata.json"),
         ".npmrc",
-        ".prettierrc",
         ".prettierignore",
         "jest.config.js",
         "package.json",
@@ -102,6 +103,9 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
         ),
         writePackageJson(result.name, usedComponents, registryPrefix),
       ]);
+
+      const filesToFormat = await getFilesToFormat(folderName);
+      await formatSourceFiles(folderName, filesToFormat);
 
       this.log(`
 "${folderName}" has been successfully generated based on the provided YAML.

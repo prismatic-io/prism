@@ -24,6 +24,7 @@ import {
 import path from "path";
 import { updatePackageJson } from "../../../util.js";
 import { writeBranchString, getBranchKind } from "./branching.js";
+import { formatSourceFiles } from "../../../../utils/generate.js";
 
 type UsedComponents = { public: string[]; private: string[] };
 
@@ -32,6 +33,8 @@ type ImportDeclaration = {
   defaultImport?: string;
   namedImports?: string[];
 };
+
+const EXCLUDED_PUBLIC_COMPONENTS = ["loop"];
 
 export async function writeIntegration(
   integration: IntegrationObjectFromYAML,
@@ -68,8 +71,10 @@ export async function writePackageJson(
   const manifests: Record<string, string> = {};
 
   usedComponents.public.forEach((componentKey) => {
-    const packageName = `@component-manifests/${componentKey}`;
-    manifests[packageName] = "*";
+    if (!EXCLUDED_PUBLIC_COMPONENTS.includes(componentKey)) {
+      const packageName = `@component-manifests/${componentKey}`;
+      manifests[packageName] = "*";
+    }
   });
 
   usedComponents.private.forEach((componentKey) => {
@@ -219,7 +224,7 @@ function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
                     `value: "${flow.trigger.schedule.value}",`,
                   )
                   .conditionalWriteLine(
-                    !!flow.trigger.schedule?.timezone,
+                    Boolean(flow.trigger.schedule?.timezone),
                     `timezone: "${flow.trigger.schedule.timezone}",`,
                   )
                   .writeLine("},");
@@ -235,7 +240,7 @@ function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
                   .writeLine(`key: "${flow.trigger.action.key}",`)
                   .writeLine("values: {")
                   .conditionalWriteLine(
-                    !!flow.trigger.formattedInputs,
+                    Boolean(flow.trigger.formattedInputs),
                     flow.trigger.formattedInputs as string,
                   )
                   .writeLine("},")
@@ -248,8 +253,8 @@ function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
 
               flow.steps.forEach((step) => {
                 writer
-                  .conditionalWriteLine(!!step.loopString, step.loopString as string)
-                  .conditionalWriteLine(!!step.branchString, step.branchString as string)
+                  .conditionalWriteLine(Boolean(step.loopString), step.loopString || "")
+                  .conditionalWriteLine(Boolean(step.branchString), step.branchString || "")
                   .conditionalWriteLine(
                     !step.loopString && !step.branchString,
                     `const ${camelCase(step.name)} = await context.components.${camelCase(
@@ -270,8 +275,6 @@ function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
         isExportEquals: false,
         expression: flow.key,
       });
-
-      file.formatText();
     } catch (e) {
       // If we hit an error generating a flow, we just want to skip that flow rather than
       // abort the entire generation process.
@@ -298,8 +301,6 @@ function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
       writer.writeLine(`[ ${flowKeys.join(", ")} ]`);
     },
   });
-
-  indexFile.formatText();
 }
 
 function writeComponentRegistry(project: Project, components: UsedComponents, prefix?: string) {
@@ -349,8 +350,6 @@ function writeComponentRegistry(project: Project, components: UsedComponents, pr
     ...componentImports,
   ]);
 
-  file.formatText();
-
   return file;
 }
 
@@ -397,7 +396,7 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
 
                   configVar.inputs.forEach((input) => {
                     writer
-                      .writeLine(`"${input.name}": {`)
+                      .writeLine(`${wrapValue(input.name)}: {`)
                       .conditionalWriteLine(
                         input.type === "configVar",
                         `configVar: "${input.value}",`,
@@ -407,11 +406,11 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                         `value: ${wrapValue(input.value, true)},`,
                       )
                       .conditionalWriteLine(
-                        !!input.meta.permissionAndVisibilityType,
+                        Boolean(input.meta.permissionAndVisibilityType),
                         `permissionAndVisibilityType: "${input.meta.permissionAndVisibilityType}",`,
                       )
                       .conditionalWriteLine(
-                        !!input.meta.writeOnly,
+                        Boolean(input.meta.writeOnly),
                         `writeOnly: ${input.meta.writeOnly},`,
                       )
                       .conditionalWriteLine(
@@ -435,7 +434,7 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
 
                   configVar.inputs.forEach((input) => {
                     writer
-                      .writeLine(`"${input.name}": {`)
+                      .writeLine(`${wrapValue(input.name)}: {`)
                       .conditionalWriteLine(
                         input.type === "configVar",
                         `configVar: "${input.value}",`,
@@ -456,7 +455,7 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                     .writeLine(`dataType: "${configVar.dataType}",`)
                     .writeLine(`description: ${wrapValue(configVar.description)},`)
                     .conditionalWriteLine(
-                      !!configVar.meta?.permissionAndVisibilityType,
+                      Boolean(configVar.meta?.permissionAndVisibilityType),
                       `permissionAndVisibilityType: "${configVar.meta?.permissionAndVisibilityType}",`,
                     )
                     .conditionalWriteLine(
@@ -464,11 +463,11 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                       `visibleToOrgDeployer: ${configVar.meta?.visibleToOrgDeployer},`,
                     )
                     .conditionalWriteLine(
-                      !!configVar.collectionType,
+                      Boolean(configVar.collectionType),
                       `collectionType: "${configVar.collectionType}", defaultValue: ${configVar.defaultValue},`,
                     )
                     .conditionalWriteLine(
-                      !configVar.collectionType && !!configVar.defaultValue,
+                      Boolean(!configVar.collectionType && configVar.defaultValue),
                       `defaultValue: ${wrapValue(configVar.defaultValue || "")},`,
                     )
                     .writeLine("}),");
@@ -495,8 +494,6 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
         }, []),
       },
     ]);
-
-    file.formatText();
   } catch (e) {
     console.error("Error generating config page:", e);
   }

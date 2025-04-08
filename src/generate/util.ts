@@ -56,6 +56,7 @@ const updateDependencies = async (dependencies: Record<string, string>) => {
       }
     } catch {
       // If we do not find a latest version, continue with "*".
+      // This also bails us out in test scenarios.
     }
 
     return [name, version];

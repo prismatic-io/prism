@@ -10,139 +10,187 @@ import { SourceFile } from "ts-morph";
 
 describe("wrapValue", () => {
   it.each([
-    {
-      input: undefined,
-      expected: '""',
-    },
-    {
-      input: "",
-      expected: '""',
-    },
-    {
-      input: "my string",
-      expected: '"my string"',
-    },
-    {
-      input: "my\nmultiline string",
-      expected: "`my\nmultiline string`",
-    },
-    {
-      input: "7",
-      expected: "7",
-    },
-    {
-      input: 7,
-      expected: 7,
-    },
-    {
-      input: false,
-      expected: false,
-    },
-    {
-      input: "true",
-      expected: "true",
-    },
-  ])("correctly wraps the input value", ({ input, expected }) => {
+    [
+      "undefined => empty string",
+      {
+        input: undefined,
+        expected: '""',
+      },
+    ],
+    [
+      "empty string => empty string",
+      {
+        input: "",
+        expected: '""',
+      },
+    ],
+    [
+      "normal string",
+      {
+        input: "my string",
+        expected: '"my string"',
+      },
+    ],
+    [
+      "multiline string",
+      {
+        input: "my\nmultiline string",
+        expected: "`my\nmultiline string`",
+      },
+    ],
+    [
+      "stringified number",
+      {
+        input: "7",
+        expected: "7",
+      },
+    ],
+    [
+      "actual integer",
+      {
+        input: 7,
+        expected: 7,
+      },
+    ],
+    [
+      "actual boolean",
+      {
+        input: false,
+        expected: false,
+      },
+    ],
+    [
+      "stringified boolean",
+      {
+        input: "true",
+        expected: "true",
+      },
+    ],
+  ])("correctly wraps the input value: %s", (_scenario, { input, expected }) => {
     expect(wrapValue(input)).toStrictEqual(expected);
   });
 });
 
 describe("convertYAMLReferenceValue", () => {
   it.each([
-    {
-      refValue: "myAction.results.1",
-      trigger: undefined,
-      loop: undefined,
-      expected: "myAction.data[1]",
-    },
-    {
-      refValue: "codeBlock.results",
-      trigger: undefined,
-      loop: undefined,
-      expected: "codeBlock.data",
-    },
-    {
-      refValue: "myTrigger.results",
-      trigger: {
-        isTrigger: true,
-        description: "",
-        inputs: {},
-        name: "My Trigger",
-        action: {
-          component: {
-            key: "my-component",
-            isPublic: true,
-            version: 1,
-          },
-          key: "my-trigger",
-        },
+    [
+      "basic step result",
+      {
+        refValue: "myAction.results.1",
+        trigger: undefined,
+        loop: undefined,
+        expected: "myAction.data[1]",
       },
-      loop: undefined,
-      expected: "params.onTrigger.results",
-    },
-    {
-      refValue: "myLoop.results.2.test",
-      trigger: undefined,
-      loop: {
-        description: "",
-        inputs: {},
-        name: "My Trigger",
-        action: {
-          component: {
-            key: "loop",
-            isPublic: true,
-            version: 1,
-          },
-          key: "loopOverItems",
-        },
+    ],
+    [
+      "code block result",
+      {
+        refValue: "codeBlock.results",
+        trigger: undefined,
+        loop: undefined,
+        expected: "codeBlock.data",
       },
-      expected: "myLoop.data[2].test",
-    },
-    {
-      refValue: "myLoop.currentItem.test",
-      trigger: undefined,
-      loop: {
-        description: "",
-        inputs: {},
-        name: "My Trigger",
-        action: {
-          component: {
-            key: "loop",
-            isPublic: true,
-            version: 1,
+    ],
+    [
+      "trigger result",
+      {
+        refValue: "myTrigger.results",
+        trigger: {
+          isTrigger: true,
+          description: "",
+          inputs: {},
+          name: "My Trigger",
+          action: {
+            component: {
+              key: "my-component",
+              isPublic: true,
+              version: 1,
+            },
+            key: "my-trigger",
           },
-          key: "loopNTimes",
         },
+        loop: undefined,
+        expected: "params.onTrigger.results",
       },
-      expected: "myLoop.data[myLoopIdx].test",
-    },
-    {
-      refValue: "myLoop.currentItem.test",
-      trigger: undefined,
-      loop: {
-        description: "",
-        inputs: {},
-        name: "My Trigger",
-        action: {
-          component: {
-            key: "loop",
-            isPublic: true,
-            version: 1,
+    ],
+    [
+      "loop step result with index",
+      {
+        refValue: "myLoop.results.2.test",
+        trigger: undefined,
+        loop: {
+          description: "",
+          inputs: {},
+          name: "My Trigger",
+          action: {
+            component: {
+              key: "loop",
+              isPublic: true,
+              version: 1,
+            },
+            key: "loopOverItems",
           },
-          key: "loopOverItems",
         },
+        expected: "myLoop.data[2].test",
       },
-      expected: "myLoopItem.test",
+    ],
+    [
+      "loop step result with nested fields",
+      {
+        refValue: "myLoop.currentItem.test",
+        trigger: undefined,
+        loop: {
+          description: "",
+          inputs: {},
+          name: "My Trigger",
+          action: {
+            component: {
+              key: "loop",
+              isPublic: true,
+              version: 1,
+            },
+            key: "loopNTimes",
+          },
+        },
+        expected: "myLoop.data[myLoopIdx].test",
+      },
+    ],
+    [
+      "loop currentItem result",
+      {
+        refValue: "myLoop.currentItem.test",
+        trigger: undefined,
+        loop: {
+          description: "",
+          inputs: {},
+          name: "My Trigger",
+          action: {
+            component: {
+              key: "loop",
+              isPublic: true,
+              version: 1,
+            },
+            key: "loopOverItems",
+          },
+        },
+        expected: "myLoopItem.test",
+      },
+    ],
+    [
+      "nested reference where the keys have spaces",
+      {
+        refValue: "myRef.results.this has spaces in it.this also has spaces in it.test",
+        trigger: undefined,
+        loop: undefined,
+        expected: 'myRef.data["this has spaces in it"]["this also has spaces in it"].test',
+      },
+    ],
+  ])(
+    "correctly converts YAML refs into valid JS refs: %s",
+    (_scenario, { refValue, trigger, loop, expected }) => {
+      expect(convertYAMLReferenceValue(refValue, trigger, loop)).toStrictEqual(expected);
     },
-    {
-      refValue: "myRef.results.this has spaces in it.this also has spaces in it.test",
-      trigger: undefined,
-      loop: undefined,
-      expected: 'myRef.data["this has spaces in it"]["this also has spaces in it"].test',
-    },
-  ])("correctly converts YAML refs into valid JS refs", ({ refValue, trigger, loop, expected }) => {
-    expect(convertYAMLReferenceValue(refValue, trigger, loop)).toStrictEqual(expected);
-  });
+  );
 });
 
 describe("convertTemplateInput", () => {

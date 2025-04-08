@@ -16,11 +16,6 @@ coverage
 "
 `;
 
-exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.prettierrc 1`] = `
-"{}
-"
-`;
-
 exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/tsconfig.json 1`] = `
 "{
   "compilerOptions": {
@@ -91,7 +86,12 @@ declare module "@prismatic-io/spectral" {
 `;
 
 exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/configPages.ts 1`] = `
-"import { configPage, configVar, connectionConfigVar, dataSourceConfigVar } from "@prismatic-io/spectral";
+"import {
+  configPage,
+  configVar,
+  connectionConfigVar,
+  dataSourceConfigVar,
+} from "@prismatic-io/spectral";
 
 export const configPages = {
   "Connections Page": configPage({
@@ -104,42 +104,43 @@ export const configPages = {
           component: "slack",
           key: "oauth2",
           values: {
-            "authorizeUrl": {
+            authorizeUrl: {
               value: "https://slack.com/oauth/v2/authorize",
               permissionAndVisibilityType: "embedded",
               visibleToOrgDeployer: false,
             },
-            "clientId": {
+            clientId: {
               value: "7610303900993.7610321662833",
               permissionAndVisibilityType: "embedded",
               visibleToOrgDeployer: false,
             },
-            "clientSecret": {
+            clientSecret: {
               value: "b6acb317302a8ce8a01fbf24ab371338",
               permissionAndVisibilityType: "embedded",
               visibleToOrgDeployer: false,
             },
-            "isUser": {
+            isUser: {
               value: "false",
               permissionAndVisibilityType: "embedded",
               visibleToOrgDeployer: false,
             },
-            "revokeUrl": {
+            revokeUrl: {
               value: "https://slack.com/api/auth.revoke",
               permissionAndVisibilityType: "embedded",
               visibleToOrgDeployer: false,
             },
-            "scopes": {
-              value: "chat:write chat:write.public chat:write.customize channels:read groups:read im:read mpim:read users:read",
+            scopes: {
+              value:
+                "chat:write chat:write.public chat:write.customize channels:read groups:read im:read mpim:read users:read",
               permissionAndVisibilityType: "embedded",
               visibleToOrgDeployer: false,
             },
-            "signingSecret": {
+            signingSecret: {
               value: "32cf662b1f05eb9a4472ef6900f0bb53",
               permissionAndVisibilityType: "embedded",
               visibleToOrgDeployer: false,
             },
-            "tokenUrl": {
+            tokenUrl: {
               value: "https://slack.com/api/oauth.v2.access",
               permissionAndVisibilityType: "embedded",
               visibleToOrgDeployer: false,
@@ -177,14 +178,20 @@ export const configPages = {
         dataType: "string",
         description: "",
         permissionAndVisibilityType: "embedded",
-        collectionType: "valuelist", defaultValue: ["abc", "def", "ghi"],
+        collectionType: "valuelist",
+        defaultValue: ["abc", "def", "ghi"],
       }),
       "Simple key value list": configVar({
         stableKey: "Simple key value list",
         dataType: "string",
         description: "",
         permissionAndVisibilityType: "embedded",
-        collectionType: "keyvaluelist", defaultValue: [{ "key": "key1", "value": "myvalue" }, { "key": "key2", "value": "myothervalue" }, { "key": "key3", "value": "myotherothervalue" }],
+        collectionType: "keyvaluelist",
+        defaultValue: [
+          { key: "key1", value: "myvalue" },
+          { key: "key2", value: "myothervalue" },
+          { key: "key3", value: "myotherothervalue" },
+        ],
       }),
     },
   }),
@@ -198,22 +205,22 @@ export const configPages = {
           component: "slack",
           key: "selectChannels",
           values: {
-            "connection": {
+            connection: {
               configVar: "Slack Connection",
             },
-            "includeImChannels": {
+            includeImChannels: {
               value: "false",
             },
-            "includeMultiPartyImchannels": {
+            includeMultiPartyImchannels: {
               value: "false",
             },
-            "includePrivateChannels": {
+            includePrivateChannels: {
               value: "false",
             },
-            "includePublicChannels": {
+            includePublicChannels: {
               value: "true",
             },
-            "showIdInDropdown": {
+            showIdInDropdown: {
               value: "false",
             },
           },
@@ -221,8 +228,7 @@ export const configPages = {
       }),
     },
   }),
-}
-  ;
+};
 "
 `;
 
@@ -242,9 +248,8 @@ const testIntegrationIntegration = integration({
   flows,
   configPages,
   componentRegistry,
-  });
-  export default testIntegrationIntegration
-;
+});
+export default testIntegrationIntegration;
 "
 `;
 
@@ -273,8 +278,7 @@ export const basic = flow({
     });
     return { data: writeLogMessage };
   },
-})
-  ;
+});
 
 export default basic;
 "
@@ -285,8 +289,7 @@ exports[`YAML CNI generation tests test convert integration should match scaffol
 import { stepConfigVarReferences } from "./stepConfigVarReferences";
 import { loopBranchTests } from "./loopBranchTests";
 
-export default [basic, stepConfigVarReferences, loopBranchTests]
-  ;
+export default [basic, stepConfigVarReferences, loopBranchTests];
 "
 `;
 
@@ -325,8 +328,7 @@ export const stepConfigVarReferences = flow({
     });
     return { data: dataSourceReference };
   },
-})
-  ;
+});
 
 export default stepConfigVarReferences;
 "
@@ -398,11 +400,13 @@ export const loopBranchTests = flow({
       level: "info",
       message: loopNTimes.data[5],
     });
-    const selectExecutedStepResult = await context.components.branch.selectExecutedStepResult({ stepResults: ["codeBlock2.results",], });
+    const selectExecutedStepResult =
+      await context.components.branch.selectExecutedStepResult({
+        stepResults: ["codeBlock2.results"],
+      });
     return { data: selectExecutedStepResult };
   },
-})
-  ;
+});
 
 export default loopBranchTests;
 "

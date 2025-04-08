@@ -53,8 +53,6 @@ describe("component generation tests", () => {
       it("should match scaffolding snapshots", async () => {
         process.chdir(tempPath);
 
-        // TODO: Bun snapshotting has a bug where it is dropping the slash for `\.ts` in webpack.config.js.
-        // Exclude package.json now that we're fetching the latest Spectral version from the registry.
         const targets = await walkDir(name, [".png", "webpack.config.js", "package.json"]);
         for (const target of targets) {
           const contents = await readFile(target, "utf-8");

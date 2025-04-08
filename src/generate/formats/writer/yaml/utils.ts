@@ -29,7 +29,7 @@ export function valueIsBoolean(value: unknown) {
   return isBoolean;
 }
 
-/* Given a valid YAML value, wrap it in quotes, escaped backticks,
+/* Given a valid YAML value, wrap it in some kind of quotation
  * or nothing depending on the case. */
 export function wrapValue(
   value: ValidYAMLValue | ValidComplexYAMLValue | undefined,
@@ -294,7 +294,7 @@ export function writeLoopString(
     throw `Cannot generate loop code for a non-loop step: ${step.name}`;
   }
 
-  (step.steps || []).some((childStep) => {
+  (step.steps || []).forEach((childStep) => {
     loopString = convertBody(childStep, loopString, file, trigger, loop);
   });
 
@@ -364,7 +364,6 @@ export async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
   const componentKeys = Object.keys(componentMap);
 
   try {
-    // @TODO - just look at component public: true/false
     const response = await gqlRequest({
       document: gql`
           query getPublicComponents($componentKeys: [String]) {
