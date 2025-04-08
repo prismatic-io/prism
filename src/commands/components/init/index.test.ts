@@ -6,13 +6,7 @@ import InitializeComponent from ".";
 import { readFile } from "fs-extra";
 import { walkDir } from "../../../fs";
 
-const tempPath = path.resolve("src/commands/components/init/temp");
-if (!fs.existsSync(tempPath)) {
-  fs.mkdirSync(tempPath);
-}
-process.chdir(tempPath);
-
-const componentGenerationTimeout = 5 * 60 * 1000; // 5 minutes
+const COMPONENT_GENERATION_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 interface SpecMeta {
   type: "openApi" | "wsdl";
@@ -20,39 +14,52 @@ interface SpecMeta {
   name: string;
 }
 
-const specs = fs.readdirSync("../fixtures/specs").map<SpecMeta>((fileName) => {
-  const type = fileName.endsWith(".wsdl") ? "wsdl" : "openApi";
-  const [name] = fileName.toLowerCase().split(".");
-  return { type, fileName, name };
-});
-
 describe("component generation tests", () => {
+  const basePath = process.cwd();
+  const componentsPath = path.resolve("src/commands/components");
+  const tempPath = path.resolve(`${componentsPath}/init/temp`);
+
+  if (!fs.existsSync(tempPath)) {
+    fs.mkdirSync(tempPath);
+  }
+
+  const specs = fs
+    .readdirSync(`${componentsPath}/init/fixtures/specs`)
+    .map<SpecMeta>((fileName) => {
+      const type = fileName.endsWith(".wsdl") ? "wsdl" : "openApi";
+      const [name] = fileName.toLowerCase().split(".");
+      return { type, fileName, name };
+    });
+
   for (const { type, fileName, name } of specs) {
     describe(`${type} - ${name}`, () => {
       it(
         "should generate successfully",
         async () => {
-          const startingCwd = process.cwd();
-          expect(startingCwd).toStrictEqual(tempPath);
+          process.chdir(tempPath);
 
           await InitializeComponent.run([
             name,
             `--${kebabCase(type)}-path=../fixtures/specs/${fileName}`,
           ]);
 
-          expect(process.cwd()).toStrictEqual(startingCwd);
+          expect(process.cwd()).toStrictEqual(tempPath);
+
+          process.chdir(basePath);
         },
-        componentGenerationTimeout,
+        COMPONENT_GENERATION_TIMEOUT,
       );
 
       it("should match scaffolding snapshots", async () => {
-        // TODO: Bun snapshotting has a bug where it is dropping the slash for `\.ts` in webpack.config.js.
-        // Exclude package.json now that we're fetching the latest Spectral version from the registry.
+        process.chdir(tempPath);
+
         const targets = await walkDir(name, [".png", "webpack.config.js", "package.json"]);
         for (const target of targets) {
           const contents = await readFile(target, "utf-8");
           expect(contents).toMatchSnapshot(target);
         }
+
+        process.chdir(basePath);
       });
     });
   }

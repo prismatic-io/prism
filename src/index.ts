@@ -67,6 +67,7 @@ import CustomersUsersListCommand from "./commands/customers/users/list.js";
 import CustomersUsersRolesCommand from "./commands/customers/users/roles.js";
 import CustomersUsersUpdateCommand from "./commands/customers/users/update.js";
 import ExecutionsStepResultGetCommand from "./commands/executions/step-result/get.js";
+import ExperimentalYamlInitCommand from "./commands/experimental/yaml/index.js";
 import InstancesConfigVarsListCommand from "./commands/instances/config-vars/list.js";
 import InstancesFlowConfigsListCommand from "./commands/instances/flow-configs/list.js";
 import InstancesFlowConfigsTestCommand from "./commands/instances/flow-configs/test.js";
@@ -162,6 +163,7 @@ export const Commands = {
   "customers:users:roles": CustomersUsersRolesCommand,
   "customers:users:update": CustomersUsersUpdateCommand,
   "executions:step-result:get": ExecutionsStepResultGetCommand,
+  "experimental:yaml": ExperimentalYamlInitCommand,
   "instances:config-vars:list": InstancesConfigVarsListCommand,
   "instances:flow-configs:list": InstancesFlowConfigsListCommand,
   "instances:flow-configs:test": InstancesFlowConfigsTestCommand,
