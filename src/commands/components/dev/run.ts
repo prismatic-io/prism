@@ -69,7 +69,7 @@ export default class RunCommand extends PrismaticBaseCommand {
       );
     }
 
-    let connection: ConfigVariable;
+    let configVariables: ConfigVariable[];
 
     // Get connection from the integration's test instance
     if (integrationId) {
@@ -109,8 +109,7 @@ export default class RunCommand extends PrismaticBaseCommand {
         },
       });
 
-      const nodes: ConfigVariable[] = result.integration.testConfigVariables.nodes;
-      [connection] = nodes.filter(({ requiredConfigVariable: { key } }) => key === connectionKey);
+      configVariables = result.integration.testConfigVariables.nodes;
     } else {
       // Get the config variable from an instance
       const result = await gqlRequest({
@@ -149,10 +148,12 @@ export default class RunCommand extends PrismaticBaseCommand {
         },
       });
 
-      const nodes: ConfigVariable[] = result.instance.configVariables.nodes;
-
-      [connection] = nodes.filter(({ requiredConfigVariable: { key } }) => key === connectionKey);
+      configVariables = result.instance.configVariables.nodes;
     }
+
+    const [connection] = configVariables.filter(
+      ({ requiredConfigVariable: { key } }) => key === connectionKey,
+    );
 
     if (!connection) {
       ux.error("Failed to find active connection with that name.", { exit: 1 });
