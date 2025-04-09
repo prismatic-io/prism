@@ -3,6 +3,8 @@ configPages:
   - elements:
       - type: configVar
         value: Slack Connection
+      - type: configVar
+        value: Salesforce Connection
     name: Connections Page
     tagline: ''
   - elements:
@@ -347,6 +349,18 @@ flows:
           - action:
               component:
                 isPublic: true
+                key: sleep
+                version: LATEST
+              key: sleep
+            description: ''
+            inputs:
+              ms:
+                type: value
+                value: '1000'
+            name: Sleep
+          - action:
+              component:
+                isPublic: true
                 key: log
                 version: LATEST
               key: writeLog
@@ -552,4 +566,53 @@ requiredConfigVars:
         type: value
         value: 'false'
     key: Slack Channels Data Source
+    orgOnly: false
+  - connection:
+      component:
+        isPublic: true
+        key: salesforce
+        version: LATEST
+      key: oauth2
+    dataType: connection
+    inputs:
+      authorizeUrl:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'https://login.salesforce.com/services/oauth2/authorize'
+      clientId:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: '123'
+      clientSecret:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: '456'
+      revokeUrl:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'https://login.salesforce.com/services/oauth2/revoke'
+      tokenUrl:
+        meta:
+          orgOnly: true
+          visibleToCustomerDeployer: false
+          visibleToOrgDeployer: false
+        type: value
+        value: 'https://login.salesforce.com/services/oauth2/token'
+    key: Salesforce Connection
+    meta:
+      visibleToCustomerDeployer: true
+      visibleToOrgDeployer: true
+    onPremiseConnectionConfig: disallowed
     orgOnly: false

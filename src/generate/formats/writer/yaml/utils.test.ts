@@ -5,8 +5,12 @@ import {
   createFlowInputsString,
   writeLoopString,
   wrapValue,
+  extractComponentList,
 } from "./utils";
 import { SourceFile } from "ts-morph";
+import { load } from "js-yaml";
+import { promises as fs } from "fs";
+import { IntegrationObjectFromYAML } from "./types";
 
 describe("wrapValue", () => {
   it.each([
@@ -406,4 +410,65 @@ describe("writeLoopString", () => {
       expect(writeLoopString(step, file, trigger, loop)).toStrictEqual(expected);
     },
   );
+});
+
+const TEST_YAML_PATH = "src/commands/experimental/yaml/fixtures/specs/test-integration.yaml";
+
+describe("extractComponentList", () => {
+  it("extracts the right list of components", async () => {
+    const basePath = process.env.PWD ?? process.cwd();
+    process.chdir(basePath);
+    console.log("BASE PATH", basePath);
+    const integration = load(
+      await fs.readFile(TEST_YAML_PATH, "utf-8"),
+    ) as IntegrationObjectFromYAML;
+    const result = await extractComponentList(integration);
+    expect(result).toMatchObject({
+      branch: {
+        isPublic: true,
+        registryPrefix: "@component-manifests",
+        version: "LATEST",
+      },
+      code: {
+        isPublic: true,
+        registryPrefix: "@component-manifests",
+        version: "LATEST",
+      },
+      log: {
+        isPublic: true,
+        registryPrefix: "@component-manifests",
+        version: "LATEST",
+      },
+      loop: {
+        isPublic: true,
+        registryPrefix: "@component-manifests",
+        version: "LATEST",
+      },
+      salesforce: {
+        isPublic: true,
+        registryPrefix: "@component-manifests",
+        version: "LATEST",
+      },
+      "schedule-triggers": {
+        isPublic: true,
+        registryPrefix: "@component-manifests",
+        version: "LATEST",
+      },
+      slack: {
+        isPublic: true,
+        registryPrefix: "@component-manifests",
+        version: "LATEST",
+      },
+      sleep: {
+        isPublic: true,
+        registryPrefix: "@component-manifests",
+        version: "LATEST",
+      },
+      "webhook-triggers": {
+        isPublic: true,
+        registryPrefix: "@component-manifests",
+        version: "LATEST",
+      },
+    });
+  });
 });

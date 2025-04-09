@@ -13,6 +13,7 @@ import {
   formatConfigVarInputs,
   getPermissionAndVisibilityType,
   wrapValue,
+  UsedComponent,
 } from "./utils.js";
 import {
   IndentationText,
@@ -24,9 +25,6 @@ import {
 import path from "path";
 import { updatePackageJson } from "../../../util.js";
 import { writeBranchString, getBranchKind } from "./branching.js";
-import { formatSourceFiles } from "../../../../utils/generate.js";
-
-type UsedComponents = { public: string[]; private: string[] };
 
 type ImportDeclaration = {
   moduleSpecifier: string;
@@ -34,7 +32,7 @@ type ImportDeclaration = {
   namedImports?: string[];
 };
 
-const EXCLUDED_PUBLIC_COMPONENTS = ["loop"];
+const EXCLUDED_PUBLIC_COMPONENTS = ["webhook-triggers", "loop"];
 
 export async function writeIntegration(
   integration: IntegrationObjectFromYAML,
@@ -47,8 +45,7 @@ export async function writeIntegration(
   });
   project.createDirectory("src");
 
-  // @TODO - also grab components from connections and configvars
-  const usedComponents = await extractComponentList(integration.flows);
+  const usedComponents = await extractComponentList(integration, registryPrefix);
 
   writeIndex(project, integration);
   writeFlows(project, integration);
@@ -65,22 +62,18 @@ export async function writeIntegration(
 
 export async function writePackageJson(
   name: string,
-  usedComponents: UsedComponents,
-  registryPrefix?: string,
+  usedComponents: Record<string, UsedComponent>,
 ) {
   const manifests: Record<string, string> = {};
 
-  usedComponents.public.forEach((componentKey) => {
-    if (!EXCLUDED_PUBLIC_COMPONENTS.includes(componentKey)) {
-      const packageName = `@component-manifests/${componentKey}`;
+  for (const [key, value] of Object.entries(usedComponents)) {
+    if (!EXCLUDED_PUBLIC_COMPONENTS.includes(key)) {
+      const packageName = `${value.registryPrefix}/${key}`;
+      // @TODO: We have access to the version here, we can eventually
+      // attempt to resolve the package version for them here.
       manifests[packageName] = "*";
     }
-  });
-
-  usedComponents.private.forEach((componentKey) => {
-    const packageName = `${registryPrefix ?? "@FIXME-YOUR-CUSTOM-NPM-REGISTRY"}/${componentKey}`;
-    manifests[packageName] = "*";
-  });
+  }
 
   await updatePackageJson({
     name: kebabCase(name),
@@ -303,7 +296,11 @@ function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
   });
 }
 
-function writeComponentRegistry(project: Project, components: UsedComponents, prefix?: string) {
+function writeComponentRegistry(
+  project: Project,
+  components: Record<string, UsedComponent>,
+  prefix?: string,
+) {
   const file = project.createSourceFile(path.join("src", "componentRegistry.ts"), undefined, {
     scriptKind: ScriptKind.TS,
   });
@@ -318,23 +315,15 @@ function writeComponentRegistry(project: Project, components: UsedComponents, pr
         initializer: (writer) => {
           writer.writeLine("componentManifests({");
 
-          components.public.forEach((component) => {
-            if (component !== "webhook-triggers") {
+          for (const [key, value] of Object.entries(components)) {
+            if (!EXCLUDED_PUBLIC_COMPONENTS.includes(key)) {
               componentImports.push({
-                moduleSpecifier: `@component-manifests/${component}`,
-                defaultImport: camelCase(component),
+                moduleSpecifier: `${value.registryPrefix}/${key}`,
+                defaultImport: camelCase(key),
               });
-              writer.writeLine(`${camelCase(component)},`);
+              writer.writeLine(`${camelCase(key)},`);
             }
-          });
-
-          components.private.forEach((component) => {
-            componentImports.push({
-              moduleSpecifier: `${prefix ?? "@FIXME-YOUR-CUSTOM-REGISTRY-HERE"}/${component}`,
-              defaultImport: camelCase(component),
-            });
-            writer.writeLine(`${camelCase(component)},`);
-          });
+          }
 
           writer.writeLine("})");
         },

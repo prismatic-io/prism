@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, spyOn } from "bun:test";
+import { describe, it, expect } from "bun:test";
 import GenerateIntegrationFromYAMLCommand from "./index.js";
 import fs from "fs";
 import path from "path";
@@ -6,13 +6,9 @@ import { readFile } from "fs-extra";
 import { walkDir } from "../../../fs.js";
 
 const CONVERT_GENERATION_TIMEOUT = 5 * 60 * 5; // 5 minutes
-interface SpecMeta {
-  fileName: string;
-  name: string;
-}
 
 describe("YAML CNI generation tests", () => {
-  const basePath = process.cwd();
+  const basePath = process.env.PWD ?? process.cwd();
   const commandPath = path.resolve("src/commands/experimental/yaml");
   const tempPath = path.resolve(`${commandPath}/temp`);
 
