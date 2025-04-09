@@ -148,6 +148,41 @@ export const configPages = {
           },
         },
       }),
+      "Salesforce Connection": connectionConfigVar({
+        stableKey: "Salesforce Connection",
+        dataType: "connection",
+        connection: {
+          component: "salesforce",
+          key: "oauth2",
+          values: {
+            authorizeUrl: {
+              value: "https://login.salesforce.com/services/oauth2/authorize",
+              permissionAndVisibilityType: "embedded",
+              visibleToOrgDeployer: false,
+            },
+            clientId: {
+              value: "123",
+              permissionAndVisibilityType: "embedded",
+              visibleToOrgDeployer: false,
+            },
+            clientSecret: {
+              value: "456",
+              permissionAndVisibilityType: "embedded",
+              visibleToOrgDeployer: false,
+            },
+            revokeUrl: {
+              value: "https://login.salesforce.com/services/oauth2/revoke",
+              permissionAndVisibilityType: "embedded",
+              visibleToOrgDeployer: false,
+            },
+            tokenUrl: {
+              value: "https://login.salesforce.com/services/oauth2/token",
+              permissionAndVisibilityType: "embedded",
+              visibleToOrgDeployer: false,
+            },
+          },
+        },
+      }),
     },
   }),
   "Config Vars Page": configPage({
@@ -381,6 +416,10 @@ export const loopBranchTests = flow({
 
     const loopNTimes: { data: unknown[] } = { data: [] };
     for (let loopNTimesIdx = 0; loopNTimesIdx < 100; loopNTimesIdx++) {
+      const sleep = await context.components.sleep.sleep({
+        ms: 1000,
+      });
+
       const writeLogMessage2 = await context.components.log.writeLog({
         level: "info",
         message: loopOverItems.data[0],

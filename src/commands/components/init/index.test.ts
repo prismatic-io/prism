@@ -15,7 +15,7 @@ interface SpecMeta {
 }
 
 describe("component generation tests", () => {
-  const basePath = process.cwd();
+  const basePath = process.env.PWD ?? process.cwd();
   const componentsPath = path.resolve("src/commands/components");
   const tempPath = path.resolve(`${componentsPath}/init/temp`);
 

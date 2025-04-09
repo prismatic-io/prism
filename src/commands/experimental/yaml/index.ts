@@ -101,7 +101,7 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
             context,
           ),
         ),
-        writePackageJson(result.name, usedComponents, registryPrefix),
+        writePackageJson(result.name, usedComponents),
       ]);
 
       const filesToFormat = await getFilesToFormat(folderName);

@@ -1,11 +1,11 @@
 import {
   ActionObjectFromYAML,
+  ComponentObjectFromYAML,
   ConfigVarObjectFromYAML,
-  FlowObjectFromYAML,
+  IntegrationObjectFromYAML,
   ValidComplexYAMLValue,
   ValidYAMLValue,
 } from "./types.js";
-import { gql, gqlRequest } from "../../../../graphql.js";
 import { camelCase, xor } from "lodash-es";
 import { writeBranchString, getBranchKind } from "./branching.js";
 import { SourceFile } from "ts-morph";
@@ -324,16 +324,39 @@ export function formatConfigVarInputs(configVar: ConfigVarObjectFromYAML) {
   });
 }
 
-/* Returns of map of component names and a boolean denoting if the component is public. */
-export async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
-  const componentMap: Record<string, boolean> = {};
-  const stepListsToProcess: Array<Array<ActionObjectFromYAML>> = [];
+export type UsedComponent = {
+  isPublic: boolean;
+  version: string | number;
+  registryPrefix: string;
+};
 
+const PUBLIC_REGISTRY = "@component-manifests";
+const EXCLUDED_PUBLIC_COMPONENTS = ["webhook-triggers", "loop"];
+
+function _extractComponentData(component: ComponentObjectFromYAML, customRegistry: string) {
+  const { key, isPublic, version } = component;
+  return {
+    version,
+    isPublic,
+    registryPrefix: isPublic ? PUBLIC_REGISTRY : customRegistry,
+  };
+}
+
+/* Returns of map of component names and a boolean denoting if the component is public. */
+export async function extractComponentList(
+  integration: IntegrationObjectFromYAML,
+  customRegistry = "@FIXME-YOUR-CUSTOM-NPM-REGISTRY",
+) {
+  const componentMap: Record<string, UsedComponent> = {};
+  const stepListsToProcess: Array<Array<ActionObjectFromYAML>> = [];
+  const { flows, requiredConfigVars } = integration;
+
+  // Flows
   flows.forEach((flow) => {
     flow.steps.forEach((step) => {
-      const key = step.action.component.key;
-      if (!componentMap[key]) {
-        componentMap[key] = true;
+      const { component } = step.action;
+      if (!EXCLUDED_PUBLIC_COMPONENTS.includes(component.key)) {
+        componentMap[component.key] = _extractComponentData(component, customRegistry);
       }
 
       if (step.steps) {
@@ -342,13 +365,14 @@ export async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
     });
   });
 
+  // Nested steps within flows
   while (stepListsToProcess.length > 0) {
     const current = stepListsToProcess.pop();
 
     (current ?? []).forEach((step) => {
-      const key = step.action.component.key;
-      if (!componentMap[key]) {
-        componentMap[key] = true;
+      const { component } = step.action;
+      if (!EXCLUDED_PUBLIC_COMPONENTS.includes(component.key)) {
+        componentMap[component.key] = _extractComponentData(component, customRegistry);
       }
 
       if (step.steps) {
@@ -357,42 +381,22 @@ export async function extractComponentList(flows: Array<FlowObjectFromYAML>) {
     });
   }
 
-  const componentKeys = Object.keys(componentMap);
+  // Config vars
+  requiredConfigVars.forEach((configVar) => {
+    if (configVar.dataSource) {
+      const { component } = configVar.dataSource;
+      if (!EXCLUDED_PUBLIC_COMPONENTS.includes(component.key)) {
+        componentMap[component.key] = _extractComponentData(component, customRegistry);
+      }
+    }
 
-  try {
-    const response = await gqlRequest({
-      document: gql`
-          query getPublicComponents($componentKeys: [String]) {
-            components(public: true, key_In: $componentKeys) {
-              nodes {
-                key
-              }
-            }
-          }
-        `,
-      variables: {
-        componentKeys,
-      },
-    });
+    if (configVar.connection) {
+      const { component } = configVar.connection;
+      if (!EXCLUDED_PUBLIC_COMPONENTS.includes(component.key)) {
+        componentMap[component.key] = _extractComponentData(component, customRegistry);
+      }
+    }
+  });
 
-    const publicComponents: Array<string> = response.components.nodes.map(
-      (node: { key: string }) => node.key,
-    );
-    const privateComponents: Array<string> = xor(publicComponents, componentKeys);
-
-    return {
-      public: publicComponents,
-      private: privateComponents,
-    };
-  } catch (e) {
-    console.error(
-      "Error fetching component registry info. Skipping component registry generation.",
-    );
-    console.error(e);
-
-    return {
-      public: [],
-      private: [],
-    };
-  }
+  return componentMap;
 }
