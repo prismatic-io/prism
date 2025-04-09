@@ -6,7 +6,6 @@ import {
   ValidComplexYAMLValue,
   ValidYAMLValue,
 } from "./types.js";
-import { gql, gqlRequest } from "../../../../graphql.js";
 import { camelCase, xor } from "lodash-es";
 import { writeBranchString, getBranchKind } from "./branching.js";
 import { SourceFile } from "ts-morph";
@@ -332,6 +331,7 @@ export type UsedComponent = {
 };
 
 const PUBLIC_REGISTRY = "@component-manifests";
+const EXCLUDED_PUBLIC_COMPONENTS = ["webhook-triggers", "loop"];
 
 function _extractComponentData(component: ComponentObjectFromYAML, customRegistry: string) {
   const { key, isPublic, version } = component;
@@ -355,7 +355,7 @@ export async function extractComponentList(
   flows.forEach((flow) => {
     flow.steps.forEach((step) => {
       const { component } = step.action;
-      if (!componentMap[component.key]) {
+      if (!EXCLUDED_PUBLIC_COMPONENTS.includes(component.key)) {
         componentMap[component.key] = _extractComponentData(component, customRegistry);
       }
 
@@ -371,7 +371,7 @@ export async function extractComponentList(
 
     (current ?? []).forEach((step) => {
       const { component } = step.action;
-      if (!componentMap[component.key]) {
+      if (!EXCLUDED_PUBLIC_COMPONENTS.includes(component.key)) {
         componentMap[component.key] = _extractComponentData(component, customRegistry);
       }
 
@@ -385,12 +385,16 @@ export async function extractComponentList(
   requiredConfigVars.forEach((configVar) => {
     if (configVar.dataSource) {
       const { component } = configVar.dataSource;
-      componentMap[component.key] = _extractComponentData(component, customRegistry);
+      if (!EXCLUDED_PUBLIC_COMPONENTS.includes(component.key)) {
+        componentMap[component.key] = _extractComponentData(component, customRegistry);
+      }
     }
 
     if (configVar.connection) {
       const { component } = configVar.connection;
-      componentMap[component.key] = _extractComponentData(component, customRegistry);
+      if (!EXCLUDED_PUBLIC_COMPONENTS.includes(component.key)) {
+        componentMap[component.key] = _extractComponentData(component, customRegistry);
+      }
     }
   });
 

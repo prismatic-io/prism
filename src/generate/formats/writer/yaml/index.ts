@@ -32,8 +32,6 @@ type ImportDeclaration = {
   namedImports?: string[];
 };
 
-const EXCLUDED_PUBLIC_COMPONENTS = ["webhook-triggers", "loop"];
-
 export async function writeIntegration(
   integration: IntegrationObjectFromYAML,
   registryPrefix?: string,
@@ -67,12 +65,10 @@ export async function writePackageJson(
   const manifests: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(usedComponents)) {
-    if (!EXCLUDED_PUBLIC_COMPONENTS.includes(key)) {
-      const packageName = `${value.registryPrefix}/${key}`;
-      // @TODO: We have access to the version here, we can eventually
-      // attempt to resolve the package version for them here.
-      manifests[packageName] = "*";
-    }
+    const packageName = `${value.registryPrefix}/${key}`;
+    // @TODO: If we can get access to the signature in the YAML export, we can
+    // eventually support resolving the package version for them here.
+    manifests[packageName] = "*";
   }
 
   await updatePackageJson({
@@ -316,13 +312,11 @@ function writeComponentRegistry(
           writer.writeLine("componentManifests({");
 
           for (const [key, value] of Object.entries(components)) {
-            if (!EXCLUDED_PUBLIC_COMPONENTS.includes(key)) {
-              componentImports.push({
-                moduleSpecifier: `${value.registryPrefix}/${key}`,
-                defaultImport: camelCase(key),
-              });
-              writer.writeLine(`${camelCase(key)},`);
-            }
+            componentImports.push({
+              moduleSpecifier: `${value.registryPrefix}/${key}`,
+              defaultImport: camelCase(key),
+            });
+            writer.writeLine(`${camelCase(key)},`);
           }
 
           writer.writeLine("})");

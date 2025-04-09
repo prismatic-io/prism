@@ -418,7 +418,6 @@ describe("extractComponentList", () => {
   it("extracts the right list of components", async () => {
     const basePath = process.env.PWD ?? process.cwd();
     process.chdir(basePath);
-    console.log("BASE PATH", basePath);
     const integration = load(
       await fs.readFile(TEST_YAML_PATH, "utf-8"),
     ) as IntegrationObjectFromYAML;
@@ -439,11 +438,6 @@ describe("extractComponentList", () => {
         registryPrefix: "@component-manifests",
         version: "LATEST",
       },
-      loop: {
-        isPublic: true,
-        registryPrefix: "@component-manifests",
-        version: "LATEST",
-      },
       salesforce: {
         isPublic: true,
         registryPrefix: "@component-manifests",
@@ -460,11 +454,6 @@ describe("extractComponentList", () => {
         version: "LATEST",
       },
       sleep: {
-        isPublic: true,
-        registryPrefix: "@component-manifests",
-        version: "LATEST",
-      },
-      "webhook-triggers": {
         isPublic: true,
         registryPrefix: "@component-manifests",
         version: "LATEST",
