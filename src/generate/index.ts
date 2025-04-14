@@ -42,6 +42,13 @@ export const generate = async ({
   await generateActions(project);
 
   componentProject.getSourceFile(path.join(projectRoot, "src", "index.test.ts"))?.delete();
+  componentProject.getSourceFile(path.join(projectRoot, "src", "actions.test.ts"))?.delete();
+  componentProject.getSourceFile(path.join(projectRoot, "src", "client.ts"))?.delete();
+  componentProject.getSourceFile(path.join(projectRoot, "src", "connections.ts"))?.delete();
+  componentProject.getSourceFile(path.join(projectRoot, "src", "dataSources.ts"))?.delete();
+  componentProject.getSourceFile(path.join(projectRoot, "src", "dataSources.test.ts"))?.delete();
+  componentProject.getSourceFile(path.join(projectRoot, "src", "triggers.ts"))?.delete();
+  componentProject.getSourceFile(path.join(projectRoot, "src", "triggers.test.ts"))?.delete();
 
   await componentProject.save();
 };
