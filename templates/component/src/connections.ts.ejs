@@ -1,0 +1,41 @@
+/**
+ * A connection is a special type of input for an action that contains
+ * information on how to connect to an external app or service. A
+ * connection can consist of one or many inputs that can represent things
+ * like API endpoints, keys, passwords, OAuth 2.0 fields, etc.
+ *
+ * For information on custom connector connections, see
+ * https://prismatic.io/docs/custom-connectors/connections/
+ *
+ * If you would like to add OAuth 2.0 support for a connection, see
+ * https://prismatic.io/docs/custom-connectors/connections/#writing-oauth-20-connections
+ */
+
+import { connection } from "@prismatic-io/spectral";
+
+export const apiKeyConnection = connection({
+  key: "apiKey",
+  display: {
+    label: "Acme Connection",
+    description: "Acme Connection",
+  },
+  inputs: {
+    baseUrl: {
+      label: "Acme Base URL",
+      type: "string",
+      required: true,
+      default:
+        "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
+      example: "https://my-company.api.acme.com/",
+    },
+    apiKey: {
+      label: "Acme API Key",
+      placeholder: "Acme API Key",
+      type: "password",
+      required: true,
+      comments: "Generate at https://app.acme.com/settings/api-keys",
+    },
+  },
+});
+
+export default [apiKeyConnection];

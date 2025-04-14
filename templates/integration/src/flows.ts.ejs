@@ -1,0 +1,46 @@
+/**
+ * Your integration will contain one or more flows that each perform different functions.
+ * When the flow is invoked, the onTrigger function runs first, followed by the onExecution
+ * function. This example flow fetches data from a third-party API and logs out metadata
+ * about the data it fetched.
+ */
+
+import { type Connection, flow } from "@prismatic-io/spectral";
+import { createAcmeClient } from "./client";
+import type { Item } from "./configPages";
+
+export const listItems = flow({
+  name: "List Items",
+  stableKey: "<%= flow.stableKey %>",
+  description: "Fetch items from an API",
+  onTrigger: async (context, payload, params) => {
+    const { logger } = context;
+
+    if (context.debug.enabled) {
+      logger.debug(`Trigger context: ${JSON.stringify(context)}`);
+      logger.debug(`Trigger payload: ${JSON.stringify(payload)}`);
+      logger.debug(`Trigger params: ${JSON.stringify(params)}`);
+    }
+
+    return Promise.resolve({ payload });
+  },
+  onExecution: async (context, params) => {
+    context.logger.info(
+      `During configuration, the customer selected the item "${context.configVars["Select Item"]}"`
+    );
+
+    // Create an authenticated reusable HTTP client from client.ts
+    const acmeErpClient = createAcmeClient(
+      context.configVars["Acme Connection"] as Connection
+    );
+    const response = await acmeErpClient.get<Item[]>("/items");
+    for (const item of response.data) {
+      context.logger.info(
+        `Item "${item.name}" with ID "${item.id}" has quantity "${item.quantity}"`
+      );
+    }
+    return { data: response.data };
+  },
+});
+
+export default [listItems];

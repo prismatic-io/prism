@@ -1,13 +1,14 @@
-import { Command, Args, Flags } from "@oclif/core";
 import { promises as fs } from "fs";
 import * as path from "path";
+import { Args, Command, Flags } from "@oclif/core";
 import { parseAndGenerate } from "wsdl-tsclient";
 import { Logger as WsdlTsClientLogger } from "wsdl-tsclient/dist/src/utils/logger.js";
 import { generate } from "../../../generate/index.js";
 import { updatePackageJson } from "../../../generate/util.js";
+import { devDependencies } from "../../../utils/devDependencies.js";
 import { VALID_NAME_REGEX, formatSourceFiles, getFilesToFormat } from "../../../utils/generate.js";
-import GenerateFormatsCommand from "./formats.js";
 import GenerateComponentCommand from "./component.js";
+import GenerateFormatsCommand from "./formats.js";
 
 export default class InitializeComponent extends Command {
   static description = "Initialize a new Component";
@@ -78,10 +79,10 @@ export default class InitializeComponent extends Command {
           {
             name,
             description: "Prism-generated Component",
-            connectionType: "basic",
           },
           this.config,
         );
+
         // Need to pop back as the WSDL generator assumes it's a directory up
         process.chdir(cwd);
 
@@ -101,27 +102,46 @@ export default class InitializeComponent extends Command {
             projectTemplateName: wsdlName,
             projectTemplatePath: wsdlPath,
           });
-
-          await updatePackageJson({
-            path: path.resolve(name, "package.json"),
-            dependencies: { soap: "0.40.0" },
-          });
         }
-
-        this.log(`
-"${name}" is ready for development.
-To install dependencies, run either "npm install" or "yarn install"
-To test the component, run "npm run test" or "yarn test"
-To build the component, run "npm run build" or "yarn build"
-To publish the component, run "prism components:publish"
-
-For documentation on writing custom components, visit https://prismatic.io/docs/custom-components/writing-custom-components/
-    `);
       }
 
+      // Return to new project's directory
       process.chdir(path.join(cwd, name));
+
+      await updatePackageJson({
+        path: "package.json",
+        scripts: {
+          build: "webpack",
+          publish: "npm run build && prism components:publish",
+          "generate:manifest": "npm run build && npx @prismatic-io/spectral component-manifest",
+          "generate:manifest:dev":
+            "npm run build && npx @prismatic-io/spectral component-manifest --skip-signature-verify",
+          test: "jest",
+          lint: "eslint --ext .ts .",
+        },
+        eslintConfig: {
+          root: true,
+          extends: ["@prismatic-io/eslint-config-spectral"],
+        },
+        dependencies: {
+          "@prismatic-io/spectral": "*",
+          ...(wsdlPath ? { soap: "1.1.10" } : {}),
+        },
+        devDependencies,
+      });
+
       const filesToFormat = await getFilesToFormat(name);
       await formatSourceFiles(name, filesToFormat);
+
+      this.log(`
+        "${name}" is ready for development.
+        To install dependencies, run either "npm install" or "yarn install"
+        To test the component, run "npm run test" or "yarn test"
+        To build the component, run "npm run build" or "yarn build"
+        To publish the component, run "prism components:publish"
+
+        For documentation on writing custom components, visit https://prismatic.io/docs/custom-connectors/
+        `);
     } finally {
       process.chdir(cwd);
     }

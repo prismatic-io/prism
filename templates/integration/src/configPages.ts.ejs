@@ -1,0 +1,78 @@
+/**
+ * When a customer deploys an instance of your integration,
+ * they will walk through a configuration wizard. In this
+ * example configuration wizard, we prompt the customer for
+ * their authentication information, and then use that
+ * information to fetch data for a dropdown menu.
+ *
+ * For more information on the code-native config wizards, see
+ * https://prismatic.io/docs/integrations/code-native/config-wizard/
+ */
+
+import {
+  type Connection,
+  type Element,
+  configPage,
+  connectionConfigVar,
+  dataSourceConfigVar,
+} from "@prismatic-io/spectral";
+import { createAcmeClient } from "./client";
+
+export interface Item {
+  id: number;
+  name: string;
+  quantity: number;
+}
+
+export const configPages = {
+  Connections: configPage({
+    elements: {
+      // Your end user will enter connection information on the first page
+      "Acme Connection": connectionConfigVar({
+        stableKey: "<%= configVars.connection.stableKey %>",
+        dataType: "connection",
+        inputs: {
+          baseUrl: {
+            label: "Acme Base URL",
+            type: "string",
+            required: true,
+            default:
+              "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
+            example: "https://my-company.api.acme.com/",
+          },
+          apiKey: {
+            label: "Acme API Key",
+            placeholder: "Acme API Key",
+            type: "password",
+            required: true,
+            comments: "You can enter any value here for this mock API.",
+          },
+        },
+      }),
+    },
+  }),
+  "Item Configuration": configPage({
+    elements: {
+      /**
+       * Dynamically fetch data using the existing connection, and present the
+       * data as a dropdown menu in the config wizard.
+       */
+      "Select Item": dataSourceConfigVar({
+        stableKey: "<%= configVars.dataSource.stableKey %>",
+        dataSourceType: "picklist",
+        perform: async (context) => {
+          // Create an authenticated reusable HTTP client from client.ts
+          const client = createAcmeClient(
+            context.configVars["Acme Connection"] as Connection
+          );
+          const { data: items } = await client.get<Item[]>("/items");
+          const options: Element[] = items.map((item) => ({
+            key: `${item.id}`,
+            label: item.name,
+          }));
+          return { result: options };
+        },
+      }),
+    },
+  }),
+};

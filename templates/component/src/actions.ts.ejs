@@ -1,0 +1,127 @@
+/**
+ * Actions are individual steps that you add to an integration
+ * built with the low-code designer. Each step receives a set
+ * of inputs and connection information for a third-party API,
+ * does work, and returns a result.
+ *
+ * For information on actions, see
+ * https://prismatic.io/docs/custom-connectors/actions/
+ */
+
+import { action, input, util } from "@prismatic-io/spectral";
+import { createAcmeClient } from "./client";
+
+interface Item {
+  id: number;
+  name: string;
+  quantity: number;
+}
+
+export const connectionInput = input({
+  label: "Acme Connection",
+  required: true,
+  type: "connection",
+});
+
+export const itemIdInput = input({
+  label: "Item ID",
+  required: true,
+  type: "string",
+  clean: util.types.toNumber,
+});
+
+/* List all items in inventory */
+const listItems = action({
+  display: {
+    label: "List All Items",
+    description: "List all items in our inventory",
+  },
+  inputs: {
+    // Declare an input for this action
+    acmeConnection: connectionInput,
+  },
+  perform: async (context, { acmeConnection }) => {
+    // Initialize our reusable HTTP client
+    const acmeClient = createAcmeClient(acmeConnection);
+
+    // Make a synchronous GET call to "{ baseUrl }/items":
+    const response = await acmeClient.get<Item[]>("/items");
+
+    // Return the data that we got back
+    return { data: response.data };
+  },
+  // Show an example payload in the Prismatic UI:
+  examplePayload: {
+    data: [
+      {
+        id: 1,
+        name: "Widgets",
+        quantity: 20,
+      },
+      {
+        id: 2,
+        name: "Whatsits",
+        quantity: 100,
+      },
+    ],
+  },
+});
+
+/* Get a specific item from inventory by ID */
+const getItem = action({
+  display: {
+    label: "Get Item",
+    description: "Get an Item by ID",
+  },
+  inputs: {
+    acmeConnection: connectionInput,
+    itemId: itemIdInput,
+  },
+  perform: async (context, { acmeConnection, itemId }) => {
+    const acmeClient = createAcmeClient(acmeConnection);
+    const response = await acmeClient.get<Item>(`/items/${itemId}`);
+    return { data: response.data };
+  },
+  examplePayload: {
+    data: {
+      id: 1,
+      name: "Widgets",
+      quantity: 20,
+    },
+  },
+});
+
+/* Add a new item to inventory */
+const addItem = action({
+  display: {
+    label: "Add Item",
+    description: "Add an Item to Inventory",
+  },
+  // We can define some inputs inline if they're not reused:
+  inputs: {
+    acmeConnection: connectionInput,
+    name: input({ label: "Item Name", type: "string" }),
+    quantity: input({
+      label: "Item Quantity",
+      type: "string",
+      clean: util.types.toNumber,
+    }),
+  },
+  perform: async (context, { acmeConnection, name, quantity }) => {
+    const acmeClient = createAcmeClient(acmeConnection);
+    const response = await acmeClient.post<Item>("/items/", {
+      name,
+      quantity,
+    });
+    return { data: response.data };
+  },
+  examplePayload: {
+    data: {
+      id: 1,
+      name: "Widgets",
+      quantity: 20,
+    },
+  },
+});
+
+export default { addItem, getItem, listItems };

@@ -1,0 +1,58 @@
+/**
+ * Your custom connector can be tested locally prior to publishing it.
+ * In this file, we create a testing harness for our custom connector
+ * and we invoke our trigger to verify it behaves as expected.
+ *
+ * To run just this set of unit tests, run "npm run test -- src/triggers.test.ts"
+ *
+ * For more information on unit tests, see
+ * https://prismatic.io/docs/custom-connectors/unit-testing/
+ */
+
+import {
+  createConnection,
+  createHarness,
+  defaultTriggerPayload,
+} from "@prismatic-io/spectral/dist/testing";
+import myComponent from ".";
+import { apiKeyConnection } from "./connections";
+
+const harness = createHarness(myComponent);
+
+const acmeConnection = createConnection(apiKeyConnection, {
+  baseUrl: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
+  apiKey: "P@s$W0rD",
+});
+
+describe("Test Trigger", () => {
+  test("Test valid trigger payload and HMAC", async () => {
+    const payload = defaultTriggerPayload();
+
+    // Create a valid HMAC signature for our payload
+    payload.rawBody.data = JSON.stringify({ foo: "bar", baz: "buz" });
+    payload.headers["x-hmac-256"] =
+      "bbcf73f3e4ab75f3a42c28b0304a3cd1568b6ceba56513116749415fa3a12ad7";
+
+    const result = await harness.trigger("exampleTrigger", payload, {
+      acmeConnection,
+    });
+
+    expect(result?.payload.rawBody.data).toEqual(
+      JSON.stringify({ foo: "bar", baz: "buz" })
+    );
+  });
+
+  test("Test invalid HMAC signature", async () => {
+    const payload = defaultTriggerPayload();
+
+    // Create an invalid HMAC signature for our payload
+    payload.rawBody.data = JSON.stringify({ foo: "bar", baz: "buz" });
+    payload.headers["x-hmac-256"] =
+      "bbcf73f3e4ab75f3a42c28b0304a3cd1568b6ceba56513116749415faaaaaaaa";
+
+    // Verify that an error is thrown when the HMAC signature is incorrect
+    await expect(async () => {
+      await harness.trigger("exampleTrigger", payload, { acmeConnection });
+    }).rejects.toThrow("Incorrect HMAC signature");
+  });
+});

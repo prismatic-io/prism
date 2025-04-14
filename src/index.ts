@@ -49,12 +49,8 @@ import ComponentsActionsListCommand from "./commands/components/actions/list.js"
 import ComponentsDataSourcesListCommand from "./commands/components/data-sources/list.js";
 import ComponentsDevRunCommand from "./commands/components/dev/run.js";
 import ComponentsDevTestCommand from "./commands/components/dev/test.js";
-import ComponentsInitActionCommand from "./commands/components/init/action.js";
 import ComponentsInitComponentCommand from "./commands/components/init/component.js";
-import ComponentsInitConnectionCommand from "./commands/components/init/connection.js";
-import ComponentsInitDataSourceCommand from "./commands/components/init/dataSource.js";
 import ComponentsInitCommand from "./commands/components/init/index.js";
-import ComponentsInitTriggerCommand from "./commands/components/init/trigger.js";
 import ComponentsSignatureCommand from "./commands/components/signature.js";
 import ComponentsTriggersListCommand from "./commands/components/triggers/list.js";
 import CustomersCredentialsCreateCommand from "./commands/customers/credentials/create.js";
@@ -73,9 +69,7 @@ import InstancesFlowConfigsListCommand from "./commands/instances/flow-configs/l
 import InstancesFlowConfigsTestCommand from "./commands/instances/flow-configs/test.js";
 import IntegrationsFlowsListCommand from "./commands/integrations/flows/list.js";
 import IntegrationsFlowsTestCommand from "./commands/integrations/flows/test.js";
-import IntegrationsInitFlowCommand from "./commands/integrations/init/flow.js";
 import IntegrationsInitCommand from "./commands/integrations/init/index.js";
-import IntegrationsInitIntegrationCommand from "./commands/integrations/init/integration.js";
 import IntegrationsVersionsCommand from "./commands/integrations/versions/index.js";
 import LogsSeveritiesListCommand from "./commands/logs/severities/list.js";
 import MeTokenRevokeCommand from "./commands/me/token/revoke.js";
@@ -145,12 +139,8 @@ export const Commands = {
   "components:data-sources:list": ComponentsDataSourcesListCommand,
   "components:dev:run": ComponentsDevRunCommand,
   "components:dev:test": ComponentsDevTestCommand,
-  "components:init:action": ComponentsInitActionCommand,
   "components:init:component": ComponentsInitComponentCommand,
-  "components:init:connection": ComponentsInitConnectionCommand,
-  "components:init:data-source": ComponentsInitDataSourceCommand,
   "components:init": ComponentsInitCommand,
-  "components:init:trigger": ComponentsInitTriggerCommand,
   "components:signature": ComponentsSignatureCommand,
   "components:triggers:list": ComponentsTriggersListCommand,
   "customers:credentials:create": CustomersCredentialsCreateCommand,
@@ -169,9 +159,7 @@ export const Commands = {
   "instances:flow-configs:test": InstancesFlowConfigsTestCommand,
   "integrations:flows:list": IntegrationsFlowsListCommand,
   "integrations:flows:test": IntegrationsFlowsTestCommand,
-  "integrations:init:flow": IntegrationsInitFlowCommand,
   "integrations:init": IntegrationsInitCommand,
-  "integrations:init:integration": IntegrationsInitIntegrationCommand,
   "integrations:versions": IntegrationsVersionsCommand,
   "logs:severities:list": LogsSeveritiesListCommand,
   "me:token:revoke": MeTokenRevokeCommand,
