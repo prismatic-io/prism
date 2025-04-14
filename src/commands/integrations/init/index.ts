@@ -107,7 +107,7 @@ To run unit tests for the integration, run "npm run test" or "yarn test"
 To build the integration, run "npm run build" or "yarn build"
 To import the integration, run "prism integrations:import"
 
-For documentation on writing code-native integrations, visit https://prismatic.io/docs/code-native-integrations/
+For documentation on writing code-native integrations, visit https://prismatic.io/docs/integrations/code-native/
     `);
   }
 }

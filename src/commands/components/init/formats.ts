@@ -62,7 +62,7 @@ To test the component, run "npm run test" or "yarn test"
 To build the component, run "npm run build" or "yarn build"
 To publish the component, run "prism components:publish"
 
-For documentation on writing custom components, visit https://prismatic.io/docs/custom-components/writing-custom-components/
+For documentation on writing custom components, visit https://prismatic.io/docs/custom-connectors/
     `);
   }
 
