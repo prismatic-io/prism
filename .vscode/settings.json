@@ -13,5 +13,10 @@
   },
   "[jsonc]": {
     "editor.defaultFormatter": "biomejs.biome"
+  },
+  "files.associations": {
+    "*.ts.ejs": "typescript",
+    "*.js.ejs": "javascript",
+    "*.json.ejs": "json"
   }
 }
