@@ -5,7 +5,7 @@
  * about the data it fetched.
  */
 
-import { type Connection, flow } from "@prismatic-io/spectral";
+import { flow } from "@prismatic-io/spectral";
 import { createAcmeClient } from "./client";
 import type { Item } from "./configPages";
 
@@ -30,7 +30,7 @@ export const listItems = flow({
     );
 
     // Create an authenticated reusable HTTP client from client.ts
-    const acmeErpClient = createAcmeClient(context.configVars["Acme Connection"] as Connection);
+    const acmeErpClient = createAcmeClient(context.configVars["Acme Connection"]);
     const response = await acmeErpClient.get<Item[]>("/items");
     for (const item of response.data) {
       context.logger.info(
