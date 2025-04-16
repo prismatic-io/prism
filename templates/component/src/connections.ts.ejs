@@ -11,7 +11,7 @@
  * https://prismatic.io/docs/custom-connectors/connections/#writing-oauth-20-connections
  */
 
-import { connection } from "@prismatic-io/spectral";
+import { connection, oauth2Connection, OAuth2Type } from "@prismatic-io/spectral";
 
 export const acmeApiKey = connection({
   key: "apiKey",
@@ -37,4 +37,73 @@ export const acmeApiKey = connection({
   },
 });
 
-export default [acmeApiKey];
+export const authorizationCode = oauth2Connection({
+  key: "authorizationCode",
+  display: {
+    label: "OAuth 2.0 Authorization Code",
+    description: "OAuth 2.0 Authorization Code flow",
+  },
+  oauth2Type: OAuth2Type.AuthorizationCode,
+  inputs: {
+    baseUrl: {
+      label: "Base URL",
+      placeholder: "Base URL",
+      type: "string",
+      required: true,
+      shown: false,
+      default: "https://api.example.com",
+      comments: "Base URL of the API",
+    },
+    authorizeUrl: {
+      label: "Authorize URL",
+      placeholder: "Authorize URL",
+      type: "string",
+      required: true,
+      shown: true,
+      comments: "The OAuth 2.0 Authorization URL for the API",
+    },
+    tokenUrl: {
+      label: "Token URL",
+      placeholder: "Token URL",
+      type: "string",
+      required: true,
+      shown: true,
+      comments: "The OAuth 2.0 Token URL for the API",
+    },
+    scopes: {
+      label: "Scopes",
+      placeholder: "Scopes",
+      type: "string",
+      required: false,
+      shown: true,
+      comments: "Space separated OAuth 2.0 permission scopes for the API",
+      default: "",
+    },
+    clientId: {
+      label: "Client ID",
+      placeholder: "Client ID",
+      type: "string",
+      required: true,
+      shown: true,
+      comments: "Client Identifier of your app for the API",
+    },
+    clientSecret: {
+      label: "Client Secret",
+      placeholder: "Client Secret",
+      type: "password",
+      required: true,
+      shown: true,
+      comments: "Client Secret of your app for the API",
+    },
+    headers: {
+      label: "Headers",
+      type: "string",
+      collection: "keyvaluelist",
+      required: false,
+      shown: true,
+      comments: "Additional header to supply to authorization requests",
+    },
+  },
+});
+
+export default [acmeApiKey, authorizationCode];
