@@ -6,7 +6,7 @@ export const devDependencies = {
   "@prismatic-io/eslint-config-spectral": "2.1.0",
   "@types/jest": "29.5.14",
   "copy-webpack-plugin": "13.0.0",
-  eslint: "9.24.0",
+  eslint: "^8.57.1",
   jest: "29.7.0",
   "ts-jest": "29.3.2",
   "ts-loader": "9.5.2",
