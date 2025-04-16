@@ -24,9 +24,7 @@ export const exampleTrigger = trigger({
     }),
   },
   perform: async (context, payload, params) => {
-    const hmacSecretKey = util.types.toString(
-      params.acmeConnection.fields.apiKey
-    );
+    const hmacSecretKey = util.types.toString(params.acmeConnection.fields.apiKey);
     const { "x-hmac-256": hmacSignature } = payload.headers;
 
     // Compute the HMAC hash of the request using the connection's API key

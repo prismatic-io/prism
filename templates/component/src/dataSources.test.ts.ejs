@@ -9,16 +9,13 @@
  * https://prismatic.io/docs/custom-connectors/unit-testing/
  */
 
-import {
-  createConnection,
-  createHarness,
-} from "@prismatic-io/spectral/dist/testing";
+import { createConnection, createHarness } from "@prismatic-io/spectral/dist/testing";
 import myComponent from ".";
-import { apiKeyConnection } from "./connections";
+import { acmeApiKey } from "./connections";
 
 const harness = createHarness(myComponent);
 
-const acmeConnection = createConnection(apiKeyConnection, {
+const acmeConnection = createConnection(acmeApiKey, {
   baseUrl: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
   apiKey: "P@s$W0rD",
 });

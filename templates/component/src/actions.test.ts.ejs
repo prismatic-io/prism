@@ -10,40 +10,39 @@
  * https://prismatic.io/docs/custom-connectors/unit-testing/
  */
 
-import {
-  createConnection,
-  createHarness,
-} from "@prismatic-io/spectral/dist/testing";
+import { createConnection, createHarness } from "@prismatic-io/spectral/dist/testing";
 import myComponent from ".";
-import { apiKeyConnection } from "./connections";
+import { acmeApiKey } from "./connections";
 
 const harness = createHarness(myComponent);
 
-const acmeConnection = createConnection(apiKeyConnection, {
+const acmeConnection = createConnection(acmeApiKey, {
   baseUrl: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
   apiKey: "P@s$W0rD",
 });
 
+const expectedItems = [
+  {
+    id: 1,
+    name: "Widgets",
+    quantity: 20,
+  },
+  {
+    id: 2,
+    name: "Whatsits",
+    quantity: 100,
+  },
+  {
+    id: 3,
+    name: "Gadgets",
+    quantity: 5,
+  },
+];
+
 describe("Test Actions", () => {
   test("Verify listItems returns the correct number of items", async () => {
     const result = await harness.action("listItems", { acmeConnection });
-    expect(result?.data).toStrictEqual([
-      {
-        id: 1,
-        name: "Widgets",
-        quantity: 20,
-      },
-      {
-        id: 2,
-        name: "Whatsits",
-        quantity: 100,
-      },
-      {
-        id: 3,
-        name: "Gadgets",
-        quantity: 5,
-      },
-    ]);
+    expect(result?.data).toStrictEqual(expectedItems);
   });
 
   test("Verify getItem returns the correct item", async () => {
@@ -51,11 +50,7 @@ describe("Test Actions", () => {
       acmeConnection,
       itemId: "3",
     });
-    expect(result?.data).toStrictEqual({
-      id: 3,
-      name: "Gadgets",
-      quantity: 5,
-    });
+    expect(result?.data).toStrictEqual(expectedItems[2]);
   });
 
   test("Verify addItem adds an item to inventory", async () => {
@@ -65,5 +60,16 @@ describe("Test Actions", () => {
       quantity: "50",
     });
     expect(result?.data).toMatchObject({ name: "My New Item", quantity: 50 });
+  });
+
+  test("Verify raw request works as expected", async () => {
+    const result = await harness.action("rawRequest", {
+      acmeConnection,
+      url: "/items",
+      method: "get",
+      responseType: "json",
+      queryParams: [{ key: "id", value: "2" }],
+    });
+    expect(result?.data).toStrictEqual([expectedItems[1]]);
   });
 });

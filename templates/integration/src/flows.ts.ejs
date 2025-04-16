@@ -26,17 +26,15 @@ export const listItems = flow({
   },
   onExecution: async (context, params) => {
     context.logger.info(
-      `During configuration, the customer selected the item "${context.configVars["Select Item"]}"`
+      `During configuration, the customer selected the item "${context.configVars["Select Item"]}"`,
     );
 
     // Create an authenticated reusable HTTP client from client.ts
-    const acmeErpClient = createAcmeClient(
-      context.configVars["Acme Connection"] as Connection
-    );
+    const acmeErpClient = createAcmeClient(context.configVars["Acme Connection"] as Connection);
     const response = await acmeErpClient.get<Item[]>("/items");
     for (const item of response.data) {
       context.logger.info(
-        `Item "${item.name}" with ID "${item.id}" has quantity "${item.quantity}"`
+        `Item "${item.name}" with ID "${item.id}" has quantity "${item.quantity}"`,
       );
     }
     return { data: response.data };

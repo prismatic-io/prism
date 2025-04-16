@@ -15,11 +15,11 @@ import {
   defaultTriggerPayload,
 } from "@prismatic-io/spectral/dist/testing";
 import myComponent from ".";
-import { apiKeyConnection } from "./connections";
+import { acmeApiKey } from "./connections";
 
 const harness = createHarness(myComponent);
 
-const acmeConnection = createConnection(apiKeyConnection, {
+const acmeConnection = createConnection(acmeApiKey, {
   baseUrl: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
   apiKey: "P@s$W0rD",
 });
@@ -37,9 +37,7 @@ describe("Test Trigger", () => {
       acmeConnection,
     });
 
-    expect(result?.payload.rawBody.data).toEqual(
-      JSON.stringify({ foo: "bar", baz: "buz" })
-    );
+    expect(result?.payload.rawBody.data).toEqual(JSON.stringify({ foo: "bar", baz: "buz" }));
   });
 
   test("Test invalid HMAC signature", async () => {

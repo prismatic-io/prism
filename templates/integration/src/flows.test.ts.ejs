@@ -14,8 +14,7 @@ import { listItems } from "./flows";
 
 const acmeConnection = {
   fields: {
-    baseUrl:
-      "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
+    baseUrl: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
     apiKey: "P@s$W0rD",
   },
 };
@@ -37,10 +36,8 @@ describe("Verify flow works as expected", () => {
       configVars: { "Acme Connection": acmeConnection, "Select Item": "2" },
     });
     expect(loggerMock.info).toHaveBeenCalledWith(
-      'During configuration, the customer selected the item "2"'
+      'During configuration, the customer selected the item "2"',
     );
-    expect(loggerMock.info).toHaveBeenCalledWith(
-      'Item "Widgets" with ID "1" has quantity "20"'
-    );
+    expect(loggerMock.info).toHaveBeenCalledWith('Item "Widgets" with ID "1" has quantity "20"');
   });
 });

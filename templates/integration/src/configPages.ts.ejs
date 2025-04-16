@@ -36,8 +36,7 @@ export const configPages = {
             label: "Acme Base URL",
             type: "string",
             required: true,
-            default:
-              "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
+            default: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
             example: "https://my-company.api.acme.com/",
           },
           apiKey: {
@@ -62,9 +61,7 @@ export const configPages = {
         dataSourceType: "picklist",
         perform: async (context) => {
           // Create an authenticated reusable HTTP client from client.ts
-          const client = createAcmeClient(
-            context.configVars["Acme Connection"] as Connection
-          );
+          const client = createAcmeClient(context.configVars["Acme Connection"] as Connection);
           const { data: items } = await client.get<Item[]>("/items");
           const options: Element[] = items.map((item) => ({
             key: `${item.id}`,
