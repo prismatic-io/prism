@@ -1,0 +1,43 @@
+/**
+ * Your flows can be tested locally prior to publishing your
+ * code-native integration. In this file, we invoke our flow
+ * twice and describe the results we expect to see.
+ *
+ * You can run this test with "npm run test"
+ *
+ * For more information on unit testing code-native integrations, see
+ * https://prismatic.io/docs/integrations/code-native/testing/
+ */
+
+import { invokeFlow } from "@prismatic-io/spectral/dist/testing";
+import { listItems } from "./flows";
+
+const acmeConnection = {
+  fields: {
+    baseUrl: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
+    apiKey: "P@s$W0rD",
+  },
+};
+
+describe("Verify flow works as expected", () => {
+  test("Verify we get the correct set of items back", async () => {
+    const { result } = await invokeFlow(listItems, {
+      configVars: { "Acme Connection": acmeConnection, "Select Item": "2" },
+    });
+    expect(result?.data).toStrictEqual([
+      { id: 1, name: "Widgets", quantity: 20 },
+      { id: 2, name: "Whatsits", quantity: 100 },
+      { id: 3, name: "Gadgets", quantity: 5 },
+    ]);
+  });
+
+  test("Verify we see the expected log lines", async () => {
+    const { loggerMock } = await invokeFlow(listItems, {
+      configVars: { "Acme Connection": acmeConnection, "Select Item": "2" },
+    });
+    expect(loggerMock.info).toHaveBeenCalledWith(
+      'During configuration, the customer selected the item "2"',
+    );
+    expect(loggerMock.info).toHaveBeenCalledWith('Item "Widgets" with ID "1" has quantity "20"');
+  });
+});

@@ -891,44 +891,6 @@ export const ubiNum = input({
 "
 `;
 
-exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/src/dataSources.ts 1`] = `
-"import { dataSource, input } from "@prismatic-io/spectral";
-import { createClient } from "./client";
-
-const myConnectionField = input({
-  label: "Connection",
-  type: "connection",
-  required: true,
-});
-
-const myInputField = input({
-  label: "My Input",
-  type: "string",
-  required: true,
-});
-
-export const myDataSource = dataSource({
-  display: {
-    label: "My Data Source",
-    description: "This is my data source",
-  },
-  perform: async (context, { connection, myInput }) => {
-    const client = createClient(connection);
-    return {
-      result: await client.call(myInput),
-    };
-  },
-  inputs: {
-    connection: myConnectionField,
-    myInput: myInputField,
-  },
-  dataSourceType: "string",
-});
-
-export default { myDataSource };
-"
-`;
-
 exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/src/actions.ts 1`] = `
 "import { action } from "@prismatic-io/spectral";
 import * as path from "path";
@@ -998,53 +960,20 @@ export default {
 "
 `;
 
-exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/src/connections.ts 1`] = `
-"import { connection } from "@prismatic-io/spectral";
-
-export const myConnection = connection({
-  key: "myConnection",
-  display: {
-    label: "My Connection",
-    description: "This is my connection",
-  },
-  inputs: {
-    username: {
-      label: "Username",
-      placeholder: "Username",
-      type: "string",
-      required: true,
-      comments: "Username for my Connection",
-    },
-    password: {
-      label: "Password",
-      placeholder: "Password",
-      type: "password",
-      required: true,
-      comments: "Password for my Connection",
-    },
-  },
-});
-
-export default [myConnection];
-"
-`;
-
-exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/src/client.ts 1`] = `
-"import type { Connection } from "@prismatic-io/spectral";
-
-export const createClient = (connection: Connection) => {
-  // Create a client using the provided Connection for the
-  // service you're consuming from this Component.
-  return {
-    call: async (name: unknown) =>
-      Promise.resolve(\`Hello, \${name} using connection \${connection.key}\`),
-  };
-};
-"
-`;
-
 exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"/**
+ * This project defines a custom connector that you can use
+ * in the low-code integration designer. To run unit tests
+ * of this connector locally, run "npm run test".
+ *
+ * To publish this connector for use in the low-code designer,
+ * run "npm run build" and then "prism components:publish".
+ *
+ * For information on custom connectors, see
+ * https://prismatic.io/docs/custom-connectors/
+ */
+
+import { component } from "@prismatic-io/spectral";
 import actions from "./actions";
 import triggers from "./triggers";
 import dataSources from "./dataSources";
@@ -1063,29 +992,6 @@ export default component({
   dataSources,
   connections,
 });
-"
-`;
-
-exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/src/triggers.ts 1`] = `
-"import { trigger } from "@prismatic-io/spectral";
-
-export const myTrigger = trigger({
-  display: {
-    label: "My Trigger",
-    description: "This is my trigger",
-  },
-  perform: async (context, payload, params) => {
-    console.log("My Trigger params", params);
-    return Promise.resolve({
-      payload,
-    });
-  },
-  inputs: {},
-  synchronousResponseSupport: "valid",
-  scheduleSupport: "valid",
-});
-
-export default { myTrigger };
 "
 `;
 
@@ -4419,44 +4325,6 @@ export const sLanguageName = input({
 "
 `;
 
-exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/src/dataSources.ts 1`] = `
-"import { dataSource, input } from "@prismatic-io/spectral";
-import { createClient } from "./client";
-
-const myConnectionField = input({
-  label: "Connection",
-  type: "connection",
-  required: true,
-});
-
-const myInputField = input({
-  label: "My Input",
-  type: "string",
-  required: true,
-});
-
-export const myDataSource = dataSource({
-  display: {
-    label: "My Data Source",
-    description: "This is my data source",
-  },
-  perform: async (context, { connection, myInput }) => {
-    const client = createClient(connection);
-    return {
-      result: await client.call(myInput),
-    };
-  },
-  inputs: {
-    connection: myConnectionField,
-    myInput: myInputField,
-  },
-  dataSourceType: "string",
-});
-
-export default { myDataSource };
-"
-`;
-
 exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/src/actions.ts 1`] = `
 "import { action } from "@prismatic-io/spectral";
 import * as path from "path";
@@ -5087,53 +4955,20 @@ export default {
 "
 `;
 
-exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/src/connections.ts 1`] = `
-"import { connection } from "@prismatic-io/spectral";
-
-export const myConnection = connection({
-  key: "myConnection",
-  display: {
-    label: "My Connection",
-    description: "This is my connection",
-  },
-  inputs: {
-    username: {
-      label: "Username",
-      placeholder: "Username",
-      type: "string",
-      required: true,
-      comments: "Username for my Connection",
-    },
-    password: {
-      label: "Password",
-      placeholder: "Password",
-      type: "password",
-      required: true,
-      comments: "Password for my Connection",
-    },
-  },
-});
-
-export default [myConnection];
-"
-`;
-
-exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/src/client.ts 1`] = `
-"import type { Connection } from "@prismatic-io/spectral";
-
-export const createClient = (connection: Connection) => {
-  // Create a client using the provided Connection for the
-  // service you're consuming from this Component.
-  return {
-    call: async (name: unknown) =>
-      Promise.resolve(\`Hello, \${name} using connection \${connection.key}\`),
-  };
-};
-"
-`;
-
 exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"/**
+ * This project defines a custom connector that you can use
+ * in the low-code integration designer. To run unit tests
+ * of this connector locally, run "npm run test".
+ *
+ * To publish this connector for use in the low-code designer,
+ * run "npm run build" and then "prism components:publish".
+ *
+ * For information on custom connectors, see
+ * https://prismatic.io/docs/custom-connectors/
+ */
+
+import { component } from "@prismatic-io/spectral";
 import actions from "./actions";
 import triggers from "./triggers";
 import dataSources from "./dataSources";
@@ -5152,28 +4987,5 @@ export default component({
   dataSources,
   connections,
 });
-"
-`;
-
-exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/src/triggers.ts 1`] = `
-"import { trigger } from "@prismatic-io/spectral";
-
-export const myTrigger = trigger({
-  display: {
-    label: "My Trigger",
-    description: "This is my trigger",
-  },
-  perform: async (context, payload, params) => {
-    console.log("My Trigger params", params);
-    return Promise.resolve({
-      payload,
-    });
-  },
-  inputs: {},
-  synchronousResponseSupport: "valid",
-  scheduleSupport: "valid",
-});
-
-export default { myTrigger };
 "
 `;

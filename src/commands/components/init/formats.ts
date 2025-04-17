@@ -47,42 +47,6 @@ export default class GenerateFormatsCommand extends Command {
       ),
     );
 
-    await updatePackageJson({
-      path: "package.json",
-      name: isPublic ? `@prismatic-io/${key}` : key,
-      private: true,
-      version: "0.0.1",
-      scripts: {
-        build: "webpack",
-        "generate:manifest": "npm run build && npx @prismatic-io/spectral component-manifest",
-        "generate:manifest:dev":
-          "npm run build && npx @prismatic-io/spectral component-manifest --skip-signature-verify",
-        test: "jest --runInBand",
-        lint: "eslint --quiet --ext .ts .",
-        "lint-fix": "eslint --quiet --ext .ts --fix .",
-        format: "npm run lint-fix && prettier --log-level error --write .",
-      },
-      eslintConfig: {
-        root: true,
-        extends: ["@prismatic-io/eslint-config-spectral"],
-      },
-      dependencies: {
-        "@prismatic-io/spectral": "*",
-      },
-      devDependencies: {
-        "@prismatic-io/eslint-config-spectral": "2.0.2",
-        "@types/jest": "29.5.12",
-        "copy-webpack-plugin": "10.2.4",
-        jest: "29.7.0",
-        "ts-jest": "29.2.4",
-        "ts-loader": "9.3.0",
-        typescript: "5.5.3",
-        webpack: "5.72.0",
-        "webpack-cli": "4.9.2",
-        prettier: "3.0.3",
-      },
-    });
-
     const result = await read(openapi);
     await write(key, isPublic, result);
     await copy(openapi, `${key}-openapi-spec${extname(openapi)}`);
@@ -98,7 +62,7 @@ To test the component, run "npm run test" or "yarn test"
 To build the component, run "npm run build" or "yarn build"
 To publish the component, run "prism components:publish"
 
-For documentation on writing custom components, visit https://prismatic.io/docs/custom-components/writing-custom-components/
+For documentation on writing custom components, visit https://prismatic.io/docs/custom-connectors/
     `);
   }
 

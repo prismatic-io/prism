@@ -1,0 +1,75 @@
+/**
+ * Your custom connector can be tested locally prior to publishing it.
+ * In this file, we create a testing harness for our custom connector
+ * and we invoke each of our actions to verify that they return expected
+ * results.
+ *
+ * To run just this set of unit tests, run "npm run test -- src/actions.test.ts"
+ *
+ * For more information on unit tests, see
+ * https://prismatic.io/docs/custom-connectors/unit-testing/
+ */
+
+import { createConnection, createHarness } from "@prismatic-io/spectral/dist/testing";
+import myComponent from ".";
+import { acmeApiKey } from "./connections";
+
+const harness = createHarness(myComponent);
+
+const acmeConnection = createConnection(acmeApiKey, {
+  baseUrl: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
+  apiKey: "P@s$W0rD",
+});
+
+const expectedItems = [
+  {
+    id: 1,
+    name: "Widgets",
+    quantity: 20,
+  },
+  {
+    id: 2,
+    name: "Whatsits",
+    quantity: 100,
+  },
+  {
+    id: 3,
+    name: "Gadgets",
+    quantity: 5,
+  },
+];
+
+describe("Test Actions", () => {
+  test("Verify listItems returns the correct number of items", async () => {
+    const result = await harness.action("listItems", { acmeConnection });
+    expect(result?.data).toStrictEqual(expectedItems);
+  });
+
+  test("Verify getItem returns the correct item", async () => {
+    const result = await harness.action("getItem", {
+      acmeConnection,
+      itemId: "3",
+    });
+    expect(result?.data).toStrictEqual(expectedItems[2]);
+  });
+
+  test("Verify addItem adds an item to inventory", async () => {
+    const result = await harness.action("addItem", {
+      acmeConnection,
+      name: "My New Item",
+      quantity: "50",
+    });
+    expect(result?.data).toMatchObject({ name: "My New Item", quantity: 50 });
+  });
+
+  test("Verify raw request works as expected", async () => {
+    const result = await harness.action("rawRequest", {
+      acmeConnection,
+      url: "/items",
+      method: "get",
+      responseType: "json",
+      queryParams: [{ key: "id", value: "2" }],
+    });
+    expect(result?.data).toStrictEqual([expectedItems[1]]);
+  });
+});
