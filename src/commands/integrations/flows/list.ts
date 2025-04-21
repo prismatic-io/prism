@@ -1,6 +1,6 @@
 import { Args, ux } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { listIntegrationFlows } from "../../../utils/integration/flows.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Integration Flows";
@@ -20,43 +20,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       flags,
     } = await this.parse(ListCommand);
 
-    let flows: any[] = [];
-    let hasNextPage = true;
-    let cursor = "";
-
-    while (hasNextPage) {
-      const {
-        integration: {
-          flows: { nodes, pageInfo },
-        },
-      } = await gqlRequest({
-        document: gql`
-          query listIntegrationFlows($id: ID!, $after: String) {
-            integration(id: $id) {
-              flows(after: $after) {
-                nodes {
-                  id
-                  name
-                  description
-                  testUrl
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        `,
-        variables: {
-          id: integration,
-          after: cursor,
-        },
-      });
-      flows = [...flows, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
-    }
+    const flows = await listIntegrationFlows(integration);
 
     ux.table(
       flows,

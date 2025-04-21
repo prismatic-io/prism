@@ -15,6 +15,7 @@ import {
   createComponentPackage,
   validateDefinition,
 } from "../component/index.js";
+import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
 
 interface ImportDefinitionResult {
   integrationId: string;
@@ -181,6 +182,17 @@ export const importCodeNativeIntegration = async (integrationId?: string): Promi
     await setIntegrationAvatar(integrationImportId, iconPath); // Integration avatar.
   }
   await uploadConnectionIcons(componentDefinition, connectionIconUploadUrls);
+
+  try {
+    const metadata = await getPrismMetadata({ fromDist: true });
+    await writePrismMetadata(
+      { ...metadata, integrationId: integrationImportId },
+      { fromDist: true },
+    );
+  } catch (e) {
+    console.error("Import was successful but there was an error formatting local metadata:");
+    console.error(e);
+  }
 
   ux.action.stop();
 
