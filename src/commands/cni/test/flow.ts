@@ -4,6 +4,7 @@ import inquirer from "inquirer";
 import { listIntegrationFlows } from "../../../utils/integration/flows.js";
 import axios from "axios";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
+import { exists, fs } from "../../../fs.js";
 
 const MISSING_PARAM_MESSAGE = "You must provide either a flow-url or an integration-id parameter.";
 
@@ -31,6 +32,11 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
       description: "Include the execution ID in the response of a synchronous flow execution",
       required: false,
     }),
+    "trigger-payload-file": Flags.string({
+      char: "p",
+      description: "A file containing a custom trigger payload to run the flow with",
+      required: false,
+    }),
   };
 
   async run() {
@@ -40,8 +46,21 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
         "flow-url": flowUrl,
         "integration-id": integrationIdFlag,
         "include-execution-id": includeExecutionId,
+        "trigger-payload-file": triggerPayloadFilePath,
       },
     } = await this.parse(CniTestFlowCommand);
+
+    let triggerPayload: Record<string, string> = {};
+
+    if (triggerPayloadFilePath) {
+      if (await exists(triggerPayloadFilePath)) {
+        triggerPayload = JSON.parse(
+          await fs.readFile(triggerPayloadFilePath, { encoding: "utf-8" }),
+        );
+      } else {
+        throw `No file found at ${triggerPayloadFilePath}. Please double check the --trigger-payload-file (-p) parameter.`;
+      }
+    }
 
     let integrationId = integrationIdFlag;
     let invokeUrl = flowUrl ?? "";
@@ -89,9 +108,9 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
 
     // At this point we have an invocation URL.
     ux.action.start("Starting execution...");
-    const response = await axios.get(invokeUrl, {
+    const response = await axios.post(invokeUrl, triggerPayload, {
       headers: {
-        ...(sync ? { "prismatic-sync": true } : {}),
+        ...(sync ? { "prismatic-synchronous": true } : {}),
         "Content-Type": "application/json",
       },
     });
