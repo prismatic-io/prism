@@ -62,22 +62,29 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
     // Once we have an integrationId, prompt the user to select a flow.
     // If an invocation URL was provided, this gets skipped.
     if (integrationId) {
-      const flows = await listIntegrationFlows(integrationId);
-      const { flow } = await inquirer.prompt({
-        type: "list",
-        name: "flow",
-        message: "Select the flow to test:",
-        choices: flows.map((flow) => {
-          return {
-            name: `${flow.name} (${flow.stableKey})`,
-            value: {
-              invokeUrl: flow.testUrl,
-            },
-          };
-        }),
-      });
+      try {
+        const flows = await listIntegrationFlows(integrationId);
+        const { flow } = await inquirer.prompt({
+          type: "list",
+          name: "flow",
+          message: "Select the flow to test:",
+          choices: flows.map((flow) => {
+            return {
+              name: `${flow.name} (${flow.stableKey})`,
+              value: {
+                invokeUrl: flow.testUrl,
+              },
+            };
+          }),
+        });
 
-      invokeUrl = flow.invokeUrl;
+        invokeUrl = flow.invokeUrl;
+      } catch (e) {
+        console.error(
+          "There was an error looking up flows for your integration. Please provide an integration ID or reimport your integration.",
+        );
+        throw e;
+      }
     }
 
     // At this point we have an invocation URL.
