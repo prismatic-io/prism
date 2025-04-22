@@ -1,19 +1,7 @@
 import { Args, Flags, ux } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
-
-interface LogNode {
-  [index: string]: unknown;
-  timestamp: string;
-  severity: string;
-  message: string;
-}
-
-interface FetchLogsResult {
-  logs: LogNode[];
-  cursor: string | undefined;
-  executionComplete: boolean;
-}
+import { FetchLogsResult, LogNode } from "../../../utils/integration/flows.js";
 
 export default class TestCommand extends PrismaticBaseCommand {
   static description = "Run a test of an Integration Flow";
