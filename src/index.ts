@@ -1,6 +1,7 @@
 import LoginCommand from "./commands/login.js";
 import LogoutCommand from "./commands/logout.js";
 import CniTestFlowCommand from "./commands/cni/test/flow.js";
+import CniSetDebugCommand from "./commands/cni/test/set-debug.js";
 import ComponentsDeleteCommand from "./commands/components/delete.js";
 import ComponentsListCommand from "./commands/components/list.js";
 import ComponentsPublishCommand from "./commands/components/publish.js";
@@ -92,6 +93,7 @@ export const Commands = {
   login: LoginCommand,
   logout: LogoutCommand,
   "cni:test:flow": CniTestFlowCommand,
+  "cni:test:set-debug": CniSetDebugCommand,
   "components:delete": ComponentsDeleteCommand,
   "components:list": ComponentsListCommand,
   "components:publish": ComponentsPublishCommand,

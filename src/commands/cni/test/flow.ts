@@ -23,6 +23,7 @@ type FormattedStepResult = {
 
 const MISSING_ID_ERROR = "You must provide either a flow-url or an integration-id parameter.";
 const TIMEOUT_MS = 1000 * 60 * 20; // 20 minutes
+
 export default class CniTestFlowCommand extends PrismaticBaseCommand {
   private startTime = 0;
 
@@ -58,6 +59,9 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
       description:
         "A file to append execution result data to. Results are saved as comma-separated values.",
     }),
+    debug: Flags.boolean({
+      description: "Enables debug mode on the test execution.",
+    }),
   };
 
   async run() {
@@ -71,6 +75,7 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
         "tail-results": tailStepResults,
         "auto-end": autoEndPoll,
         "result-file": resultFilePath,
+        debug,
       },
     } = await this.parse(CniTestFlowCommand);
 
@@ -133,6 +138,7 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
     ux.action.start("Starting execution...");
     const response = await axios.post(invokeUrl, triggerPayload, {
       headers: {
+        ...(debug ? { "prismatic-debug": true } : {}),
         ...(sync ? { "prismatic-synchronous": true } : {}),
         "Content-Type": "application/json",
       },
