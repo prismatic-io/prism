@@ -1,10 +1,10 @@
 import { Flags, ux } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import inquirer from "inquirer";
-import { listIntegrationFlows } from "../../../utils/integration/flows.js";
 import axios from "axios";
-import { getPrismMetadata } from "../../../utils/integration/metadata.js";
+import inquirer from "inquirer";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { listIntegrationFlows } from "../../../utils/integration/flows.js";
 import { exists, fs } from "../../../fs.js";
+import { getPrismMetadata } from "../../../utils/integration/metadata.js";
 
 const MISSING_PARAM_MESSAGE = "You must provide either a flow-url or an integration-id parameter.";
 
@@ -54,9 +54,14 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
 
     if (triggerPayloadFilePath) {
       if (await exists(triggerPayloadFilePath)) {
-        triggerPayload = JSON.parse(
-          await fs.readFile(triggerPayloadFilePath, { encoding: "utf-8" }),
-        );
+        try {
+          triggerPayload = JSON.parse(
+            await fs.readFile(triggerPayloadFilePath, { encoding: "utf-8" }),
+          );
+        } catch (e) {
+          console.error("The provided trigger payload file contains malformed JSON");
+          throw e;
+        }
       } else {
         throw `No file found at ${triggerPayloadFilePath}. Please double check the --trigger-payload-file (-p) parameter.`;
       }
@@ -83,6 +88,12 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
     if (integrationId) {
       try {
         const flows = await listIntegrationFlows(integrationId);
+
+        if (flows.length === 0) {
+          console.error("No flows were found for the given integration.");
+          return;
+        }
+
         const { flow } = await inquirer.prompt({
           type: "list",
           name: "flow",
@@ -106,30 +117,38 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
       }
     }
 
+    if (!invokeUrl) {
+      throw MISSING_PARAM_MESSAGE;
+    }
+
     // At this point we have an invocation URL.
-    ux.action.start("Starting execution...");
-    const response = await axios.post(invokeUrl, triggerPayload, {
-      headers: {
-        ...(sync ? { "prismatic-synchronous": true } : {}),
-        "Content-Type": "application/json",
-      },
-    });
-    ux.action.stop();
+    try {
+      ux.action.start("Starting execution...");
+      const response = await axios.post(invokeUrl, triggerPayload, {
+        headers: {
+          ...(sync ? { "prismatic-synchronous": true } : {}),
+          "Content-Type": "application/json",
+        },
+      });
+      ux.action.stop();
 
-    this.log(`
-To re-run this flow, use the command:
-prism cni:test:flow -u=${invokeUrl}
-`);
+      this.log(`
+        To re-run this flow, use the command:
+        prism cni:test:flow -u=${invokeUrl}
+        `);
 
-    if (includeExecutionId) {
-      this.log(
-        JSON.stringify({
-          data: response.data,
-          executionId: response.headers["prismatic-executionid"],
-        }),
-      );
-    } else {
-      this.log(JSON.stringify(response.data));
+      if (includeExecutionId) {
+        this.log(
+          JSON.stringify({
+            data: response.data,
+            executionId: response.headers["prismatic-executionid"],
+          }),
+        );
+      } else {
+        this.log(JSON.stringify(response.data));
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
 }

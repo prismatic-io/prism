@@ -190,8 +190,7 @@ export const importCodeNativeIntegration = async (integrationId?: string): Promi
       { fromDist: true },
     );
   } catch (e) {
-    console.error("Import was successful but there was an error formatting local metadata:");
-    console.error(e);
+    console.error("Import was successful but there was an error formatting local metadata:", e);
   }
 
   ux.action.stop();
