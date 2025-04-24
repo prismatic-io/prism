@@ -83,12 +83,12 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
       try {
         const metadata = await getPrismMetadata();
         integrationId = metadata.integrationId;
+
+        if (!integrationId) {
+          throw new Error();
+        }
       } catch (err) {
         handleError({ message: MISSING_PARAM_MESSAGE, err, throwError: true });
-      }
-
-      if (!integrationId) {
-        handleError({ message: MISSING_PARAM_MESSAGE, throwError: true });
       }
     }
 
