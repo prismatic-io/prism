@@ -1,9 +1,17 @@
 import { Flags, ux } from "@oclif/core";
 import { decode } from "@msgpack/msgpack";
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 import inquirer from "inquirer";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { cniExecutionIsComplete, FetchLogsResult, listExecutionLogs, listExecutionStepResults, listIntegrationFlows, LogNode, StepResultNode } from "../../../utils/integration/flows.js";
+import {
+  isCniExecutionComplete,
+  FetchLogsResult,
+  getExecutionLogs,
+  getExecutionStepResults,
+  getIntegrationFlows,
+  LogNode,
+  StepResultNode,
+} from "../../../utils/integration/flows.js";
 import { exists, fs } from "../../../fs.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
 
@@ -104,7 +112,7 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
     // If an invocation URL was provided, this gets skipped.
     if (integrationId) {
       try {
-        const flows = await listIntegrationFlows(integrationId);
+        const flows = await getIntegrationFlows(integrationId);
 
         if (flows.length === 0) {
           console.error("No flows were found for the given integration.");
@@ -184,7 +192,7 @@ prism cni:test:flow -u=${invokeUrl} ${flagString}
     );
 
     if (resultFilePath) {
-      fs.appendFile(resultFilePath, "timestamp,type,data\n");
+      await fs.appendFile(resultFilePath, "timestamp,type,data\n");
     }
 
     const tailPromises = [];
@@ -228,7 +236,7 @@ prism cni:test:flow -u=${invokeUrl} ${flagString}
 
       if (resultFilePath) {
         for (const log of logs) {
-          fs.appendFile(resultFilePath, `${log.timestamp},${log.severity},${log.message}\n`);
+          await fs.appendFile(resultFilePath, `${log.timestamp},${log.severity},${log.message}\n`);
         }
       }
 
@@ -272,7 +280,7 @@ prism cni:test:flow -u=${invokeUrl} ${flagString}
 
       if (resultFilePath) {
         for (const result of stepResults) {
-          fs.appendFile(
+          await fs.appendFile(
             resultFilePath,
             `${result.endedAt},${result.type},${JSON.stringify(result.result)}\n`,
           );
@@ -289,7 +297,7 @@ prism cni:test:flow -u=${invokeUrl} ${flagString}
     executionId: string,
     nextCursor?: string,
   ): Promise<FetchLogsResult | undefined> {
-    const results = await listExecutionLogs(executionId, nextCursor);
+    const results = await getExecutionLogs(executionId, nextCursor);
 
     const { edges }: { edges: { node: LogNode; cursor?: string }[] } = results.logs;
     if (!edges || edges.length === 0) {
@@ -303,7 +311,7 @@ prism cni:test:flow -u=${invokeUrl} ${flagString}
   }
 
   private async fetchStepResults(executionId: string, nextCursor?: string) {
-    const results = await listExecutionStepResults(executionId, nextCursor);
+    const results = await getExecutionStepResults(executionId, nextCursor);
 
     const { edges }: { edges: { node: StepResultNode; cursor?: string }[] } =
       results.executionResult.stepResults;
@@ -317,17 +325,22 @@ prism cni:test:flow -u=${invokeUrl} ${flagString}
     for (const edge of edges) {
       const { endedAt, resultsUrl, stepName } = edge.node;
 
-      const response = await axios.get(resultsUrl, {
-        responseType: "arraybuffer",
-      });
-      const resultsBuffer = Buffer.from(await response.data);
-      const result = decode(resultsBuffer) as Record<string, unknown>;
+      try {
+        const response = await axios.get(resultsUrl, {
+          responseType: "arraybuffer",
+        });
+        const resultsBuffer = Buffer.from(await response.data);
+        const result = decode(resultsBuffer) as Record<string, unknown>;
 
-      stepResults.push({
-        type: stepName === "onTrigger" ? "RESULT_TRIGGER" : "RESULT_FLOW",
-        endedAt,
-        result,
-      });
+        stepResults.push({
+          type: stepName === "onTrigger" ? "RESULT_TRIGGER" : "RESULT_FLOW",
+          endedAt,
+          result,
+        });
+      } catch (e) {
+        // Allow the process to keep running, just skip rendering the step result.
+        console.error("There was an error fetching step results for this flow.", e);
+      }
     }
 
     const { cursor } = edges[edges.length - 1];
@@ -337,24 +350,25 @@ prism cni:test:flow -u=${invokeUrl} ${flagString}
   private async shouldEnd(executionId: string, autoEndPoll: boolean) {
     return (
       Date.now() - this.startTime > TIMEOUT_MS ||
-      (autoEndPoll && (await cniExecutionIsComplete(executionId)))
+      (autoEndPoll && (await isCniExecutionComplete(executionId)))
     );
   }
 
   private getPollIntervalMs() {
     const timeElapsed = this.startTime - Date.now();
-    if (timeElapsed < 30000) {
-      // every 1s for first 30s
-      return 1000;
-    } else if (timeElapsed < 60000) {
-      // every 5s for 30s-1min
-      return 5000;
-    } else if (timeElapsed < 300000) {
-      // every 30s for 1min-5min
-      return 30000;
-    } else {
-      // every 1min for 5min+
-      return 60000;
+    switch (true) {
+      case timeElapsed < 30000:
+        // every 1s for first 30s
+        return 1000;
+      case timeElapsed < 60000:
+        // every 5s for 30s-1min
+        return 5000;
+      case timeElapsed < 300000:
+        // every 30s for 1min-5min
+        return 30000;
+      default:
+        // every 1min for 5min+
+        return 60000;
     }
   }
 }
