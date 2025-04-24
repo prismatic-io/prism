@@ -2,6 +2,8 @@ import { Flags, ux } from "@oclif/core";
 import { decode } from "@msgpack/msgpack";
 import axios from "axios";
 import inquirer from "inquirer";
+import open from "open";
+import { prismaticUrl } from "../../../auth.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import {
   isCniExecutionComplete,
@@ -14,6 +16,7 @@ import {
 } from "../../../utils/integration/flows.js";
 import { exists, fs } from "../../../fs.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
+import { isIntegrationConfigured } from "../../../utils/integration/query.js";
 
 type FormattedStepResult = {
   type: string;
@@ -27,7 +30,7 @@ const TIMEOUT_SECONDS = 60 * 20; // 20 minutes
 export default class TestFlowCommand extends PrismaticBaseCommand {
   private startTime = 0;
 
-  static description = "Run a test execution of a CNI flow";
+  static description = "Run a test execution of a flow";
   static flags = {
     "flow-url": Flags.string({
       char: "u",
@@ -65,7 +68,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     "result-file": Flags.string({
       char: "r",
       description:
-        "Optional file to append execution result data to. Results are saved as comma-separated values.",
+        "Optional file to append tailed execution result data to. Results are saved as comma-separated values.",
     }),
     debug: Flags.boolean({
       description: "Enables debug mode on the test execution.",
@@ -117,6 +120,29 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
 
       if (!integrationId) {
         throw MISSING_ID_ERROR;
+      }
+    }
+
+    // Check if the integration is fully configured. We cannot do this check for invokes
+    // via URL that have no integrationId in the metadata.
+    if (integrationId) {
+      const isConfigured = await isIntegrationConfigured(integrationId);
+      if (!isConfigured) {
+        this.warn("The integration needs to be configured before it can be tested.");
+        // @TODO: Replace with actual configuration URL when ready
+        const configUrl = `${prismaticUrl}/integrations/${integrationId}/`;
+        this.log(`Configuration URL: ${configUrl}`);
+
+        const shouldOpen = await ux.confirm(
+          "Would you like to open the configuration wizard in your browser? (yes/no)",
+        );
+
+        if (shouldOpen) {
+          await open(configUrl);
+        } else {
+          this.log("You can configure the integration later by visiting the URL above.");
+        }
+        return;
       }
     }
 
@@ -179,7 +205,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
 
     this.log(`
 To re-run this flow directly:
-prism cni:test:flow -u=${invokeUrl} ${flagString}
+prism integrations:flows:test -u=${invokeUrl} ${flagString}
 `);
 
     const executionId = response.headers["prismatic-executionid"];

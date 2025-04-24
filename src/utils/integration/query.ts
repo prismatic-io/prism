@@ -26,6 +26,25 @@ export const integrationByName = async (
   return integration;
 };
 
+export const isIntegrationConfigured = async (integrationId: string): Promise<boolean> => {
+  const result = await gqlRequest({
+    document: gql`
+      query getIntegrationConfigurationState($integrationId: ID!) {
+        integration(id: $integrationId) {
+          systemInstance {
+            configState
+          }
+        }
+      }
+    `,
+    variables: {
+      integrationId,
+    },
+  });
+
+  return result.integration.systemInstance.configState !== "NEEDS_INSTANCE_CONFIGURATION";
+};
+
 export const pollForActiveConfigVarState = async (
   integrationId: string,
   configVarId: string,
