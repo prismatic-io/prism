@@ -8,7 +8,7 @@ type IntegrationFlow = {
   testUrl: string;
 };
 
-export async function listIntegrationFlows(integrationId: string) {
+export async function getIntegrationFlows(integrationId: string) {
   let flows: Array<IntegrationFlow> = [];
   let hasNextPage = true;
   let cursor = "";
@@ -20,7 +20,7 @@ export async function listIntegrationFlows(integrationId: string) {
       },
     } = await gqlRequest({
       document: gql`
-        query listIntegrationFlows($id: ID!, $after: String) {
+        query getIntegrationFlows($id: ID!, $after: String) {
           integration(id: $id) {
             flows(after: $after) {
               nodes {
@@ -64,10 +64,10 @@ export interface FetchLogsResult {
   executionComplete?: boolean;
 }
 
-export async function listExecutionLogs(executionId: string, nextCursor?: string) {
+export async function getExecutionLogs(executionId: string, nextCursor?: string) {
   return await gqlRequest({
     document: gql`
-      query listExecutionLogs($executionId: ID!, $nextCursor: String) {
+      query getExecutionLogs($executionId: ID!, $nextCursor: String) {
         logs(
           executionResult: $executionId
           after: $nextCursor
@@ -98,10 +98,10 @@ export interface StepResultNode {
   resultsUrl: string;
 }
 
-export async function listExecutionStepResults(executionId: string, nextCursor?: string) {
+export async function getExecutionStepResults(executionId: string, nextCursor?: string) {
   return await gqlRequest({
     document: gql`
-      query listExecutionStepResults($executionId: ID!, $nextCursor: String) {
+      query getExecutionStepResults($executionId: ID!, $nextCursor: String) {
         executionResult(id: $executionId) {
           stepResults(after: $nextCursor, orderBy: { field: ENDED_AT, direction: ASC }) {
             edges {
@@ -124,10 +124,10 @@ export async function listExecutionStepResults(executionId: string, nextCursor?:
   });
 }
 
-export async function cniExecutionIsComplete(executionId: string) {
+export async function isCniExecutionComplete(executionId: string) {
   const result = await gqlRequest({
     document: gql`
-      query cniExecutionIsComplete($executionId: ID!) {
+      query isCniExecutionComplete($executionId: ID!) {
         executionResult(id: $executionId) {
           stepResults {
             totalCount

@@ -1,11 +1,11 @@
 import { Args, Flags, ux } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { getPrismMetadata } from "../../../utils/integration/metadata.js";
-import { setGlobalDebugOnSystemInstance } from "../../../utils/integration/mutate.js";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { getPrismMetadata } from "../../utils/integration/metadata.js";
+import { setGlobalDebugOnSystemInstance } from "../../utils/integration/mutate.js";
 
 const MISSING_ID_ERROR = "You must provide an integration-id (-i).";
 
-export default class CniSetDebugCommand extends PrismaticBaseCommand {
+export default class SetDebugCommand extends PrismaticBaseCommand {
   static description = "Set debug mode on or off for an integration's test instance.";
 
   static args = {
@@ -27,7 +27,7 @@ export default class CniSetDebugCommand extends PrismaticBaseCommand {
     const {
       args: { debug },
       flags: { "integration-id": integrationIdFlag },
-    } = await this.parse(CniSetDebugCommand);
+    } = await this.parse(SetDebugCommand);
 
     let integrationId = integrationIdFlag;
 
