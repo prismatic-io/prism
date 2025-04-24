@@ -5,6 +5,7 @@ import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { listIntegrationFlows } from "../../../utils/integration/flows.js";
 import { exists, fs } from "../../../fs.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
+import { handleError } from "../../../utils/errors.js";
 
 const MISSING_PARAM_MESSAGE = "You must provide either a flow-url or an integration-id parameter.";
 
@@ -58,12 +59,18 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
           triggerPayload = JSON.parse(
             await fs.readFile(triggerPayloadFilePath, { encoding: "utf-8" }),
           );
-        } catch (e) {
-          console.error("The provided trigger payload file contains malformed JSON");
-          throw e;
+        } catch (err) {
+          handleError({
+            message: "The provided trigger payload file contains malformed JSON",
+            err,
+            throwError: true,
+          });
         }
       } else {
-        throw `No file found at ${triggerPayloadFilePath}. Please double check the --trigger-payload-file (-p) parameter.`;
+        handleError({
+          message: `No file found at ${triggerPayloadFilePath}. Please double check the --trigger-payload-file (-p) parameter.`,
+          throwError: true,
+        });
       }
     }
 
@@ -76,11 +83,13 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
       try {
         const metadata = await getPrismMetadata();
         integrationId = metadata.integrationId;
-      } catch (e) {
-        throw MISSING_PARAM_MESSAGE;
+      } catch (err) {
+        handleError({ message: MISSING_PARAM_MESSAGE, err, throwError: true });
       }
 
-      if (!integrationId) throw MISSING_PARAM_MESSAGE;
+      if (!integrationId) {
+        handleError({ message: MISSING_PARAM_MESSAGE, throwError: true });
+      }
     }
 
     // Once we have an integrationId, prompt the user to select a flow.
@@ -109,11 +118,13 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
         });
 
         invokeUrl = flow.invokeUrl;
-      } catch (e) {
-        console.error(
-          "There was an error looking up flows for your integration. Please provide an integration ID or reimport your integration.",
-        );
-        throw e;
+      } catch (err) {
+        handleError({
+          message:
+            "There was an error looking up flows for your integration. Please provide an integration ID or reimport your integration.",
+          err,
+          throwError: true,
+        });
       }
     }
 
@@ -147,8 +158,12 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
       } else {
         this.log(JSON.stringify(response.data));
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      handleError({
+        message: "There was an error when starting the execution.",
+        err,
+        throwError: true,
+      });
     }
   }
 }
