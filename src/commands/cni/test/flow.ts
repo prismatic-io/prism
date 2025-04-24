@@ -1,19 +1,11 @@
 import { Flags, ux } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import inquirer from "inquirer";
-import {
-  cniExecutionIsComplete,
-  FetchLogsResult,
-  listExecutionLogs,
-  listExecutionStepResults,
-  listIntegrationFlows,
-  LogNode,
-  StepResultNode,
-} from "../../../utils/integration/flows.js";
-import axios from "axios";
-import { getPrismMetadata } from "../../../utils/integration/metadata.js";
-import { exists, fs } from "../../../fs.js";
 import { decode } from "@msgpack/msgpack";
+import axios, { AxiosResponse } from "axios";
+import inquirer from "inquirer";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { cniExecutionIsComplete, FetchLogsResult, listExecutionLogs, listExecutionStepResults, listIntegrationFlows, LogNode, StepResultNode } from "../../../utils/integration/flows.js";
+import { exists, fs } from "../../../fs.js";
+import { getPrismMetadata } from "../../../utils/integration/metadata.js";
 
 type FormattedStepResult = {
   type: string;
@@ -49,9 +41,9 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
     "tail-logs": Flags.boolean({
       description: "Tail logs from the test execution until user interrupt or timeout.",
     }),
-    "auto-end": Flags.boolean({
+    "cni-auto-end": Flags.boolean({
       description:
-        "Automatically stop polling activity once an execution completes. Some logs & results may not be returned this way.",
+        "Automatically stop polling activity once an execution completes. Some logs & results may not be returned this way. DOES NOT WORK FOR LOW-CODE FLOWS.",
     }),
     "result-file": Flags.string({
       char: "r",
@@ -69,7 +61,7 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
         "trigger-payload-file": triggerPayloadFilePath,
         "tail-logs": tailLogs,
         "tail-results": tailStepResults,
-        "auto-end": autoEndPoll,
+        "cni-auto-end": autoEndPoll,
         "result-file": resultFilePath,
       },
     } = await this.parse(CniTestFlowCommand);
@@ -78,9 +70,14 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
     let triggerPayload: Record<string, string> = {};
     if (triggerPayloadFilePath) {
       if (await exists(triggerPayloadFilePath)) {
-        triggerPayload = JSON.parse(
-          await fs.readFile(triggerPayloadFilePath, { encoding: "utf-8" }),
-        );
+        try {
+          triggerPayload = JSON.parse(
+            await fs.readFile(triggerPayloadFilePath, { encoding: "utf-8" }),
+          );
+        } catch (e) {
+          console.error("The provided trigger payload file contains malformed JSON");
+          throw e;
+        }
       } else {
         throw `No file found at ${triggerPayloadFilePath}. Please double check the --trigger-payload-file (-p) parameter.`;
       }
@@ -98,7 +95,9 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
         throw MISSING_ID_ERROR;
       }
 
-      if (!integrationId) throw MISSING_ID_ERROR;
+      if (!integrationId) {
+        throw MISSING_ID_ERROR;
+      }
     }
 
     // Once we have an integrationId, prompt the user to select a flow.
@@ -106,6 +105,12 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
     if (integrationId) {
       try {
         const flows = await listIntegrationFlows(integrationId);
+
+        if (flows.length === 0) {
+          console.error("No flows were found for the given integration.");
+          return;
+        }
+
         const { flow } = await inquirer.prompt({
           type: "list",
           name: "flow",
@@ -129,8 +134,12 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
       }
     }
 
-    // At this point we have an invocation URL.
+    if (!invokeUrl) {
+      throw MISSING_ID_ERROR;
+    }
+
     ux.action.start("Starting execution...");
+    // If this POST fails then just let the error be thrown.
     const response = await axios.post(invokeUrl, triggerPayload, {
       headers: {
         ...(sync ? { "prismatic-synchronous": true } : {}),
@@ -144,7 +153,7 @@ export default class CniTestFlowCommand extends PrismaticBaseCommand {
     const flagString = `${triggerPayloadFilePath ? `-p=${triggerPayloadFilePath} ` : ""}${
       tailLogs ? "--tail-logs " : ""
     }${tailStepResults ? "--tail-results " : ""}${sync ? "--sync " : ""}${
-      autoEndPoll ? "--auto-end " : ""
+      autoEndPoll ? "--cni-auto-end " : ""
     }${resultFilePath ? `-r=${resultFilePath} ` : ""}`;
 
     this.log(`
@@ -189,7 +198,7 @@ prism cni:test:flow -u=${invokeUrl} ${flagString}
 
   private async tailLogs(executionId: string, startTime: number) {
     const {
-      flags: { "auto-end": autoEndPoll, "result-file": resultFilePath },
+      flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath },
     } = await this.parse(CniTestFlowCommand);
 
     let nextCursor: string | undefined = undefined;
@@ -231,7 +240,7 @@ prism cni:test:flow -u=${invokeUrl} ${flagString}
 
   private async tailStepResults(executionId: string, startTime: number) {
     const {
-      flags: { "auto-end": autoEndPoll, "result-file": resultFilePath },
+      flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath },
     } = await this.parse(CniTestFlowCommand);
 
     let nextCursor: string | undefined = undefined;
@@ -325,14 +334,10 @@ prism cni:test:flow -u=${invokeUrl} ${flagString}
     return { stepResults, cursor };
   }
 
-  private async executionIsComplete(executionId: string) {
-    return await cniExecutionIsComplete(executionId);
-  }
-
   private async shouldEnd(executionId: string, autoEndPoll: boolean) {
     return (
       Date.now() - this.startTime > TIMEOUT_MS ||
-      (autoEndPoll && (await this.executionIsComplete(executionId)))
+      (autoEndPoll && (await cniExecutionIsComplete(executionId)))
     );
   }
 

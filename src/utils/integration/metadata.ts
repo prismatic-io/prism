@@ -14,14 +14,19 @@ export async function getPrismMetadata(
   options: PrismMetadataOptions = {},
 ): Promise<Record<string, string>> {
   const metadataPath = `${getPrefix(options.fromDist)}${CNI_METADATA_RELATIVE_PATH}`;
-  let metadata = {};
+  const metadataExists = await exists(metadataPath);
 
-  if (await exists(metadataPath)) {
-    const parsed = JSON.parse(await fs.readFile(metadataPath, { encoding: "utf-8" }));
-    metadata = parsed;
+  if (!metadataExists) {
+    return {};
   }
 
-  return metadata;
+  try {
+    const parsed = JSON.parse(await fs.readFile(metadataPath, { encoding: "utf-8" }));
+    return parsed;
+  } catch (e) {
+    console.warn(`Failed to parse metadata at ${metadataPath}`, e);
+    return {};
+  }
 }
 
 export async function writePrismMetadata(
