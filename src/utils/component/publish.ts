@@ -59,13 +59,12 @@ export const checkPackageSignature = async (
 export const confirmPublish = async (
   { display: { label, description } }: ComponentDefinition,
   confirm = true,
-) => {
-  if (!confirm) return;
+): Promise<boolean> => {
+  if (!confirm) return true;
 
   ux.log(label, "-", description);
 
-  const continuePublish = await ux.confirm(`Would you like to publish ${label}? (y/N)`);
-  if (!continuePublish) ux.exit(0);
+  return await ux.confirm(`Would you like to publish ${label}? (y/N)`);
 };
 
 export const publishDefinition = async (
