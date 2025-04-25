@@ -133,7 +133,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
           message: "Select the flow to test:",
           choices: flows.map((flow) => {
             return {
-              name: `${flow.name} (${flow.stableKey})`,
+              name: `${flow.name} ${flow.stableKey ? `(${flow.stableKey})` : ""}`,
               value: {
                 invokeUrl: flow.testUrl,
               },
