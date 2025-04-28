@@ -101,12 +101,15 @@ export default class PublishCommand extends PrismaticBaseCommand {
         ) {
           // Signatures match and we've opted to skip on match, so bail.
           ux.log("Package signatures match, skipping publish.");
-          ux.exit(0);
+          return;
         }
       }
     }
 
-    await confirmPublish(definition, confirm);
+    const shouldPublish = await confirmPublish(definition, confirm);
+    if (!shouldPublish) {
+      return;
+    }
 
     const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls, versionNumber } =
       await publishDefinition(definition, {

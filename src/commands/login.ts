@@ -34,6 +34,5 @@ export default class LoginCommand extends Command {
     await login({ url });
 
     this.log("Login complete!");
-    process.exit(0);
   }
 }
