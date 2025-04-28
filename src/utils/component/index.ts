@@ -66,12 +66,25 @@ export const createComponentPackage = async (): Promise<string> => {
   return pathPromise;
 };
 
-export const validateDefinition = async (definition: ComponentDefinition): Promise<void> => {
+export const validateDefinition = async (
+  definition: ComponentDefinition,
+  options: { forCodeNativeIntegration?: boolean } = {},
+): Promise<void> => {
   // Output basic information to the user to confirm that this component is what they want to publish
   const {
     display: { label, description, iconPath },
+    codeNativeIntegrationYAML,
     connections,
   } = definition;
+  // Check for mistaken invocations, though an invoke from an actual CNI build context is valid.
+  if (codeNativeIntegrationYAML && !options.forCodeNativeIntegration) {
+    ux.error(
+      "You are running a component command on what appears to be a Code Native Integration. Please check the current path.",
+      {
+        exit: 1,
+      },
+    );
+  }
   if (!label || !description) {
     ux.error("Missing required values `label` or `description`. Exiting.", {
       exit: 1,

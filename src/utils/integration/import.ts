@@ -145,7 +145,7 @@ export const importCodeNativeIntegration = async (integrationId?: string): Promi
     );
   }
 
-  await validateDefinition(componentDefinition);
+  await validateDefinition(componentDefinition, { forCodeNativeIntegration: true });
 
   const packagePath = await createComponentPackage();
 
