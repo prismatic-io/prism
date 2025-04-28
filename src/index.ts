@@ -24,6 +24,7 @@ import IntegrationsListCommand from "./commands/integrations/list.js";
 import IntegrationsMarketplaceCommand from "./commands/integrations/marketplace.js";
 import IntegrationsOpenCommand from "./commands/integrations/open.js";
 import IntegrationsPublishCommand from "./commands/integrations/publish.js";
+import IntegrationsSetDebugCommand from "./commands/integrations/set-debug.js";
 import IntegrationsUpdateCommand from "./commands/integrations/update.js";
 import MeCommand from "./commands/me/index.js";
 import MeTokenCommand from "./commands/me/token.js";
@@ -114,6 +115,7 @@ export const Commands = {
   "integrations:marketplace": IntegrationsMarketplaceCommand,
   "integrations:open": IntegrationsOpenCommand,
   "integrations:publish": IntegrationsPublishCommand,
+  "integrations:set-debug": IntegrationsSetDebugCommand,
   "integrations:update": IntegrationsUpdateCommand,
   me: MeCommand,
   "me:token": MeTokenCommand,
