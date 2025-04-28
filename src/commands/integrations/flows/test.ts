@@ -142,13 +142,13 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         this.log(`Configuration URL: ${configUrl}`);
 
         const shouldOpen = await ux.confirm(
-          "Would you like to open the configuration wizard in your browser? (yes/no)",
+          "Would you like to open the Designer in your browser to configure the test instance? (yes/no)",
         );
 
         if (shouldOpen) {
           await open(configUrl);
         } else {
-          this.log("You can configure the integration later by visiting the URL above.");
+          this.log("You can configure the test instance later by visiting the URL above.");
         }
         return;
       }
