@@ -16,11 +16,8 @@ import {
 } from "../../../utils/integration/flows.js";
 import { exists, fs } from "../../../fs.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
-<<<<<<< HEAD
-import { isIntegrationConfigured } from "../../../utils/integration/query.js";
-=======
 import { handleError } from "../../../utils/errors.js";
->>>>>>> pa/cni-test-debug-mode
+import { isIntegrationConfigured } from "../../../utils/integration/query.js";
 
 type FormattedStepResult = {
   type: string;
@@ -34,11 +31,7 @@ const TIMEOUT_SECONDS = 60 * 20; // 20 minutes
 export default class TestFlowCommand extends PrismaticBaseCommand {
   private startTime = 0;
 
-<<<<<<< HEAD
   static description = "Run a test execution of a flow";
-=======
-  static description = "Run a test execution of an integration's flow";
->>>>>>> pa/cni-test-debug-mode
   static flags = {
     "flow-url": Flags.string({
       char: "u",
