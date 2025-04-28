@@ -14,6 +14,7 @@ import {
 } from "../../../utils/integration/flows.js";
 import { exists, fs } from "../../../fs.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
+import { handleError } from "../../../utils/errors.js";
 
 type FormattedStepResult = {
   type: string;
@@ -27,7 +28,7 @@ const TIMEOUT_SECONDS = 60 * 20; // 20 minutes
 export default class TestFlowCommand extends PrismaticBaseCommand {
   private startTime = 0;
 
-  static description = "Run a test execution of a CNI flow";
+  static description = "Run a test execution of an integration's flow";
   static flags = {
     "flow-url": Flags.string({
       char: "u",
@@ -39,7 +40,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     }),
     payload: Flags.string({
       char: "p",
-      description: "Optional file containing a JSON-formatted data payload to run the flow with.",
+      description: "Optional file containing a payload to run the flow with.",
     }),
     "payload-content-type": Flags.string({
       description: "Optional content-type for the test payload.",
@@ -90,29 +91,36 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       if (await exists(payloadFilePath)) {
         try {
           triggerPayload = JSON.parse(await fs.readFile(payloadFilePath, { encoding: "utf-8" }));
-        } catch (e) {
-          console.error("The provided trigger payload file contains malformed JSON");
-          throw e;
+        } catch (err) {
+          handleError({
+            message: "The provided trigger payload file contains malformed JSON",
+            err,
+            throwError: true,
+          });
         }
       } else {
-        throw `No file found at ${payloadFilePath}. Please double check the --trigger-payload-file (-p) parameter.`;
+        handleError({
+          message: `No file found at ${payloadFilePath}. Please double check the --trigger-payload-file (-p) parameter.`,
+          throwError: true,
+        });
       }
     }
 
     let integrationId = integrationIdFlag;
     let invokeUrl = flowUrl ?? "";
 
-    // Try to find an integrationId if we were not provided with an ID or invocation URL.
+    // Try to find an integrationId if we were not provided with an ID or
+    // direct invocation URL.
     if (!invokeUrl && !integrationId) {
       try {
         const metadata = await getPrismMetadata();
         integrationId = metadata.integrationId;
-      } catch (e) {
-        throw MISSING_ID_ERROR;
-      }
 
-      if (!integrationId) {
-        throw MISSING_ID_ERROR;
+        if (!integrationId) {
+          throw new Error();
+        }
+      } catch (err) {
+        handleError({ message: MISSING_ID_ERROR, err, throwError: true });
       }
     }
 
@@ -142,11 +150,13 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         });
 
         invokeUrl = flow.invokeUrl;
-      } catch (e) {
-        console.error(
-          "There was an error looking up flows for your integration. Please provide an integration ID or reimport your integration.",
-        );
-        throw e;
+      } catch (err) {
+        handleError({
+          message:
+            "There was an error looking up flows for your integration. Please provide an integration ID or reimport your integration.",
+          err,
+          throwError: true,
+        });
       }
     }
 
@@ -155,7 +165,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     }
 
     ux.action.start("Starting execution...");
-    // If this POST fails then just let the error be thrown.
+    // If this POST fails then just let the error be thrown normally.
     const response = await axios.post(invokeUrl, triggerPayload, {
       headers: {
         ...(sync ? { "prismatic-synchronous": true } : {}),
@@ -345,9 +355,13 @@ prism cni:test:flow -u=${invokeUrl} ${flagString}
           endedAt,
           result,
         });
-      } catch (e) {
+      } catch (err) {
         // Allow the process to keep running, just skip rendering the step result.
-        console.error("There was an error fetching step results for this flow.", e);
+        handleError({
+          message: `There was an error fetching step results for step: ${stepName}`,
+          err,
+          throwError: false,
+        });
       }
     }
 
