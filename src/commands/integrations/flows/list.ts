@@ -1,6 +1,6 @@
 import { Args, ux } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { listIntegrationFlows } from "../../../utils/integration/flows.js";
+import { getIntegrationFlows } from "../../../utils/integration/flows.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Integration Flows";
@@ -20,7 +20,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       flags,
     } = await this.parse(ListCommand);
 
-    const flows = await listIntegrationFlows(integration);
+    const flows = await getIntegrationFlows(integration);
 
     ux.table(
       flows,

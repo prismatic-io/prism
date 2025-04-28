@@ -1,6 +1,5 @@
 import LoginCommand from "./commands/login.js";
 import LogoutCommand from "./commands/logout.js";
-import CniTestFlowCommand from "./commands/cni/test/flow.js";
 import ComponentsDeleteCommand from "./commands/components/delete.js";
 import ComponentsListCommand from "./commands/components/list.js";
 import ComponentsPublishCommand from "./commands/components/publish.js";
@@ -25,6 +24,7 @@ import IntegrationsListCommand from "./commands/integrations/list.js";
 import IntegrationsMarketplaceCommand from "./commands/integrations/marketplace.js";
 import IntegrationsOpenCommand from "./commands/integrations/open.js";
 import IntegrationsPublishCommand from "./commands/integrations/publish.js";
+import IntegrationsSetDebugCommand from "./commands/integrations/set-debug.js";
 import IntegrationsUpdateCommand from "./commands/integrations/update.js";
 import MeCommand from "./commands/me/index.js";
 import MeTokenCommand from "./commands/me/token.js";
@@ -91,7 +91,6 @@ import OrganizationUsersUpdateCommand from "./commands/organization/users/update
 export const Commands = {
   login: LoginCommand,
   logout: LogoutCommand,
-  "cni:test:flow": CniTestFlowCommand,
   "components:delete": ComponentsDeleteCommand,
   "components:list": ComponentsListCommand,
   "components:publish": ComponentsPublishCommand,
@@ -116,6 +115,7 @@ export const Commands = {
   "integrations:marketplace": IntegrationsMarketplaceCommand,
   "integrations:open": IntegrationsOpenCommand,
   "integrations:publish": IntegrationsPublishCommand,
+  "integrations:set-debug": IntegrationsSetDebugCommand,
   "integrations:update": IntegrationsUpdateCommand,
   me: MeCommand,
   "me:token": MeTokenCommand,
