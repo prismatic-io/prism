@@ -20,7 +20,7 @@ import { handleError } from "../../../utils/errors.js";
 import { isIntegrationConfigured } from "../../../utils/integration/query.js";
 
 type FormattedStepResult = {
-  type: string;
+  stepName: string;
   endedAt: string;
   result: Record<string, unknown>;
 };
@@ -88,6 +88,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         "tail-results": tailStepResults,
         "cni-auto-end": autoEndPoll,
         "result-file": resultFilePath,
+        timeout,
         debug,
       },
     } = await this.parse(TestFlowCommand);
@@ -127,7 +128,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
           throw new Error();
         }
       } catch (err) {
-        handleError({ message: MISSING_ID_ERROR, err, throwError: true });
+        handleError({ message: MISSING_ID_ERROR, throwError: true });
       }
     }
 
@@ -184,14 +185,13 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         handleError({
           message:
             "There was an error looking up flows for your integration. Please provide an integration ID or reimport your integration.",
-          err,
           throwError: true,
         });
       }
     }
 
     if (!invokeUrl) {
-      throw MISSING_ID_ERROR;
+      handleError({ message: MISSING_ID_ERROR, throwError: true });
     }
 
     ux.action.start("Starting execution...");
@@ -236,12 +236,14 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
     );
     this.log(
       `\nPress CMD+C/CTRL+C to stop polling. ${
-        autoEndPoll ? "" : "This process will timeout after 20 minutes."
+        autoEndPoll
+          ? ""
+          : `This process will timeout after ${timeout ? `${timeout} seconds` : "20 minutes"}.`
       }\n`,
     );
 
     if (resultFilePath) {
-      await fs.appendFile(resultFilePath, "timestamp,type,data\n");
+      await fs.appendFile(resultFilePath, "timestamp,log_severity,step_name,data\n");
     }
 
     const tailPromises = [];
@@ -274,6 +276,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
         {
           timestamp: {},
           severity: {
+            get: (row) => `LOG_${row.severity}`,
             minWidth: 15,
           },
           message: {},
@@ -285,7 +288,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
 
       if (resultFilePath) {
         for (const log of logs) {
-          await fs.appendFile(resultFilePath, `${log.timestamp},${log.severity},${log.message}\n`);
+          await fs.appendFile(resultFilePath, `${log.timestamp},${log.severity},,${log.message}\n`);
         }
       }
 
@@ -317,7 +320,8 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
         stepResults,
         {
           endedAt: {},
-          type: {
+          stepName: {
+            get: (row) => `STEP_${row.stepName}`,
             minWidth: 15,
           },
           result: {},
@@ -331,7 +335,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
         for (const result of stepResults) {
           await fs.appendFile(
             resultFilePath,
-            `${result.endedAt},${result.type},${JSON.stringify(result.result)}\n`,
+            `${result.endedAt},,${result.stepName},${JSON.stringify(result.result)}\n`,
           );
         }
       }
@@ -382,7 +386,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
         const result = decode(resultsBuffer) as Record<string, unknown>;
 
         stepResults.push({
-          type: stepName === "onTrigger" ? "RESULT_TRIGGER" : "RESULT_FLOW",
+          stepName,
           endedAt,
           result,
         });
