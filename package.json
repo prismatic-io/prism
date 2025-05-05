@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "7.4.1",
+  "version": "7.4.2",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": ["prismatic", "cli"],
   "homepage": "https://prismatic.io",
@@ -53,8 +53,8 @@
     "ejs": "3.1.10",
     "fs-extra": "9.0.0",
     "glob": "10.4.5",
-    "graphql": "16.8.1",
-    "graphql-request": "6.1.0",
+    "graphql": "16.11.0",
+    "graphql-request": "7.1.2",
     "http-status-codes": "2.1.2",
     "inquirer": "9.2.16",
     "inquirer-autocomplete-standalone": "0.8.1",
