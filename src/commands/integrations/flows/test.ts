@@ -38,10 +38,10 @@ export const CONFIGURE_INSTANCE_PARAMS = {
   screenConfiguration: JSON.stringify({
     configurationWizard: {
       mode: "streamlined",
-      isInModal: true,
     },
   }),
 };
+
 export default class TestFlowCommand extends PrismaticBaseCommand {
   private startTime = 0;
 
