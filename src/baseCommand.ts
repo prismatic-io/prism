@@ -10,5 +10,15 @@ export abstract class PrismaticBaseCommand extends Command {
         return input;
       },
     }),
+    quiet: Flags.boolean({
+      description: "Reduce helpful notes and text",
+      helpGroup: "GLOBAL",
+      required: false,
+      default: false,
+      parse: async (input) => {
+        process.env.PRISM_QUIET = `${input}`;
+        return input;
+      },
+    }),
   };
 }
