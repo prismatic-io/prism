@@ -37,7 +37,7 @@ export async function writePrismMetadata(
   const alreadyExists = await exists(metadataPath);
   const file = await fs.writeFile(metadataPath, JSON.stringify(metadata));
 
-  if (!alreadyExists) {
+  if (!alreadyExists && !process.env.PRISM_QUIET) {
     console.warn(`
 [NOTE] A metadata file has been added at .spectral/prism.json to improve local developer experience.
 If you are managing your integration via git, feel free to add this to your .gitignore.
