@@ -17,7 +17,10 @@ import {
 import { exists, fs } from "../../../fs.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
 import { handleError } from "../../../utils/errors.js";
-import { isIntegrationConfigured } from "../../../utils/integration/query.js";
+import {
+  getIntegrationSystemId,
+  isIntegrationConfigured,
+} from "../../../utils/integration/query.js";
 
 type FormattedStepResult = {
   stepName: string;
@@ -27,6 +30,17 @@ type FormattedStepResult = {
 
 const MISSING_ID_ERROR = "You must provide either a flow-url or an integration-id parameter.";
 const TIMEOUT_SECONDS = 60 * 20; // 20 minutes
+
+export const CONFIGURE_INSTANCE_PARAMS = {
+  embed: "true",
+  theme: "LIGHT",
+  reconfigure: "true",
+  screenConfiguration: JSON.stringify({
+    configurationWizard: {
+      mode: "streamlined",
+    },
+  }),
+};
 
 export default class TestFlowCommand extends PrismaticBaseCommand {
   private startTime = 0;
@@ -136,20 +150,28 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     // via URL that have no integrationId in the metadata.
     if (integrationId) {
       const isConfigured = await isIntegrationConfigured(integrationId);
-      if (!isConfigured) {
-        this.warn("The integration needs to be configured before it can be tested.");
-        // @TODO: Replace with actual configuration URL when ready
-        const configUrl = `${prismaticUrl}/integrations/${integrationId}/`;
-        this.log(`Configuration URL: ${configUrl}`);
 
+      if (!isConfigured) {
+        const systemInstanceId = await getIntegrationSystemId(integrationId);
+        this.warn("The integration needs to be configured before it can be tested.");
+
+        const url = new URL(`${prismaticUrl}/configure-instance/${systemInstanceId}`);
+
+        for (const [key, value] of Object.entries(CONFIGURE_INSTANCE_PARAMS)) {
+          url.searchParams.set(key, value);
+        }
+
+        const configUrl = url.toString();
         const shouldOpen = await ux.confirm(
-          "Would you like to open the Designer in your browser to configure the test instance? (yes/no)",
+          "Would you like to open the Configuration Wizard in your browser? (yes/no)",
         );
 
         if (shouldOpen) {
           await open(configUrl);
         } else {
-          this.log("You can configure the test instance later by visiting the URL above.");
+          this.log(
+            `\nYou can configure the test instance later by visiting the following URL:\n${configUrl}`,
+          );
         }
         return;
       }

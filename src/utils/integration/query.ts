@@ -87,3 +87,19 @@ export const pollForActiveConfigVarState = async (
     }, 5000);
   });
 };
+
+export const getIntegrationSystemId = async (integrationId: string): Promise<string> => {
+  const result = await gqlRequest({
+    document: gql`
+      query integration($integrationId: ID!) {
+        integration(id: $integrationId) {
+          systemInstance {
+            id
+          }
+        }
+      }
+    `,
+    variables: { integrationId },
+  });
+  return result.integration.systemInstance.id;
+};
