@@ -13,7 +13,8 @@ import { kebabCase } from "lodash-es";
 import { formatSourceFiles, getFilesToFormat } from "../../../utils/generate.js";
 
 export default class GenerateIntegrationFromYAMLCommand extends Command {
-  static description = "Initialize a new Code Native Integration based on a Low-Code Integration's YAML file";
+  static description =
+    "Initialize a new Code Native Integration based on a Low-Code Integration's YAML file";
   static args = {
     yamlFile: Args.string({
       required: true,
