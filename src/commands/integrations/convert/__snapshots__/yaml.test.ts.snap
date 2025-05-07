@@ -1,0 +1,443 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/jest.config.js 1`] = `
+"module.exports = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+};
+"
+`;
+
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.prettierignore 1`] = `
+"# Ignore artifacts:
+.spectral
+build
+coverage
+"
+`;
+
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/tsconfig.json 1`] = `
+"{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["esnext"],
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "node"
+  },
+  "include": ["src", ".spectral/*"]
+}
+"
+`;
+
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.spectral/metadata.json 1`] = `
+"{
+  "convertedFromLowCode": true
+}
+"
+`;
+
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.spectral/index.ts 1`] = `
+"import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
+
+// @ts-ignore: these imports should stay here even if unused or undefined. ts-ignore is used to avoid type errors.
+import type { configPages, componentRegistry, userLevelConfigPages, scopedConfigVars } from "../src";
+
+type IsAny<T> = 0 extends 1 & T ? true : false;
+
+type TConfigPages = IsAny<typeof configPages> extends true
+  ? { [key: string]: ConfigPage }
+  : typeof configPages;
+
+type TUserLevelConfigPages = IsAny<typeof userLevelConfigPages> extends true
+  ? { [key: string]: ConfigPage }
+  : typeof userLevelConfigPages;
+
+type TComponentRegistry = IsAny<typeof componentRegistry> extends true
+  ? { [key: string]: ComponentManifest }
+  : typeof componentRegistry;
+
+type TScopedConfigVarMap = IsAny<typeof scopedConfigVars> extends true
+  ? { [key: string]: ScopedConfigVar }
+  : typeof scopedConfigVars;
+
+declare module "@prismatic-io/spectral" {
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionConfigPages extends TConfigPages {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionUserLevelConfigPages extends TUserLevelConfigPages {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionComponentRegistry extends TComponentRegistry {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-interface
+  interface IntegrationDefinitionScopedConfigVars extends TScopedConfigVarMap {}
+}
+"
+`;
+
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/configPages.ts 1`] = `
+"import {
+  configPage,
+  configVar,
+  connectionConfigVar,
+  dataSourceConfigVar,
+} from "@prismatic-io/spectral";
+
+export const configPages = {
+  "Connections Page": configPage({
+    tagline: "",
+    elements: {
+      "Slack Connection": connectionConfigVar({
+        stableKey: "slackConnection",
+        dataType: "connection",
+        connection: {
+          component: "slack",
+          key: "oauth2",
+          values: {
+            authorizeUrl: {
+              value: "https://slack.com/oauth/v2/authorize",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+            clientId: {
+              value: "7610303900993.7610321662833",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+            clientSecret: {
+              value: "b6acb317302a8ce8a01fbf24ab371338",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+            isUser: {
+              value: "false",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+            revokeUrl: {
+              value: "https://slack.com/api/auth.revoke",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+            scopes: {
+              value:
+                "chat:write chat:write.public chat:write.customize channels:read groups:read im:read mpim:read users:read",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+            signingSecret: {
+              value: "32cf662b1f05eb9a4472ef6900f0bb53",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+            tokenUrl: {
+              value: "https://slack.com/api/oauth.v2.access",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+          },
+        },
+      }),
+      "Salesforce Connection": connectionConfigVar({
+        stableKey: "salesforceConnection",
+        dataType: "connection",
+        connection: {
+          component: "salesforce",
+          key: "oauth2",
+          values: {
+            authorizeUrl: {
+              value: "https://login.salesforce.com/services/oauth2/authorize",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+            clientId: {
+              value: "123",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+            clientSecret: {
+              value: "456",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+            revokeUrl: {
+              value: "https://login.salesforce.com/services/oauth2/revoke",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+            tokenUrl: {
+              value: "https://login.salesforce.com/services/oauth2/token",
+              permissionAndVisibilityType: "organization",
+              visibleToOrgDeployer: false,
+            },
+          },
+        },
+      }),
+    },
+  }),
+  "Config Vars Page": configPage({
+    tagline: "",
+    elements: {
+      "<h3>Set up your configVars</h3>": configVar({
+        stableKey: "h3SetUpYourConfigVarsH3",
+        dataType: "htmlElement",
+        description: "",
+      }),
+      "Simple string": configVar({
+        stableKey: "simpleString",
+        dataType: "string",
+        description: "",
+        permissionAndVisibilityType: "organization",
+        visibleToOrgDeployer: true,
+        defaultValue: "The quick brown fox jumps over the lazy dog.",
+      }),
+      "Simple number": configVar({
+        stableKey: "simpleNumber",
+        dataType: "number",
+        description: "",
+        permissionAndVisibilityType: "embedded",
+        defaultValue: 1,
+      }),
+      "Simple list": configVar({
+        stableKey: "simpleList",
+        dataType: "string",
+        description: "",
+        permissionAndVisibilityType: "embedded",
+        collectionType: "valuelist",
+        defaultValue: ["abc", "def", "ghi"],
+      }),
+      "Simple key value list": configVar({
+        stableKey: "simpleKeyValueList",
+        dataType: "string",
+        description: "",
+        permissionAndVisibilityType: "embedded",
+        collectionType: "keyvaluelist",
+        defaultValue: [
+          { key: "key1", value: "myvalue" },
+          { key: "key2", value: "myothervalue" },
+          { key: "key3", value: "myotherothervalue" },
+        ],
+      }),
+    },
+  }),
+  "Data Sources Page": configPage({
+    tagline: "",
+    elements: {
+      "Slack Channels Data Source": dataSourceConfigVar({
+        stableKey: "slackChannelsDataSource",
+        dataType: "picklist",
+        dataSource: {
+          component: "slack",
+          key: "selectChannels",
+          values: {
+            connection: {
+              configVar: "Slack Connection",
+            },
+            includeImChannels: {
+              value: false,
+            },
+            includeMultiPartyImchannels: {
+              value: false,
+            },
+            includePrivateChannels: {
+              value: false,
+            },
+            includePublicChannels: {
+              value: true,
+            },
+            showIdInDropdown: {
+              value: false,
+            },
+          },
+        },
+      }),
+    },
+  }),
+};
+"
+`;
+
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/index.ts 1`] = `
+"import { integration } from "@prismatic-io/spectral";
+import flows from "./flows";
+import { configPages } from "./configPages";
+import { componentRegistry } from "./componentRegistry";
+
+export { configPages } from "./configPages";
+export { componentRegistry } from "./componentRegistry";
+
+const testIntegrationIntegration = integration({
+  name: "Test Integration",
+  description: "",
+  iconPath: "icon.png",
+  flows,
+  configPages,
+  componentRegistry,
+});
+export default testIntegrationIntegration;
+"
+`;
+
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/flows/basic.ts 1`] = `
+"import { flow } from "@prismatic-io/spectral";
+
+export const basic = flow({
+  name: "Basic",
+  stableKey: "basic",
+  description: "",
+  endpointSecurityType: "customer_optional",
+  onExecution: async (context, params) => {
+    const { configVars } = context;
+    const postMessage = await context.components.slack.postMessage({
+      channelName: "general",
+      connection: configVars["Slack Connection"],
+      debug: false,
+      message: "Hello this is my Slack message",
+      messageId: "",
+      username: "myTestSlackBot",
+    });
+    const writeLogMessage = await context.components.log.writeLog({
+      level: "info",
+      message: "Here is a simple log message at the end of my flow",
+    });
+    return { data: writeLogMessage };
+  },
+});
+
+export default basic;
+"
+`;
+
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/flows/index.ts 1`] = `
+"import { basic } from "./basic";
+import { stepConfigVarReferences } from "./stepConfigVarReferences";
+import { loopBranchTests } from "./loopBranchTests";
+
+export default [basic, stepConfigVarReferences, loopBranchTests];
+"
+`;
+
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/flows/stepConfigVarReferences.ts 1`] = `
+"import { flow } from "@prismatic-io/spectral";
+
+export const stepConfigVarReferences = flow({
+  name: "Step & configVar references",
+  stableKey: "step-config-var-references",
+  description: "",
+  endpointSecurityType: "customer_optional",
+  onExecution: async (context, params) => {
+    const { configVars } = context;
+    const codeBlock = await context.components.code.runCode({
+      code: \`module.exports = async ({ logger, configVars }, stepResults) => {
+  return { data: { testKey: "My return value" } };
+};
+\`,
+    });
+    const templateReferences = await context.components.log.writeLog({
+      level: "info",
+      message: \`The response of the code block action was: \${codeBlock.data.testKey}. This config var value is: \${configVars["Simple string"]}.\`,
+    });
+    const directConfigVarReference = await context.components.log.writeLog({
+      level: "info",
+      message: configVars["Simple string"],
+    });
+    const directStepReference = await context.components.log.writeLog({
+      level: "info",
+      message: codeBlock.data.testKey,
+    });
+    const dataSourceReference = await context.components.log.writeLog({
+      level: "info",
+      message: configVars["Slack Channels Data Source"],
+    });
+    return { data: dataSourceReference };
+  },
+});
+
+export default stepConfigVarReferences;
+"
+`;
+
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/flows/loopBranchTests.ts 1`] = `
+"import { isEqual } from "@prismatic-io/spectral/dist/conditionalLogic";
+import { flow } from "@prismatic-io/spectral";
+
+export const loopBranchTests = flow({
+  name: "Loop & branch tests",
+  stableKey: "loop-branch-tests",
+  description: "",
+  endpointSecurityType: "customer_optional",
+  schedule: {
+    value: "*/10 * * * *",
+  },
+  onExecution: async (context, params) => {
+    const { configVars } = context;
+    const listUsers = await context.components.slack.listUsers({
+      connection: configVars["Slack Connection"],
+      cursor: "",
+      debug: false,
+      limit: "",
+      teamId: "",
+    });
+    const loopOverItems: { data: unknown[] } = { data: [] };
+    for (const loopOverItemsItem of listUsers.data.members) {
+      const writeLogMessage = await context.components.log.writeLog({
+        level: "info",
+        message: loopOverItemsItem.name,
+      });
+
+      /* This string is the name of the branch that this conditional block resolves to. */
+      let branchOnExpression: string;
+      if (isEqual(loopOverItemsItem.name, "slackbot")) {
+        const codeBlock = await context.components.code.runCode({
+          code: \`module.exports = async ({ logger, configVars }, stepResults) => {
+  return { data: true };
+};
+\`,
+        });
+        branchOnExpression = "it is slackbot";
+      } else {
+        break;
+      }
+      loopOverItems.data.push(branchOnExpression);
+    }
+
+    const loopNTimes: { data: unknown[] } = { data: [] };
+    for (let loopNTimesIdx = 0; loopNTimesIdx < 100; loopNTimesIdx++) {
+      const sleep = await context.components.sleep.sleep({
+        ms: "1000",
+      });
+
+      const writeLogMessage2 = await context.components.log.writeLog({
+        level: "info",
+        message: loopOverItems.data[0],
+      });
+
+      const codeBlock2 = await context.components.code.runCode({
+        code: \`module.exports = async ({ logger, configVars }, stepResults) => {
+  return { data: 100 };
+};
+\`,
+      });
+
+      loopNTimes.data.push(codeBlock2.data);
+    }
+
+    const writeLogMessage3 = await context.components.log.writeLog({
+      level: "info",
+      message: loopNTimes.data[5],
+    });
+    const selectExecutedStepResult =
+      await context.components.branch.selectExecutedStepResult({
+        stepResults: ["codeBlock2.results"],
+      });
+    return { data: selectExecutedStepResult };
+  },
+});
+
+export default loopBranchTests;
+"
+`;

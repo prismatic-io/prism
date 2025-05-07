@@ -1,4 +1,4 @@
-import { Command, Config, Flags, Args } from "@oclif/core";
+import { Command, Config, Flags } from "@oclif/core";
 import path from "path";
 import { template, toArgv } from "../../../generate/util.js";
 import { exists } from "../../../fs.js";
@@ -12,16 +12,14 @@ import { formatInputValue } from "../../../generate/formats/writer/yaml/utils.js
 import { kebabCase } from "lodash-es";
 import { formatSourceFiles, getFilesToFormat } from "../../../utils/generate.js";
 
-export default class GenerateIntegrationFromYAMLCommand extends Command {
-  static description =
-    "Initialize a new Code Native Integration based on a Low-Code Integration's YAML file";
-  static args = {
-    yamlFile: Args.string({
+export default class ConvertIntegrationCommand extends Command {
+  static description = "Convert a Low-Code Integration's YAML file into a Code Native Integration";
+  static flags = {
+    yamlFile: Flags.string({
       required: true,
+      char: "y",
       description: "Filepath to a Low-Code Integration's YAML",
     }),
-  };
-  static flags = {
     folder: Flags.string({
       required: false,
       char: "f",
@@ -39,9 +37,8 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
     const cwd = process.cwd();
 
     try {
-      const { args, flags } = await this.parse(GenerateIntegrationFromYAMLCommand);
-      const { yamlFile } = args;
-      const { registryPrefix, folder } = flags;
+      const { flags } = await this.parse(ConvertIntegrationCommand);
+      const { yamlFile, registryPrefix, folder } = flags;
 
       const yamlExists = await exists(yamlFile);
 
@@ -122,6 +119,6 @@ For documentation on writing code-native integrations, visit https://prismatic.i
   }
 
   static async invoke(args: { [K in keyof typeof this.flags]+?: unknown }, config: Config) {
-    await GenerateIntegrationFromYAMLCommand.run(toArgv(args), config);
+    await ConvertIntegrationCommand.run(toArgv(args), config);
   }
 }

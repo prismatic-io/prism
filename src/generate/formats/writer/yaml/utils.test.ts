@@ -412,7 +412,7 @@ describe("writeLoopString", () => {
   );
 });
 
-const TEST_YAML_PATH = "src/commands/experimental/yaml/fixtures/specs/test-integration.yaml";
+const TEST_YAML_PATH = "src/commands/integrations/convert/fixtures/specs/test-integration.yaml";
 
 describe("extractComponentList", () => {
   it("extracts the right list of components", async () => {

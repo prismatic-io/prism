@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import GenerateIntegrationFromYAMLCommand from "./index.js";
+import ConvertIntegrationCommand from "./index.js";
 import fs from "fs";
 import path from "path";
 import { readFile } from "fs-extra";
@@ -9,7 +9,7 @@ const CONVERT_GENERATION_TIMEOUT = 5 * 60 * 5; // 5 minutes
 
 describe("YAML CNI generation tests", () => {
   const basePath = process.env.PWD ?? process.cwd();
-  const commandPath = path.resolve("src/commands/experimental/yaml");
+  const commandPath = path.resolve("src/commands/integrations/convert");
   const tempPath = path.resolve(`${commandPath}/temp`);
 
   if (!fs.existsSync(tempPath)) {
@@ -22,8 +22,8 @@ describe("YAML CNI generation tests", () => {
       async () => {
         process.chdir(tempPath);
 
-        await GenerateIntegrationFromYAMLCommand.run([
-          "../fixtures/specs/test-integration.yaml",
+        await ConvertIntegrationCommand.run([
+          "--yamlFile=../fixtures/specs/test-integration.yaml",
           "--folder=testIntegration",
         ]);
 

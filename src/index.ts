@@ -64,10 +64,10 @@ import CustomersUsersListCommand from "./commands/customers/users/list.js";
 import CustomersUsersRolesCommand from "./commands/customers/users/roles.js";
 import CustomersUsersUpdateCommand from "./commands/customers/users/update.js";
 import ExecutionsStepResultGetCommand from "./commands/executions/step-result/get.js";
-import ExperimentalYamlInitCommand from "./commands/experimental/yaml/index.js";
 import InstancesConfigVarsListCommand from "./commands/instances/config-vars/list.js";
 import InstancesFlowConfigsListCommand from "./commands/instances/flow-configs/list.js";
 import InstancesFlowConfigsTestCommand from "./commands/instances/flow-configs/test.js";
+import IntegrationConvertCommand from "./commands/integrations/convert/index.js";
 import IntegrationsFlowsListCommand from "./commands/integrations/flows/list.js";
 import IntegrationsFlowsTestCommand from "./commands/integrations/flows/test.js";
 import IntegrationsInitCommand from "./commands/integrations/init/index.js";
@@ -155,10 +155,10 @@ export const Commands = {
   "customers:users:roles": CustomersUsersRolesCommand,
   "customers:users:update": CustomersUsersUpdateCommand,
   "executions:step-result:get": ExecutionsStepResultGetCommand,
-  "experimental:yaml": ExperimentalYamlInitCommand,
   "instances:config-vars:list": InstancesConfigVarsListCommand,
   "instances:flow-configs:list": InstancesFlowConfigsListCommand,
   "instances:flow-configs:test": InstancesFlowConfigsTestCommand,
+  "integrations:convert": IntegrationConvertCommand,
   "integrations:flows:list": IntegrationsFlowsListCommand,
   "integrations:flows:test": IntegrationsFlowsTestCommand,
   "integrations:init": IntegrationsInitCommand,
