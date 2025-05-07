@@ -9,7 +9,7 @@ import {
   convertBody,
   convertTemplateInput,
   convertYAMLReferenceValue,
-  wrapValue,
+  formatInputValue,
 } from "./utils.js";
 import { camelCase, uniq, difference } from "lodash-es";
 import { SourceFile } from "ts-morph";
@@ -150,7 +150,7 @@ export function _convertConditionIntoTermExpression(
     case "configVar":
       return `configVars["${value}"]`;
     case "value":
-      return `${wrapValue(value)}`;
+      return `${formatInputValue(value)}`;
     case "template":
       return convertTemplateInput(value as string, trigger, loop);
     case "reference":

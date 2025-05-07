@@ -1,4 +1,4 @@
-import { Command, Config, Flags } from "@oclif/core";
+import { Command, Config, Flags, Args } from "@oclif/core";
 import path from "path";
 import { template, toArgv } from "../../../generate/util.js";
 import { exists } from "../../../fs.js";
@@ -8,23 +8,24 @@ import { v4 as uuid4 } from "uuid";
 import { prismaticUrl } from "../../../auth.js";
 import { writeIntegration, writePackageJson } from "../../../generate/formats/writer/yaml/index.js";
 import { IntegrationObjectFromYAML } from "../../../generate/formats/writer/yaml/types.js";
-import { wrapValue } from "../../../generate/formats/writer/yaml/utils.js";
+import { formatInputValue } from "../../../generate/formats/writer/yaml/utils.js";
 import { kebabCase } from "lodash-es";
 import { formatSourceFiles, getFilesToFormat } from "../../../utils/generate.js";
 
 export default class GenerateIntegrationFromYAMLCommand extends Command {
-  static description = "Initialize a new Code Native Integration based on a YAML file";
-  static flags = {
-    yamlFile: Flags.string({
+  static description = "Initialize a new Code Native Integration based on a Low-Code Integration's YAML file";
+  static args = {
+    yamlFile: Args.string({
       required: true,
-      char: "y",
-      description: "YAML filepath",
+      description: "Filepath to a Low-Code Integration's YAML",
     }),
+  };
+  static flags = {
     folder: Flags.string({
       required: false,
       char: "f",
       description:
-        "Optional: Folder name to install the integration into (by default we will kebab-case your integration name)",
+        "Optional: Folder name to install the integration into (kebab-cased integration name by default)",
     }),
     registryPrefix: Flags.string({
       required: false,
@@ -37,8 +38,9 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
     const cwd = process.cwd();
 
     try {
-      const { flags } = await this.parse(GenerateIntegrationFromYAMLCommand);
-      const { yamlFile, registryPrefix, folder } = flags;
+      const { args, flags } = await this.parse(GenerateIntegrationFromYAMLCommand);
+      const { yamlFile } = args;
+      const { registryPrefix, folder } = flags;
 
       const yamlExists = await exists(yamlFile);
 
@@ -59,7 +61,7 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
       const context = {
         integration: {
           name: result.name,
-          description: result.description ? wrapValue(result.description) : undefined,
+          description: result.description ? formatInputValue(result.description) : undefined,
           key: integrationKey,
         },
         registry: {

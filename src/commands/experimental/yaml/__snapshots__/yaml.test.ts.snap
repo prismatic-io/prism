@@ -42,13 +42,8 @@ exports[`YAML CNI generation tests test convert integration should match scaffol
 exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/.spectral/index.ts 1`] = `
 "import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
 
-// @ts-ignore
-import type {
-  configPages,
-  componentRegistry,
-  userLevelConfigPages,
-  scopedConfigVars,
-} from "../src";
+// @ts-ignore: these imports should stay here even if unused or undefined. ts-ignore is used to avoid type errors.
+import type { configPages, componentRegistry, userLevelConfigPages, scopedConfigVars } from "../src";
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
@@ -97,7 +92,7 @@ export const configPages = {
     tagline: "",
     elements: {
       "Slack Connection": connectionConfigVar({
-        stableKey: "Slack Connection",
+        stableKey: "slackConnection",
         dataType: "connection",
         connection: {
           component: "slack",
@@ -105,50 +100,50 @@ export const configPages = {
           values: {
             authorizeUrl: {
               value: "https://slack.com/oauth/v2/authorize",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
             clientId: {
               value: "7610303900993.7610321662833",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
             clientSecret: {
               value: "b6acb317302a8ce8a01fbf24ab371338",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
             isUser: {
               value: "false",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
             revokeUrl: {
               value: "https://slack.com/api/auth.revoke",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
             scopes: {
               value:
                 "chat:write chat:write.public chat:write.customize channels:read groups:read im:read mpim:read users:read",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
             signingSecret: {
               value: "32cf662b1f05eb9a4472ef6900f0bb53",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
             tokenUrl: {
               value: "https://slack.com/api/oauth.v2.access",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
           },
         },
       }),
       "Salesforce Connection": connectionConfigVar({
-        stableKey: "Salesforce Connection",
+        stableKey: "salesforceConnection",
         dataType: "connection",
         connection: {
           component: "salesforce",
@@ -156,27 +151,27 @@ export const configPages = {
           values: {
             authorizeUrl: {
               value: "https://login.salesforce.com/services/oauth2/authorize",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
             clientId: {
               value: "123",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
             clientSecret: {
               value: "456",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
             revokeUrl: {
               value: "https://login.salesforce.com/services/oauth2/revoke",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
             tokenUrl: {
               value: "https://login.salesforce.com/services/oauth2/token",
-              permissionAndVisibilityType: "embedded",
+              permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },
           },
@@ -193,7 +188,7 @@ export const configPages = {
         description: "",
       }),
       "Simple string": configVar({
-        stableKey: "Simple string",
+        stableKey: "simpleString",
         dataType: "string",
         description: "",
         permissionAndVisibilityType: "organization",
@@ -201,14 +196,14 @@ export const configPages = {
         defaultValue: "The quick brown fox jumps over the lazy dog.",
       }),
       "Simple number": configVar({
-        stableKey: "Simple number",
+        stableKey: "simpleNumber",
         dataType: "number",
         description: "",
         permissionAndVisibilityType: "embedded",
         defaultValue: 1,
       }),
       "Simple list": configVar({
-        stableKey: "Simple list",
+        stableKey: "simpleList",
         dataType: "string",
         description: "",
         permissionAndVisibilityType: "embedded",
@@ -216,7 +211,7 @@ export const configPages = {
         defaultValue: ["abc", "def", "ghi"],
       }),
       "Simple key value list": configVar({
-        stableKey: "Simple key value list",
+        stableKey: "simpleKeyValueList",
         dataType: "string",
         description: "",
         permissionAndVisibilityType: "embedded",
@@ -233,7 +228,7 @@ export const configPages = {
     tagline: "",
     elements: {
       "Slack Channels Data Source": dataSourceConfigVar({
-        stableKey: "Slack Channels Data Source",
+        stableKey: "slackChannelsDataSource",
         dataType: "picklist",
         dataSource: {
           component: "slack",
@@ -243,19 +238,19 @@ export const configPages = {
               configVar: "Slack Connection",
             },
             includeImChannels: {
-              value: "false",
+              value: false,
             },
             includeMultiPartyImchannels: {
-              value: "false",
+              value: false,
             },
             includePrivateChannels: {
-              value: "false",
+              value: false,
             },
             includePublicChannels: {
-              value: "true",
+              value: true,
             },
             showIdInDropdown: {
-              value: "false",
+              value: false,
             },
           },
         },
@@ -294,7 +289,6 @@ export const basic = flow({
   name: "Basic",
   stableKey: "basic",
   description: "",
-  isSynchronous: false,
   endpointSecurityType: "customer_optional",
   onExecution: async (context, params) => {
     const { configVars } = context;
@@ -334,7 +328,6 @@ export const stepConfigVarReferences = flow({
   name: "Step & configVar references",
   stableKey: "step-config-var-references",
   description: "",
-  isSynchronous: false,
   endpointSecurityType: "customer_optional",
   onExecution: async (context, params) => {
     const { configVars } = context;
@@ -376,7 +369,6 @@ export const loopBranchTests = flow({
   name: "Loop & branch tests",
   stableKey: "loop-branch-tests",
   description: "",
-  isSynchronous: false,
   endpointSecurityType: "customer_optional",
   schedule: {
     value: "*/10 * * * *",
@@ -416,7 +408,7 @@ export const loopBranchTests = flow({
     const loopNTimes: { data: unknown[] } = { data: [] };
     for (let loopNTimesIdx = 0; loopNTimesIdx < 100; loopNTimesIdx++) {
       const sleep = await context.components.sleep.sleep({
-        ms: 1000,
+        ms: "1000",
       });
 
       const writeLogMessage2 = await context.components.log.writeLog({

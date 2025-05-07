@@ -23,7 +23,7 @@ describe("YAML CNI generation tests", () => {
         process.chdir(tempPath);
 
         await GenerateIntegrationFromYAMLCommand.run([
-          "--yamlFile=../fixtures/specs/test-integration.yaml",
+          "../fixtures/specs/test-integration.yaml",
           "--folder=testIntegration",
         ]);
 

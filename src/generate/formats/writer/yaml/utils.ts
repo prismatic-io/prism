@@ -31,17 +31,17 @@ export function valueIsBoolean(value: unknown) {
 
 /* Given a valid YAML value, wrap it in some kind of quotation
  * or nothing depending on the case. */
-export function wrapValue(
+export function formatInputValue(
   value: ValidYAMLValue | ValidComplexYAMLValue | undefined,
-  useQuotes?: boolean,
+  forceWrap?: boolean,
 ) {
-  if (valueIsBoolean(value) && !useQuotes) {
+  if (valueIsBoolean(value) && !forceWrap) {
     const formattedValue = typeof value === "string" ? value.toLowerCase() : value;
     // Boolean-like values shouldn't be wrapped
     return formattedValue;
   } else if (value === "" || (!value && value !== false && value !== 0)) {
     return `""`;
-  } else if (valueIsNumber(value) && !useQuotes) {
+  } else if (valueIsNumber(value) && !forceWrap) {
     // Number-like values shouldn't be wrapped
     return value;
   } else if (typeof value === "string" && value.indexOf("\n") >= 0) {
@@ -110,12 +110,13 @@ export function convertYAMLReferenceValue(
 
 /* Given a config var's meta & orgOnly properties, determine the
  * permission and visibility type. Implementation taken from frontend. */
-export const getPermissionAndVisibilityType = (
-  meta: ConfigVarObjectFromYAML["meta"],
-  orgOnly?: boolean,
-) => {
-  const { visibleToCustomerDeployer } = meta ?? {};
-
+export const getPermissionAndVisibilityType = ({
+  visibleToCustomerDeployer,
+  orgOnly,
+}: {
+  visibleToCustomerDeployer?: boolean;
+  orgOnly?: boolean;
+}) => {
   if (orgOnly) {
     return "organization";
   }
@@ -195,9 +196,9 @@ export function convertYAMLObjectIntoString(value: ValidComplexYAMLValue) {
         const key =
           typeof element.name === "string" ? element.name : (element.name.value as string);
         const formattedKey = includesExceptionChars(key) ? `"${key}"` : key;
-        resultString += `${formattedKey}: ${wrapValue(element.value as string)},`;
+        resultString += `${formattedKey}: ${formatInputValue(element.value as string)},`;
       } else {
-        resultString += `${wrapValue(element.value as string)},`;
+        resultString += `${formatInputValue(element.value as string)},`;
       }
     });
   }
@@ -228,13 +229,18 @@ export function createFlowInputsString(
     } else if (input.type === "configVar") {
       if (action.isTrigger) {
         currentInputString += `"${input.value}"`;
+      } else if (!input.value) {
+        currentInputString += "undefined,";
       } else {
         currentInputString += `configVars["${input.value}"],`;
       }
     } else if (input.type === "template") {
       currentInputString += `${convertTemplateInput(input.value as string, trigger, loop)},`;
     } else {
-      currentInputString += `${wrapValue(input.value as ValidYAMLValue)},`;
+      const forceWrap =
+        (typeof input.value === "string" || valueIsNumber(input.value)) &&
+        !valueIsBoolean(input.value);
+      currentInputString += `${formatInputValue(input.value as ValidYAMLValue, forceWrap)},`;
     }
 
     if (action.isTrigger) {
@@ -362,6 +368,12 @@ export async function extractComponentList(
       if (step.steps) {
         stepListsToProcess.push(step.steps);
       }
+
+      if (step.branches) {
+        step.branches.forEach((branch) => {
+          stepListsToProcess.push(branch.steps);
+        });
+      }
     });
   });
 
@@ -377,6 +389,12 @@ export async function extractComponentList(
 
       if (step.steps) {
         stepListsToProcess.push(step.steps);
+      }
+
+      if (step.branches) {
+        step.branches.forEach((branch) => {
+          stepListsToProcess.push(branch.steps);
+        });
       }
     });
   }
