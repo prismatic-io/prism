@@ -12,7 +12,7 @@ import {
   extractComponentList,
   formatConfigVarInputs,
   getPermissionAndVisibilityType,
-  wrapValue,
+  formatInputValue,
   UsedComponent,
 } from "./utils.js";
 import {
@@ -151,7 +151,7 @@ function writeIndex(project: Project, integration: IntegrationObjectFromYAML) {
           writer
             .writeLine("integration({")
             .writeLine(`name: "${integration.name}",`)
-            .writeLine(`description: ${wrapValue(integration.description) || ""},`)
+            .writeLine(`description: ${formatInputValue(integration.description) || ""},`)
             .writeLine(`iconPath: "icon.png",`)
             .writeLine("flows,")
             .writeLine("configPages,")
@@ -197,9 +197,15 @@ function writeFlows(project: Project, integration: IntegrationObjectFromYAML) {
                 .writeLine("flow({")
                 .writeLine(`name: "${flow.name}",`)
                 .writeLine(`stableKey: "${flow.stableKey}",`)
-                .writeLine(`description: ${wrapValue(flow.description)},`)
-                .writeLine(`isSynchronous: ${flow.isSynchronous},`)
-                .writeLine(`endpointSecurityType: "${flow.endpointSecurityType}",`);
+                .writeLine(`description: ${formatInputValue(flow.description)},`)
+                .conditionalWriteLine(
+                  Boolean(flow.isSynchronous),
+                  `isSynchronous: ${flow.isSynchronous},`,
+                )
+                .conditionalWriteLine(
+                  flow.endpointSecurityType !== undefined,
+                  `endpointSecurityType: "${flow.endpointSecurityType}",`,
+                );
 
               if (flow.trigger.schedule && flow.trigger.schedule.meta?.scheduleType !== "none") {
                 writer
@@ -370,7 +376,7 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                   includes.connectionConfigVar = true;
                   writer
                     .writeLine(`"${configVar.name}": connectionConfigVar({`)
-                    .writeLine(`stableKey: "${configVar.key}",`)
+                    .writeLine(`stableKey: "${camelCase(configVar.key)}",`)
                     .writeLine(`dataType: "${configVar.dataType}",`)
                     .writeLine("connection: {")
                     .writeLine(`component: "${camelCase(configVar.connection.component.key)}",`)
@@ -379,14 +385,14 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
 
                   configVar.inputs.forEach((input) => {
                     writer
-                      .writeLine(`${wrapValue(input.name)}: {`)
+                      .writeLine(`${formatInputValue(input.name)}: {`)
                       .conditionalWriteLine(
                         input.type === "configVar",
                         `configVar: "${input.value}",`,
                       )
                       .conditionalWriteLine(
                         input.type !== "configVar",
-                        `value: ${wrapValue(input.value, true)},`,
+                        `value: ${formatInputValue(input.value, true)},`,
                       )
                       .conditionalWriteLine(
                         Boolean(input.meta.permissionAndVisibilityType),
@@ -408,7 +414,7 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                   includes.dataSourceConfigVar = true;
                   writer
                     .writeLine(`"${configVar.name}": dataSourceConfigVar({`)
-                    .writeLine(`stableKey: "${configVar.key}",`)
+                    .writeLine(`stableKey: "${camelCase(configVar.key)}",`)
                     .writeLine(`dataType: "${configVar.dataType}",`)
                     .writeLine("dataSource: {")
                     .writeLine(`component: "${camelCase(configVar.dataSource.component.key)}",`)
@@ -417,14 +423,14 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
 
                   configVar.inputs.forEach((input) => {
                     writer
-                      .writeLine(`${wrapValue(input.name)}: {`)
+                      .writeLine(`${formatInputValue(input.name)}: {`)
                       .conditionalWriteLine(
                         input.type === "configVar",
                         `configVar: "${input.value}",`,
                       )
                       .conditionalWriteLine(
                         input.type !== "configVar",
-                        `value: ${wrapValue(input.value, true)},`,
+                        `value: ${formatInputValue(input.value)},`,
                       )
                       .writeLine("},");
                   });
@@ -434,9 +440,9 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                   includes.configVar = true;
                   writer
                     .writeLine(`"${configVar.name}": configVar({`)
-                    .writeLine(`stableKey: "${configVar.key}",`)
+                    .writeLine(`stableKey: "${camelCase(configVar.key)}",`)
                     .writeLine(`dataType: "${configVar.dataType}",`)
-                    .writeLine(`description: ${wrapValue(configVar.description)},`)
+                    .writeLine(`description: ${formatInputValue(configVar.description)},`)
                     .conditionalWriteLine(
                       Boolean(configVar.meta?.permissionAndVisibilityType),
                       `permissionAndVisibilityType: "${configVar.meta?.permissionAndVisibilityType}",`,
@@ -451,7 +457,7 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                     )
                     .conditionalWriteLine(
                       Boolean(!configVar.collectionType && configVar.defaultValue),
-                      `defaultValue: ${wrapValue(configVar.defaultValue || "")},`,
+                      `defaultValue: ${formatInputValue(configVar.defaultValue || "")},`,
                     )
                     .writeLine("}),");
                 }
@@ -543,10 +549,10 @@ function formatConfigPages(
             inputs: formatConfigVarInputs(foundConfigVar),
             meta: {
               ...foundConfigVar.meta,
-              permissionAndVisibilityType: getPermissionAndVisibilityType(
-                foundConfigVar.meta,
-                foundConfigVar.orgOnly,
-              ),
+              permissionAndVisibilityType: getPermissionAndVisibilityType({
+                ...foundConfigVar.meta,
+                orgOnly: foundConfigVar.orgOnly,
+              }),
             },
           }
         : {

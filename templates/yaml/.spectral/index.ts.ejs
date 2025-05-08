@@ -1,12 +1,7 @@
 import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
 
-// @ts-ignore
-import type {
-  configPages,
-  componentRegistry,
-  userLevelConfigPages,
-  scopedConfigVars,
-} from "../src";
+// @ts-ignore: these imports should stay here even if unused or undefined. ts-ignore is used to avoid type errors.
+import type { configPages, componentRegistry, userLevelConfigPages, scopedConfigVars } from "../src";
 
 type IsAny<T> = 0 extends 1 & T ? true : false;
 

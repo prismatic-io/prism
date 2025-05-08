@@ -8,23 +8,23 @@ import { v4 as uuid4 } from "uuid";
 import { prismaticUrl } from "../../../auth.js";
 import { writeIntegration, writePackageJson } from "../../../generate/formats/writer/yaml/index.js";
 import { IntegrationObjectFromYAML } from "../../../generate/formats/writer/yaml/types.js";
-import { wrapValue } from "../../../generate/formats/writer/yaml/utils.js";
+import { formatInputValue } from "../../../generate/formats/writer/yaml/utils.js";
 import { kebabCase } from "lodash-es";
 import { formatSourceFiles, getFilesToFormat } from "../../../utils/generate.js";
 
-export default class GenerateIntegrationFromYAMLCommand extends Command {
-  static description = "Initialize a new Code Native Integration based on a YAML file";
+export default class ConvertIntegrationCommand extends Command {
+  static description = "Convert a Low-Code Integration's YAML file into a Code Native Integration";
   static flags = {
     yamlFile: Flags.string({
       required: true,
       char: "y",
-      description: "YAML filepath",
+      description: "Filepath to a Low-Code Integration's YAML",
     }),
     folder: Flags.string({
       required: false,
       char: "f",
       description:
-        "Optional: Folder name to install the integration into (by default we will kebab-case your integration name)",
+        "Optional: Folder name to install the integration into (kebab-cased integration name by default)",
     }),
     registryPrefix: Flags.string({
       required: false,
@@ -37,7 +37,7 @@ export default class GenerateIntegrationFromYAMLCommand extends Command {
     const cwd = process.cwd();
 
     try {
-      const { flags } = await this.parse(GenerateIntegrationFromYAMLCommand);
+      const { flags } = await this.parse(ConvertIntegrationCommand);
       const { yamlFile, registryPrefix, folder } = flags;
 
       const yamlExists = await exists(yamlFile);
@@ -59,7 +59,7 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
       const context = {
         integration: {
           name: result.name,
-          description: result.description ? wrapValue(result.description) : undefined,
+          description: result.description ? formatInputValue(result.description) : undefined,
           key: integrationKey,
         },
         registry: {
@@ -119,6 +119,6 @@ For documentation on writing code-native integrations, visit https://prismatic.i
   }
 
   static async invoke(args: { [K in keyof typeof this.flags]+?: unknown }, config: Config) {
-    await GenerateIntegrationFromYAMLCommand.run(toArgv(args), config);
+    await ConvertIntegrationCommand.run(toArgv(args), config);
   }
 }

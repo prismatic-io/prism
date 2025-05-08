@@ -4,7 +4,7 @@ import {
   convertYAMLReferenceValue,
   createFlowInputsString,
   writeLoopString,
-  wrapValue,
+  formatInputValue,
   extractComponentList,
 } from "./utils";
 import { SourceFile } from "ts-morph";
@@ -12,7 +12,7 @@ import { load } from "js-yaml";
 import { promises as fs } from "fs";
 import { IntegrationObjectFromYAML } from "./types";
 
-describe("wrapValue", () => {
+describe("formatInputValue", () => {
   it.each([
     [
       "undefined => empty string",
@@ -71,7 +71,7 @@ describe("wrapValue", () => {
       },
     ],
   ])("correctly wraps the input value: %s", (_scenario, { input, expected }) => {
-    expect(wrapValue(input)).toStrictEqual(expected);
+    expect(formatInputValue(input)).toStrictEqual(expected);
   });
 });
 
@@ -412,7 +412,7 @@ describe("writeLoopString", () => {
   );
 });
 
-const TEST_YAML_PATH = "src/commands/experimental/yaml/fixtures/specs/test-integration.yaml";
+const TEST_YAML_PATH = "src/commands/integrations/convert/fixtures/specs/test-integration.yaml";
 
 describe("extractComponentList", () => {
   it("extracts the right list of components", async () => {

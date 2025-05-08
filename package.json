@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "7.4.3",
+  "version": "7.5.0",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": ["prismatic", "cli"],
   "homepage": "https://prismatic.io",
@@ -21,7 +21,7 @@
   },
   "scripts": {
     "clean": "rm -rf lib && bun run clean-test-temp",
-    "clean-test-temp": "rm -rf src/commands/components/temp src/commands/components/init/temp src/commands/experimental/yaml/temp",
+    "clean-test-temp": "rm -rf src/commands/components/temp src/commands/components/init/temp src/commands/integrations/convert/temp",
     "copy": "copyfiles --error --all --exclude='.* !(|.spectral)' 'templates/**' 'lib' && copyfiles --error --up 1 'src/run.cmd' 'lib'",
     "build": "bun run clean && bun run format && bun run lint && tsc && bun run bundle && bun run manifest && bun run copy",
     "bundle": "bun build src/index.ts src/run.ts --external debug --minify --outdir lib --target node",
