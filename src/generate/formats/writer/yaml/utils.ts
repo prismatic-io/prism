@@ -33,15 +33,15 @@ export function valueIsBoolean(value: unknown) {
  * or nothing depending on the case. */
 export function formatInputValue(
   value: ValidYAMLValue | ValidComplexYAMLValue | undefined,
-  forceWrap?: boolean,
+  forceWrap: { boolean?: boolean; number?: boolean } = { boolean: false, number: false },
 ) {
-  if (valueIsBoolean(value) && !forceWrap) {
+  if (valueIsBoolean(value) && !forceWrap.boolean) {
     const formattedValue = typeof value === "string" ? value.toLowerCase() : value;
     // Boolean-like values shouldn't be wrapped
     return formattedValue;
   } else if (value === "" || (!value && value !== false && value !== 0)) {
     return `""`;
-  } else if (valueIsNumber(value) && !forceWrap) {
+  } else if (valueIsNumber(value) && !forceWrap.number) {
     // Number-like values shouldn't be wrapped
     return value;
   } else if (typeof value === "string" && value.indexOf("\n") >= 0) {
@@ -237,10 +237,10 @@ export function createFlowInputsString(
     } else if (input.type === "template") {
       currentInputString += `${convertTemplateInput(input.value as string, trigger, loop)},`;
     } else {
-      const forceWrap =
-        (typeof input.value === "string" || valueIsNumber(input.value)) &&
-        !valueIsBoolean(input.value);
-      currentInputString += `${formatInputValue(input.value as ValidYAMLValue, forceWrap)},`;
+      currentInputString += `${formatInputValue(input.value as ValidYAMLValue, {
+        boolean: false,
+        number: true,
+      })},`;
     }
 
     if (action.isTrigger) {
