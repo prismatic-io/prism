@@ -114,7 +114,7 @@ export const configPages = {
               visibleToOrgDeployer: false,
             },
             isUser: {
-              value: "false",
+              value: false,
               permissionAndVisibilityType: "organization",
               visibleToOrgDeployer: false,
             },

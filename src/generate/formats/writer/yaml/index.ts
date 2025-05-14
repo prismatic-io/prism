@@ -392,7 +392,10 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                       )
                       .conditionalWriteLine(
                         input.type !== "configVar",
-                        `value: ${formatInputValue(input.value, true)},`,
+                        `value: ${formatInputValue(input.value, {
+                          boolean: false,
+                          number: true,
+                        })},`,
                       )
                       .conditionalWriteLine(
                         Boolean(input.meta.permissionAndVisibilityType),
