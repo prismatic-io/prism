@@ -30,6 +30,7 @@ type FormattedStepResult = {
 
 const MISSING_ID_ERROR = "You must provide either a flow-url or an integration-id parameter.";
 const TIMEOUT_SECONDS = 60 * 20; // 20 minutes
+const SUPPORTED_CONTENT_TYPES = ["application/json", "application/xml", "text/csv"];
 
 export const CONFIGURE_INSTANCE_PARAMS = {
   embed: "true",
@@ -60,7 +61,8 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       description: "Optional file containing a payload to run the flow with.",
     }),
     "payload-content-type": Flags.string({
-      description: "Optional content-type for the test payload.",
+      char: "c",
+      description: `Optional Content-Type for the test payload. Supported types: ${SUPPORTED_CONTENT_TYPES}`,
       default: "application/json",
     }),
     sync: Flags.boolean({
@@ -108,21 +110,33 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     } = await this.parse(TestFlowCommand);
 
     // Load custom trigger payload if provided.
-    let triggerPayload: Record<string, string> = {};
+    let triggerPayload = "";
     if (payloadFilePath) {
       if (await exists(payloadFilePath)) {
-        try {
-          triggerPayload = JSON.parse(await fs.readFile(payloadFilePath, { encoding: "utf-8" }));
-        } catch (err) {
+        triggerPayload = await fs.readFile(payloadFilePath, { encoding: "utf-8" });
+        if (!SUPPORTED_CONTENT_TYPES.includes(contentType)) {
           handleError({
-            message: "The provided trigger payload file contains malformed JSON",
-            err,
+            message: `Unsupported Content-Type: ${contentType}. Supported types are: ${SUPPORTED_CONTENT_TYPES}`,
             throwError: true,
           });
         }
+
+        // Validate JSON files specifically. CSV and XML files fail more gracefully if malformed
+        if (contentType === "application/json") {
+          try {
+            JSON.parse(triggerPayload);
+          } catch (e) {
+            handleError({
+              message:
+                "The provided trigger payload file contains malformed JSON. Please check the payload file (-p) and Content-Type (-c).",
+              err: e,
+              throwError: true,
+            });
+          }
+        }
       } else {
         handleError({
-          message: `No file found at ${payloadFilePath}. Please double check the --trigger-payload-file (-p) parameter.`,
+          message: `No file found at ${payloadFilePath}. Please check the --trigger-payload-file (-p) parameter.`,
           throwError: true,
         });
       }
@@ -222,14 +236,14 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       headers: {
         ...(sync ? { "prismatic-synchronous": true } : {}),
         ...(debug ? { "prismatic-debug": true } : {}),
-        "Content-Type": contentType,
+        ...(contentType && triggerPayload ? { "Content-Type": contentType } : {}),
       },
     });
     ux.action.stop();
 
     this.startTime = Date.now();
 
-    const flagString = `${payloadFilePath ? `-p=${payloadFilePath} ` : ""}${
+    const flagString = `${payloadFilePath ? `-p=${payloadFilePath} -c=${contentType}` : ""}${
       tailLogs ? "--tail-logs " : ""
     }${tailStepResults ? "--tail-results " : ""}${sync ? "--sync " : ""}${
       autoEndPoll ? "--cni-auto-end " : ""
