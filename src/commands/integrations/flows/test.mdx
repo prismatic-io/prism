@@ -1,9 +1,8 @@
 ```bash
-# Test an integration flow named 'My Integration Flow' and tail log output
+# Test an integration flow with a payload file and tail the logs and step results
 prism integrations:flows:test \
-    --tail \
-    $(prism integrations:flows:list \
-        --columns id \
-        --no-header \
-        --filter 'name=^My Integration Flow$')
+    -p=some_payload_file.xml
+    -c=application/xml
+    --tail-logs
+    --tail-results
 ```
