@@ -16,6 +16,8 @@ import {
   validateDefinition,
 } from "../component/index.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
+import { loadYaml } from "../serialize.js";
+import { IntegrationObjectFromYAML } from "../../generate/formats/writer/yaml/types.js";
 
 interface ImportDefinitionResult {
   integrationId: string;
@@ -42,12 +44,13 @@ interface Integration {
 export const importDefinition = async (
   definition: string,
   integrationId?: string,
+  replace?: boolean,
 ): Promise<ImportDefinitionResult> => {
   const result = await gqlRequest({
     document: gql`
-      mutation importIntegration($definition: String!, $integrationId: ID) {
+      mutation importIntegration($definition: String!, $integrationId: ID, $replace: Boolean) {
         importIntegration(
-          input: { definition: $definition, integrationId: $integrationId }
+          input: { definition: $definition, integrationId: $integrationId, replace: $replace }
         ) {
           integration {
             id
@@ -74,6 +77,7 @@ export const importDefinition = async (
     variables: {
       definition,
       integrationId,
+      replace,
     },
   });
 
@@ -121,11 +125,15 @@ export const importYamlIntegration = async (
   path: string,
   integrationId?: string,
   iconPath?: string,
+  replace?: boolean,
 ): Promise<string> => {
-  const encoding = await chardet.detectFile(path);
-  const definition = await fs.readFile(path, encoding === "UTF-16LE" ? "utf16le" : "utf-8");
+  const definition = await extractYAMLFromPath(path);
 
-  const { integrationId: integrationImportId } = await importDefinition(definition, integrationId);
+  const { integrationId: integrationImportId } = await importDefinition(
+    definition,
+    integrationId,
+    replace,
+  );
 
   if (iconPath) {
     await setIntegrationAvatar(integrationImportId, iconPath);
@@ -134,7 +142,10 @@ export const importYamlIntegration = async (
   return integrationImportId;
 };
 
-export const importCodeNativeIntegration = async (integrationId?: string): Promise<string> => {
+export const importCodeNativeIntegration = async (
+  integrationId?: string,
+  replace?: boolean,
+): Promise<string> => {
   const { integrationDefinition, componentDefinition } =
     await loadCodeNativeIntegrationEntryPoint();
 
@@ -172,6 +183,7 @@ export const importCodeNativeIntegration = async (integrationId?: string): Promi
   const { integrationId: integrationImportId } = await importDefinition(
     integrationDefinition,
     integrationId,
+    replace,
   );
 
   const {
@@ -280,4 +292,49 @@ export const waitForCodeNativeComponentAvailable = async (
 
   // Component is still not ready, so bail out.
   return false;
+};
+
+export const getIntegrationDefinition = async (integrationId: string): Promise<string> => {
+  const result = await gqlRequest({
+    document: gql`
+      query integration($integrationId: ID!) {
+        integration(id: $integrationId) {
+          definition
+        }
+      }
+    `,
+    variables: { integrationId },
+  });
+  return result.integration.definition;
+};
+
+export const compareConfigVars = async (current: string, next: string): Promise<Array<string>> => {
+  const currentDef: IntegrationObjectFromYAML = await loadYaml(current);
+  const nextDef: IntegrationObjectFromYAML = await loadYaml(next);
+
+  const requiredMatches: Record<string, boolean> = {};
+  // The current definition contains the absolutely required config vars.
+  currentDef.configPages.forEach((page) => {
+    page.elements.forEach((element) => {
+      requiredMatches[element.value] = false;
+    });
+  });
+
+  // It's OK for the new integration to have a superset of the required config vars.
+  nextDef.configPages.forEach((page) => {
+    page.elements.forEach((element) => {
+      requiredMatches[element.value] = true;
+    });
+  });
+
+  // Return missing config vars.
+  return Object.entries(requiredMatches)
+    .filter(([key, match]) => !match)
+    .map(([key]) => key);
+};
+
+export const extractYAMLFromPath = async (path: string): Promise<string> => {
+  const encoding = await chardet.detectFile(path);
+  const definition = await fs.readFile(path, encoding === "UTF-16LE" ? "utf16le" : "utf-8");
+  return definition;
 };
