@@ -529,7 +529,7 @@ function formatFlow(flow: FlowObjectFromYAML, file: SourceFile) {
     endpointSecurityType,
     trigger,
     steps,
-    result: camelCase(steps.at(-1)?.name ?? ""),
+    result: camelCase(steps.at(-1)?.name ?? "null"),
   };
 }
 
