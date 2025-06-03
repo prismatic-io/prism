@@ -324,7 +324,7 @@ export function formatConfigVarInputs(configVar: ConfigVarObjectFromYAML) {
       value: input.value,
       meta: {
         ...input.meta,
-        permissionAndVisibilityType: getPermissionAndVisibilityType(input.meta),
+        permissionAndVisibilityType: getPermissionAndVisibilityType(input.meta ?? {}),
       },
     };
   });
