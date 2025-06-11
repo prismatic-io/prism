@@ -90,10 +90,6 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     jsonl: Flags.boolean({
       description: "Optionally format the step and tail results output into JSON Lines.",
     }),
-    succinct: Flags.boolean({
-      char: "s",
-      description: "Removes warnings and descriptive messaging from test output.",
-    }),
     debug: Flags.boolean({
       description: "Enables debug mode on the test execution.",
     }),
@@ -113,7 +109,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         "result-file": resultFilePath,
         timeout,
         debug,
-        succinct,
+        quiet,
       },
     } = await this.parse(TestFlowCommand);
 
@@ -183,7 +179,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       const configUrl = url.toString();
 
       if (!isConfigured) {
-        if (succinct) {
+        if (quiet) {
           this.warn(`Configure the test instance by visiting the following URL:\n${configUrl}`);
         } else {
           const shouldOpen = await ux.confirm(
@@ -260,12 +256,12 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       autoEndPoll ? "--cni-auto-end " : ""
     }${resultFilePath ? `-r=${resultFilePath} ` : ""}`;
 
-    this.succinctLog(
+    this.quietLog(
       `
 To re-run this flow directly:
 prism integrations:flows:test -u=${invokeUrl} ${flagString}
 `,
-      succinct,
+      quiet,
     );
 
     const executionId = response.headers["prismatic-executionid"];
@@ -281,18 +277,18 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
     if (!(tailLogs || tailStepResults)) return;
 
     // If tailing logs or step results, show relevant messaging & setup polling promises.
-    this.succinctLog(
+    this.quietLog(
       "While the timestamps are accurate, logs & step results may not arrive in chronological order.",
-      succinct,
+      quiet,
       "warn",
     );
-    this.succinctLog(
+    this.quietLog(
       `\nPress CMD+C/CTRL+C to stop polling. ${
         autoEndPoll
           ? ""
           : `This process will timeout after ${timeout ? `${timeout} seconds` : "20 minutes"}.`
       }\n`,
-      succinct,
+      quiet,
     );
 
     const tailPromises = [];
@@ -304,7 +300,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
     const timeoutPromise = new Promise<void>(() => {
       setTimeout(
         () => {
-          this.succinctLog("Timeout reached. Stopping polling.", succinct);
+          this.quietLog("Timeout reached. Stopping polling.", quiet);
           process.exit(0);
         },
         (timeout ?? TIMEOUT_SECONDS) * 1000,
@@ -496,8 +492,8 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
     }
   }
 
-  private async succinctLog(log: string, succinct = false, type?: "warn") {
-    if (!succinct) {
+  private async quietLog(log: string, quiet = false, type?: "warn") {
+    if (!quiet) {
       if (type === "warn") {
         this.warn(log);
       } else {
