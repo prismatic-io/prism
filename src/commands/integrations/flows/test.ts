@@ -266,7 +266,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
 
     const executionId = response.headers["prismatic-executionid"];
 
-    if (!response.data.executionId) {
+    if (!response.data || !response.data.executionId) {
       // Log execution ID's separately for synchronously-run flows.
       this.log(`Execution ID: ${executionId}\n`);
     }
