@@ -85,7 +85,10 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     "result-file": Flags.string({
       char: "r",
       description:
-        "Optional file to append tailed execution result data to. Results are saved as comma-separated values.",
+        "Optional file to append tailed execution result data to. Results are saved into JSON Lines.",
+    }),
+    jsonl: Flags.boolean({
+      description: "Optionally format the step and tail results output into JSON Lines.",
     }),
     debug: Flags.boolean({
       description: "Enables debug mode on the test execution.",
@@ -106,6 +109,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         "result-file": resultFilePath,
         timeout,
         debug,
+        quiet,
       },
     } = await this.parse(TestFlowCommand);
 
@@ -164,30 +168,33 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     // via URL that have no integrationId in the metadata.
     if (integrationId) {
       const isConfigured = await isIntegrationConfigured(integrationId);
+      const systemInstanceId = await getIntegrationSystemId(integrationId);
+      this.warn("The integration needs to be configured before it can be tested.");
+
+      const url = new URL(`${prismaticUrl}/configure-instance/${systemInstanceId}`);
+      for (const [key, value] of Object.entries(CONFIGURE_INSTANCE_PARAMS)) {
+        url.searchParams.set(key, value);
+      }
+
+      const configUrl = url.toString();
 
       if (!isConfigured) {
-        const systemInstanceId = await getIntegrationSystemId(integrationId);
-        this.warn("The integration needs to be configured before it can be tested.");
-
-        const url = new URL(`${prismaticUrl}/configure-instance/${systemInstanceId}`);
-
-        for (const [key, value] of Object.entries(CONFIGURE_INSTANCE_PARAMS)) {
-          url.searchParams.set(key, value);
-        }
-
-        const configUrl = url.toString();
-        const shouldOpen = await ux.confirm(
-          "Would you like to open the Configuration Wizard in your browser? (yes/no)",
-        );
-
-        if (shouldOpen) {
-          await open(configUrl);
+        if (quiet) {
+          this.warn(`Configure the test instance by visiting the following URL:\n${configUrl}`);
         } else {
-          this.log(
-            `\nYou can configure the test instance later by visiting the following URL:\n${configUrl}`,
+          const shouldOpen = await ux.confirm(
+            "Would you like to open the Configuration Wizard in your browser? (yes/no)",
           );
+
+          if (shouldOpen) {
+            await open(configUrl);
+          } else {
+            this.log(
+              `\nYou can configure the test instance later by visiting the following URL:\n${configUrl}`,
+            );
+          }
+          return;
         }
-        return;
       }
     }
 
@@ -249,10 +256,13 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       autoEndPoll ? "--cni-auto-end " : ""
     }${resultFilePath ? `-r=${resultFilePath} ` : ""}`;
 
-    this.log(`
+    this.quietLog(
+      `
 To re-run this flow directly:
 prism integrations:flows:test -u=${invokeUrl} ${flagString}
-`);
+`,
+      quiet,
+    );
 
     const executionId = response.headers["prismatic-executionid"];
 
@@ -267,20 +277,19 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
     if (!(tailLogs || tailStepResults)) return;
 
     // If tailing logs or step results, show relevant messaging & setup polling promises.
-    this.warn(
+    this.quietLog(
       "While the timestamps are accurate, logs & step results may not arrive in chronological order.",
+      quiet,
+      "warn",
     );
-    this.log(
+    this.quietLog(
       `\nPress CMD+C/CTRL+C to stop polling. ${
         autoEndPoll
           ? ""
           : `This process will timeout after ${timeout ? `${timeout} seconds` : "20 minutes"}.`
       }\n`,
+      quiet,
     );
-
-    if (resultFilePath) {
-      await fs.appendFile(resultFilePath, "timestamp,log_severity,step_name,data\n");
-    }
 
     const tailPromises = [];
     this.startTime = Date.now();
@@ -288,12 +297,21 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
     if (tailLogs) tailPromises.push(this.tailLogs(executionId));
     if (tailStepResults) tailPromises.push(this.tailStepResults(executionId));
 
-    await Promise.all(tailPromises);
+    const timeoutPromise = new Promise<void>(() => {
+      setTimeout(
+        () => {
+          this.quietLog("Timeout reached. Stopping polling.", quiet);
+          process.exit(0);
+        },
+        (timeout ?? TIMEOUT_SECONDS) * 1000,
+      );
+    });
+    await Promise.race([Promise.all(tailPromises), timeoutPromise]);
   }
 
   private async tailLogs(executionId: string) {
     const {
-      flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout },
+      flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout, jsonl },
     } = await this.parse(TestFlowCommand);
 
     let nextCursor: string | undefined = undefined;
@@ -301,30 +319,36 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
     while (true) {
       await ux.wait(this.getPollIntervalMs());
 
-      const result: any = await this.fetchLogs(executionId, nextCursor);
+      const result = await this.fetchLogs(executionId, nextCursor);
       if (result === undefined) continue;
 
       const { logs, cursor } = result;
       nextCursor = cursor;
 
-      ux.table(
-        logs,
-        {
-          timestamp: {},
-          severity: {
-            get: (row) => `LOG_${row.severity}`,
-            minWidth: 15,
+      if (jsonl) {
+        logs.forEach((result) => {
+          this.log(JSON.stringify(result));
+        });
+      } else {
+        ux.table(
+          logs,
+          {
+            timestamp: {},
+            severity: {
+              get: (row) => `LOG_${row.severity}`,
+              minWidth: 15,
+            },
+            message: {},
           },
-          message: {},
-        },
-        {
-          "no-header": true,
-        },
-      );
+          {
+            "no-header": true,
+          },
+        );
+      }
 
       if (resultFilePath) {
         for (const log of logs) {
-          await fs.appendFile(resultFilePath, `${log.timestamp},${log.severity},,${log.message}\n`);
+          await fs.appendFile(resultFilePath, JSON.stringify(log));
         }
       }
 
@@ -336,7 +360,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
 
   private async tailStepResults(executionId: string) {
     const {
-      flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout },
+      flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout, jsonl },
     } = await this.parse(TestFlowCommand);
 
     let nextCursor: string | undefined = undefined;
@@ -344,7 +368,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
     while (true) {
       await ux.wait(this.getPollIntervalMs());
 
-      const result: any = await this.fetchStepResults(executionId, nextCursor);
+      const result = await this.fetchStepResults(executionId, nextCursor);
       if (result === undefined) {
         continue;
       }
@@ -352,27 +376,30 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
       const { stepResults, cursor } = result;
       nextCursor = cursor;
 
-      ux.table(
-        stepResults,
-        {
-          endedAt: {},
-          stepName: {
-            get: (row) => `STEP_${row.stepName}`,
-            minWidth: 15,
+      if (jsonl) {
+        stepResults.forEach((result) => {
+          this.log(JSON.stringify(result));
+        });
+      } else {
+        ux.table(
+          stepResults,
+          {
+            endedAt: {},
+            stepName: {
+              get: (row) => `STEP_${row.stepName}`,
+              minWidth: 15,
+            },
+            result: {},
           },
-          result: {},
-        },
-        {
-          "no-header": true,
-        },
-      );
+          {
+            "no-header": true,
+          },
+        );
+      }
 
       if (resultFilePath) {
         for (const result of stepResults) {
-          await fs.appendFile(
-            resultFilePath,
-            `${result.endedAt},,${result.stepName},${JSON.stringify(result.result)}\n`,
-          );
+          await fs.appendFile(resultFilePath, JSON.stringify(stepResults));
         }
       }
 
@@ -462,6 +489,16 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
       default:
         // every 1min for 5min+
         return 60000;
+    }
+  }
+
+  private async quietLog(log: string, quiet = false, type?: "warn") {
+    if (!quiet) {
+      if (type === "warn") {
+        this.warn(log);
+      } else {
+        this.log(log);
+      }
     }
   }
 }
