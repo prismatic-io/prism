@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "7.5.6",
+  "version": "7.6.0",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": ["prismatic", "cli"],
   "homepage": "https://prismatic.io",
@@ -37,7 +37,7 @@
   },
   "files": ["oclif.manifest.json", "bin", "lib"],
   "dependencies": {
-    "@apidevtools/swagger-parser": "10.1.1",
+    "@apidevtools/swagger-parser": "12.0.0",
     "@msgpack/msgpack": "2.3.0",
     "@oclif/core": "3.26.0",
     "@oclif/plugin-autocomplete": "3.0.13",
