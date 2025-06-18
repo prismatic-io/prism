@@ -1529,6 +1529,885 @@ describe("petstoreExpandedUuidPaths", () => {
 "
 `;
 
+exports[`component generation tests openApi - todo-api should match scaffolding snapshots: todo-api/jest.config.js 1`] = `
+"module.exports = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+};
+"
+`;
+
+exports[`component generation tests openApi - todo-api should match scaffolding snapshots: todo-api/tsconfig.json 1`] = `
+"{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["esnext"],
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "node"
+  },
+  "include": ["src"]
+}
+"
+`;
+
+exports[`component generation tests openApi - todo-api should match scaffolding snapshots: todo-api/todoApi-openapi-spec.json 1`] = `
+"{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Todo API",
+    "version": "1.0.0",
+    "description": "A simple Todo API for testing component generation",
+    "contact": {
+      "name": "API Support",
+      "email": "support@example.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:3000/v1",
+      "description": "Development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "todos",
+      "description": "Todo operations"
+    },
+    {
+      "name": "users",
+      "description": "User management"
+    }
+  ],
+  "paths": {
+    "/todos": {
+      "get": {
+        "tags": ["todos"],
+        "summary": "List all todos",
+        "description": "Returns a list of all todos with optional filtering",
+        "operationId": "listTodos",
+        "parameters": [
+          {
+            "name": "completed",
+            "in": "query",
+            "description": "Filter by completion status",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Todo"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["todos"],
+        "summary": "Create a new todo",
+        "description": "Creates a new todo item",
+        "operationId": "createTodo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TodoInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Todo created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Todo"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/todos/{todoId}": {
+      "get": {
+        "tags": ["todos"],
+        "summary": "Get a specific todo",
+        "description": "Returns a single todo by ID",
+        "operationId": "getTodo",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TodoId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Todo"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "tags": ["todos"],
+        "summary": "Update a todo",
+        "description": "Updates an existing todo",
+        "operationId": "updateTodo",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TodoId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TodoInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Todo updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Todo"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["todos"],
+        "summary": "Delete a todo",
+        "description": "Deletes a todo by ID",
+        "operationId": "deleteTodo",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TodoId"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Todo deleted successfully"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "tags": ["users"],
+        "summary": "Get current user",
+        "description": "Returns information about the authenticated user",
+        "operationId": "getCurrentUser",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Todo": {
+        "type": "object",
+        "required": ["id", "title", "completed", "createdAt"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for the todo",
+            "examples": ["123e4567-e89b-12d3-a456-426614174000"]
+          },
+          "title": {
+            "type": "string",
+            "description": "The todo title",
+            "minLength": 1,
+            "maxLength": 200,
+            "examples": ["Buy groceries"]
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional detailed description",
+            "maxLength": 1000,
+            "examples": ["Milk, eggs, bread, and coffee"]
+          },
+          "completed": {
+            "type": "boolean",
+            "description": "Whether the todo is completed",
+            "default": false
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the todo was created"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the todo was last updated"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional tags for categorization",
+            "examples": [["shopping", "urgent"]]
+          }
+        }
+      },
+      "TodoInput": {
+        "type": "object",
+        "required": ["title"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "The todo title",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional detailed description",
+            "maxLength": 1000
+          },
+          "completed": {
+            "type": "boolean",
+            "description": "Whether the todo is completed",
+            "default": false
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Optional tags for categorization"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "required": ["id", "email", "name"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Unique identifier for the user"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "User's email address"
+          },
+          "name": {
+            "type": "string",
+            "description": "User's full name"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the user account was created"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["code", "message"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Error code"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable error message"
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional error details"
+          }
+        }
+      }
+    },
+    "parameters": {
+      "TodoId": {
+        "name": "todoId",
+        "in": "path",
+        "description": "Todo ID",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "BAD_REQUEST",
+              "message": "Invalid request parameters"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "UNAUTHORIZED",
+              "message": "Authentication required"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "NOT_FOUND",
+              "message": "Resource not found"
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "code": "INTERNAL_ERROR",
+              "message": "An unexpected error occurred"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT authentication"
+      }
+    }
+  }
+}"
+`;
+
+exports[`component generation tests openApi - todo-api should match scaffolding snapshots: todo-api/src/connections.ts 1`] = `
+"import { connection } from "@prismatic-io/spectral";
+
+export const bearerAuth = connection({
+  key: "bearerAuth",
+  display: {
+    label: "Bearer Auth",
+    description: "JWT authentication",
+    icons: {},
+  },
+  inputs: {
+    apiKey: {
+      label: "Token",
+      type: "password",
+      required: true,
+    },
+  },
+});
+
+export default [bearerAuth];
+"
+`;
+
+exports[`component generation tests openApi - todo-api should match scaffolding snapshots: todo-api/src/client.ts 1`] = `
+"import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
+import {
+  HttpClient,
+  createClient as createHttpClient,
+} from "@prismatic-io/spectral/dist/clients/http";
+import { bearerAuth } from "./connections";
+
+export const baseUrl = "https://api.example.com/v1";
+
+const toAuthorizationHeaders = (
+  connection: Connection
+): { Authorization: string } => {
+  const accessToken = util.types.toString(connection.token?.access_token);
+  if (accessToken) {
+    return { Authorization: \`Bearer \${accessToken}\` };
+  }
+
+  const apiKey = util.types.toString(connection.fields?.apiKey);
+  if (apiKey) {
+    return { Authorization: \`Bearer \${apiKey}\` };
+  }
+
+  const username = util.types.toString(connection.fields?.username);
+  const password = util.types.toString(connection.fields?.password);
+  if (username && password) {
+    const encoded = Buffer.from(\`\${username}:\${password}\`).toString("base64");
+    return { Authorization: \`Basic \${encoded}\` };
+  }
+
+  throw new Error(
+    \`Failed to guess at authorization parameters for Connection: \${connection.key}\`
+  );
+};
+
+export const createClient = async (
+  connection: Connection
+): Promise<HttpClient> => {
+  if (![bearerAuth.key].includes(connection.key)) {
+    throw new ConnectionError(
+      connection,
+      \`Received unexpected connection type: \${connection.key}\`
+    );
+  }
+
+  const client = createHttpClient({
+    baseUrl,
+    headers: {
+      ...toAuthorizationHeaders(connection),
+      Accept: "application/json",
+    },
+    responseType: "json",
+  });
+  return client;
+};
+"
+`;
+
+exports[`component generation tests openApi - todo-api should match scaffolding snapshots: todo-api/src/actions/todos.ts 1`] = `
+"import { action, input, util } from "@prismatic-io/spectral";
+import { createClient } from "../client";
+
+const listTodos = action({
+  display: {
+    label: "List Todos",
+    description: "List all todos",
+  },
+  perform: async (context, { connection, completed, limit }) => {
+    const client = createClient(connection);
+    const { data } = await client.get(\`/todos\`, {
+      params: { completed, limit },
+    });
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    completed: input({
+      label: "Completed",
+      type: "boolean",
+      required: true,
+      clean: (value): boolean => util.types.toBool(value),
+      comments: "Filter by completion status",
+    }),
+    limit: input({
+      label: "Limit",
+      type: "string",
+      required: false,
+      default: "20",
+      clean: (value): number | undefined =>
+        value !== undefined && value !== null
+          ? util.types.toNumber(value)
+          : undefined,
+      comments: "Maximum number of items to return",
+    }),
+  },
+});
+
+const createTodo = action({
+  display: {
+    label: "Create Todo",
+    description: "Create a new todo",
+  },
+  perform: async (
+    context,
+    { connection, title, description, completed, tags }
+  ) => {
+    const client = createClient(connection);
+    const { data } = await client.post(\`/todos\`, {
+      title,
+      description,
+      completed,
+      tags,
+    });
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    title: input({
+      label: "Title",
+      type: "string",
+      required: true,
+      clean: (value): string => util.types.toString(value),
+      comments: "The todo title",
+    }),
+    description: input({
+      label: "Description",
+      type: "string",
+      required: false,
+      clean: (value): string | undefined =>
+        value !== undefined && value !== null
+          ? util.types.toString(value)
+          : undefined,
+      comments: "Optional detailed description",
+    }),
+    completed: input({
+      label: "Completed",
+      type: "boolean",
+      required: true,
+      default: "false",
+      clean: (value): boolean => util.types.toBool(value),
+      comments: "Whether the todo is completed",
+    }),
+    tags: input({
+      label: "Tags",
+      type: "string",
+      required: true,
+      collection: "valuelist",
+      clean: (values) =>
+        ((values as unknown[]) || []).map((value) =>
+          util.types.toString(value)
+        ),
+      comments: "Optional tags for categorization",
+    }),
+  },
+});
+
+const getTodo = action({
+  display: {
+    label: "Get Todo",
+    description: "Get a specific todo",
+  },
+  perform: async (context, { connection, todoId }) => {
+    const client = createClient(connection);
+    const { data } = await client.get(\`/todos/\${todoId}\`);
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    todoId: input({
+      label: "Todo Id",
+      type: "string",
+      required: true,
+      clean: (value): string => util.types.toString(value),
+      comments: "Todo ID",
+    }),
+  },
+});
+
+const updateTodo = action({
+  display: {
+    label: "Update Todo",
+    description: "Update a todo",
+  },
+  perform: async (
+    context,
+    { connection, todoId, title, description, completed, tags }
+  ) => {
+    const client = createClient(connection);
+    const { data } = await client.put(\`/todos/\${todoId}\`, {
+      title,
+      description,
+      completed,
+      tags,
+    });
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    todoId: input({
+      label: "Todo Id",
+      type: "string",
+      required: true,
+      clean: (value): string => util.types.toString(value),
+      comments: "Todo ID",
+    }),
+    title: input({
+      label: "Title",
+      type: "string",
+      required: true,
+      clean: (value): string => util.types.toString(value),
+      comments: "The todo title",
+    }),
+    description: input({
+      label: "Description",
+      type: "string",
+      required: false,
+      clean: (value): string | undefined =>
+        value !== undefined && value !== null
+          ? util.types.toString(value)
+          : undefined,
+      comments: "Optional detailed description",
+    }),
+    completed: input({
+      label: "Completed",
+      type: "boolean",
+      required: true,
+      default: "false",
+      clean: (value): boolean => util.types.toBool(value),
+      comments: "Whether the todo is completed",
+    }),
+    tags: input({
+      label: "Tags",
+      type: "string",
+      required: true,
+      collection: "valuelist",
+      clean: (values) =>
+        ((values as unknown[]) || []).map((value) =>
+          util.types.toString(value)
+        ),
+      comments: "Optional tags for categorization",
+    }),
+  },
+});
+
+const deleteTodo = action({
+  display: {
+    label: "Delete Todo",
+    description: "Delete a todo",
+  },
+  perform: async (context, { connection, todoId }) => {
+    const client = createClient(connection);
+    const { data } = await client.delete(\`/todos/\${todoId}\`);
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+    todoId: input({
+      label: "Todo Id",
+      type: "string",
+      required: true,
+      clean: (value): string => util.types.toString(value),
+      comments: "Todo ID",
+    }),
+  },
+});
+
+export default {
+  listTodos,
+  createTodo,
+  getTodo,
+  updateTodo,
+  deleteTodo,
+};
+"
+`;
+
+exports[`component generation tests openApi - todo-api should match scaffolding snapshots: todo-api/src/actions/users.ts 1`] = `
+"import { action, input, util } from "@prismatic-io/spectral";
+import { createClient } from "../client";
+
+const getCurrentUser = action({
+  display: {
+    label: "Get Current User",
+    description: "Get current user",
+  },
+  perform: async (context, { connection }) => {
+    const client = createClient(connection);
+    const { data } = await client.get(\`/users/me\`);
+    return { data };
+  },
+  inputs: {
+    connection: input({
+      label: "Connection",
+      type: "connection",
+      required: true,
+    }),
+  },
+});
+
+export default {
+  getCurrentUser,
+};
+"
+`;
+
+exports[`component generation tests openApi - todo-api should match scaffolding snapshots: todo-api/src/actions/index.ts 1`] = `
+"import { buildRawRequestAction } from "@prismatic-io/spectral/dist/clients/http";
+import { baseUrl } from "../client";
+import todos from "./todos";
+import users from "./users";
+
+export default {
+  ...todos,
+  ...users,
+  rawRequest: buildRawRequestAction(baseUrl),
+};
+"
+`;
+
+exports[`component generation tests openApi - todo-api should match scaffolding snapshots: todo-api/src/index.ts 1`] = `
+"import { component } from "@prismatic-io/spectral";
+import { handleErrors } from "@prismatic-io/spectral/dist/clients/http";
+import actions from "./actions";
+import connections from "./connections";
+
+export default component({
+  key: "todoApi",
+  display: {
+    label: "Todo API",
+    description: "A simple Todo API for testing component generation",
+    iconPath: "icon.png",
+  },
+  hooks: { error: handleErrors },
+  actions,
+  connections,
+});
+"
+`;
+
+exports[`component generation tests openApi - todo-api should match scaffolding snapshots: todo-api/src/component.test.ts 1`] = `
+"import { testing } from "@prismatic-io/spectral";
+import { bearerAuth } from "./connections";
+import component from ".";
+
+describe("todoApi", () => {
+  const harness = testing.createHarness(component);
+  const connection = harness.connectionValue(bearerAuth);
+
+  it("should invoke action", async () => {
+    const result = await harness.action("listTodos", {
+      connection,
+      completed: undefined,
+      limit: 20,
+    });
+    expect(result?.data).toBeDefined();
+  });
+});
+"
+`;
+
 exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/jest.config.js 1`] = `
 "module.exports = {
   preset: "ts-jest",
