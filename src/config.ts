@@ -38,23 +38,16 @@ export const deleteTenantConfig = async (prismaticUrl?: string) => {
   const config = (await loadYaml(contents.toString())) as Configuration | MultiTenantConfiguration;
 
   if (isLegacyConfiguration(config)) {
-    // If it's legacy and we're deleting the default URL, delete entire file
-    const defaultUrl = "https://app.prismatic.io";
-    if (targetUrl === defaultUrl) {
-      return fs.unlink(configFilePath);
-    }
-    return; // Nothing to delete for other URLs in legacy format
+    return fs.unlink(configFilePath);
   }
 
   if (isMultiTenantConfiguration(config)) {
     delete config[targetUrl];
 
-    // If no tenants left, delete the entire file
     if (Object.keys(config).length === 0) {
       return fs.unlink(configFilePath);
     }
 
-    // Otherwise, write the updated config
     const updatedContents = dumpYaml(config, { skipInvalid: true });
     await fs.writeFile(configFilePath, updatedContents, { encoding: "utf-8" });
   }
@@ -73,7 +66,6 @@ export const writeConfig = async (config: Configuration) => {
   const prismaticUrl = process.env.PRISMATIC_URL ?? "https://app.prismatic.io";
   let multiTenantConfig: MultiTenantConfiguration = {};
 
-  // Check if existing config file exists and read it
   if (await configFileExists()) {
     const contents = await fs.readFile(configFilePath, { encoding: "utf-8" });
     const existingConfig = (await loadYaml(contents.toString())) as
@@ -89,7 +81,6 @@ export const writeConfig = async (config: Configuration) => {
     }
   }
 
-  // Update or add the configuration for the current tenant
   multiTenantConfig[prismaticUrl] = config;
 
   const contents = dumpYaml(multiTenantConfig, { skipInvalid: true });
@@ -120,12 +111,10 @@ export const readConfig = async (): Promise<Configuration | null> => {
   const contents = await fs.readFile(configFilePath, { encoding: "utf-8" });
   const config = (await loadYaml(contents.toString())) as Configuration | MultiTenantConfiguration;
 
-  // Handle legacy single-tenant configuration
   if (isLegacyConfiguration(config)) {
     return config;
   }
 
-  // Handle multi-tenant configuration
   if (isMultiTenantConfiguration(config)) {
     const prismaticUrl = process.env.PRISMATIC_URL ?? "https://app.prismatic.io";
     return config[prismaticUrl] || null;
