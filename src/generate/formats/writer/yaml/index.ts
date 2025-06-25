@@ -25,6 +25,7 @@ import {
 import path from "path";
 import { updatePackageJson } from "../../../util.js";
 import { writeBranchString, getBranchKind } from "./branching.js";
+import { escapeText as escapeDoubleQuotes } from "../../utils.js";
 
 type ImportDeclaration = {
   moduleSpecifier: string;
@@ -442,7 +443,7 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                 } else {
                   includes.configVar = true;
                   writer
-                    .writeLine(`"${configVar.name}": configVar({`)
+                    .writeLine(`"${escapeDoubleQuotes(configVar.name)}": configVar({`)
                     .writeLine(`stableKey: "${camelCase(configVar.key)}",`)
                     .writeLine(`dataType: "${configVar.dataType}",`)
                     .writeLine(`description: ${formatInputValue(configVar.description)},`)

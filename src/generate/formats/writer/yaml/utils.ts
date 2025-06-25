@@ -6,9 +6,10 @@ import {
   ValidComplexYAMLValue,
   ValidYAMLValue,
 } from "./types.js";
-import { camelCase, xor } from "lodash-es";
+import { camelCase } from "lodash-es";
 import { writeBranchString, getBranchKind } from "./branching.js";
 import { SourceFile } from "ts-morph";
+import { escapeText as escapeDoubleQuotes } from "../../utils.js";
 
 export function valueIsNumber(value: unknown) {
   return typeof value === "number" || (typeof value === "string" && !Number.isNaN(Number(value)));
@@ -51,8 +52,12 @@ export function formatInputValue(
   } else if (typeof value === "object") {
     return convertYAMLObjectIntoString(value as ValidComplexYAMLValue);
   } else {
-    return `"${value}"`;
+    return `"${escapeDoubleQuotes(value)}"`;
   }
+}
+
+function escapeTemplateString(str: string) {
+  return str.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
 }
 
 const EXCEPTION_CHARACTERS = [" ", "-", ":"];
@@ -236,6 +241,12 @@ export function createFlowInputsString(
       }
     } else if (input.type === "template") {
       currentInputString += `${convertTemplateInput(input.value as string, trigger, loop)},`;
+    } else if (
+      action.action.component.key === "code" &&
+      action.action.key === "runCode" &&
+      typeof input.value === "string"
+    ) {
+      currentInputString += `\`${escapeTemplateString(input.value)}\``;
     } else {
       currentInputString += `${formatInputValue(input.value as ValidYAMLValue, {
         boolean: false,
