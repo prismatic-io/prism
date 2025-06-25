@@ -3,7 +3,13 @@ import http from "http";
 import axios from "axios";
 import url from "url";
 import jwtDecode from "jwt-decode";
-import { configFileExists, deleteConfig, readConfig, writeConfig } from "./config.js";
+import {
+  configFileExists,
+  deleteConfig,
+  deleteTenantConfig,
+  readConfig,
+  writeConfig,
+} from "./config.js";
 import { gqlRequest, gql } from "./graphql.js";
 import { AddressInfo } from "net";
 import open from "open";
@@ -185,7 +191,7 @@ export class Authenticate {
     };
     const queryString = createRequestParams(params);
     await open(`https://${this.options.domain}/logout?${queryString}`);
-    await deleteConfig();
+    await deleteTenantConfig();
   }
 
   private async attemptServerCreate(): Promise<http.Server> {
@@ -390,5 +396,5 @@ export const revokeRefreshToken = async (): Promise<void> => {
       refresh_token: refreshToken,
     },
   });
-  await logout();
+  await deleteTenantConfig();
 };
