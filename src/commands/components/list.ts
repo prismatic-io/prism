@@ -6,6 +6,7 @@ import { gql, gqlRequest } from "../../graphql.js";
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List available Components";
   static flags = {
+    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
     showAllVersions: Flags.boolean({
       char: "a",
@@ -62,41 +63,45 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    ux.table(
-      components,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+    if (flags.json) {
+      this.logJsonOutput(components);
+    } else {
+      ux.table(
+        components,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          key: {
+            minWidth: 10,
+            extended: true,
+          },
+          label: {},
+          public: {},
+          description: {},
+          versionNumber: { header: "Version" },
+          versionCreatedAt: {
+            header: "Last Published",
+            extended: true,
+            get: ({ versionCreatedAt }) => dayjs(versionCreatedAt).format(),
+          },
+          category: { get: ({ category }) => category || "" },
+          customerId: {
+            extended: true,
+            get: ({ customer }) => customer?.id ?? "",
+          },
+          customerName: {
+            extended: true,
+            get: ({ customer }) => customer?.name ?? "",
+          },
+          customerExternalId: {
+            extended: true,
+            get: ({ customer }) => customer?.externalId ?? "",
+          },
         },
-        key: {
-          minWidth: 10,
-          extended: true,
-        },
-        label: {},
-        public: {},
-        description: {},
-        versionNumber: { header: "Version" },
-        versionCreatedAt: {
-          header: "Last Published",
-          extended: true,
-          get: ({ versionCreatedAt }) => dayjs(versionCreatedAt).format(),
-        },
-        category: { get: ({ category }) => category || "" },
-        customerId: {
-          extended: true,
-          get: ({ customer }) => customer?.id ?? "",
-        },
-        customerName: {
-          extended: true,
-          get: ({ customer }) => customer?.name ?? "",
-        },
-        customerExternalId: {
-          extended: true,
-          get: ({ customer }) => customer?.externalId ?? "",
-        },
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }

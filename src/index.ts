@@ -74,6 +74,7 @@ import IntegrationsInitCommand from "./commands/integrations/init/index.js";
 import IntegrationsVersionsCommand from "./commands/integrations/versions/index.js";
 import LogsSeveritiesListCommand from "./commands/logs/severities/list.js";
 import MeTokenRevokeCommand from "./commands/me/token/revoke.js";
+import OrganizationConnectionsListCommand from "./commands/organization/connections/list.js";
 import OrganizationCredentialsCreateCommand from "./commands/organization/credentials/create.js";
 import OrganizationCredentialsDeleteCommand from "./commands/organization/credentials/delete.js";
 import OrganizationCredentialsListCommand from "./commands/organization/credentials/list.js";
@@ -165,6 +166,7 @@ export const Commands = {
   "integrations:versions": IntegrationsVersionsCommand,
   "logs:severities:list": LogsSeveritiesListCommand,
   "me:token:revoke": MeTokenRevokeCommand,
+  "organization:connections:list": OrganizationConnectionsListCommand,
   "organization:credentials:create": OrganizationCredentialsCreateCommand,
   "organization:credentials:delete": OrganizationCredentialsDeleteCommand,
   "organization:credentials:list": OrganizationCredentialsListCommand,

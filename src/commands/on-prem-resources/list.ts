@@ -5,6 +5,7 @@ import { gql, gqlRequest } from "../../graphql.js";
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List On-Premise Resources";
   static flags = {
+    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
     customer: Flags.string({
       char: "c",
@@ -55,24 +56,32 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    ux.table(
-      onPremiseResources,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+    if (flags.json) {
+      this.logJsonOutput(onPremiseResources);
+    } else {
+      ux.table(
+        onPremiseResources,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          name: {},
+          customerId: {
+            header: "Customer ID",
+            extended: true,
+            get: (row) => row.customer?.id ?? "",
+          },
+          status: { get: (row) => row.status ?? "" },
+          customer: { get: (row) => row.customer?.name ?? "" },
+          customerExternalId: {
+            header: "Customer External ID",
+            extended: true,
+            get: (row) => row.customer?.externalId ?? "",
+          },
         },
-        name: {},
-        customerId: { header: "Customer ID", extended: true, get: (row) => row.customer?.id ?? "" },
-        status: { get: (row) => row.status ?? "" },
-        customer: { get: (row) => row.customer?.name ?? "" },
-        customerExternalId: {
-          header: "Customer External ID",
-          extended: true,
-          get: (row) => row.customer?.externalId ?? "",
-        },
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }

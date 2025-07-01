@@ -9,6 +9,7 @@ export default class ListCommand extends PrismaticBaseCommand {
   };
 
   static flags = {
+    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
   };
 
@@ -67,32 +68,36 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    ux.table(
-      configVariables,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+    if (flags.json) {
+      this.logJsonOutput(configVariables);
+    } else {
+      ux.table(
+        configVariables,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          requiredVariableId: {
+            get: (row: any) => row.requiredConfigVariable.id,
+            extended: true,
+          },
+          key: {
+            get: (row: any) => row.requiredConfigVariable.key,
+          },
+          value: {
+            get: (row: any) =>
+              row.requiredConfigVariable.dataType === "CONNECTION" ? row.inputs : row.value,
+          },
+          defaultValue: {
+            get: (row: any) =>
+              row.requiredConfigVariable.dataType === "CONNECTION"
+                ? ""
+                : row.requiredConfigVariable.defaultValue,
+          },
         },
-        requiredVariableId: {
-          get: (row: any) => row.requiredConfigVariable.id,
-          extended: true,
-        },
-        key: {
-          get: (row: any) => row.requiredConfigVariable.key,
-        },
-        value: {
-          get: (row: any) =>
-            row.requiredConfigVariable.dataType === "CONNECTION" ? row.inputs : row.value,
-        },
-        defaultValue: {
-          get: (row: any) =>
-            row.requiredConfigVariable.dataType === "CONNECTION"
-              ? ""
-              : row.requiredConfigVariable.defaultValue,
-        },
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }

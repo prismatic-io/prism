@@ -6,6 +6,7 @@ export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Roles you can grant to other users in your Organization";
 
   static flags = {
+    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
   };
 
@@ -24,17 +25,21 @@ export default class ListCommand extends PrismaticBaseCommand {
       `,
     });
 
-    ux.table(
-      result.organizationRoles,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+    if (flags.json) {
+      this.log(JSON.stringify(result.organizationRoles, null, 2));
+    } else {
+      ux.table(
+        result.organizationRoles,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          name: {},
+          description: {},
         },
-        name: {},
-        description: {},
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }

@@ -6,6 +6,7 @@ export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Integration versions";
 
   static flags = {
+    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
     "latest-available": Flags.boolean({
       char: "l",
@@ -60,35 +61,39 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
-    ux.table(
-      result.integration.versionSequence.nodes,
-      {
-        versionNumber: {
-          header: "Version",
+    if (flags.json) {
+      this.log(JSON.stringify(result.integration.versionSequence.nodes, null, 2));
+    } else {
+      ux.table(
+        result.integration.versionSequence.nodes,
+        {
+          versionNumber: {
+            header: "Version",
+          },
+          id: {
+            header: "ID",
+            get: (row: any) => row.id,
+            extended: true,
+          },
+          versionCreatedAt: {
+            header: "Created At",
+            get: (row: any) => new Date(row.versionCreatedAt).toISOString(),
+          },
+          versionCreatedBy: {
+            header: "Created By",
+            get: (row: any) => row.versionCreatedBy?.email ?? "",
+          },
+          versionComment: {
+            header: "Comment",
+            get: (row: any) => row.versionComment ?? "",
+          },
+          available: {
+            header: "Available",
+            get: (row: any) => row.versionIsAvailable,
+          },
         },
-        id: {
-          header: "ID",
-          get: (row: any) => row.id,
-          extended: true,
-        },
-        versionCreatedAt: {
-          header: "Created At",
-          get: (row: any) => new Date(row.versionCreatedAt).toISOString(),
-        },
-        versionCreatedBy: {
-          header: "Created By",
-          get: (row: any) => row.versionCreatedBy?.email ?? "",
-        },
-        versionComment: {
-          header: "Comment",
-          get: (row: any) => row.versionComment ?? "",
-        },
-        available: {
-          header: "Available",
-          get: (row: any) => row.versionIsAvailable,
-        },
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }

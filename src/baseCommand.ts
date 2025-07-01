@@ -20,5 +20,14 @@ export abstract class PrismaticBaseCommand extends Command {
         return input;
       },
     }),
+    json: Flags.boolean({
+      description: "Output in JSON format",
+      helpGroup: "GLOBAL",
+      default: false,
+    }),
   };
+
+  protected logJsonOutput(data: any): void {
+    this.log(JSON.stringify(data, null, 2));
+  }
 }

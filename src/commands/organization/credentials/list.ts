@@ -4,7 +4,10 @@ import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Credentials available to the entire Organization";
-  static flags = { ...ux.table.flags() };
+  static flags = {
+    ...PrismaticBaseCommand.baseFlags,
+    ...ux.table.flags(),
+  };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
@@ -29,23 +32,27 @@ export default class ListCommand extends PrismaticBaseCommand {
       `,
     });
 
-    ux.table(
-      result.organization.credentials.nodes,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+    if (flags.json) {
+      this.logJsonOutput(result.organization.credentials.nodes);
+    } else {
+      ux.table(
+        result.organization.credentials.nodes,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          label: {},
+          authorizationMethod: {
+            header: "Authorization Method",
+            get: (row: any) => row.authorizationMethod.label,
+          },
+          readyForUse: {
+            header: "Ready for Use",
+          },
         },
-        label: {},
-        authorizationMethod: {
-          header: "Authorization Method",
-          get: (row: any) => row.authorizationMethod.label,
-        },
-        readyForUse: {
-          header: "Ready for Use",
-        },
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }

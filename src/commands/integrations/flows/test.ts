@@ -48,6 +48,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
 
   static description = "Run a test execution of a flow";
   static flags = {
+    ...PrismaticBaseCommand.baseFlags,
     "flow-url": Flags.string({
       char: "u",
       description: "Invocation URL of the flow to run.",
@@ -86,9 +87,6 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       char: "r",
       description:
         "Optional file to append tailed execution result data to. Results are saved into JSON Lines.",
-    }),
-    jsonl: Flags.boolean({
-      description: "Optionally format the step and tail results output into JSON Lines.",
     }),
     debug: Flags.boolean({
       description: "Enables debug mode on the test execution.",
@@ -311,7 +309,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
 
   private async tailLogs(executionId: string) {
     const {
-      flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout, jsonl },
+      flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout, json },
     } = await this.parse(TestFlowCommand);
 
     let nextCursor: string | undefined = undefined;
@@ -325,7 +323,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
       const { logs, cursor } = result;
       nextCursor = cursor;
 
-      if (jsonl) {
+      if (json) {
         logs.forEach((result) => {
           this.log(JSON.stringify(result));
         });
@@ -360,7 +358,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
 
   private async tailStepResults(executionId: string) {
     const {
-      flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout, jsonl },
+      flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout, json },
     } = await this.parse(TestFlowCommand);
 
     let nextCursor: string | undefined = undefined;
@@ -376,7 +374,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
       const { stepResults, cursor } = result;
       nextCursor = cursor;
 
-      if (jsonl) {
+      if (json) {
         stepResults.forEach((result) => {
           this.log(JSON.stringify(result));
         });

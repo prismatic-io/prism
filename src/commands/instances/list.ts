@@ -5,6 +5,8 @@ import { gql, gqlRequest } from "../../graphql.js";
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Instances";
   static flags = {
+    ...PrismaticBaseCommand.baseFlags,
+    ...ux.table.flags(),
     customer: Flags.string({
       char: "c",
       required: false,
@@ -15,7 +17,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       required: false,
       description: "ID of an integration",
     }),
-    ...ux.table.flags(),
   };
 
   async run() {
@@ -67,29 +68,33 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    ux.table(
-      instances,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+    if (flags.json) {
+      this.logJsonOutput(instances);
+    } else {
+      ux.table(
+        instances,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          name: {},
+          customer: {
+            get: ({ customer }) => customer.name,
+          },
+          customerid: {
+            get: ({ customer }) => customer.id,
+            extended: true,
+          },
+          customerExternalId: {
+            get: ({ customer }) => customer.externalId || "",
+            extended: true,
+          },
+          description: {},
+          enabled: { extended: true },
         },
-        name: {},
-        customer: {
-          get: ({ customer }) => customer.name,
-        },
-        customerid: {
-          get: ({ customer }) => customer.id,
-          extended: true,
-        },
-        customerExternalId: {
-          get: ({ customer }) => customer.externalId || "",
-          extended: true,
-        },
-        description: {},
-        enabled: { extended: true },
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }

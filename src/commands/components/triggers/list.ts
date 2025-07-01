@@ -13,6 +13,7 @@ interface TriggerNode {
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Triggers that Components implement";
   static flags = {
+    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
     public: Flags.boolean({
       required: false,
@@ -94,29 +95,33 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = component.actions.pageInfo.hasNextPage;
     }
 
-    ux.table(
-      triggers,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+    if (flags.json) {
+      this.logJsonOutput(triggers);
+    } else {
+      ux.table(
+        triggers,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          key: {
+            minWidth: 10,
+            extended: true,
+          },
+          label: {},
+          description: {},
+          componentid: {
+            get: () => componentId,
+            extended: true,
+          },
+          componentkey: {
+            get: () => componentKey,
+            extended: true,
+          },
         },
-        key: {
-          minWidth: 10,
-          extended: true,
-        },
-        label: {},
-        description: {},
-        componentid: {
-          get: () => componentId,
-          extended: true,
-        },
-        componentkey: {
-          get: () => componentKey,
-          extended: true,
-        },
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }

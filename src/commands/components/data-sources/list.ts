@@ -15,6 +15,7 @@ interface DataSourceNode {
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Data Sources that Components implement";
   static flags = {
+    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
     public: Flags.boolean({
       required: false,
@@ -106,34 +107,38 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = component.actions.pageInfo.hasNextPage;
     }
 
-    ux.table(
-      dataSources,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+    if (flags.json) {
+      this.logJsonOutput(dataSources);
+    } else {
+      ux.table(
+        dataSources,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          key: {
+            minWidth: 10,
+            extended: true,
+          },
+          label: {},
+          description: {},
+          dataSourceType: { header: "Type" },
+          detailDataSource: {
+            header: "Detail Data Source",
+            extended: true,
+          },
+          componentid: {
+            get: () => componentId,
+            extended: true,
+          },
+          componentkey: {
+            get: () => componentKey,
+            extended: true,
+          },
         },
-        key: {
-          minWidth: 10,
-          extended: true,
-        },
-        label: {},
-        description: {},
-        dataSourceType: { header: "Type" },
-        detailDataSource: {
-          header: "Detail Data Source",
-          extended: true,
-        },
-        componentid: {
-          get: () => componentId,
-          extended: true,
-        },
-        componentkey: {
-          get: () => componentKey,
-          extended: true,
-        },
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }
