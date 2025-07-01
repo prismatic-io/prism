@@ -4,7 +4,7 @@ import { gqlRequest, gql } from "../../../graphql.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Alert Webhooks";
-  static flags = { ...ux.table.flags() };
+  static flags = { ...PrismaticBaseCommand.baseFlags, ...ux.table.flags() };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
@@ -41,26 +41,30 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    ux.table(
-      alertWebhooks,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+    if (flags.json) {
+      this.logJsonOutput(alertWebhooks);
+    } else {
+      ux.table(
+        alertWebhooks,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          name: {},
+          url: {
+            extended: true,
+          },
+          headers: {
+            extended: true,
+          },
+          payloadTemplate: {
+            header: "Payload Template",
+            extended: true,
+          },
         },
-        name: {},
-        url: {
-          extended: true,
-        },
-        headers: {
-          extended: true,
-        },
-        payloadTemplate: {
-          header: "Payload Template",
-          extended: true,
-        },
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }

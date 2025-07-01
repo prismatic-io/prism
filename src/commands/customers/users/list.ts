@@ -12,6 +12,7 @@ export default class ListCommand extends PrismaticBaseCommand {
   };
 
   static flags = {
+    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
   };
 
@@ -59,22 +60,26 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    ux.table(
-      customerUsers,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+    if (flags.json) {
+      this.logJsonOutput(customerUsers);
+    } else {
+      ux.table(
+        customerUsers,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          name: {},
+          email: {},
+          role: { get: ({ role: { name } }) => name },
+          externalId: {
+            extended: true,
+            get: ({ externalId }) => externalId || "",
+          },
         },
-        name: {},
-        email: {},
-        role: { get: ({ role: { name } }) => name },
-        externalId: {
-          extended: true,
-          get: ({ externalId }) => externalId || "",
-        },
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }

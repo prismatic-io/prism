@@ -11,6 +11,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     }),
   };
   static flags = {
+    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
   };
 
@@ -43,23 +44,27 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
-    ux.table(
-      result.alertEvents.nodes,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+    if (flags.json) {
+      this.logJsonOutput(result.alertEvents.nodes);
+    } else {
+      ux.table(
+        result.alertEvents.nodes,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          name: {
+            get: (row: any) => row.monitor.name,
+            header: "Name",
+          },
+          createdAt: {
+            header: "Timestamp",
+          },
+          details: {},
         },
-        name: {
-          get: (row: any) => row.monitor.name,
-          header: "Name",
-        },
-        createdAt: {
-          header: "Timestamp",
-        },
-        details: {},
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    }
   }
 }
