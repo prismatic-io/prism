@@ -4,7 +4,7 @@ import { gqlRequest, gql } from "../../../graphql.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Alert Monitors for Customer Instances";
-  static flags = { ...PrismaticBaseCommand.baseFlags, ...ux.table.flags() };
+  static flags = { ...ux.table.flags() };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
@@ -47,30 +47,26 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    if (flags.json) {
-      this.logJsonOutput(alertMonitors);
-    } else {
-      ux.table(
-        alertMonitors,
-        {
-          id: {
-            minWidth: 8,
-            extended: true,
-          },
-          name: {},
-          triggered: {},
-          customer: {
-            get: ({ instance: { customer } }) => customer.name,
-          },
-          customerId: {
-            extended: true,
-            get: ({ instance: { customer } }) => customer.id,
-          },
-          instance: { get: ({ instance }) => instance.name },
-          instanceId: { extended: true, get: ({ instance }) => instance.id },
+    ux.table(
+      alertMonitors,
+      {
+        id: {
+          minWidth: 8,
+          extended: true,
         },
-        { ...flags },
-      );
-    }
+        name: {},
+        triggered: {},
+        customer: {
+          get: ({ instance: { customer } }) => customer.name,
+        },
+        customerId: {
+          extended: true,
+          get: ({ instance: { customer } }) => customer.id,
+        },
+        instance: { get: ({ instance }) => instance.name },
+        instanceId: { extended: true, get: ({ instance }) => instance.id },
+      },
+      { ...flags },
+    );
   }
 }

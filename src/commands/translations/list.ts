@@ -10,7 +10,6 @@ import { fs } from "../../fs.js";
 export default class TranslationsCommand extends PrismaticBaseCommand {
   static description = "Generate Dynamic Phrases for Embedded Marketplace";
   static flags = {
-    ...PrismaticBaseCommand.baseFlags,
     "output-file": Flags.string({
       required: false,
       char: "o",

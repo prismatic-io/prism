@@ -8,7 +8,6 @@ export default class ListCommand extends PrismaticBaseCommand {
     instance: Args.string({ description: "ID of an Instance", required: true }),
   };
   static flags = {
-    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
   };
 
@@ -57,25 +56,21 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    if (flags.json) {
-      this.logJsonOutput(flowConfigs);
-    } else {
-      ux.table(
-        flowConfigs,
-        {
-          id: {
-            minWidth: 8,
-            extended: true,
-          },
-          name: {
-            get: (row: any) => row.flow.name,
-          },
-          webhookUrl: {
-            extended: true,
-          },
+    ux.table(
+      flowConfigs,
+      {
+        id: {
+          minWidth: 8,
+          extended: true,
         },
-        { ...flags },
-      );
-    }
+        name: {
+          get: (row: any) => row.flow.name,
+        },
+        webhookUrl: {
+          extended: true,
+        },
+      },
+      { ...flags },
+    );
   }
 }

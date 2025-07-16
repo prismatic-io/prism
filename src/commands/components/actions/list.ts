@@ -13,7 +13,6 @@ interface ActionNode {
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Actions that Components implement";
   static flags = {
-    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
     public: Flags.boolean({
       required: false,
@@ -95,33 +94,29 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = component.actions.pageInfo.hasNextPage;
     }
 
-    if (flags.json) {
-      this.logJsonOutput(actions);
-    } else {
-      ux.table(
-        actions,
-        {
-          id: {
-            minWidth: 8,
-            extended: true,
-          },
-          key: {
-            minWidth: 10,
-            extended: true,
-          },
-          label: {},
-          description: {},
-          componentid: {
-            get: () => componentId,
-            extended: true,
-          },
-          componentkey: {
-            get: () => componentKey,
-            extended: true,
-          },
+    ux.table(
+      actions,
+      {
+        id: {
+          minWidth: 8,
+          extended: true,
         },
-        { ...flags },
-      );
-    }
+        key: {
+          minWidth: 10,
+          extended: true,
+        },
+        label: {},
+        description: {},
+        componentid: {
+          get: () => componentId,
+          extended: true,
+        },
+        componentkey: {
+          get: () => componentKey,
+          extended: true,
+        },
+      },
+      { ...flags },
+    );
   }
 }

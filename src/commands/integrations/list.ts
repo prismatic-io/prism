@@ -5,7 +5,6 @@ import { gql, gqlRequest } from "../../graphql.js";
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Integrations";
   static flags = {
-    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
     showAllVersions: Flags.boolean({
       char: "a",
@@ -80,33 +79,29 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    if (flags.json) {
-      this.logJsonOutput(integrations);
-    } else {
-      ux.table(
-        integrations,
-        {
-          id: {
-            minWidth: 8,
-            extended: true,
-          },
-          name: {},
-          description: {},
-          versionNumber: { header: "Version" },
-          labels: { extended: true },
-          category: { extended: true },
-          customerId: { extended: true, get: (row) => row.customer?.id ?? "" },
-          customerName: {
-            extended: true,
-            get: (row) => row.customer?.name ?? "",
-          },
-          customerExternalId: {
-            extended: true,
-            get: (row) => row.customer?.externalId ?? "",
-          },
+    ux.table(
+      integrations,
+      {
+        id: {
+          minWidth: 8,
+          extended: true,
         },
-        { ...flags },
-      );
-    }
+        name: {},
+        description: {},
+        versionNumber: { header: "Version" },
+        labels: { extended: true },
+        category: { extended: true },
+        customerId: { extended: true, get: (row) => row.customer?.id ?? "" },
+        customerName: {
+          extended: true,
+          get: (row) => row.customer?.name ?? "",
+        },
+        customerExternalId: {
+          extended: true,
+          get: (row) => row.customer?.externalId ?? "",
+        },
+      },
+      { ...flags },
+    );
   }
 }

@@ -10,7 +10,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       required: true,
       description: "ID of a customer",
     }),
-    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
   };
 
@@ -41,27 +40,23 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
-    if (flags.json) {
-      this.logJsonOutput(result.customer.credentials.nodes);
-    } else {
-      ux.table(
-        result.customer.credentials.nodes,
-        {
-          id: {
-            minWidth: 8,
-            extended: true,
-          },
-          label: {},
-          authorizationMethod: {
-            header: "Authorization Method",
-            get: (row: any) => row.authorizationMethod.label,
-          },
-          readyForUse: {
-            header: "Ready for Use",
-          },
+    ux.table(
+      result.customer.credentials.nodes,
+      {
+        id: {
+          minWidth: 8,
+          extended: true,
         },
-        { ...flags },
-      );
-    }
+        label: {},
+        authorizationMethod: {
+          header: "Authorization Method",
+          get: (row: any) => row.authorizationMethod.label,
+        },
+        readyForUse: {
+          header: "Ready for Use",
+        },
+      },
+      { ...flags },
+    );
   }
 }

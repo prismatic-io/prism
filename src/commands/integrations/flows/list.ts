@@ -11,7 +11,6 @@ export default class ListCommand extends PrismaticBaseCommand {
     }),
   };
   static flags = {
-    ...PrismaticBaseCommand.baseFlags,
     ...ux.table.flags(),
   };
 
@@ -23,22 +22,18 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     const flows = await getIntegrationFlows(integration);
 
-    if (flags.json) {
-      this.logJsonOutput(flows);
-    } else {
-      ux.table(
-        flows,
-        {
-          id: {
-            minWidth: 8,
-            extended: true,
-          },
-          name: {},
-          description: {},
-          testUrl: { header: "Test URL", extended: true },
+    ux.table(
+      flows,
+      {
+        id: {
+          minWidth: 8,
+          extended: true,
         },
-        { ...flags },
-      );
-    }
+        name: {},
+        description: {},
+        testUrl: { header: "Test URL", extended: true },
+      },
+      { ...flags },
+    );
   }
 }

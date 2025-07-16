@@ -4,7 +4,7 @@ import { gql, gqlRequest } from "../../graphql.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List your Customers";
-  static flags = { ...PrismaticBaseCommand.baseFlags, ...ux.table.flags() };
+  static flags = { ...ux.table.flags() };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
@@ -40,25 +40,21 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    if (flags.json) {
-      this.logJsonOutput(customers);
-    } else {
-      ux.table(
-        customers,
-        {
-          id: {
-            minWidth: 8,
-            extended: true,
-          },
-          externalId: {
-            extended: true,
-            get: ({ externalId }) => externalId || "",
-          },
-          name: {},
-          description: {},
+    ux.table(
+      customers,
+      {
+        id: {
+          minWidth: 8,
+          extended: true,
         },
-        { ...flags },
-      );
-    }
+        externalId: {
+          extended: true,
+          get: ({ externalId }) => externalId || "",
+        },
+        name: {},
+        description: {},
+      },
+      { ...flags },
+    );
   }
 }

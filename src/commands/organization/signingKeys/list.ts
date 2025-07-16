@@ -4,10 +4,7 @@ import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List embedded signing keys for embedded marketplace";
-  static flags = {
-    ...PrismaticBaseCommand.baseFlags,
-    ...ux.table.flags(),
-  };
+  static flags = { ...ux.table.flags() };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
@@ -30,20 +27,16 @@ export default class ListCommand extends PrismaticBaseCommand {
       `,
     });
 
-    if (flags.json) {
-      this.logJsonOutput(result.organization.signingKeys.nodes);
-    } else {
-      ux.table(
-        result.organization.signingKeys.nodes,
-        {
-          id: { minWidth: 8, extended: true },
-          privateKeyPreview: { header: "Private Key Preview" },
-          publicKey: { header: "Public Key", extended: true },
-          issuedAt: { header: "Timestamp" },
-          imported: { header: "Imported?" },
-        },
-        { ...flags },
-      );
-    }
+    ux.table(
+      result.organization.signingKeys.nodes,
+      {
+        id: { minWidth: 8, extended: true },
+        privateKeyPreview: { header: "Private Key Preview" },
+        publicKey: { header: "Public Key", extended: true },
+        issuedAt: { header: "Timestamp" },
+        imported: { header: "Imported?" },
+      },
+      { ...flags },
+    );
   }
 }
