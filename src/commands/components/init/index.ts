@@ -27,6 +27,10 @@ export default class InitializeComponent extends Command {
       default: false,
       description: "Output more verbose logging from Component generation",
     }),
+    path: Flags.string({
+      required: false,
+      description: "Path to the folder to initialize the component in.",
+    }),
   };
   static args = {
     name: Args.string({
@@ -42,7 +46,12 @@ export default class InitializeComponent extends Command {
     try {
       const {
         args: { name },
-        flags: { verbose, "wsdl-path": rawWsdlPath, "open-api-path": rawOpenApiPath },
+        flags: {
+          verbose,
+          "wsdl-path": rawWsdlPath,
+          "open-api-path": rawOpenApiPath,
+          path: installPath,
+        },
       } = await this.parse(InitializeComponent);
 
       const wsdlPath = rawWsdlPath ? path.resolve(rawWsdlPath) : undefined;
@@ -61,10 +70,6 @@ export default class InitializeComponent extends Command {
           exit: 1,
         });
       }
-      this.log(`Creating component directory for "${name}"...`);
-
-      await fs.mkdir(name);
-      process.chdir(name);
 
       if (openApiPath) {
         await GenerateFormatsCommand.invoke(
@@ -105,8 +110,13 @@ export default class InitializeComponent extends Command {
         }
       }
 
-      // Return to new project's directory
-      process.chdir(path.join(cwd, name));
+      if (installPath) {
+        process.chdir(installPath);
+      } else {
+        this.log(`Creating component directory for "${name}"...`);
+        await fs.mkdir(name);
+        process.chdir(path.join(cwd, name));
+      }
 
       await updatePackageJson({
         path: "package.json",

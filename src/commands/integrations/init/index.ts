@@ -1,5 +1,5 @@
 import path from "path";
-import { Args, Command } from "@oclif/core";
+import { Args, Command, Flags } from "@oclif/core";
 import fs from "fs/promises";
 import { camelCase } from "lodash-es";
 import { v4 as uuid4 } from "uuid";
@@ -17,10 +17,17 @@ export default class InitializeIntegration extends Command {
         "Name of the new integration to create (alphanumeric characters, hyphens, and underscores)",
     }),
   };
+  static flags = {
+    path: Flags.string({
+      required: false,
+      description: "Path to the folder to initialize the integration in.",
+    }),
+  };
 
   async run() {
     const {
       args: { name },
+      flags: { path: installPath },
     } = await this.parse(InitializeIntegration);
 
     if (!VALID_NAME_REGEX.test(name)) {
@@ -32,8 +39,12 @@ export default class InitializeIntegration extends Command {
       );
     }
 
-    await fs.mkdir(name);
-    process.chdir(name);
+    if (installPath) {
+      process.chdir(installPath);
+    } else {
+      await fs.mkdir(name);
+      process.chdir(name);
+    }
 
     const context = {
       integration: { name, description: "Prism-generated Integration", key: camelCase(name) },
