@@ -274,9 +274,9 @@ const testIntegrationIntegration = integration({
   name: "Test Integration",
   description: "",
   iconPath: "icon.png",
+  componentRegistry,
   flows,
   configPages,
-  componentRegistry,
 });
 export default testIntegrationIntegration;
 "

@@ -33,6 +33,8 @@ type ImportDeclaration = {
   namedImports?: string[];
 };
 
+type FormattedConfigPages = ReturnType<typeof formatConfigPages>;
+
 export async function writeIntegration(
   integration: IntegrationObjectFromYAML,
   registryPrefix?: string,
@@ -46,10 +48,12 @@ export async function writeIntegration(
 
   const usedComponents = await extractComponentList(integration, registryPrefix);
 
-  writeIndex(project, integration);
   writeFlows(project, integration);
   writeComponentRegistry(project, usedComponents, registryPrefix);
-  writeConfigPages(project, integration);
+  const { includesUserLevel } = writeConfigPages(project, integration);
+  const { includesScopedConfigVars } = writeScopedConfigVars(project, integration);
+
+  writeIndex(project, integration, { includesUserLevel, includesScopedConfigVars });
 
   await project.save();
 
@@ -106,7 +110,12 @@ export async function writePackageJson(
   });
 }
 
-function writeIndex(project: Project, integration: IntegrationObjectFromYAML) {
+function writeIndex(
+  project: Project,
+  integration: IntegrationObjectFromYAML,
+  options: { includesUserLevel?: boolean; includesScopedConfigVars?: boolean },
+) {
+  const { includesScopedConfigVars, includesUserLevel } = options;
   const file = project.createSourceFile(path.join("src", "index.ts"), undefined, {
     scriptKind: ScriptKind.TS,
   });
@@ -122,23 +131,39 @@ function writeIndex(project: Project, integration: IntegrationObjectFromYAML) {
     },
     {
       moduleSpecifier: "./configPages",
-      namedImports: ["configPages"],
+      namedImports: ["configPages", ...(includesUserLevel ? ["userLevelConfigPages"] : [])],
     },
     {
       moduleSpecifier: "./componentRegistry",
       namedImports: ["componentRegistry"],
     },
+    ...(includesScopedConfigVars
+      ? [
+          {
+            moduleSpecifier: "./scopedConfigVars",
+            namedImports: ["scopedConfigVars"],
+          },
+        ]
+      : []),
   ]);
 
   file.addExportDeclarations([
     {
       moduleSpecifier: "./configPages",
-      namedExports: ["configPages"],
+      namedExports: ["configPages", ...(includesUserLevel ? ["userLevelConfigPages"] : [])],
     },
     {
       moduleSpecifier: "./componentRegistry",
       namedExports: ["componentRegistry"],
     },
+    ...(includesScopedConfigVars
+      ? [
+          {
+            moduleSpecifier: "./scopedConfigVars",
+            namedExports: ["scopedConfigVars"],
+          },
+        ]
+      : []),
   ]);
 
   const integrationVarName = `${camelCase(integration.name)}Integration`;
@@ -154,9 +179,11 @@ function writeIndex(project: Project, integration: IntegrationObjectFromYAML) {
             .writeLine(`name: "${integration.name}",`)
             .writeLine(`description: ${formatInputValue(integration.description) || ""},`)
             .writeLine(`iconPath: "icon.png",`)
+            .writeLine("componentRegistry,")
             .writeLine("flows,")
             .writeLine("configPages,")
-            .writeLine("componentRegistry,")
+            .conditionalWriteLine(includesUserLevel, "userLevelConfigPages,")
+            .conditionalWriteLine(includesScopedConfigVars, "scopedConfigVars,")
             .writeLine("});")
             .writeLine(`export default ${integrationVarName}`);
         },
@@ -345,25 +372,75 @@ function writeComponentRegistry(
 
 function writeConfigPages(project: Project, integration: IntegrationObjectFromYAML) {
   try {
-    const configPages = formatConfigPages(integration.configPages, integration.requiredConfigVars);
+    const formattedPages = formatConfigPages(
+      integration.configPages,
+      integration.requiredConfigVars,
+    );
+    const configPages: FormattedConfigPages = [];
+    const userConfigPages: FormattedConfigPages = [];
+
+    formattedPages.forEach((page) => {
+      if (page.userLevelConfigured) {
+        userConfigPages.push(page);
+      } else {
+        configPages.push(page);
+      }
+    });
 
     const file = project.createSourceFile(path.join("src", "configPages.ts"), undefined, {
       scriptKind: ScriptKind.TS,
     });
 
+    const configPageIncludes = generateConfigPages(file, configPages);
+    const userConfigIncludes = generateConfigPages(file, userConfigPages, true);
+
     const includes = {
       configPage: true,
-      configVar: false,
-      connectionConfigVar: false,
-      dataSourceConfigVar: false,
+      configVar: configPageIncludes.configVar || userConfigIncludes.configVar,
+      connectionConfigVar:
+        configPageIncludes.connectionConfigVar || userConfigIncludes.connectionConfigVar,
+      dataSourceConfigVar:
+        configPageIncludes.dataSourceConfigVar || userConfigIncludes.dataSourceConfigVar,
     };
 
+    file.addImportDeclarations([
+      {
+        moduleSpecifier: "@prismatic-io/spectral",
+        namedImports: Object.keys(includes).reduce<Array<string>>((accum, key) => {
+          if (includes[key as keyof typeof includes]) {
+            accum.push(key);
+          }
+
+          return accum;
+        }, []),
+      },
+    ]);
+
+    return { includesUserLevel: userConfigPages.length > 0 };
+  } catch (e) {
+    console.error("Error generating config page:", e);
+    return { includesUserLevel: false };
+  }
+}
+
+function generateConfigPages(
+  file: SourceFile,
+  configPages: FormattedConfigPages,
+  isUserLevel = false,
+) {
+  const includes: {
+    configVar?: boolean;
+    connectionConfigVar?: boolean;
+    dataSourceConfigVar?: boolean;
+  } = {};
+
+  if (configPages.length > 0) {
     file.addVariableStatement({
       isExported: true,
       declarationKind: VariableDeclarationKind.Const,
       declarations: [
         {
-          name: "configPages",
+          name: `${isUserLevel ? "userLevelConfigPages" : "configPages"}`,
           initializer: (writer) => {
             writer.writeLine("{");
             configPages.forEach((page) => {
@@ -474,21 +551,72 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
         },
       ],
     });
+  }
 
-    file.addImportDeclarations([
-      {
-        moduleSpecifier: "@prismatic-io/spectral",
-        namedImports: Object.keys(includes).reduce<Array<string>>((accum, key) => {
-          if (includes[key as keyof typeof includes]) {
-            accum.push(key);
-          }
+  return includes;
+}
 
-          return accum;
-        }, []),
-      },
-    ]);
+function writeScopedConfigVars(project: Project, integration: IntegrationObjectFromYAML) {
+  try {
+    const scopedConfigVars = integration.requiredConfigVars.filter((cv) => {
+      return cv.useScopedConfigVar;
+    });
+
+    if (scopedConfigVars.length > 0) {
+      const file = project.createSourceFile(path.join("src", "scopedConfigVars.ts"), undefined, {
+        scriptKind: ScriptKind.TS,
+      });
+
+      /** There is currently no way to differentiate between customer-activated and org-activated
+       *  connections via YAML. As of spectral@10.5, the customerActivatedConnection and
+       *  organizationActivatedConnection methods actually do the same thing, so there's no harm
+       *  in using either function for either case, other than just being confusing.
+       */
+      file.addStatements((writer) => {
+        writer
+          .writeLine(
+            "// NOTE - You may want to double check if this integration is using org-activated or",
+          )
+          .writeLine(
+            "// customer-activated connection config vars. If customer-activated, you may use the",
+          )
+          .writeLine("// customerActivatedConnection function.");
+      });
+
+      file.addVariableStatement({
+        isExported: true,
+        declarationKind: VariableDeclarationKind.Const,
+        declarations: [
+          {
+            name: "scopedConfigVars",
+            initializer: (writer) => {
+              writer.writeLine("{");
+              scopedConfigVars.forEach((scv) => {
+                writer
+                  .writeLine(`"${scv.key}": organizationActivatedConnection({`)
+                  .writeLine(`stableKey: "${scv.useScopedConfigVar}",`)
+                  .writeLine("}),");
+              });
+              writer.writeLine("}");
+            },
+          },
+        ],
+      });
+
+      file.addImportDeclarations([
+        {
+          moduleSpecifier: "@prismatic-io/spectral",
+          namedImports: ["organizationActivatedConnection"],
+        },
+      ]);
+
+      return { includesScopedConfigVars: true };
+    } else {
+      return { includesScopedConfigVars: false };
+    }
   } catch (e) {
-    console.error("Error generating config page:", e);
+    console.error(`Error writing scoped config vars: ${e}`);
+    return { includesScopedConfigVars: false };
   }
 }
 
@@ -540,7 +668,8 @@ function formatConfigPages(
   requiredConfigVars: Array<ConfigVarObjectFromYAML>,
 ) {
   return configPages.map((configPage) => {
-    const { name, tagline, elements } = configPage;
+    const { name, tagline, elements, userLevelConfigured } = configPage;
+
     const configVars = elements.map((element) => {
       const foundConfigVar = requiredConfigVars.find((configVar) => {
         return configVar.key === element.value;
@@ -578,6 +707,7 @@ function formatConfigPages(
       name,
       tagline,
       configVars,
+      userLevelConfigured,
     };
   });
 }
