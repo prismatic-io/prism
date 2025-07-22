@@ -105,6 +105,7 @@ export type ConfigVarObjectFromYAML = {
       };
     }
   >;
+  useScopedConfigVar?: string;
   meta?: {
     visibleToOrgDeployer: boolean;
     visibleToCustomerDeployer: boolean;
@@ -132,7 +133,7 @@ export type IntegrationObjectFromYAML = {
     }>;
     name: string;
     tagline?: string;
-    userLeveLConfigured: boolean;
+    userLevelConfigured: boolean;
   }>;
   requiredConfigVars: Array<ConfigVarObjectFromYAML>;
 };
