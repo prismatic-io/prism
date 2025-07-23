@@ -25,7 +25,7 @@ import {
 import path from "path";
 import { updatePackageJson } from "../../../util.js";
 import { writeBranchString, getBranchKind } from "./branching.js";
-import { escapeText as escapeDoubleQuotes } from "../../utils.js";
+import { escapeText } from "../../utils.js";
 
 type ImportDeclaration = {
   moduleSpecifier: string;
@@ -343,6 +343,8 @@ function writeComponentRegistry(
   return file;
 }
 
+const MAX_HTML_STABLEKEY_LENGTH = 100;
+
 function writeConfigPages(project: Project, integration: IntegrationObjectFromYAML) {
   try {
     const configPages = formatConfigPages(integration.configPages, integration.requiredConfigVars);
@@ -443,8 +445,14 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                 } else {
                   includes.configVar = true;
                   writer
-                    .writeLine(`"${escapeDoubleQuotes(configVar.name)}": configVar({`)
-                    .writeLine(`stableKey: "${camelCase(configVar.key)}",`)
+                    .writeLine(`"${escapeText(configVar.name)}": configVar({`)
+                    .writeLine(
+                      `stableKey: "${
+                        configVar.dataType === "htmlElement"
+                          ? camelCase(configVar.key).substring(0, MAX_HTML_STABLEKEY_LENGTH)
+                          : camelCase(configVar.key)
+                      }",`,
+                    )
                     .writeLine(`dataType: "${configVar.dataType}",`)
                     .writeLine(`description: ${formatInputValue(configVar.description)},`)
                     .conditionalWriteLine(
@@ -542,7 +550,7 @@ function formatConfigPages(
   return configPages.map((configPage) => {
     const { name, tagline, elements } = configPage;
     const configVars = elements.map((element) => {
-      const foundConfigVar = requiredConfigVars.find((configVar) => {
+      const foundConfigVar = requiredConfigVars?.find((configVar) => {
         return configVar.key === element.value;
       });
 
