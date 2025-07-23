@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { camelCase, kebabCase } from "lodash-es";
 import {
   ActionObjectFromYAML,
@@ -449,7 +450,10 @@ function writeConfigPages(project: Project, integration: IntegrationObjectFromYA
                     .writeLine(
                       `stableKey: "${
                         configVar.dataType === "htmlElement"
-                          ? camelCase(configVar.key).substring(0, MAX_HTML_STABLEKEY_LENGTH)
+                          ? crypto
+                              .createHash("sha256")
+                              .update(camelCase(configVar.key))
+                              .digest("hex")
                           : camelCase(configVar.key)
                       }",`,
                     )

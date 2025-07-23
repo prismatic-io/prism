@@ -369,8 +369,8 @@ export async function extractComponentList(
   const { flows, requiredConfigVars } = integration;
 
   // Flows
-  (flows ?? []).forEach((flow) => {
-    (flow.steps ?? []).forEach((step) => {
+  flows.forEach((flow) => {
+    flow.steps.forEach((step) => {
       const { component } = step.action;
       if (!EXCLUDED_PUBLIC_COMPONENTS.includes(component.key)) {
         componentMap[component.key] = _extractComponentData(component, customRegistry);
