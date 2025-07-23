@@ -52,7 +52,7 @@ export const escapeText = (text?: unknown): string => {
   if (!text) {
     return "";
   }
-  return `${text}`.replace(/"/g, '\\"');
+  return `${text}`.replace(/\s+/g, " ").trim().replace(/"/g, '\\"');
 };
 
 export type GeneratedFunction = string | WriterFunction;

@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { camelCase, kebabCase } from "lodash-es";
 import {
   ActionObjectFromYAML,
@@ -25,7 +26,7 @@ import {
 import path from "path";
 import { updatePackageJson } from "../../../util.js";
 import { writeBranchString, getBranchKind } from "./branching.js";
-import { escapeText as escapeDoubleQuotes } from "../../utils.js";
+import { escapeText } from "../../utils.js";
 
 type ImportDeclaration = {
   moduleSpecifier: string;
@@ -370,6 +371,8 @@ function writeComponentRegistry(
   return file;
 }
 
+const MAX_HTML_STABLEKEY_LENGTH = 100;
+
 function writeConfigPages(project: Project, integration: IntegrationObjectFromYAML) {
   try {
     const formattedPages = formatConfigPages(
@@ -520,8 +523,17 @@ function generateConfigPages(
                 } else {
                   includes.configVar = true;
                   writer
-                    .writeLine(`"${escapeDoubleQuotes(configVar.name)}": configVar({`)
-                    .writeLine(`stableKey: "${camelCase(configVar.key)}",`)
+                    .writeLine(`"${escapeText(configVar.name)}": configVar({`)
+                    .writeLine(
+                      `stableKey: "${
+                        configVar.dataType === "htmlElement"
+                          ? crypto
+                              .createHash("sha256")
+                              .update(camelCase(configVar.key))
+                              .digest("hex")
+                          : camelCase(configVar.key)
+                      }",`,
+                    )
                     .writeLine(`dataType: "${configVar.dataType}",`)
                     .writeLine(`description: ${formatInputValue(configVar.description)},`)
                     .conditionalWriteLine(
@@ -671,7 +683,7 @@ function formatConfigPages(
     const { name, tagline, elements, userLevelConfigured } = configPage;
 
     const configVars = elements.map((element) => {
-      const foundConfigVar = requiredConfigVars.find((configVar) => {
+      const foundConfigVar = requiredConfigVars?.find((configVar) => {
         return configVar.key === element.value;
       });
 

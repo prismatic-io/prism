@@ -9,7 +9,7 @@ import {
 import { camelCase } from "lodash-es";
 import { writeBranchString, getBranchKind } from "./branching.js";
 import { SourceFile } from "ts-morph";
-import { escapeText as escapeDoubleQuotes } from "../../utils.js";
+import { escapeText } from "../../utils.js";
 
 export function valueIsNumber(value: unknown) {
   return typeof value === "number" || (typeof value === "string" && !Number.isNaN(Number(value)));
@@ -52,7 +52,7 @@ export function formatInputValue(
   } else if (typeof value === "object") {
     return convertYAMLObjectIntoString(value as ValidComplexYAMLValue);
   } else {
-    return `"${escapeDoubleQuotes(value)}"`;
+    return `"${escapeText(value)}"`;
   }
 }
 
@@ -328,7 +328,7 @@ export function writeLoopString(
 
 /* Config Vars: Given a config var object, format its inputs so it is consumable by the writers. */
 export function formatConfigVarInputs(configVar: ConfigVarObjectFromYAML) {
-  return Object.entries(configVar.inputs || []).map(([key, input]) => {
+  return Object.entries(configVar?.inputs || {}).map(([key, input]) => {
     return {
       name: key,
       type: input.type,
@@ -411,7 +411,7 @@ export async function extractComponentList(
   }
 
   // Config vars
-  requiredConfigVars.forEach((configVar) => {
+  (requiredConfigVars ?? []).forEach((configVar) => {
     if (configVar.dataSource) {
       const { component } = configVar.dataSource;
       if (!EXCLUDED_PUBLIC_COMPONENTS.includes(component.key)) {

@@ -183,7 +183,8 @@ export const configPages = {
     tagline: "",
     elements: {
       "<h3>Set up your configVars</h3>": configVar({
-        stableKey: "h3SetUpYourConfigVarsH3",
+        stableKey:
+          "41d4e86eb4330e09cf49e90dc7278954d48dd8f12b24fb5d26af8bf518e714c6",
         dataType: "htmlElement",
         description: "",
       }),
