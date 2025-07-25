@@ -21,7 +21,7 @@ export default class RunCommand extends PrismaticBaseCommand {
   static usage = "components:dev:run -i <value> -c <value> -- /command/to/run";
   static examples = [
     {
-      description: `To simply print an integration's basic auth config variable named "My Credentials" and pipe the resulting JSON to jq, run:`,
+      description: `To simply print an integration's basic auth config variable named "My Connection" and pipe the resulting JSON to jq, run:`,
       command: `$ prism components:dev:run
     --integrationId SW50ZWexample
     --connectionKey "My Connection" --

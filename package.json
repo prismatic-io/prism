@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "7.6.3",
+  "version": "7.6.4",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": ["prismatic", "cli"],
   "homepage": "https://prismatic.io",
@@ -137,9 +137,6 @@
       "customers": {
         "description": "Manage Customers"
       },
-      "customers:credentials": {
-        "description": "Manage Customer Credentials"
-      },
       "customers:users": {
         "description": "Manage Customer Users"
       },
@@ -157,9 +154,6 @@
       },
       "organization": {
         "description": "Manage your Organization"
-      },
-      "organization:credentials": {
-        "description": "Manage Organization Credentials"
       },
       "organization:users": {
         "description": "Manage Organization Users"
