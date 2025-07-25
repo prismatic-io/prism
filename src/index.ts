@@ -54,10 +54,6 @@ import ComponentsInitComponentCommand from "./commands/components/init/component
 import ComponentsInitCommand from "./commands/components/init/index.js";
 import ComponentsSignatureCommand from "./commands/components/signature.js";
 import ComponentsTriggersListCommand from "./commands/components/triggers/list.js";
-import CustomersCredentialsCreateCommand from "./commands/customers/credentials/create.js";
-import CustomersCredentialsDeleteCommand from "./commands/customers/credentials/delete.js";
-import CustomersCredentialsUpdateCommand from "./commands/customers/credentials/update.js";
-import CustomersCredentialsListCommand from "./commands/customers/credentials/list.js";
 import CustomersUsersCreateCommand from "./commands/customers/users/create.js";
 import CustomersUsersDeleteCommand from "./commands/customers/users/delete.js";
 import CustomersUsersListCommand from "./commands/customers/users/list.js";
@@ -75,10 +71,6 @@ import IntegrationsVersionsCommand from "./commands/integrations/versions/index.
 import LogsSeveritiesListCommand from "./commands/logs/severities/list.js";
 import MeTokenRevokeCommand from "./commands/me/token/revoke.js";
 import OrganizationConnectionsListCommand from "./commands/organization/connections/list.js";
-import OrganizationCredentialsCreateCommand from "./commands/organization/credentials/create.js";
-import OrganizationCredentialsDeleteCommand from "./commands/organization/credentials/delete.js";
-import OrganizationCredentialsListCommand from "./commands/organization/credentials/list.js";
-import OrganizationCredentialsUpdateCommand from "./commands/organization/credentials/update.js";
 import OrganizationSigningKeysDeleteCommand from "./commands/organization/signingKeys/delete.js";
 import OrganizationSigningKeysGenerateCommand from "./commands/organization/signingKeys/generate.js";
 import OrganizationSigningKeysImportCommand from "./commands/organization/signingKeys/import.js";
@@ -146,10 +138,6 @@ export const Commands = {
   "components:init": ComponentsInitCommand,
   "components:signature": ComponentsSignatureCommand,
   "components:triggers:list": ComponentsTriggersListCommand,
-  "customers:credentials:create": CustomersCredentialsCreateCommand,
-  "customers:credentials:delete": CustomersCredentialsDeleteCommand,
-  "customers:credentials:update": CustomersCredentialsUpdateCommand,
-  "customers:credentials:list": CustomersCredentialsListCommand,
   "customers:users:create": CustomersUsersCreateCommand,
   "customers:users:delete": CustomersUsersDeleteCommand,
   "customers:users:list": CustomersUsersListCommand,
@@ -167,10 +155,6 @@ export const Commands = {
   "logs:severities:list": LogsSeveritiesListCommand,
   "me:token:revoke": MeTokenRevokeCommand,
   "organization:connections:list": OrganizationConnectionsListCommand,
-  "organization:credentials:create": OrganizationCredentialsCreateCommand,
-  "organization:credentials:delete": OrganizationCredentialsDeleteCommand,
-  "organization:credentials:list": OrganizationCredentialsListCommand,
-  "organization:credentials:update": OrganizationCredentialsUpdateCommand,
   "organization:signing-keys:delete": OrganizationSigningKeysDeleteCommand,
   "organization:signing-keys:generate": OrganizationSigningKeysGenerateCommand,
   "organization:signing-keys:import": OrganizationSigningKeysImportCommand,
