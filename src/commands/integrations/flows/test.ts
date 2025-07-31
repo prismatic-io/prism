@@ -93,6 +93,9 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     debug: Flags.boolean({
       description: "Enables debug mode on the test execution.",
     }),
+    apiKey: Flags.string({
+      description: "Optional API key for flows with secured endpoints.",
+    }),
   };
 
   async run() {
@@ -110,6 +113,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         timeout,
         debug,
         quiet,
+        apiKey,
       },
     } = await this.parse(TestFlowCommand);
 
@@ -244,6 +248,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         ...(sync ? { "prismatic-synchronous": true } : {}),
         ...(debug ? { "prismatic-debug": true } : {}),
         ...(contentType && triggerPayload ? { "Content-Type": contentType } : {}),
+        ...(apiKey ? { "Api-Key": apiKey } : {}),
       },
     });
     ux.action.stop();
