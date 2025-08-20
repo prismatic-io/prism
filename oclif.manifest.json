@@ -109,9 +109,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -119,9 +117,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -129,9 +125,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -145,36 +139,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -427,9 +410,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -437,9 +418,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -447,9 +426,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -463,36 +440,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -862,9 +828,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -872,9 +836,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -882,9 +844,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -898,36 +858,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -1356,9 +1305,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -1366,9 +1313,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -1376,9 +1321,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -1392,36 +1335,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -1764,10 +1696,7 @@
           "default": "access",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "access",
-            "refresh"
-          ],
+          "options": ["access", "refresh"],
           "type": "option"
         }
       },
@@ -1838,9 +1767,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -1848,9 +1775,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -1858,9 +1783,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -1874,36 +1797,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -2146,9 +2058,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2156,9 +2066,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -2166,9 +2074,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -2182,36 +2088,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -2346,9 +2241,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2356,9 +2249,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -2366,9 +2257,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -2382,36 +2271,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -2618,9 +2496,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2628,9 +2504,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -2638,9 +2512,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -2654,36 +2526,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -2725,9 +2586,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2735,9 +2594,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -2745,9 +2602,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -2761,36 +2616,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -2934,9 +2778,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2944,9 +2786,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -2954,9 +2794,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -2970,36 +2808,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -3047,9 +2874,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3057,9 +2882,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -3067,9 +2890,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -3083,36 +2904,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -3174,9 +2984,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3184,9 +2992,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -3194,9 +3000,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -3210,36 +3014,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -3555,9 +3348,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3565,9 +3356,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -3575,9 +3364,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -3591,36 +3378,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -3784,9 +3560,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3794,9 +3568,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -3804,9 +3576,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -3820,36 +3590,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -3891,9 +3650,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3901,9 +3658,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -3911,9 +3666,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -3927,36 +3680,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -4133,9 +3875,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4143,9 +3883,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -4153,9 +3891,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -4169,36 +3905,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -4246,9 +3971,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4256,9 +3979,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -4266,9 +3987,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -4282,36 +4001,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -4360,18 +4068,14 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4483,9 +4187,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4493,9 +4195,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -4503,9 +4203,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -4519,36 +4217,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -4737,9 +4424,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4747,9 +4432,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -4757,9 +4440,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -4773,36 +4454,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -4851,9 +4521,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4861,9 +4529,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -4871,9 +4537,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -4887,36 +4551,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -4972,9 +4625,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4982,9 +4633,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -4992,9 +4641,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -5008,36 +4655,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -5052,10 +4688,7 @@
           "name": "managed-by",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "org",
-            "customer"
-          ],
+          "options": ["org", "customer"],
           "type": "option"
         }
       },
@@ -5195,9 +4828,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5205,9 +4836,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -5215,9 +4844,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -5231,36 +4858,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -5394,9 +5010,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5404,9 +5018,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -5414,9 +5026,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -5430,36 +5040,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
@@ -5501,9 +5100,7 @@
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
-          "exclusive": [
-            "extended"
-          ],
+          "exclusive": ["extended"],
           "name": "columns",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5511,9 +5108,7 @@
         },
         "csv": {
           "description": "output is csv format [alias: --output=csv]",
-          "exclusive": [
-            "no-truncate"
-          ],
+          "exclusive": ["no-truncate"],
           "name": "csv",
           "allowNo": false,
           "type": "boolean"
@@ -5521,9 +5116,7 @@
         "extended": {
           "char": "x",
           "description": "show extra columns",
-          "exclusive": [
-            "columns"
-          ],
+          "exclusive": ["columns"],
           "name": "extended",
           "allowNo": false,
           "type": "boolean"
@@ -5537,36 +5130,25 @@
         },
         "no-header": {
           "description": "hide table header from output",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-header",
           "allowNo": false,
           "type": "boolean"
         },
         "no-truncate": {
           "description": "do not truncate output to fit screen",
-          "exclusive": [
-            "csv"
-          ],
+          "exclusive": ["csv"],
           "name": "no-truncate",
           "allowNo": false,
           "type": "boolean"
         },
         "output": {
           "description": "output in a more machine friendly format",
-          "exclusive": [
-            "no-truncate",
-            "csv"
-          ],
+          "exclusive": ["no-truncate", "csv"],
           "name": "output",
           "hasDynamicHelp": false,
           "multiple": false,
-          "options": [
-            "csv",
-            "json",
-            "yaml"
-          ],
+          "options": ["csv", "json", "yaml"],
           "type": "option"
         },
         "sort": {
