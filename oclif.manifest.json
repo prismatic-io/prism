@@ -1,0 +1,5659 @@
+{
+  "commands": {
+    "login": {
+      "aliases": [],
+      "args": {},
+      "description": "Log in to your Prismatic account",
+      "flags": {
+        "force": {
+          "char": "f",
+          "description": "re-authenticate, even if you are already logged in",
+          "name": "force",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "url": {
+          "char": "u",
+          "description": "returns a challenge url without automatically opening a browser",
+          "name": "url",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "login",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "logout": {
+      "aliases": [],
+      "args": {},
+      "description": "Log out of your Prismatic account",
+      "flags": {
+        "browser": {
+          "char": "b",
+          "description": "additionally log out of your default browser's session",
+          "name": "browser",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "logout",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "components:delete": {
+      "aliases": [],
+      "args": {
+        "component": {
+          "description": "ID of the component to delete",
+          "name": "component",
+          "required": true
+        }
+      },
+      "description": "Delete a Component",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "components:delete",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "components:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List available Components",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "showAllVersions": {
+          "char": "a",
+          "description": "If specified this command returns all versions of all components rather than only the latest version",
+          "name": "showAllVersions",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "components:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "components:publish": {
+      "aliases": [],
+      "args": {},
+      "description": "Publish a Component to Prismatic",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "comment": {
+          "char": "c",
+          "description": "Comment about changes in this Publish",
+          "name": "comment",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "confirm": {
+          "description": "Interactively confirm publish",
+          "name": "confirm",
+          "allowNo": true,
+          "type": "boolean"
+        },
+        "check-signature": {
+          "description": "Check signature of existing component and confirm publish if matched",
+          "name": "check-signature",
+          "allowNo": true,
+          "type": "boolean"
+        },
+        "skip-on-signature-match": {
+          "description": "Skips component publish if the new signature matches the existing signature",
+          "name": "skip-on-signature-match",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "customer": {
+          "description": "ID of customer with which to associate the component",
+          "name": "customer",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "commitHash": {
+          "description": "Commit hash corresponding to the component version being published",
+          "name": "commitHash",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "commitUrl": {
+          "description": "URL to the commit details for this component version",
+          "name": "commitUrl",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "repoUrl": {
+          "description": "URL to the repository containing the component definition",
+          "name": "repoUrl",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "pullRequestUrl": {
+          "description": "URL to the pull request that modified this component version",
+          "name": "pullRequestUrl",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "components:publish",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "customers:create": {
+      "aliases": [],
+      "args": {},
+      "description": "Create a new Customer",
+      "examples": [
+        {
+          "description": "Apply multiple labels to a customer",
+          "command": "prism customers:create --name \"Widgets Inc\" --externalId \"abc-123\" --label \"Prod Customers\" --label \"Beta Testers\""
+        }
+      ],
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "short name of the new customer",
+          "name": "name",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "description": {
+          "char": "d",
+          "description": "longer description of the customer",
+          "name": "description",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "externalId": {
+          "char": "e",
+          "description": "external ID of the customer from your system",
+          "name": "externalId",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "label": {
+          "char": "l",
+          "description": "a label to apply to the customer",
+          "name": "label",
+          "hasDynamicHelp": false,
+          "multiple": true,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "customers:create",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "customers:delete": {
+      "aliases": [],
+      "args": {
+        "customer": {
+          "description": "ID of the customer to delete",
+          "name": "customer",
+          "required": true
+        }
+      },
+      "description": "Delete a Customer",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "customers:delete",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "customers:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List your Customers",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "customers:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "customers:update": {
+      "aliases": [],
+      "args": {
+        "customer": {
+          "description": "ID of a customer",
+          "name": "customer",
+          "required": true
+        }
+      },
+      "description": "Update a Customer",
+      "examples": [
+        {
+          "description": "Apply multiple labels to a customer (note: previously set labels will be overwritten)",
+          "command": "prism customers:update Q3VzdG9tZXI6MmUzZDllOTUtMWIyMy00N2FjLTk3MjUtMzU1OTA2YzgyZWZj --label \"Prod Customers\" --label \"Beta Testers\""
+        }
+      ],
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of the customer",
+          "name": "name",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "description": {
+          "char": "d",
+          "description": "description of the customer",
+          "name": "description",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "externalId": {
+          "char": "e",
+          "description": "external ID of the customer from your system",
+          "name": "externalId",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "label": {
+          "char": "l",
+          "description": "a label to apply to the customer",
+          "name": "label",
+          "hasDynamicHelp": false,
+          "multiple": true,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "customers:update",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "instances:create": {
+      "aliases": [],
+      "args": {},
+      "description": "Create an Instance",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of your new instance.",
+          "name": "name",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "integration": {
+          "char": "i",
+          "description": "ID of the integration or a specific integration version ID this is an instance of",
+          "name": "integration",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "customer": {
+          "char": "c",
+          "description": "ID of customer to deploy to",
+          "name": "customer",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "description": {
+          "char": "d",
+          "description": "longer description of the instance",
+          "name": "description",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "config-vars": {
+          "char": "v",
+          "description": "config variables to bind to steps of your instance",
+          "name": "config-vars",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "label": {
+          "char": "l",
+          "description": "a label or set of labels to apply to the instance",
+          "name": "label",
+          "hasDynamicHelp": false,
+          "multiple": true,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "instances:create",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "instances:delete": {
+      "aliases": [],
+      "args": {
+        "instance": {
+          "description": "ID of the instance to delete",
+          "name": "instance",
+          "required": true
+        }
+      },
+      "description": "Delete an Instance",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "instances:delete",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "instances:deploy": {
+      "aliases": [],
+      "args": {
+        "instance": {
+          "description": "ID of an instance",
+          "name": "instance",
+          "required": true
+        }
+      },
+      "description": "Deploy an Instance",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "force": {
+          "char": "f",
+          "description": "Force deployment even when there are certain conditions that would normally prevent it",
+          "name": "force",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "instances:deploy",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "instances:disable": {
+      "aliases": [],
+      "args": {
+        "instance": {
+          "description": "ID of an instance",
+          "name": "instance",
+          "required": true
+        }
+      },
+      "description": "Disable an Instance",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "instances:disable",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "instances:enable": {
+      "aliases": [],
+      "args": {
+        "instance": {
+          "description": "ID of an instance",
+          "name": "instance",
+          "required": true
+        }
+      },
+      "description": "Enable an Instance",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "instances:enable",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "instances:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List Instances",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "customer": {
+          "char": "c",
+          "description": "ID of a customer",
+          "name": "customer",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "integration": {
+          "char": "i",
+          "description": "ID of an integration",
+          "name": "integration",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "instances:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "instances:update": {
+      "aliases": [],
+      "args": {
+        "instance": {
+          "description": "ID of an instance",
+          "name": "instance",
+          "required": true
+        }
+      },
+      "description": "Update an Instance",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "Name of the instance",
+          "name": "name",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "description": {
+          "char": "d",
+          "description": "Description for the instance",
+          "name": "description",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "version": {
+          "char": "v",
+          "description": "ID of integration version",
+          "name": "version",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "deploy": {
+          "description": "Deploy the instance after updating",
+          "name": "deploy",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "label": {
+          "char": "l",
+          "description": "a label or set of labels to apply to the instance",
+          "name": "label",
+          "hasDynamicHelp": false,
+          "multiple": true,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "instances:update",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:available": {
+      "aliases": [],
+      "args": {
+        "integration": {
+          "description": "ID of an integration version",
+          "name": "integration",
+          "required": true
+        }
+      },
+      "description": "Mark an Integration version as available or unavailable",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "available": {
+          "char": "a",
+          "description": "Version is available or unavailable",
+          "name": "available",
+          "required": true,
+          "allowNo": true,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:available",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:create": {
+      "aliases": [],
+      "args": {},
+      "description": "Create an Integration",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of the integration to create",
+          "name": "name",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "description": {
+          "char": "d",
+          "description": "longer description of the integration",
+          "name": "description",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "customer": {
+          "char": "c",
+          "description": "ID of customer with which to associate the integration",
+          "name": "customer",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:create",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:delete": {
+      "aliases": [],
+      "args": {
+        "integration": {
+          "description": "ID of the integration to delete",
+          "name": "integration",
+          "required": true
+        }
+      },
+      "description": "Delete an Integration",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:delete",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:export": {
+      "aliases": [],
+      "args": {
+        "integration": {
+          "description": "ID of an integration to export",
+          "name": "integration",
+          "required": true
+        }
+      },
+      "description": "Export an integration to YAML definition",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "latest-components": {
+          "char": "l",
+          "description": "Use the latest available version of each Component upon import",
+          "name": "latest-components",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "version": {
+          "char": "v",
+          "description": "Define the definition version to export.",
+          "name": "version",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:export",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:fork": {
+      "aliases": [],
+      "args": {
+        "parent": {
+          "description": "ID of the Integration to fork",
+          "name": "parent",
+          "required": true
+        }
+      },
+      "description": "Fork an Integration",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of the forked integration",
+          "name": "name",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "description": {
+          "char": "d",
+          "description": "longer description of the forked integration",
+          "name": "description",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:fork",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:import": {
+      "aliases": [],
+      "args": {},
+      "description": "Import an Integration using a YAML definition file or a Code Native Integration",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "path": {
+          "char": "p",
+          "description": "If supplied, the path to the YAML definition of the integration to import. Not applicable for Code Native Integrations.",
+          "name": "path",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "integrationId": {
+          "char": "i",
+          "description": "The ID of the integration being imported",
+          "name": "integrationId",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "icon-path": {
+          "description": "If supplied, the path to the PNG icon for the integration. Not applicable for Code Native Integrations.",
+          "name": "icon-path",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "open": {
+          "char": "o",
+          "description": "If supplied, open the Designer for the imported integration",
+          "name": "open",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "replace": {
+          "char": "r",
+          "description": "If supplied, allows replacing an existing integration regardless of code-native status. Requires integrationId.",
+          "name": "replace",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:import",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List Integrations",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "showAllVersions": {
+          "char": "a",
+          "description": "If specified this command returns all versions of all integrations rather than only the latest version",
+          "name": "showAllVersions",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "customer": {
+          "char": "c",
+          "description": "If specified this command returns only integrations that are available to the specified customer ID",
+          "name": "customer",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "org-only": {
+          "char": "o",
+          "description": "If specified this command returns only org integrations",
+          "name": "org-only",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:marketplace": {
+      "aliases": [],
+      "args": {
+        "integration": {
+          "description": "ID of an integration version to make marketplace available",
+          "name": "integration",
+          "required": true
+        }
+      },
+      "description": "Make a version of an Integration available in the Marketplace",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "available": {
+          "char": "a",
+          "description": "Mark this Integration version available in the marketplace",
+          "name": "available",
+          "required": true,
+          "allowNo": true,
+          "type": "boolean"
+        },
+        "deployable": {
+          "char": "d",
+          "description": "Mark this Integration version as deployable in the marketplace; does not apply if not also marked available",
+          "name": "deployable",
+          "allowNo": true,
+          "type": "boolean"
+        },
+        "allow-multiple-instances": {
+          "char": "m",
+          "description": "Allow a customer to deploy multiple instances of this integration",
+          "name": "allow-multiple-instances",
+          "allowNo": true,
+          "type": "boolean"
+        },
+        "overview": {
+          "char": "o",
+          "description": "Overview to describe the purpose of the integration",
+          "name": "overview",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:marketplace",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:open": {
+      "aliases": [],
+      "args": {
+        "integrationId": {
+          "description": "ID of the integration to open",
+          "name": "integrationId",
+          "required": true
+        }
+      },
+      "description": "Open the Designer for the specified Integration",
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:open",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:publish": {
+      "aliases": [],
+      "args": {
+        "integration": {
+          "description": "ID of an integration to publish",
+          "name": "integration",
+          "required": true
+        }
+      },
+      "description": "Publish a version of an Integration for use in Instances",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "comment": {
+          "char": "c",
+          "description": "comment about changes in this publication",
+          "name": "comment",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "commitHash": {
+          "description": "Commit hash corresponding to the integration version being published",
+          "name": "commitHash",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "commitUrl": {
+          "description": "URL to the commit details corresponding to this integration version",
+          "name": "commitUrl",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "repoUrl": {
+          "description": "URL to the repository containing the definition for this integration",
+          "name": "repoUrl",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "pullRequestUrl": {
+          "description": "URL to the pull request that modified this integration version",
+          "name": "pullRequestUrl",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:publish",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:set-debug": {
+      "aliases": [],
+      "args": {
+        "debug": {
+          "description": "Boolean value to set whether globalDebug should be enabled for the given integration",
+          "name": "debug",
+          "required": true
+        }
+      },
+      "description": "Set debug mode on or off for an integration's test instance.",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "integration-id": {
+          "char": "i",
+          "description": "ID of the integration containing the flow to test.",
+          "name": "integration-id",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:set-debug",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:update": {
+      "aliases": [],
+      "args": {
+        "integration": {
+          "description": "ID of an integration",
+          "name": "integration",
+          "required": true
+        }
+      },
+      "description": "Update an Integration's name or description",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "new name to give the integration",
+          "name": "name",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "description": {
+          "char": "d",
+          "description": "new description to give the integration",
+          "name": "description",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "customer": {
+          "char": "c",
+          "description": "ID of customer with which to associate the integration",
+          "name": "customer",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "test-config-vars": {
+          "description": "JSON-formatted config variables to be used for testing",
+          "name": "test-config-vars",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:update",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "me": {
+      "aliases": [],
+      "args": {},
+      "description": "Print your user profile information",
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "me",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "me:token": {
+      "aliases": [],
+      "args": {},
+      "description": "Print your authorization tokens",
+      "flags": {
+        "type": {
+          "char": "t",
+          "description": "Which token type to print",
+          "name": "type",
+          "default": "access",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "access",
+            "refresh"
+          ],
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "me:token",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "on-prem-resources:delete": {
+      "aliases": [],
+      "args": {
+        "resource": {
+          "description": "ID of the On-Premise Resource to delete",
+          "name": "resource",
+          "required": true
+        }
+      },
+      "description": "Delete an On-Premise Resource",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "on-prem-resources:delete",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "on-prem-resources:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List On-Premise Resources",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "customer": {
+          "char": "c",
+          "description": "If specified this command returns only On-Premise Resources that are available to the specified customer ID",
+          "name": "customer",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "on-prem-resources:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "on-prem-resources:registration-jwt": {
+      "aliases": [],
+      "args": {},
+      "description": "Create a JWT that may be used to register an On-Premise Resource.",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "customerId": {
+          "char": "c",
+          "description": "The ID of the customer for which to create the JWT. Only valid for Organization users.",
+          "name": "customerId",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "orgOnly": {
+          "description": "Register a Resource available to Organization users only. Only valid for Organization users.",
+          "name": "orgOnly",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "resourceId": {
+          "char": "r",
+          "description": "An optional ID of an existing On-Premise Resource for which to generate a new JWT.",
+          "name": "resourceId",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "rotate": {
+          "description": "Invalidate all JWTs for the On-Premise Resource and get a new JWT.",
+          "name": "rotate",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "on-prem-resources:registration-jwt",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:update": {
+      "aliases": [],
+      "args": {},
+      "description": "Update your Organization",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of the organization",
+          "name": "name",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:update",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:updateAvatarUrl": {
+      "aliases": [],
+      "args": {},
+      "description": "Update your Organization Avatar URL",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "organizationId": {
+          "description": "ID of an organization",
+          "name": "organizationId",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "avatarUrl": {
+          "char": "n",
+          "description": "Url of the organization avatar",
+          "name": "avatarUrl",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:updateAvatarUrl",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "translations:list": {
+      "aliases": [],
+      "args": {},
+      "description": "Generate Dynamic Phrases for Embedded Marketplace",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output-file": {
+          "char": "o",
+          "description": "Output the results of the action to a specified file",
+          "name": "output-file",
+          "required": false,
+          "default": "translations_output.json",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "translations:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:events:list": {
+      "aliases": [],
+      "args": {
+        "alertMonitorId": {
+          "description": "ID of an alert monitor",
+          "name": "alertMonitorId",
+          "required": true
+        }
+      },
+      "description": "List Alert Events for an Alert Monitor",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:events:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:groups:create": {
+      "aliases": [],
+      "args": {},
+      "description": "Create an Alert Group",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of the group to be created",
+          "name": "name",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "users": {
+          "char": "u",
+          "description": "JSON-formatted list of Prismatic user IDs to alert",
+          "name": "users",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "webhooks": {
+          "char": "w",
+          "description": "JSON-formatted list of Alert Webhook IDs to alert",
+          "name": "webhooks",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:groups:create",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:groups:delete": {
+      "aliases": [],
+      "args": {
+        "group": {
+          "description": "ID of the group to delete",
+          "name": "group",
+          "required": true
+        }
+      },
+      "description": "Delete an Alert Group",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:groups:delete",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:groups:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List Alert Groups in your Organization",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:groups:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:monitors:clear": {
+      "aliases": [],
+      "args": {
+        "monitor": {
+          "description": "ID of the monitor to clear",
+          "name": "monitor",
+          "required": true
+        }
+      },
+      "description": "Clear an Alert Monitor",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:monitors:clear",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:monitors:create": {
+      "aliases": [],
+      "args": {},
+      "description": "Create an Alert Monitor by attaching an Alert Trigger and a set of users and webhooks to an Instance",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of the alert monitor to be created",
+          "name": "name",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "instance": {
+          "char": "i",
+          "description": "ID of the instance to monitor",
+          "name": "instance",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "triggers": {
+          "char": "t",
+          "description": "JSON-formatted list of trigger IDs that should trigger this monitor",
+          "name": "triggers",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "duration": {
+          "char": "d",
+          "description": "greatest time allowed (in seconds) for time-based triggers",
+          "name": "duration",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "log-severity": {
+          "char": "s",
+          "description": "greatest log level {debug, info, warn, error} allowed for log-based triggers",
+          "name": "log-severity",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "groups": {
+          "char": "g",
+          "description": "JSON-formatted list of group IDs to alert",
+          "name": "groups",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "users": {
+          "char": "u",
+          "description": "JSON-formatted list of Prismatic user IDs alert",
+          "name": "users",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:monitors:create",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:monitors:delete": {
+      "aliases": [],
+      "args": {
+        "monitor": {
+          "description": "ID of the monitor to delete",
+          "name": "monitor",
+          "required": true
+        }
+      },
+      "description": "Delete an Alert Monitor",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:monitors:delete",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:monitors:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List Alert Monitors for Customer Instances",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:monitors:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:triggers:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List Alert Triggers",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:triggers:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:webhooks:create": {
+      "aliases": [],
+      "args": {},
+      "description": "Create an Alert Webhook",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of the webhook to be created",
+          "name": "name",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "url": {
+          "char": "u",
+          "description": "URL that will receive a POST request for an alert",
+          "name": "url",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "headers": {
+          "char": "h",
+          "description": "JSON-formatted object of key/value pairs to include in the request header",
+          "name": "headers",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "payloadTemplate": {
+          "char": "p",
+          "description": "template string that will be used as the request body, see documentation for details",
+          "name": "payloadTemplate",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:webhooks:create",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:webhooks:delete": {
+      "aliases": [],
+      "args": {
+        "webhook": {
+          "description": "ID of the webhook to delete",
+          "name": "webhook",
+          "required": true
+        }
+      },
+      "description": "Delete an Alert Webhook",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:webhooks:delete",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "alerts:webhooks:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List Alert Webhooks",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "alerts:webhooks:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "components:actions:list": {
+      "aliases": [],
+      "args": {
+        "componentKey": {
+          "description": "The key of the component to show actions for (e.g. 'salesforce')",
+          "name": "componentKey",
+          "required": true
+        }
+      },
+      "description": "List Actions that Components implement",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "public": {
+          "description": "Show actions for the public component with the given key. Use this flag when you have a private component with the same key as a public component.",
+          "name": "public",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "private": {
+          "description": "Show actions for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
+          "name": "private",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "components:actions:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "components:data-sources:list": {
+      "aliases": [],
+      "args": {
+        "componentKey": {
+          "description": "The key of the component to show data sources for (e.g. 'salesforce')",
+          "name": "componentKey",
+          "required": true
+        }
+      },
+      "description": "List Data Sources that Components implement",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "public": {
+          "description": "Show data sources for the public component with the given key. Use this flag when you have a private component with the same key as a public component.",
+          "name": "public",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "private": {
+          "description": "Show data sources for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
+          "name": "private",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "components:data-sources:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "components:dev:run": {
+      "aliases": [],
+      "args": {},
+      "description": "Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.",
+      "examples": [
+        {
+          "description": "To simply print an integration's basic auth config variable named \"My Connection\" and pipe the resulting JSON to jq, run:",
+          "command": "$ prism components:dev:run\n    --integrationId SW50ZWexample\n    --connectionKey \"My Connection\" --\n    printenv PRISMATIC_CONNECTION_VALUE | jq"
+        },
+        {
+          "description": "If one of your integrations has an authenticated OAuth 2.0 config variable \"Slack Connection\", you could run your component's unit tests with that environment variable:",
+          "command": "$ prism components:dev:run -i SW50ZWexample -c \"Slack Connection\" -- yarn run test"
+        },
+        {
+          "description": "If you would like to fetch a connection from an instance deployed to one of your customers, specify the --instanceId flag instead",
+          "command": "$ prism components:dev:run --instanceId SW50ZWexample -c \"Slack Connection\" -- yarn run test"
+        }
+      ],
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "integrationId": {
+          "char": "i",
+          "description": "Integration ID",
+          "name": "integrationId",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "instanceId": {
+          "description": "Instance ID. ",
+          "name": "instanceId",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "connectionKey": {
+          "char": "c",
+          "description": "Key of the connection config variable to fetch meta/state for",
+          "name": "connectionKey",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "components:dev:run",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": false,
+      "usage": "components:dev:run -i <value> -c <value> -- /command/to/run",
+      "enableJsonFlag": false,
+      "--": true
+    },
+    "components:dev:test": {
+      "aliases": [],
+      "args": {},
+      "description": "Run an action of a component within a test integration in the integration runner",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "envPath": {
+          "char": "e",
+          "description": "Path to dotenv file to load for supplying testing values",
+          "name": "envPath",
+          "required": false,
+          "default": ".env",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "build": {
+          "char": "b",
+          "description": "Build the component prior to testing",
+          "name": "build",
+          "required": false,
+          "allowNo": true,
+          "type": "boolean"
+        },
+        "output-file": {
+          "char": "o",
+          "description": "Output the results of the action to a specified file",
+          "name": "output-file",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "print-results": {
+          "description": "Print the results of the action to stdout",
+          "name": "print-results",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "clean-up": {
+          "description": "Clean up the integration and temporary component after running the action",
+          "name": "clean-up",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "components:dev:test",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "components:init:component": {
+      "aliases": [],
+      "args": {},
+      "description": "Initialize a new Component",
+      "flags": {
+        "name": {
+          "char": "n",
+          "description": "Name of the component",
+          "name": "name",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "description": {
+          "char": "d",
+          "description": "Description for the component",
+          "name": "description",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hidden": true,
+      "hiddenAliases": [],
+      "id": "components:init:component",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "components:init": {
+      "aliases": [],
+      "args": {
+        "name": {
+          "description": "Name of the new component to create (alphanumeric characters, hyphens, and underscores)",
+          "name": "name",
+          "required": true
+        }
+      },
+      "description": "Initialize a new Component",
+      "flags": {
+        "wsdl-path": {
+          "description": "Path to the WSDL definition file used to generate a Component",
+          "name": "wsdl-path",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "open-api-path": {
+          "description": "The path to an OpenAPI Specification file (JSON or YAML) used to generate a Component",
+          "name": "open-api-path",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "verbose": {
+          "description": "Output more verbose logging from Component generation",
+          "name": "verbose",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "components:init",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "components:signature": {
+      "aliases": [],
+      "args": {},
+      "description": "Generate a Component signature",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "skip-signature-verify": {
+          "description": "This consistently returns a signature, regardless of whether the corresponding component has been published to the platform or not.",
+          "name": "skip-signature-verify",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "components:signature",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "components:triggers:list": {
+      "aliases": [],
+      "args": {
+        "componentKey": {
+          "description": "The key of the component to show triggers for (e.g. 'salesforce')",
+          "name": "componentKey",
+          "required": true
+        }
+      },
+      "description": "List Triggers that Components implement",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "public": {
+          "description": "Show actions for the public component with the given key. Use this flag when you have a private component with the same key as a public component.",
+          "name": "public",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "private": {
+          "description": "Show actions for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
+          "name": "private",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "components:triggers:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "customers:users:create": {
+      "aliases": [],
+      "args": {},
+      "description": "Create a User for the specified Customer",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "email": {
+          "char": "e",
+          "description": "email address",
+          "name": "email",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "role": {
+          "char": "r",
+          "description": "ID of the role to assign the user",
+          "name": "role",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "customer": {
+          "char": "c",
+          "description": "ID of the customer this user is associated with",
+          "name": "customer",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of the new user",
+          "name": "name",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "customers:users:create",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "customers:users:delete": {
+      "aliases": [],
+      "args": {
+        "user": {
+          "description": "ID of the user to delete",
+          "name": "user",
+          "required": true
+        }
+      },
+      "description": "Delete a Customer User",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "customers:users:delete",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "customers:users:list": {
+      "aliases": [],
+      "args": {
+        "customer": {
+          "description": "ID of the customer",
+          "name": "customer",
+          "required": true
+        }
+      },
+      "description": "List Customer Users",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "customers:users:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "customers:users:roles": {
+      "aliases": [],
+      "args": {},
+      "description": "List Roles you can grant to Customer Users",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "customers:users:roles",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "customers:users:update": {
+      "aliases": [],
+      "args": {
+        "user": {
+          "description": "ID of a user",
+          "name": "user",
+          "required": true
+        }
+      },
+      "description": "Update a User",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of the user",
+          "name": "name",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "phone": {
+          "char": "p",
+          "description": "phone number of the user",
+          "name": "phone",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "dark-mode": {
+          "char": "d",
+          "description": "whether the user should have dark mode enabled",
+          "name": "dark-mode",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "dark-mode-os-sync": {
+          "char": "o",
+          "description": "whether dark mode should sync with OS settings",
+          "name": "dark-mode-os-sync",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "customers:users:update",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "executions:step-result:get": {
+      "aliases": [],
+      "args": {},
+      "description": "Gets the Result of a specified Step in an Instance Execution",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "executionId": {
+          "char": "e",
+          "description": "ID of an Execution",
+          "name": "executionId",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "stepName": {
+          "char": "s",
+          "description": "Name of an Integration Step",
+          "name": "stepName",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "outputPath": {
+          "char": "p",
+          "description": "Output result to a file. Output will be printed to stdout if this is omitted",
+          "name": "outputPath",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "executions:step-result:get",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "instances:config-vars:list": {
+      "aliases": [],
+      "args": {
+        "instance": {
+          "description": "ID of an instance",
+          "name": "instance",
+          "required": true
+        }
+      },
+      "description": "List Config Variables used on an Instance",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "instances:config-vars:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "instances:flow-configs:list": {
+      "aliases": [],
+      "args": {
+        "instance": {
+          "description": "ID of an Instance",
+          "name": "instance",
+          "required": true
+        }
+      },
+      "description": "List Instance Flow Configs",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "instances:flow-configs:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "instances:flow-configs:test": {
+      "aliases": [],
+      "args": {
+        "flowConfig": {
+          "description": "ID of a Flow Config to test",
+          "name": "flowConfig",
+          "required": true
+        }
+      },
+      "description": "Test a Flow Config of an Instance",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "tail": {
+          "char": "t",
+          "description": "Tail logs of the flow config test run",
+          "name": "tail",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "payload": {
+          "char": "p",
+          "description": "Optional JSON-formatted data payload to submit with the test",
+          "name": "payload",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "contentType": {
+          "char": "c",
+          "description": "Optional content-type for the test payload",
+          "name": "contentType",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "instances:flow-configs:test",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:convert": {
+      "aliases": [],
+      "args": {},
+      "description": "Convert a Low-Code Integration's YAML file into a Code Native Integration",
+      "flags": {
+        "yamlFile": {
+          "char": "y",
+          "description": "Filepath to a Low-Code Integration's YAML",
+          "name": "yamlFile",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "folder": {
+          "char": "f",
+          "description": "Optional: Folder name to install the integration into (kebab-cased integration name by default)",
+          "name": "folder",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "registryPrefix": {
+          "char": "r",
+          "description": "Optional: Your custom NPM registry prefix",
+          "name": "registryPrefix",
+          "required": false,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:convert",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:flows:list": {
+      "aliases": [],
+      "args": {
+        "integration": {
+          "description": "ID of an Integration",
+          "name": "integration",
+          "required": true
+        }
+      },
+      "description": "List Integration Flows",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:flows:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:flows:test": {
+      "aliases": [],
+      "args": {},
+      "description": "Run a test execution of a flow",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "flow-url": {
+          "char": "u",
+          "description": "Invocation URL of the flow to run.",
+          "name": "flow-url",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "integration-id": {
+          "char": "i",
+          "description": "ID of the integration containing the flow to test.",
+          "name": "integration-id",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "payload": {
+          "char": "p",
+          "description": "Optional file containing a payload to run the flow with.",
+          "name": "payload",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "payload-content-type": {
+          "char": "c",
+          "description": "Optional Content-Type for the test payload. Supported types: application/json,application/xml,text/csv",
+          "name": "payload-content-type",
+          "default": "application/json",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "sync": {
+          "description": "Forces the flow to run synchronously.",
+          "name": "sync",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "tail-results": {
+          "description": "Tail step results from the test execution until user interrupt or timeout.",
+          "name": "tail-results",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "tail-logs": {
+          "description": "Tail logs from the test execution until user interrupt or timeout.",
+          "name": "tail-logs",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "cni-auto-end": {
+          "description": "Automatically stop polling activity once an CNI flow execution completes. Some logs & results may not be returned this way. DOES NOT WORK FOR LOW-CODE FLOWS.",
+          "name": "cni-auto-end",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "timeout": {
+          "description": "Optionally set a timeout (in seconds) to stop tail activity. Compatible with both low-code and CNI flows.",
+          "name": "timeout",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "result-file": {
+          "char": "r",
+          "description": "Optional file to append tailed execution result data to. Results are saved into JSON Lines.",
+          "name": "result-file",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "jsonl": {
+          "description": "Optionally format the step and tail results output into JSON Lines.",
+          "name": "jsonl",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "debug": {
+          "description": "Enables debug mode on the test execution.",
+          "name": "debug",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "apiKey": {
+          "description": "Optional API key for flows with secured endpoints.",
+          "name": "apiKey",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:flows:test",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:init": {
+      "aliases": [],
+      "args": {
+        "name": {
+          "description": "Name of the new integration to create (alphanumeric characters, hyphens, and underscores)",
+          "name": "name",
+          "required": true
+        }
+      },
+      "description": "Initialize a new Code Native Integration",
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:init",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "integrations:versions": {
+      "aliases": [],
+      "args": {
+        "integration": {
+          "description": "ID of an integration",
+          "name": "integration",
+          "required": true
+        }
+      },
+      "description": "List Integration versions",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "latest-available": {
+          "char": "l",
+          "description": "Show only the latest available version",
+          "name": "latest-available",
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "integrations:versions",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "logs:severities:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List Log Severities for use by Alert Triggers",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "logs:severities:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "me:token:revoke": {
+      "aliases": [],
+      "args": {},
+      "description": "Revoke all refresh tokens for your user",
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "me:token:revoke",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:connections:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List all integration-agnostic connections available to the organization",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "managed-by": {
+          "description": "Filter connections by management type",
+          "name": "managed-by",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "org",
+            "customer"
+          ],
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:connections:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:signing-keys:delete": {
+      "aliases": [],
+      "args": {
+        "signingKeyId": {
+          "description": "ID of the signing key to delete",
+          "name": "signingKeyId",
+          "required": true
+        }
+      },
+      "description": "Delete an embedded marketplace signing key",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:signing-keys:delete",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:signing-keys:generate": {
+      "aliases": [],
+      "args": {},
+      "description": "Generate an embedded marketplace signing key",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:signing-keys:generate",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:signing-keys:import": {
+      "aliases": [],
+      "args": {},
+      "description": "Import a RSA public key for use with embedded marketplace",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "public-key-file": {
+          "char": "p",
+          "description": "public key file",
+          "name": "public-key-file",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:signing-keys:import",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:signing-keys:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List embedded signing keys for embedded marketplace",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:signing-keys:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:users:create": {
+      "aliases": [],
+      "args": {},
+      "description": "Create a User for your Organization",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of the user",
+          "name": "name",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "email": {
+          "char": "e",
+          "description": "email address of the user",
+          "name": "email",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "role": {
+          "char": "r",
+          "description": "role the user should assume",
+          "name": "role",
+          "required": true,
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:users:create",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:users:delete": {
+      "aliases": [],
+      "args": {
+        "user": {
+          "description": "ID of the user to delete",
+          "name": "user",
+          "required": true
+        }
+      },
+      "description": "Delete an Organization User",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:users:delete",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:users:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List Users of your Organization",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:users:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:users:roles": {
+      "aliases": [],
+      "args": {},
+      "description": "List Roles you can grant to other users in your Organization",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by partial string matching, ex: name=foo",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:users:roles",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "organization:users:update": {
+      "aliases": [],
+      "args": {
+        "user": {
+          "description": "ID of a user",
+          "name": "user",
+          "required": true
+        }
+      },
+      "description": "Update a User",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "name": {
+          "char": "n",
+          "description": "name of the user",
+          "name": "name",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "phone": {
+          "char": "p",
+          "description": "phone number of the user",
+          "name": "phone",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "dark-mode": {
+          "char": "d",
+          "description": "whether the user should have dark mode enabled",
+          "name": "dark-mode",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "dark-mode-os-sync": {
+          "char": "o",
+          "description": "whether dark mode should sync with OS settings",
+          "name": "dark-mode-os-sync",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "organization:users:update",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    }
+  },
+  "version": "7.6.5"
+}

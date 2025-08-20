@@ -16,7 +16,6 @@
 marketplace.build.log
 node_modules
 lib
-oclif*
 jspm_packages
 *build.log
 ./packed
