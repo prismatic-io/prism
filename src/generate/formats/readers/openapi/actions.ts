@@ -46,7 +46,7 @@ const buildPerformFunction = (
     writer
       .writeLine(`async (context, { connection, ${destructureNames} }) => {`)
       .blankLineIfLastNot()
-      .writeLine("const client = createClient(connection);")
+      .writeLine("const client = await createClient(connection);")
       .write("const {data} = await client.")
       .write(verb)
       .write("(`")

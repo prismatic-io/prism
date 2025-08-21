@@ -345,7 +345,7 @@ const findPets = action({
     description: "Returns all pets from the system that the user has access to",
   },
   perform: async (context, { connection, tags, limit }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.get(\`/pets\`, { params: { tags, limit } });
     return { data };
   },
@@ -384,7 +384,7 @@ const addPet = action({
     description: "Creates a new pet in the store",
   },
   perform: async (context, { connection, name, tag }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.post(\`/pets\`, { name, tag });
     return { data };
   },
@@ -419,7 +419,7 @@ const findPetById = action({
       "Returns a user based on a single ID, if the user does not have access to the pet",
   },
   perform: async (context, { connection, id }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.get(\`/pets/\${id}\`);
     return { data };
   },
@@ -445,7 +445,7 @@ const deletePet = action({
     description: "deletes a single pet based on the ID supplied",
   },
   perform: async (context, { connection, id }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.delete(\`/pets/\${id}\`);
     return { data };
   },
@@ -1340,7 +1340,7 @@ const findPets = action({
     description: "Returns all pets from the system that the user has access to",
   },
   perform: async (context, { connection, tags, limit }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.get(\`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2\`, {
       params: { tags, limit },
     });
@@ -1381,7 +1381,7 @@ const addPet = action({
     description: "Creates a new pet in the store",
   },
   perform: async (context, { connection, name, tag }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.post(
       \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2\`,
       { name, tag }
@@ -1419,7 +1419,7 @@ const findPetById = action({
       "Returns a user based on a single ID, if the user does not have access to the pet",
   },
   perform: async (context, { connection, id }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.get(
       \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${id}\`
     );
@@ -1447,7 +1447,7 @@ const deletePet = action({
     description: "deletes a single pet based on the ID supplied",
   },
   perform: async (context, { connection, id }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.delete(
       \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${id}\`
     );
@@ -2096,7 +2096,7 @@ const listTodos = action({
     description: "List all todos",
   },
   perform: async (context, { connection, completed, limit }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.get(\`/todos\`, {
       params: { completed, limit },
     });
@@ -2138,7 +2138,7 @@ const createTodo = action({
     context,
     { connection, title, description, completed, tags }
   ) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.post(\`/todos\`, {
       title,
       description,
@@ -2198,7 +2198,7 @@ const getTodo = action({
     description: "Get a specific todo",
   },
   perform: async (context, { connection, todoId }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.get(\`/todos/\${todoId}\`);
     return { data };
   },
@@ -2227,7 +2227,7 @@ const updateTodo = action({
     context,
     { connection, todoId, title, description, completed, tags }
   ) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.put(\`/todos/\${todoId}\`, {
       title,
       description,
@@ -2294,7 +2294,7 @@ const deleteTodo = action({
     description: "Delete a todo",
   },
   perform: async (context, { connection, todoId }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.delete(\`/todos/\${todoId}\`);
     return { data };
   },
@@ -2334,7 +2334,7 @@ const getCurrentUser = action({
     description: "Get current user",
   },
   perform: async (context, { connection }) => {
-    const client = createClient(connection);
+    const client = await createClient(connection);
     const { data } = await client.get(\`/users/me\`);
     return { data };
   },
