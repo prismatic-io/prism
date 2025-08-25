@@ -1,5 +1,6 @@
 const path = require("path");
 const CopyPlugin = require("copy-webpack-plugin");
+const Dotenv = require("dotenv-webpack");
 
 module.exports = {
   mode: "production",
@@ -8,6 +9,7 @@ module.exports = {
     new CopyPlugin({
       patterns: [{ from: "assets", to: path.resolve(__dirname, "dist") }],
     }),
+    new Dotenv(),
   ],
   module: {
     rules: [
