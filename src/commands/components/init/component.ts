@@ -55,6 +55,7 @@ export default class GenerateComponentCommand extends Command {
       path.join("src", "triggers.ts"),
       path.join(".vscode", "extensions.json"),
       path.join(".vscode", "settings.json"),
+      ".test.env",
       "jest.config.js",
       "package.json",
       "tsconfig.json",
