@@ -14,14 +14,17 @@ import {
   createHarness,
   defaultTriggerPayload,
 } from "@prismatic-io/spectral/dist/testing";
+import dotenv from "dotenv";
 import myComponent from ".";
 import { acmeApiKey } from "./connections";
+
+dotenv.config({ path: ".env.testing" });
 
 const harness = createHarness(myComponent);
 
 const acmeConnection = createConnection(acmeApiKey, {
-  baseUrl: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
-  apiKey: "P@s$W0rD",
+  baseUrl: process.env.ACME_ENDPOINT,
+  apiKey: process.env.ACME_API_KEY,
 });
 
 describe("Test Trigger", () => {

@@ -65,6 +65,7 @@ export default class InitializeIntegration extends Command {
       path.join(".spectral", "index.ts"),
       path.join(".vscode", "extensions.json"),
       path.join(".vscode", "settings.json"),
+      ".env.testing",
       ".npmrc",
       "jest.config.js",
       "package.json",
