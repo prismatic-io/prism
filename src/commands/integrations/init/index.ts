@@ -1,5 +1,5 @@
 import path from "path";
-import { Args, Command } from "@oclif/core";
+import { Args, Command, Flags } from "@oclif/core";
 import fs from "fs/promises";
 import { camelCase } from "lodash-es";
 import { v4 as uuid4 } from "uuid";
@@ -17,10 +17,17 @@ export default class InitializeIntegration extends Command {
         "Name of the new integration to create (alphanumeric characters, hyphens, and underscores)",
     }),
   };
+  static flags = {
+    clean: Flags.boolean({
+      description: "Generate clean scaffold without example code",
+      default: false,
+    }),
+  };
 
   async run() {
     const {
       args: { name },
+      flags: { clean },
     } = await this.parse(InitializeIntegration);
 
     if (!VALID_NAME_REGEX.test(name)) {
@@ -54,6 +61,7 @@ export default class InitializeIntegration extends Command {
       },
     };
 
+    const templateSuffix = clean ? ".clean" : "";
     const templateFiles = [
       path.join("assets", "icon.png"),
       path.join("src", "index.ts"),
@@ -73,14 +81,24 @@ export default class InitializeIntegration extends Command {
       "webpack.config.js",
     ];
 
+    const cleanableTemplates = [
+      "src/client.ts",
+      "src/flows.ts",
+      "src/flows.test.ts",
+      "src/configPages.ts",
+    ];
+
     await Promise.all([
-      ...templateFiles.map((file) =>
-        template(
-          path.join("integration", file.endsWith("icon.png") ? file : `${file}.ejs`),
-          file,
-          context,
-        ),
-      ),
+      ...templateFiles.map((file) => {
+        const cleanable = cleanableTemplates.includes(file);
+        const templateFile = file.endsWith("icon.png")
+          ? file
+          : cleanable
+            ? `${file}${templateSuffix}.ejs`
+            : `${file}.ejs`;
+
+        return template(path.join("integration", templateFile), file, context);
+      }),
     ]);
 
     await updatePackageJson({
