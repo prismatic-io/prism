@@ -173,7 +173,10 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     if (integrationId) {
       const isConfigured = await isIntegrationConfigured(integrationId);
       const systemInstanceId = await getIntegrationSystemId(integrationId);
-      this.warn("The integration needs to be configured before it can be tested.");
+
+      if (!isConfigured) {
+        this.warn("The integration needs to be configured before it can be tested.");
+      }
 
       const url = new URL(`${prismaticUrl}/configure-instance/${systemInstanceId}`);
       for (const [key, value] of Object.entries(CONFIGURE_INSTANCE_PARAMS)) {
