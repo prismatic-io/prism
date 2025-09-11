@@ -13,11 +13,16 @@ export default class ListCommand extends PrismaticBaseCommand {
       description:
         "If specified this command returns all versions of all components rather than only the latest version",
     }),
+    search: Flags.string({
+      char: "s",
+      required: false,
+      description: "Search components by key or label (case insensitive)",
+    }),
   };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
-    const { showAllVersions } = flags;
+    const { showAllVersions, search } = flags;
 
     let components: any[] = [];
     let hasNextPage = true;
@@ -28,8 +33,8 @@ export default class ListCommand extends PrismaticBaseCommand {
         components: { nodes, pageInfo },
       } = await gqlRequest({
         document: gql`
-          query listComponents($showAllVersions: Boolean, $after: String) {
-            components(allVersions: $showAllVersions, after: $after) {
+          query listComponents($showAllVersions: Boolean, $after: String, $keySearch: String, $labelSearch: String) {
+            components(allVersions: $showAllVersions, after: $after, key_Icontains: $keySearch, label_Icontains: $labelSearch) {
               nodes {
                 id
                 key
@@ -55,6 +60,8 @@ export default class ListCommand extends PrismaticBaseCommand {
         variables: {
           showAllVersions,
           after: cursor,
+          keySearch: search,
+          labelSearch: search,
         },
       });
       components = [...components, ...nodes];
