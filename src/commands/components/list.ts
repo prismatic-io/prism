@@ -13,16 +13,21 @@ export default class ListCommand extends PrismaticBaseCommand {
       description:
         "If specified this command returns all versions of all components rather than only the latest version",
     }),
-    search: Flags.string({
-      char: "s",
+    key: Flags.string({
+      char: "k",
       required: false,
-      description: "Search components by key or label (case insensitive)",
+      description: "Search components by key (case insensitive)",
+    }),
+    label: Flags.string({
+      char: "l",
+      required: false,
+      description: "Search components by label (case insensitive)",
     }),
   };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
-    const { showAllVersions, search } = flags;
+    const { showAllVersions, key: keySearch, label: labelSearch } = flags;
 
     let components: any[] = [];
     let hasNextPage = true;
@@ -60,8 +65,8 @@ export default class ListCommand extends PrismaticBaseCommand {
         variables: {
           showAllVersions,
           after: cursor,
-          keySearch: search,
-          labelSearch: search,
+          keySearch,
+          labelSearch,
         },
       });
       components = [...components, ...nodes];

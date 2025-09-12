@@ -5868,3 +5868,15 @@ export default component({
 });
 "
 `;
+
+exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/.env.testing 1`] = `
+"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
+ACME_API_KEY=P@s$W0rD
+"
+`;
+
+exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/.env.testing 1`] = `
+"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
+ACME_API_KEY=P@s$W0rD
+"
+`;

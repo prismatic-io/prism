@@ -8,6 +8,13 @@ import { template, updatePackageJson } from "../../../generate/util.js";
 import { VALID_NAME_REGEX } from "../../../utils/generate.js";
 import { devDependencies } from "../../../utils/devDependencies.js";
 
+const CLEANABLE_TEMPLATES = [
+  "src/client.ts",
+  "src/flows.ts",
+  "src/flows.test.ts",
+  "src/configPages.ts",
+];
+
 export default class InitializeIntegration extends Command {
   static description = "Initialize a new Code Native Integration";
   static args = {
@@ -81,16 +88,9 @@ export default class InitializeIntegration extends Command {
       "webpack.config.js",
     ];
 
-    const cleanableTemplates = [
-      "src/client.ts",
-      "src/flows.ts",
-      "src/flows.test.ts",
-      "src/configPages.ts",
-    ];
-
     await Promise.all([
       ...templateFiles.map((file) => {
-        const cleanable = cleanableTemplates.includes(file);
+        const cleanable = CLEANABLE_TEMPLATES.includes(file);
         const templateFile = file.endsWith("icon.png")
           ? file
           : cleanable
