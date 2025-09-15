@@ -13,65 +13,30 @@ export default class ListCommand extends PrismaticBaseCommand {
       description:
         "If specified this command returns all versions of all components rather than only the latest version",
     }),
-    key: Flags.string({
-      char: "k",
+    search: Flags.string({
+      char: "s",
       required: false,
-      description: "Search components by key (case insensitive)",
-    }),
-    label: Flags.string({
-      char: "l",
-      required: false,
-      description: "Search components by label (case insensitive)",
+      description: "Search components by label first, then by key (case insensitive)",
     }),
   };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
-    const { showAllVersions, key: keySearch, label: labelSearch } = flags;
+    const { showAllVersions, search } = flags;
 
     let components: any[] = [];
-    let hasNextPage = true;
-    let cursor = "";
 
-    while (hasNextPage) {
-      const {
-        components: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listComponents($showAllVersions: Boolean, $after: String, $keySearch: String, $labelSearch: String) {
-            components(allVersions: $showAllVersions, after: $after, key_Icontains: $keySearch, label_Icontains: $labelSearch) {
-              nodes {
-                id
-                key
-                public
-                label
-                description
-                versionNumber
-                category
-                versionCreatedAt
-                customer {
-                  id
-                  externalId
-                  name
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
-        variables: {
-          showAllVersions,
-          after: cursor,
-          keySearch,
-          labelSearch,
-        },
-      });
-      components = [...components, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+    if (search) {
+      // First try searching by label
+      components = await fetchComponents(showAllVersions, undefined, search);
+
+      // If no results found by label, try searching by key
+      if (components.length === 0) {
+        components = await fetchComponents(showAllVersions, search, undefined);
+      }
+    } else {
+      // No search term provided, get all components
+      components = await fetchComponents(showAllVersions);
     }
 
     ux.table(
@@ -112,3 +77,55 @@ export default class ListCommand extends PrismaticBaseCommand {
     );
   }
 }
+
+const fetchComponents = async (
+  showAllVersions: boolean,
+  keySearch?: string,
+  labelSearch?: string,
+): Promise<any[]> => {
+  let components: any[] = [];
+  let hasNextPage = true;
+  let cursor = "";
+
+  while (hasNextPage) {
+    const {
+      components: { nodes, pageInfo },
+    } = await gqlRequest({
+      document: gql`
+        query listComponents($showAllVersions: Boolean, $after: String, $keySearch: String, $labelSearch: String) {
+              components(allVersions: $showAllVersions, after: $after, key_Icontains: $keySearch, label_Icontains: $labelSearch) {
+                nodes {
+                  id
+                  key
+                  public
+                  label
+                  description
+                  versionNumber
+                  category
+                  versionCreatedAt
+                  customer {
+                    id
+                    externalId
+                    name
+                  }
+                }
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+              }
+            }
+          `,
+      variables: {
+        showAllVersions,
+        after: cursor,
+        keySearch,
+        labelSearch,
+      },
+    });
+    components = [...components, ...nodes];
+    cursor = pageInfo.endCursor;
+    hasNextPage = pageInfo.hasNextPage;
+  }
+  return components;
+};
