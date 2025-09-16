@@ -24,20 +24,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     const { flags } = await this.parse(ListCommand);
     const { showAllVersions, search } = flags;
 
-    let components: any[] = [];
-
-    if (search) {
-      // First try searching by label
-      components = await fetchComponents(showAllVersions, undefined, search);
-
-      // If no results found by label, try searching by key
-      if (components.length === 0) {
-        components = await fetchComponents(showAllVersions, search, undefined);
-      }
-    } else {
-      // No search term provided, get all components
-      components = await fetchComponents(showAllVersions);
-    }
+    const components: any[] = await fetchComponents(showAllVersions, search);
 
     ux.table(
       components,
@@ -78,11 +65,7 @@ export default class ListCommand extends PrismaticBaseCommand {
   }
 }
 
-const fetchComponents = async (
-  showAllVersions: boolean,
-  keySearch?: string,
-  labelSearch?: string,
-): Promise<any[]> => {
+const fetchComponents = async (showAllVersions: boolean, search?: string): Promise<any[]> => {
   let components: any[] = [];
   let hasNextPage = true;
   let cursor = "";
@@ -92,8 +75,8 @@ const fetchComponents = async (
       components: { nodes, pageInfo },
     } = await gqlRequest({
       document: gql`
-        query listComponents($showAllVersions: Boolean, $after: String, $keySearch: String, $labelSearch: String) {
-              components(allVersions: $showAllVersions, after: $after, key_Icontains: $keySearch, label_Icontains: $labelSearch) {
+        query listComponents($showAllVersions: Boolean, $after: String, $filterQuery: JSONString) {
+              components(allVersions: $showAllVersions, after: $after, filterQuery: $filterQuery) {
                 nodes {
                   id
                   key
@@ -119,8 +102,7 @@ const fetchComponents = async (
       variables: {
         showAllVersions,
         after: cursor,
-        keySearch,
-        labelSearch,
+        filterQuery: JSON.stringify(["or", ["in", "key", search], ["in", "label", search]]),
       },
     });
     components = [...components, ...nodes];
