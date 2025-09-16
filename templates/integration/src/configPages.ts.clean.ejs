@@ -7,11 +7,17 @@
  * https://prismatic.io/docs/integrations/code-native/config-wizard/
  */
 
-import {
-  configPage,
-  connectionConfigVar,
-} from "@prismatic-io/spectral";
+import { configPage } from "@prismatic-io/spectral";
 
 export const configPages = {
-  // Enter your config variables here.
+  Connections: configPage({
+    elements: {
+      // Connections, if there are any, should appear on the first page.
+    },
+  }),
+  "Other Config Variables": configPage({
+    elements: {
+      // Other configVar elements.
+    },
+  }),
 };
