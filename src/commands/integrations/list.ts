@@ -20,11 +20,15 @@ export default class ListCommand extends PrismaticBaseCommand {
       char: "o",
       description: "If specified this command returns only org integrations",
     }),
+    search: Flags.string({
+      char: "s",
+      description: "If specificed search for integrations by name (case insensitive).",
+    }),
   };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
-    const { showAllVersions, customer, "org-only": orgOnly } = flags;
+    const { showAllVersions, customer, "org-only": orgOnly, search } = flags;
 
     let integrations: any[] = [];
     let hasNextPage = true;
@@ -40,12 +44,14 @@ export default class ListCommand extends PrismaticBaseCommand {
             $after: String
             $customer: ID
             $customerIsnull: Boolean
+            $search: String
           ) {
             integrations(
               allVersions: $showAllVersions
               after: $after
               customer: $customer
               customer_Isnull: $customerIsnull
+              name_Icontains: $search
             ) {
               nodes {
                 id
@@ -72,6 +78,7 @@ export default class ListCommand extends PrismaticBaseCommand {
           after: cursor,
           customer,
           customerIsnull: orgOnly,
+          search,
         },
       });
       integrations = [...integrations, ...nodes];

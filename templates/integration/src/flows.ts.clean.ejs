@@ -1,0 +1,23 @@
+/**
+ * Your integration will contain one or more flows that each perform different functions.
+ * When the flow is invoked, the onTrigger function runs first, followed by the onExecution
+ * function.
+ */
+
+import { flow } from "@prismatic-io/spectral";
+
+export const exampleFlow = flow({
+  name: "Example Flow",
+  stableKey: "<%= flow.stableKey %>",
+  description: "An example flow",
+  onTrigger: async (context, payload, params) => {
+    // Trigger logic.
+    return Promise.resolve({ payload });
+  },
+  onExecution: async (context, params) => {
+    // Flow logic.
+    return { data: "success" };
+  },
+});
+
+export default [exampleFlow];

@@ -13,54 +13,18 @@ export default class ListCommand extends PrismaticBaseCommand {
       description:
         "If specified this command returns all versions of all components rather than only the latest version",
     }),
+    search: Flags.string({
+      char: "s",
+      required: false,
+      description: "Search components by label first, then by key (case insensitive)",
+    }),
   };
 
   async run() {
     const { flags } = await this.parse(ListCommand);
-    const { showAllVersions } = flags;
+    const { showAllVersions, search } = flags;
 
-    let components: any[] = [];
-    let hasNextPage = true;
-    let cursor = "";
-
-    while (hasNextPage) {
-      const {
-        components: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listComponents($showAllVersions: Boolean, $after: String) {
-            components(allVersions: $showAllVersions, after: $after) {
-              nodes {
-                id
-                key
-                public
-                label
-                description
-                versionNumber
-                category
-                versionCreatedAt
-                customer {
-                  id
-                  externalId
-                  name
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
-        variables: {
-          showAllVersions,
-          after: cursor,
-        },
-      });
-      components = [...components, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
-    }
+    const components: any[] = await fetchComponents(showAllVersions, search);
 
     ux.table(
       components,
@@ -100,3 +64,50 @@ export default class ListCommand extends PrismaticBaseCommand {
     );
   }
 }
+
+const fetchComponents = async (showAllVersions: boolean, search?: string): Promise<any[]> => {
+  let components: any[] = [];
+  let hasNextPage = true;
+  let cursor = "";
+
+  while (hasNextPage) {
+    const {
+      components: { nodes, pageInfo },
+    } = await gqlRequest({
+      document: gql`
+        query listComponents($showAllVersions: Boolean, $after: String, $filterQuery: JSONString) {
+              components(allVersions: $showAllVersions, after: $after, filterQuery: $filterQuery) {
+                nodes {
+                  id
+                  key
+                  public
+                  label
+                  description
+                  versionNumber
+                  category
+                  versionCreatedAt
+                  customer {
+                    id
+                    externalId
+                    name
+                  }
+                }
+                pageInfo {
+                  hasNextPage
+                  endCursor
+                }
+              }
+            }
+          `,
+      variables: {
+        showAllVersions,
+        after: cursor,
+        filterQuery: JSON.stringify(["or", ["in", "key", search], ["in", "label", search]]),
+      },
+    });
+    components = [...components, ...nodes];
+    cursor = pageInfo.endCursor;
+    hasNextPage = pageInfo.hasNextPage;
+  }
+  return components;
+};

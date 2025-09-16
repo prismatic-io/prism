@@ -1,0 +1,23 @@
+/**
+ * When a customer deploys an instance of your integration,
+ * they will walk through a configuration wizard. Define your
+ * configuration pages here.
+ *
+ * For more information on the code-native config wizards, see
+ * https://prismatic.io/docs/integrations/code-native/config-wizard/
+ */
+
+import { configPage } from "@prismatic-io/spectral";
+
+export const configPages = {
+  Connections: configPage({
+    elements: {
+      // Connections, if there are any, should appear on the first page.
+    },
+  }),
+  "Other Config Variables": configPage({
+    elements: {
+      // Other configVar elements.
+    },
+  }),
+};
