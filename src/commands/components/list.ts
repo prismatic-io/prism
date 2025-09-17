@@ -102,7 +102,9 @@ const fetchComponents = async (showAllVersions: boolean, search?: string): Promi
       variables: {
         showAllVersions,
         after: cursor,
-        filterQuery: JSON.stringify(["or", ["in", "key", search], ["in", "label", search]]),
+        filterQuery: search
+          ? JSON.stringify(["or", ["in", "key", search], ["in", "label", search]])
+          : undefined,
       },
     });
     components = [...components, ...nodes];
