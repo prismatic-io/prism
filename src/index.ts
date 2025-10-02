@@ -80,6 +80,8 @@ import OrganizationUsersDeleteCommand from "./commands/organization/users/delete
 import OrganizationUsersListCommand from "./commands/organization/users/list.js";
 import OrganizationUsersRolesCommand from "./commands/organization/users/roles.js";
 import OrganizationUsersUpdateCommand from "./commands/organization/users/update.js";
+import WorkflowsExportCommand from "./commands/workflows/export.js";
+import WorkflowsImportCommand from "./commands/workflows/import.js";
 
 export const Commands = {
   login: LoginCommand,
@@ -164,4 +166,6 @@ export const Commands = {
   "organization:users:list": OrganizationUsersListCommand,
   "organization:users:roles": OrganizationUsersRolesCommand,
   "organization:users:update": OrganizationUsersUpdateCommand,
+  "workflows:export": WorkflowsExportCommand,
+  "workflows:import": WorkflowsImportCommand,
 };

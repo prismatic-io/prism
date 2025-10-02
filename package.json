@@ -160,6 +160,9 @@
       },
       "translations:list": {
         "description": "Generates phrases for all marketplace integrations"
+      },
+      "workflows": {
+        "description": "Manage embedded workflow builder workflows and templates"
       }
     }
   }
