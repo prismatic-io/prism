@@ -30,7 +30,6 @@ type FormattedStepResult = {
 
 const MISSING_ID_ERROR = "You must provide either a flow-url or an integration-id parameter.";
 const TIMEOUT_SECONDS = 60 * 20; // 20 minutes
-const SUPPORTED_CONTENT_TYPES = ["application/json", "application/xml", "text/csv"];
 
 export const CONFIGURE_INSTANCE_PARAMS = {
   embed: "true",
@@ -62,7 +61,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     }),
     "payload-content-type": Flags.string({
       char: "c",
-      description: `Optional Content-Type for the test payload. Supported types: ${SUPPORTED_CONTENT_TYPES}`,
+      description: "Optional Content-Type for the test payload.",
       default: "application/json",
     }),
     sync: Flags.boolean({
@@ -122,12 +121,6 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     if (payloadFilePath) {
       if (await exists(payloadFilePath)) {
         triggerPayload = await fs.readFile(payloadFilePath, { encoding: "utf-8" });
-        if (!SUPPORTED_CONTENT_TYPES.includes(contentType)) {
-          handleError({
-            message: `Unsupported Content-Type: ${contentType}. Supported types are: ${SUPPORTED_CONTENT_TYPES}`,
-            throwError: true,
-          });
-        }
 
         // Validate JSON files specifically. CSV and XML files fail more gracefully if malformed
         if (contentType === "application/json") {
