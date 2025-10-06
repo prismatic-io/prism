@@ -22,7 +22,7 @@ export default class ExportCommand extends PrismaticBaseCommand {
       document: gql`
         query exportWorkflow($workflow: ID!) {
           workflow(id: $workflow) {
-            definition
+            definition(definitionType: WORKFLOW)
           }
         }`,
       variables: { workflow },
