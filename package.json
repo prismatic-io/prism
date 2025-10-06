@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "7.8.0",
+  "version": "7.8.1",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": ["prismatic", "cli"],
   "homepage": "https://prismatic.io",
@@ -160,6 +160,9 @@
       },
       "translations:list": {
         "description": "Generates phrases for all marketplace integrations"
+      },
+      "workflows": {
+        "description": "Manage embedded workflow builder workflows and templates"
       }
     }
   }
