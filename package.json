@@ -9,11 +9,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/prismatic-io/prism.git"
+    "url": "git+https://github.com/prismatic-io/prism.git"
   },
   "license": "MIT",
   "bin": {
-    "prism": "./lib/run.js"
+    "prism": "lib/run.js"
   },
   "type": "module",
   "engines": {
