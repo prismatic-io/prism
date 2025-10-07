@@ -20,5 +20,12 @@ export abstract class PrismaticBaseCommand extends Command {
         return input;
       },
     }),
+    "test-api-key": Flags.string({
+      description:
+        'Provide test API keys for flows in the format provider="API_KEY". Can be specified multiple times.',
+      helpGroup: "GLOBAL",
+      multiple: true,
+      required: false,
+    }),
   };
 }

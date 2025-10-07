@@ -23,6 +23,7 @@ interface ImportDefinitionResult {
   integrationId: string;
   flows: { id: string; name: string }[];
   pendingAuthorizations: { id: string; url: string }[];
+  systemInstance: string;
 }
 
 interface Integration {
@@ -39,6 +40,7 @@ interface Integration {
       authorizeUrl: string;
     }[];
   };
+  systemInstance: string;
 }
 
 export const importDefinition = async (
@@ -66,6 +68,7 @@ export const importDefinition = async (
                 authorizeUrl
               }
             }
+            systemInstance
           }
           errors {
             field
@@ -88,6 +91,7 @@ export const importDefinition = async (
     pendingAuthorizations: integration.testConfigVariables.nodes.map(
       ({ id, authorizeUrl: url }) => ({ id, url }),
     ),
+    systemInstance: integration.systemInstance,
   };
 };
 
@@ -129,7 +133,7 @@ export const importYamlIntegration = async (
 ): Promise<string> => {
   const definition = await extractYAMLFromPath(path);
 
-  const { integrationId: integrationImportId } = await importDefinition(
+  const { integrationId: integrationImportId, systemInstance } = await importDefinition(
     definition,
     integrationId,
     replace,
@@ -145,9 +149,33 @@ export const importYamlIntegration = async (
 export const importCodeNativeIntegration = async (
   integrationId?: string,
   replace?: boolean,
+  testApiKeyFlags?: string[],
 ): Promise<string> => {
-  const { integrationDefinition, componentDefinition } =
+  const { integrationDefinition, componentDefinition, publishingMetadata } =
     await loadCodeNativeIntegrationEntryPoint();
+
+  // Parse CLI-provided test API keys
+  const cliApiKeys = testApiKeyFlags ? parseTestApiKeys(testApiKeyFlags) : {};
+
+  // Validate that all flows with customer required API keys have at least one key available
+  if (publishingMetadata?.flowsWithCustomerRequiredAPIKeys.length) {
+    for (const flow of publishingMetadata.flowsWithCustomerRequiredAPIKeys) {
+      const existingKeys = flow.testApiKeys || [];
+      const allKeysForFlow = [...existingKeys];
+
+      // Add CLI keys for providers that this flow might need
+      for (const [provider, keys] of Object.entries(cliApiKeys)) {
+        allKeysForFlow.push(...keys);
+      }
+
+      if (allKeysForFlow.length === 0) {
+        ux.error(
+          `Flow "${flow.name}" requires customer API keys but none were provided. Use --test-api-key to specify keys in the format provider="API_KEY".`,
+          { exit: 1 },
+        );
+      }
+    }
+  }
 
   if (!integrationDefinition) {
     ux.error(
@@ -180,7 +208,7 @@ export const importCodeNativeIntegration = async (
   }
 
   ux.action.start("Importing definition for Code Native Integration into Prismatic");
-  const { integrationId: integrationImportId } = await importDefinition(
+  const { integrationId: integrationImportId, flows } = await importDefinition(
     integrationDefinition,
     integrationId,
     replace,
@@ -205,18 +233,160 @@ export const importCodeNativeIntegration = async (
     console.error("Import was successful but there was an error formatting local metadata:", e);
   }
 
+  // Set test API keys, if they are present.
+  if (
+    publishingMetadata &&
+    ((cliApiKeys && Object.keys(cliApiKeys).length > 0) ||
+      publishingMetadata.flowsWithCustomerRequiredAPIKeys.some((flow) => flow.testApiKeys?.length))
+  ) {
+    ux.action.start("Setting test API keys for flows");
+    try {
+      await setTestApiKeysForFlows(flows, publishingMetadata, cliApiKeys);
+      ux.action.stop();
+    } catch (error) {
+      ux.action.stop("Failed to set test API keys");
+      console.warn("Warning: Could not set test API keys:", error);
+    }
+  }
+
   ux.action.stop();
 
   return integrationImportId;
 };
 
+// todo: move this to a better place (share type from spectral?)
+interface PublishingMetadata {
+  flowsWithCustomerRequiredAPIKeys: {
+    name: string;
+    // prism will error if this is not provided, but it can provided by an arg to prism invocation if you don't want it in source
+    testApiKeys?: string[];
+  }[];
+}
+
+interface ParsedApiKey {
+  provider: string;
+  key: string;
+}
+
+export const parseTestApiKeys = (testApiKeyFlags: string[]): Record<string, string[]> => {
+  const parsedKeys: Record<string, string[]> = {};
+
+  for (const flag of testApiKeyFlags) {
+    // Parse format: provider="API_KEY"
+    const match = flag.match(/^(\w+)="([^"]*)"$/);
+    if (!match) {
+      throw new Error(
+        `Invalid --test-api-key format: "${flag}". Expected format: provider="API_KEY"`,
+      );
+    }
+
+    const [, provider, key] = match;
+    if (!key) {
+      throw new Error(`Empty API key provided for provider "${provider}"`);
+    }
+
+    if (!parsedKeys[provider]) {
+      parsedKeys[provider] = [];
+    }
+    parsedKeys[provider].push(key);
+  }
+
+  return parsedKeys;
+};
+
+const setTestApiKeysForFlows = async (
+  flows: { id: string; name: string }[],
+  publishingMetadata: PublishingMetadata,
+  cliApiKeys: Record<string, string[]>,
+): Promise<void> => {
+  if (!publishingMetadata?.flowsWithCustomerRequiredAPIKeys.length) {
+    return;
+  }
+
+  for (const metadataFlow of publishingMetadata.flowsWithCustomerRequiredAPIKeys) {
+    // Find the corresponding imported flow by name
+    const importedFlow = flows.find((flow) => flow.name === metadataFlow.name);
+    if (!importedFlow) {
+      console.warn(`Could not find imported flow "${metadataFlow.name}" to set API keys`);
+      continue;
+    }
+
+    // Combine existing keys from metadata with CLI keys
+    const existingKeys = metadataFlow.testApiKeys || [];
+    const allKeysForFlow = [...existingKeys];
+
+    // Add CLI keys for all providers
+    for (const keys of Object.values(cliApiKeys)) {
+      allKeysForFlow.push(...keys);
+    }
+
+    if (allKeysForFlow.length > 0) {
+      await setFlowTestApiKeys(importedFlow.id, allKeysForFlow);
+    }
+  }
+};
+
+//todo: pass in system instance here. fix gql
+const setFlowTestApiKeys = async (flowId: string, apiKeys: string[]): Promise<void> => {
+  const result = await gqlRequest({
+    document: gql`
+      mutation saveTestApiKey(
+  $instanceId: ID!
+  $flowConfigs: [InputInstanceFlowConfig]
+) {
+  updateInstance(
+    input: {
+      id: $instanceId
+      flowConfigs: $flowConfigs
+      configMode: "INSTANCE"
+    }
+  ) {
+    instance {
+      id
+      flowConfigs {
+        nodes {
+          id
+          apiKeys
+          flow {
+            id
+            name
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    errors {
+      field
+      messages
+      __typename
+    }
+    __typename
+  }
+}`,
+  });
+
+  if (result.updateIntegrationFlow.errors?.length) {
+    throw new Error(
+      `Failed to set test API keys for flow ${flowId}: ${result.updateIntegrationFlow.errors
+        .map((e: { messages: string[] }) => e.messages.join(", "))
+        .join("; ")}`,
+    );
+  }
+};
 interface CodeNativeIntegrationEntrypoint {
-  default: ComponentDefinition & { codeNativeIntegrationYAML: string };
+  default: ComponentDefinition & {
+    codeNativeIntegrationYAML: string;
+    publishingMetadata?: PublishingMetadata;
+  };
 }
 
 export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
   integrationDefinition: string;
   componentDefinition: ComponentDefinition;
+  publishingMetadata?: PublishingMetadata;
 }> => {
   // If we don't have an index.js in cwd seek directories to find package.json of Code Native Integration
   if (!(await exists("index.js"))) {
@@ -239,6 +409,7 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
   return {
     integrationDefinition: componentDefinition.codeNativeIntegrationYAML,
     componentDefinition: componentDefinition,
+    publishingMetadata: componentDefinition.publishingMetadata,
   };
 };
 
