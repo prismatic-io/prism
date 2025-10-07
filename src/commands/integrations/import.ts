@@ -44,11 +44,25 @@ export default class ImportCommand extends PrismaticBaseCommand {
       description:
         "If supplied, allows replacing an existing integration regardless of code-native status. Requires integrationId.",
     }),
+    "test-api-key": Flags.string({
+      description:
+        'Provide test API keys for flows in the format flowName="API_KEY". Can be specified multiple times.',
+      helpGroup: "GLOBAL",
+      multiple: true,
+      required: false,
+    }),
   };
 
   async run() {
     const {
-      flags: { path, integrationId, "icon-path": iconPath, open, replace },
+      flags: {
+        path,
+        integrationId,
+        "icon-path": iconPath,
+        open,
+        replace,
+        "test-api-key": testApiKey,
+      },
     } = await this.parse(ImportCommand);
 
     if (path && !(await exists(path))) {
@@ -105,7 +119,7 @@ There will be no way to restore the existing draft. If you wish to save it, eith
       ? // A path was specified, so assume we're importing a YAML Integration.
         await importYamlIntegration(path, integrationId, iconPath, replace)
       : // No path was specified, so assume the current directory is a Code Native Integration and import it.
-        await importCodeNativeIntegration(integrationId, replace);
+        await importCodeNativeIntegration(integrationId, replace, testApiKey);
 
     this.log(integrationImportId);
 

@@ -358,8 +358,16 @@ export default class TestCommand extends PrismaticBaseCommand {
 
     const {
       integrationId,
-      flows: [{ id: flowId }],
       pendingAuthorizations,
+      systemInstance: {
+        flowConfigs: {
+          nodes: [
+            {
+              flow: { id: flowId },
+            },
+          ],
+        },
+      },
     } = await importDefinition(harnessYaml);
 
     ux.action.stop();
