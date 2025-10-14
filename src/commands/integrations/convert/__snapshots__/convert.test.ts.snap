@@ -16,6 +16,13 @@ coverage
 "
 `;
 
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/documentation.md 1`] = `
+"# Test Integration
+
+Add internal integration documentation here.
+"
+`;
+
 exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/tsconfig.json 1`] = `
 "{
   "compilerOptions": {
@@ -262,11 +269,23 @@ export const configPages = {
 "
 `;
 
+exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/markdown.d.ts 1`] = `
+"/**
+ * Allow importing markdown files as strings.
+ */
+declare module "*.md" {
+  const content: string;
+  export default content;
+}
+"
+`;
+
 exports[`YAML CNI generation tests test convert integration should match scaffolding snapshots: testIntegration/src/index.ts 1`] = `
 "import { integration } from "@prismatic-io/spectral";
 import flows from "./flows";
 import { configPages } from "./configPages";
 import { componentRegistry } from "./componentRegistry";
+import documentation from "../documentation.md";
 
 export { configPages } from "./configPages";
 export { componentRegistry } from "./componentRegistry";
@@ -278,6 +297,7 @@ const testIntegrationIntegration = integration({
   componentRegistry,
   flows,
   configPages,
+  documentation,
 });
 export default testIntegrationIntegration;
 "
