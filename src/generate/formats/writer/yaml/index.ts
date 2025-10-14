@@ -138,6 +138,7 @@ function writeIndex(
       moduleSpecifier: "./componentRegistry",
       namedImports: ["componentRegistry"],
     },
+    { moduleSpecifier: "../documentation.md", defaultImport: "documentation" },
     ...(includesScopedConfigVars
       ? [
           {
@@ -183,6 +184,7 @@ function writeIndex(
             .writeLine("componentRegistry,")
             .writeLine("flows,")
             .writeLine("configPages,")
+            .writeLine("documentation,")
             .conditionalWriteLine(includesUserLevel, "userLevelConfigPages,")
             .conditionalWriteLine(includesScopedConfigVars, "scopedConfigVars,")
             .writeLine("});")
@@ -570,9 +572,10 @@ function generateConfigPages(
 
 function writeScopedConfigVars(project: Project, integration: IntegrationObjectFromYAML) {
   try {
-    const scopedConfigVars = integration.requiredConfigVars.filter((cv) => {
-      return cv.useScopedConfigVar;
-    });
+    const scopedConfigVars =
+      integration.requiredConfigVars?.filter((cv) => {
+        return cv.useScopedConfigVar;
+      }) || [];
 
     if (scopedConfigVars.length > 0) {
       const file = project.createSourceFile(path.join("src", "scopedConfigVars.ts"), undefined, {

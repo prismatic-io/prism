@@ -136,6 +136,7 @@ export type IntegrationObjectFromYAML = {
     userLevelConfigured: boolean;
   }>;
   requiredConfigVars: Array<ConfigVarObjectFromYAML>;
+  documentation: string;
 };
 
 /* These are taken from spectral's conditionalLogic evaluate method */
