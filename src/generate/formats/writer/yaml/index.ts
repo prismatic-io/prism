@@ -27,6 +27,7 @@ import path from "path";
 import { updatePackageJson } from "../../../util.js";
 import { writeBranchString, getBranchKind } from "./branching.js";
 import { escapeText } from "../../utils.js";
+import { devDependencies } from "../../../../utils/devDependencies.js";
 
 type ImportDeclaration = {
   moduleSpecifier: string;
@@ -97,16 +98,7 @@ export async function writePackageJson(
     },
     devDependencies: {
       ...manifests,
-      "@prismatic-io/eslint-config-spectral": "2.0.1",
-      "@types/jest": "29.5.12",
-      "copy-webpack-plugin": "12.0.2",
-      jest: "29.7.0",
-      prettier: "3.4.2",
-      "ts-jest": "29.1.2",
-      "ts-loader": "9.5.1",
-      typescript: "5.5.3",
-      webpack: "5.91.0",
-      "webpack-cli": "5.1.4",
+      ...devDependencies,
     },
   });
 }
