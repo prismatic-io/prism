@@ -13,6 +13,6 @@ export const devDependencies = {
   "ts-jest": "29.3.2",
   "ts-loader": "9.5.2",
   typescript: "5.8.3",
-  webpack: "5.99.5",
+  webpack: "5.102.1",
   "webpack-cli": "6.0.1",
 };
