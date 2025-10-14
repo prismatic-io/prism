@@ -61,6 +61,9 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
           name: result.name,
           description: result.description ? formatInputValue(result.description) : undefined,
           key: integrationKey,
+          documentation:
+            result.documentation ||
+            `# ${result.name}\n\nAdd internal integration documentation here.`,
         },
         registry: {
           url: new URL("/packages/npm", prismaticUrl).toString(),
@@ -83,8 +86,10 @@ Use "prism integrations:version:download $INTEGRATION_ID" to download a compatib
         path.join("assets", "icon.png"),
         path.join(".spectral", "index.ts"),
         path.join(".spectral", "metadata.json"),
+        path.join("src", "markdown.d.ts"),
         ".npmrc",
         ".prettierignore",
+        "documentation.md",
         "jest.config.js",
         "package.json",
         "tsconfig.json",

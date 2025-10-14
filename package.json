@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "7.8.1",
+  "version": "7.9.0",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": ["prismatic", "cli"],
   "homepage": "https://prismatic.io",

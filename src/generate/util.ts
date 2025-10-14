@@ -36,7 +36,7 @@ export const template = async (
 
   const templatePath = path.join(basePath, "templates", source);
 
-  const isTemplate = [".js", ".ts", ".json", ""].includes(path.extname(destination));
+  const isTemplate = [".js", ".ts", ".json", ".md", ""].includes(path.extname(destination));
 
   if (isTemplate) {
     const rendered = await renderFile(templatePath, data);
