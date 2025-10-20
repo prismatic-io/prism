@@ -22,7 +22,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     }),
     search: Flags.string({
       char: "s",
-      description: "If specificed search for integrations by name (case insensitive).",
+      description: "If specified, search for integrations by name (case insensitive).",
     }),
   };
 
