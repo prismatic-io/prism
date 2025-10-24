@@ -51,7 +51,7 @@ const toInquirerInputType = (
 
   switch (type) {
     case "boolean":
-      return "checkbox";
+      return "confirm";
     case "password":
       return "password";
     case "code":
