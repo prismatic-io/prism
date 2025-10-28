@@ -1,7 +1,7 @@
 import { Flags, ux } from "@oclif/core";
 import { serverTypes } from "@prismatic-io/spectral"; // FIXME: Get rid of this and stop exporting it in Spectral.
 import dotenv from "dotenv";
-import inquirer, { DistinctQuestion, Answers } from "inquirer";
+import inquirer, { DistinctQuestion, Answers, ListQuestionOptions } from "inquirer";
 import { kebabCase, snakeCase, upperCase } from "lodash-es";
 import open from "open";
 import { promisify } from "util";
@@ -67,8 +67,8 @@ const getInputQuestion = ({
   type,
   collection,
   default: defaultValue,
-}: serverTypes.Input): DistinctQuestion => {
-  const question = {
+}: serverTypes.Input): DistinctQuestion | ListQuestionOptions => {
+  const questionBase = {
     type: toInquirerInputType(type, collection),
     name: key,
     message: `${label}:`,
@@ -104,19 +104,22 @@ const getInputQuestion = ({
   };
 
   if (type === "boolean") {
-    question.choices = [
-      {
-        name: "true",
-        value: "true",
-      },
-      {
-        name: "false",
-        value: "false",
-      },
-    ];
+    return {
+      ...questionBase,
+      choices: [
+        {
+          name: "true",
+          value: "true",
+        },
+        {
+          name: "false",
+          value: "false",
+        },
+      ],
+    };
   }
 
-  return question;
+  return questionBase;
 };
 
 interface PromptAnswers {
