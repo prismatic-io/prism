@@ -104,13 +104,16 @@ const getInputQuestion = ({
   };
 
   if (type === "boolean") {
-    question.choices = [{
-      name: "true",
-      value: "true"
-    }, {
-      name:"false",
-      value: "false"
-    }];
+    question.choices = [
+      {
+        name: "true",
+        value: "true",
+      },
+      {
+        name: "false",
+        value: "false",
+      },
+    ];
   }
 
   return question;
