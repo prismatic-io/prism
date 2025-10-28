@@ -1,7 +1,7 @@
 import { Flags, ux } from "@oclif/core";
 import { serverTypes } from "@prismatic-io/spectral"; // FIXME: Get rid of this and stop exporting it in Spectral.
 import dotenv from "dotenv";
-import inquirer, { DistinctQuestion } from "inquirer";
+import inquirer, { DistinctQuestion, Answers, ListQuestionOptions } from "inquirer";
 import { kebabCase, snakeCase, upperCase } from "lodash-es";
 import open from "open";
 import { promisify } from "util";
@@ -51,7 +51,7 @@ const toInquirerInputType = (
 
   switch (type) {
     case "boolean":
-      return "checkbox";
+      return "list";
     case "password":
       return "password";
     case "code":
@@ -67,40 +67,60 @@ const getInputQuestion = ({
   type,
   collection,
   default: defaultValue,
-}: serverTypes.Input): DistinctQuestion => ({
-  type: toInquirerInputType(type, collection),
-  name: key,
-  message: `${label}:`,
-  when: (answers) => {
-    const envVar = envVarCase(key);
-    const exists = envVar in process.env;
-    if (exists) {
-      const value = process.env[envVar] ?? "";
-      answers[key] = collection
-        ? { type: "complex", value: JSON.parse(value) }
-        : { type: "value", value };
-    }
-    return !exists;
-  },
-  filter: (value) => {
-    if (type === "connection") {
-      return { type: "configVar", value };
-    }
+}: serverTypes.Input): DistinctQuestion | ListQuestionOptions => {
+  const questionBase = {
+    type: toInquirerInputType(type, collection),
+    name: key,
+    message: `${label}:`,
+    when: (answers: Answers) => {
+      const envVar = envVarCase(key);
+      const exists = envVar in process.env;
+      if (exists) {
+        const value = process.env[envVar] ?? "";
+        answers[key] = collection
+          ? { type: "complex", value: JSON.parse(value) }
+          : { type: "value", value };
+      }
+      return !exists;
+    },
+    filter: (value: string) => {
+      if (type === "connection") {
+        return { type: "configVar", value };
+      }
 
-    if (collection) {
+      if (collection) {
+        return {
+          type: "complex",
+          value: JSON.parse(value),
+        };
+      }
+
       return {
-        type: "complex",
-        value: JSON.parse(value),
+        type: "value",
+        value,
       };
-    }
+    },
+    default: () => (type === "connection" ? "testConnection" : defaultValue),
+  };
 
+  if (type === "boolean") {
     return {
-      type: "value",
-      value,
+      ...questionBase,
+      choices: [
+        {
+          name: "true",
+          value: "true",
+        },
+        {
+          name: "false",
+          value: "false",
+        },
+      ],
     };
-  },
-  default: () => (type === "connection" ? "testConnection" : defaultValue),
-});
+  }
+
+  return questionBase;
+};
 
 interface PromptAnswers {
   action: serverTypes.Action;
