@@ -1,7 +1,7 @@
 import { Flags, ux } from "@oclif/core";
 import { serverTypes } from "@prismatic-io/spectral"; // FIXME: Get rid of this and stop exporting it in Spectral.
 import dotenv from "dotenv";
-import inquirer, { DistinctQuestion } from "inquirer";
+import inquirer, { DistinctQuestion, Answers } from "inquirer";
 import { kebabCase, snakeCase, upperCase } from "lodash-es";
 import open from "open";
 import { promisify } from "util";
@@ -72,7 +72,7 @@ const getInputQuestion = ({
     type: toInquirerInputType(type, collection),
     name: key,
     message: `${label}:`,
-    when: (answers) => {
+    when: (answers: Answers) => {
       const envVar = envVarCase(key);
       const exists = envVar in process.env;
       if (exists) {
@@ -83,7 +83,7 @@ const getInputQuestion = ({
       }
       return !exists;
     },
-    filter: (value) => {
+    filter: (value: string) => {
       if (type === "connection") {
         return { type: "configVar", value };
       }
