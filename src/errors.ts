@@ -1,6 +1,6 @@
 import { handle } from "@oclif/core";
 import { OclifError } from "@oclif/core/lib/interfaces";
-import { ClientError } from "graphql-request";
+import { ClientError } from "./graphql.js";
 import { StatusCodes, getReasonPhrase } from "http-status-codes";
 
 const isError = (error: unknown): error is Error =>
