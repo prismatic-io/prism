@@ -51,7 +51,7 @@ const toInquirerInputType = (
 
   switch (type) {
     case "boolean":
-      return "confirm";
+      return "list";
     case "password":
       return "password";
     case "code":
@@ -67,40 +67,54 @@ const getInputQuestion = ({
   type,
   collection,
   default: defaultValue,
-}: serverTypes.Input): DistinctQuestion => ({
-  type: toInquirerInputType(type, collection),
-  name: key,
-  message: `${label}:`,
-  when: (answers) => {
-    const envVar = envVarCase(key);
-    const exists = envVar in process.env;
-    if (exists) {
-      const value = process.env[envVar] ?? "";
-      answers[key] = collection
-        ? { type: "complex", value: JSON.parse(value) }
-        : { type: "value", value };
-    }
-    return !exists;
-  },
-  filter: (value) => {
-    if (type === "connection") {
-      return { type: "configVar", value };
-    }
+}: serverTypes.Input): DistinctQuestion => {
+  const question = {
+    type: toInquirerInputType(type, collection),
+    name: key,
+    message: `${label}:`,
+    when: (answers) => {
+      const envVar = envVarCase(key);
+      const exists = envVar in process.env;
+      if (exists) {
+        const value = process.env[envVar] ?? "";
+        answers[key] = collection
+          ? { type: "complex", value: JSON.parse(value) }
+          : { type: "value", value };
+      }
+      return !exists;
+    },
+    filter: (value) => {
+      if (type === "connection") {
+        return { type: "configVar", value };
+      }
 
-    if (collection) {
+      if (collection) {
+        return {
+          type: "complex",
+          value: JSON.parse(value),
+        };
+      }
+
       return {
-        type: "complex",
-        value: JSON.parse(value),
+        type: "value",
+        value,
       };
-    }
+    },
+    default: () => (type === "connection" ? "testConnection" : defaultValue),
+  };
 
-    return {
-      type: "value",
-      value,
-    };
-  },
-  default: () => (type === "connection" ? "testConnection" : defaultValue),
-});
+  if (type === "boolean") {
+    question.choices = [{
+      name: "true",
+      value: "true"
+    }, {
+      name:"false",
+      value: "false"
+    }];
+  }
+
+  return question;
+};
 
 interface PromptAnswers {
   action: serverTypes.Action;
