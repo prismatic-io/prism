@@ -17,7 +17,7 @@ import {
 } from "../component/index.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
 import { loadYaml } from "../serialize.js";
-import { IntegrationObjectFromYAML } from "../../generate/formats/writer/yaml/types.js";
+import { IntegrationObjectFromYAML } from "./types.js";
 
 interface ImportDefinitionResult {
   integrationId: string;

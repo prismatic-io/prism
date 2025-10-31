@@ -525,6 +525,12 @@ describe("petstoreExpanded", () => {
 "
 `;
 
+exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/.env.testing 1`] = `
+"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
+ACME_API_KEY=P@s$W0rD
+"
+`;
+
 exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/numberConversion.wsdl 1`] = `
 "<?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="http://www.dataaccess.com/webservicesserver/" name="NumberConversion" targetNamespace="http://www.dataaccess.com/webservicesserver/">
@@ -2405,6 +2411,12 @@ describe("todoApi", () => {
     expect(result?.data).toBeDefined();
   });
 });
+"
+`;
+
+exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/.env.testing 1`] = `
+"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
+ACME_API_KEY=P@s$W0rD
 "
 `;
 
@@ -5866,17 +5878,5 @@ export default component({
   dataSources,
   connections,
 });
-"
-`;
-
-exports[`component generation tests wsdl - numberconversion should match scaffolding snapshots: numberconversion/.env.testing 1`] = `
-"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
-"
-`;
-
-exports[`component generation tests wsdl - countryinfoservice should match scaffolding snapshots: countryinfoservice/.env.testing 1`] = `
-"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
 "
 `;
