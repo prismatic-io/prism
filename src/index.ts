@@ -82,6 +82,7 @@ import OrganizationUsersRolesCommand from "./commands/organization/users/roles.j
 import OrganizationUsersUpdateCommand from "./commands/organization/users/update.js";
 import WorkflowsExportCommand from "./commands/workflows/export.js";
 import WorkflowsImportCommand from "./commands/workflows/import.js";
+import GraphqlQueryCommand from "./commands/graphql/query.js";
 
 export const Commands = {
   login: LoginCommand,
@@ -168,4 +169,5 @@ export const Commands = {
   "organization:users:update": OrganizationUsersUpdateCommand,
   "workflows:export": WorkflowsExportCommand,
   "workflows:import": WorkflowsImportCommand,
+  "graphql:query": GraphqlQueryCommand,
 };
