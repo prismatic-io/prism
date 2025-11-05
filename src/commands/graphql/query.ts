@@ -27,7 +27,7 @@ export default class QueryCommand extends PrismaticBaseCommand {
     "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }' --output yaml",
     "",
     "# Table output with nested data",
-    "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name email } } }' --output table --data-path customers.nodes --columns id,name,email",
+    "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }' --output table --data-path customers.nodes --columns id,name",
   ];
 
   static args = {
