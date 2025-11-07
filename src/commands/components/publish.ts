@@ -3,6 +3,7 @@ import { Flags, ux } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import {
   createComponentPackage,
+  createSourceCodePackage,
   loadEntrypoint,
   validateDefinition,
 } from "../../utils/component/index.js";
@@ -56,6 +57,11 @@ export default class PublishCommand extends PrismaticBaseCommand {
       required: false,
       description: "URL to the pull request that modified this component version",
     }),
+    "include-source": Flags.boolean({
+      required: false,
+      default: false,
+      description: "Include source code in the component publish",
+    }),
   };
 
   async run() {
@@ -70,6 +76,7 @@ export default class PublishCommand extends PrismaticBaseCommand {
         commitUrl,
         repoUrl,
         pullRequestUrl,
+        "include-source": includeSource,
       },
     } = await this.parse(PublishCommand);
 
@@ -89,6 +96,12 @@ export default class PublishCommand extends PrismaticBaseCommand {
     await validateDefinition(definition);
 
     const packagePath = await createComponentPackage();
+
+    // Optionally create a source code package if the --include-source flag is set
+    let sourceCodePath: string | undefined;
+    if (includeSource) {
+      sourceCodePath = await createSourceCodePackage();
+    }
 
     if (checkSignature) {
       const signatureMatches = await checkPackageSignature(definition, packagePath);
@@ -111,12 +124,17 @@ export default class PublishCommand extends PrismaticBaseCommand {
       return;
     }
 
-    const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls, versionNumber } =
-      await publishDefinition(definition, {
-        comment,
-        customer,
-        attributes: didProvideAttributes ? attributes : undefined,
-      });
+    const {
+      iconUploadUrl,
+      packageUploadUrl,
+      sourceUploadUrl,
+      connectionIconUploadUrls,
+      versionNumber,
+    } = await publishDefinition(definition, {
+      comment,
+      customer,
+      attributes: didProvideAttributes ? attributes : undefined,
+    });
 
     const {
       display: { iconPath },
@@ -124,6 +142,11 @@ export default class PublishCommand extends PrismaticBaseCommand {
     await uploadFile(packagePath, packageUploadUrl);
     if (iconPath) {
       await uploadFile(iconPath, iconUploadUrl);
+    }
+
+    // Upload source code if it was created and the API returned an upload URL
+    if (sourceCodePath && sourceUploadUrl) {
+      await uploadFile(sourceCodePath, sourceUploadUrl);
     }
 
     await uploadConnectionIcons(definition, connectionIconUploadUrls);

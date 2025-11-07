@@ -87,6 +87,7 @@ export const publishDefinition = async (
 ): Promise<{
   iconUploadUrl: string;
   packageUploadUrl: string;
+  sourceUploadUrl?: string;
   connectionIconUploadUrls: Record<
     string,
     {
@@ -166,6 +167,7 @@ export const publishDefinition = async (
             }
             iconUploadUrl
             packageUploadUrl
+            sourceUploadUrl
             connectionIconUploadUrls {
               connectionKey
               iconUploadUrl
@@ -197,6 +199,7 @@ export const publishDefinition = async (
   const {
     iconUploadUrl,
     packageUploadUrl,
+    sourceUploadUrl,
     connectionIconUploadUrls,
     connectionAvatarIconUploadUrls,
     component: { versionNumber },
@@ -228,6 +231,7 @@ export const publishDefinition = async (
   return {
     iconUploadUrl,
     packageUploadUrl,
+    sourceUploadUrl,
     connectionIconUploadUrls: uploadUrls,
     versionNumber,
   };
