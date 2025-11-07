@@ -66,6 +66,52 @@ export const createComponentPackage = async (): Promise<string> => {
   return pathPromise;
 };
 
+export const createSourceCodePackage = async (): Promise<string> => {
+  const zip = archiver("zip", { zlib: { level: 9 } });
+  const pathPromise = tempy.write(zip, { extension: "zip" });
+
+  const cwd = process.cwd();
+
+  // Try to read tsconfig.json to determine source directories
+  let includePatterns: string[] = ["src"];
+  try {
+    const tsconfigPath = resolve(cwd, "tsconfig.json");
+    if (await exists(tsconfigPath)) {
+      const tsconfigContent = await import(tsconfigPath, { assert: { type: "json" } });
+      if (tsconfigContent.default?.include && Array.isArray(tsconfigContent.default.include)) {
+        includePatterns = tsconfigContent.default.include;
+      }
+    }
+  } catch {
+    // Fall back to default if tsconfig can't be read
+  }
+
+  // Include essential files and the source directories
+  const essentialFiles = ["package.json", "tsconfig.json", "webpack.config.js", "jest.config.js"];
+
+  for (const file of essentialFiles) {
+    const filePath = resolve(cwd, file);
+    if (await exists(filePath)) {
+      zip.file(filePath, { name: file, date: new Date(0) });
+    }
+  }
+
+  // Include directories from tsconfig include patterns or fallback to src
+  for (const pattern of includePatterns) {
+    const dirPath = resolve(cwd, pattern);
+    if (await exists(dirPath)) {
+      zip.directory(dirPath, pattern, (entry) => ({
+        ...entry,
+        date: new Date(0),
+      }));
+    }
+  }
+
+  await zip.finalize();
+
+  return pathPromise;
+};
+
 export const validateDefinition = async (
   definition: ComponentDefinition,
   options: { forCodeNativeIntegration?: boolean } = {},
