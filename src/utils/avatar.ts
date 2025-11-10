@@ -1,8 +1,8 @@
-import axios from "axios";
 import { fs } from "../fs.js";
 import { gql, gqlRequest } from "../graphql.js";
 import mimetypes from "mime-types";
 import { basename, extname } from "path";
+import { fetch } from "./http.js";
 
 interface GetPresignedUrlResponse {
   uploadMedia: {
@@ -45,8 +45,12 @@ export const uploadAvatar = async (objectId: string, iconPath: string) => {
     },
   });
 
-  await axios.put(uploadUrl, await fs.readFile(iconPath), {
-    headers: { "Content-Type": mimetypes.contentType(extname(iconPath)) },
+  await fetch(uploadUrl, {
+    method: "PUT",
+    body: await fs.readFile(iconPath),
+    headers: {
+      "Content-Type": mimetypes.contentType(extname(iconPath)) || "application/octet-stream",
+    },
   });
 
   return objectUrl;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import { Authenticate, createRequestParams } from "./auth.js";
-import axios from "axios";
+import { fetch } from "./utils/http.js";
 
 const domain = "prismatic-io-dev.auth0.com";
 const clientId = "R3uA27LbxqyanGVXjKpXgQo5A4TK44s7";
@@ -57,13 +57,13 @@ describe.skip("auth", () => {
       successRedirectUri,
     });
     const { accessToken } = await auth.login();
-    const { data } = await axios({
-      method: "get",
-      url: `https://${domain}/userinfo`,
+    const response = await fetch(`https://${domain}/userinfo`, {
+      method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
+    const data = await response.json();
     expect(data.email).toBeDefined();
   });
 });

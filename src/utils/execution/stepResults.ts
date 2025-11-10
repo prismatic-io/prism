@@ -1,8 +1,8 @@
 import { decode } from "@msgpack/msgpack";
-import axios from "axios";
 import { fs } from "../../fs.js";
 import { gql, gqlRequest } from "../../graphql.js";
 import { extension } from "mime-types";
+import { fetch } from "../http.js";
 
 export interface DeserializeResult {
   data: unknown;
@@ -59,10 +59,9 @@ const getFinalStepResult = async (executionId: string) => {
     variables: { executionId },
   });
   const { resultsUrl } = result.executionResult.stepResults.nodes[0];
-  const response = await axios.get(resultsUrl, {
-    responseType: "arraybuffer",
-  });
-  const resultsBuffer = Buffer.from(await response.data);
+  const response = await fetch(resultsUrl);
+  const arrayBuffer = await response.arrayBuffer();
+  const resultsBuffer = Buffer.from(arrayBuffer);
   const { data: deserializedResult, contentType } = decode(resultsBuffer) as DeserializeResult;
 
   return {

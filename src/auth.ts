@@ -1,6 +1,5 @@
 import crypto from "crypto";
 import http from "http";
-import axios from "axios";
 import url from "url";
 import jwtDecode from "jwt-decode";
 import inquirer from "inquirer";
@@ -10,6 +9,7 @@ import { gqlRequest, gql } from "./graphql.js";
 import { AddressInfo } from "net";
 import open from "open";
 import { whoAmI } from "./utils/user/query.js";
+import { fetch } from "./utils/http.js";
 
 const urlEncodeBase64 = (value: Buffer | string): string => {
   const buffer = typeof value === "string" ? Buffer.from(value) : value;
@@ -149,7 +149,7 @@ export class Authenticate {
 
         this.redirectServer.close();
 
-        validateAuthorizationToken(request.url, state)
+        validateAuthorizationToken(request.url || "", state)
           .then(async (authorizationToken) =>
             this.retrieveAuthenticationToken(verifier, authorizationToken, redirectUri),
           )
@@ -167,14 +167,14 @@ export class Authenticate {
       tenant_id: tenantId,
     };
 
-    const { data: response } = await axios({
-      method: "post",
-      url: `https://${this.options.domain}/oauth/token`,
-      data: createRequestParams(data),
+    const fetchResponse = await fetch(`https://${this.options.domain}/oauth/token`, {
+      method: "POST",
+      body: createRequestParams(data),
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
+    const response = (await fetchResponse.json()) as any;
     return {
       accessToken: response.access_token,
       expiresIn: response.expires_in,
@@ -236,14 +236,14 @@ export class Authenticate {
       redirect_uri: redirectUri,
     };
 
-    const { data: response } = await axios({
-      method: "post",
-      url: `https://${this.options.domain}/oauth/token`,
-      data: createRequestParams(data),
+    const fetchResponse = await fetch(`https://${this.options.domain}/oauth/token`, {
+      method: "POST",
+      body: createRequestParams(data),
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
+    const response = (await fetchResponse.json()) as any;
     return {
       accessToken: response.access_token,
       expiresIn: response.expires_in,
@@ -283,10 +283,8 @@ export class Authenticate {
 
 // TODO: Need to factor this out if we look to open source this auth logic.
 const getAuthOptions = async () => {
-  const { data: authConfig } = await axios({
-    method: "get",
-    url: new url.URL("/auth/meta", prismaticUrl).toString(),
-  });
+  const fetchResponse = await fetch(new url.URL("/auth/meta", prismaticUrl).toString());
+  const authConfig = (await fetchResponse.json()) as any;
 
   const { domain, clientId, audience } = authConfig;
   return {
@@ -499,12 +497,14 @@ export const revokeRefreshToken = async (): Promise<void> => {
 
   const config = await readConfig();
   const { refreshToken } = config ?? {};
-  await axios({
-    method: "post",
-    url: new url.URL("/auth/revoke", prismaticUrl).toString(),
-    data: {
-      refresh_token: refreshToken,
+  await fetch(new url.URL("/auth/revoke", prismaticUrl).toString(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({
+      refresh_token: refreshToken,
+    }),
   });
   await logout();
 };
