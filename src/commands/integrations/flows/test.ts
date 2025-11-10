@@ -1,10 +1,10 @@
 import { Flags, ux } from "@oclif/core";
 import { decode } from "@msgpack/msgpack";
-import axios from "axios";
 import inquirer from "inquirer";
 import open from "open";
 import { prismaticUrl } from "../../../auth.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { fetch } from "../../../utils/http.js";
 import {
   isCniExecutionComplete,
   FetchLogsResult,
@@ -239,14 +239,17 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
 
     ux.action.start("Starting execution...");
     // If this POST fails then just let the error be thrown normally.
-    const response = await axios.post(invokeUrl, triggerPayload, {
+    const response = await fetch(invokeUrl, {
+      method: "POST",
+      body: triggerPayload,
       headers: {
-        ...(sync ? { "prismatic-synchronous": true } : {}),
-        ...(debug ? { "prismatic-debug": true } : {}),
+        ...(sync ? { "prismatic-synchronous": "true" } : {}),
+        ...(debug ? { "prismatic-debug": "true" } : {}),
         ...(contentType && triggerPayload ? { "Content-Type": contentType } : {}),
         ...(apiKey ? { "Api-Key": apiKey } : {}),
       },
     });
+    const responseData = (await response.json()) as any;
     ux.action.stop();
 
     this.startTime = Date.now();
@@ -265,15 +268,15 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
       quiet,
     );
 
-    const executionId = response.headers["prismatic-executionid"];
+    const executionId = response.headers.get("prismatic-executionid") || "";
 
-    if (!response?.data?.executionId) {
+    if (!responseData?.executionId) {
       // Log execution ID's separately for synchronously-run flows.
       this.log(`Execution ID: ${executionId}\n`);
     }
 
     // Log the results.
-    this.log(`${JSON.stringify(response.data)}\n`);
+    this.log(`${JSON.stringify(responseData)}\n`);
 
     if (!(tailLogs || tailStepResults)) return;
 
@@ -449,10 +452,9 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
       const { endedAt, resultsUrl, stepName } = edge.node;
 
       try {
-        const response = await axios.get(resultsUrl, {
-          responseType: "arraybuffer",
-        });
-        const resultsBuffer = Buffer.from(await response.data);
+        const response = await fetch(resultsUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        const resultsBuffer = Buffer.from(arrayBuffer);
         const result = decode(resultsBuffer) as Record<string, unknown>;
 
         stepResults.push({
