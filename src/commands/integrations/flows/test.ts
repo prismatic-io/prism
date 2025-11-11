@@ -298,16 +298,22 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
     if (tailLogs) tailPromises.push(this.tailLogs(executionId));
     if (tailStepResults) tailPromises.push(this.tailStepResults(executionId));
 
-    const timeoutPromise = new Promise<void>(() => {
-      setTimeout(
+    let timeoutTimer: NodeJS.Timeout | undefined = undefined;
+    const timeoutPromise = new Promise<void>((resolve) => {
+      timeoutTimer = setTimeout(
         () => {
           this.quietLog("Timeout reached. Stopping polling.", quiet);
-          process.exit(0);
+          resolve();
         },
         (timeout ?? TIMEOUT_SECONDS) * 1000,
       );
     });
     await Promise.race([Promise.all(tailPromises), timeoutPromise]);
+
+    // Clear the timeout to allow process to exit cleanly
+    if (timeoutTimer) {
+      clearTimeout(timeoutTimer);
+    }
   }
 
   private async tailLogs(executionId: string) {
