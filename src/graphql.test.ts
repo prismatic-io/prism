@@ -1,6 +1,4 @@
-import { describe, it, expect, mock, beforeAll, afterEach, afterAll } from "bun:test";
-import { http, HttpResponse } from "msw";
-import { setupServer } from "msw/native";
+import { describe, it, expect, mock, beforeEach } from "bun:test";
 import { gql, gqlRequest } from "./graphql.js";
 
 mock.module("./auth.js", () => ({
@@ -8,11 +6,33 @@ mock.module("./auth.js", () => ({
   prismaticUrl: "https://example.com",
 }));
 
-const server = setupServer();
+// Mock responses for testing
+const mockResponses: Map<string, { status: number; body: any }> = new Map();
 
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+// Mock our fetch to use test responses
+mock.module("./utils/http.js", () => ({
+  fetch: async (url: string, options?: any) => {
+    const mockKey = `${options?.method || "GET"}:${url}`;
+    const mockResponse = mockResponses.get(mockKey);
+
+    if (mockResponse) {
+      return {
+        ok: mockResponse.status >= 200 && mockResponse.status < 300,
+        status: mockResponse.status,
+        headers: new Headers(),
+        json: async () => mockResponse.body,
+      };
+    }
+
+    // Should not reach here in tests
+    throw new Error(`Unmocked request: ${mockKey}`);
+  },
+  createFetch: () => globalThis.fetch,
+}));
+
+beforeEach(() => {
+  mockResponses.clear();
+});
 
 describe("gql", () => {
   it("returns GraphQL query string without interpolation", () => {
@@ -48,20 +68,16 @@ describe("gqlRequest", () => {
     const errorMessage = "This field is required";
     const expectedError = `${fieldName}: ${errorMessage}`;
 
-    server.use(
-      http.post("https://example.com/api", () => {
-        return HttpResponse.json(
-          {
-            data: {
-              createUser: {
-                errors: [{ field: fieldName, messages: [errorMessage] }],
-              },
-            },
+    mockResponses.set("POST:https://example.com/api", {
+      status: 400,
+      body: {
+        data: {
+          createUser: {
+            errors: [{ field: fieldName, messages: [errorMessage] }],
           },
-          { status: 400 },
-        );
-      }),
-    );
+        },
+      },
+    });
 
     await expect(gqlRequest({ document: "mutation { createUser }" })).rejects.toThrow(
       expectedError,
@@ -72,11 +88,10 @@ describe("gqlRequest", () => {
     const fieldName = "someField";
     const fieldValue = "value";
 
-    server.use(
-      http.post("https://example.com/api", () => {
-        return HttpResponse.json({ data: { [fieldName]: fieldValue } });
-      }),
-    );
+    mockResponses.set("POST:https://example.com/api", {
+      status: 200,
+      body: { data: { [fieldName]: fieldValue } },
+    });
 
     const result = await gqlRequest({ document: "query { test }" });
     expect(result).toHaveProperty(fieldName, fieldValue);
@@ -86,11 +101,10 @@ describe("gqlRequest", () => {
     const fieldName = "someField";
     const fieldValue = "value";
 
-    server.use(
-      http.post("https://example.com/api", () => {
-        return HttpResponse.json({ data: { [fieldName]: fieldValue } }, { status: 400 });
-      }),
-    );
+    mockResponses.set("POST:https://example.com/api", {
+      status: 400,
+      body: { data: { [fieldName]: fieldValue } },
+    });
 
     const result = await gqlRequest({ document: "query { test }" });
     expect(result).toHaveProperty(fieldName, fieldValue);
@@ -99,11 +113,10 @@ describe("gqlRequest", () => {
   it("deserializes 401 responses", async () => {
     const errorMessage = "Unauthorized";
 
-    server.use(
-      http.post("https://example.com/api", () => {
-        return HttpResponse.json({ errors: [{ message: errorMessage }] }, { status: 401 });
-      }),
-    );
+    mockResponses.set("POST:https://example.com/api", {
+      status: 401,
+      body: { errors: [{ message: errorMessage }] },
+    });
 
     const error = await gqlRequest({ document: "query { test }" }).catch((e) => e);
 
@@ -116,11 +129,10 @@ describe("gqlRequest", () => {
   it("deserializes 403 responses", async () => {
     const errorMessage = "Forbidden";
 
-    server.use(
-      http.post("https://example.com/api", () => {
-        return HttpResponse.json({ errors: [{ message: errorMessage }] }, { status: 403 });
-      }),
-    );
+    mockResponses.set("POST:https://example.com/api", {
+      status: 403,
+      body: { errors: [{ message: errorMessage }] },
+    });
 
     await expect(gqlRequest({ document: "query { test }" })).rejects.toThrow();
   });

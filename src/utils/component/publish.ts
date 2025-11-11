@@ -2,11 +2,11 @@ import { extname } from "path";
 import crypto from "crypto";
 import { ux } from "@oclif/core";
 import mimetypes from "mime-types";
-import axios, { AxiosResponse } from "axios";
 
 import { ComponentDefinition } from "./index.js";
 import { fs } from "../../fs.js";
 import { gqlRequest, gql } from "../../graphql.js";
+import { fetch } from "../http.js";
 
 const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {
   actions: true,
@@ -87,6 +87,7 @@ export const publishDefinition = async (
 ): Promise<{
   iconUploadUrl: string;
   packageUploadUrl: string;
+  sourceUploadUrl?: string;
   connectionIconUploadUrls: Record<
     string,
     {
@@ -166,6 +167,7 @@ export const publishDefinition = async (
             }
             iconUploadUrl
             packageUploadUrl
+            sourceUploadUrl
             connectionIconUploadUrls {
               connectionKey
               iconUploadUrl
@@ -197,6 +199,7 @@ export const publishDefinition = async (
   const {
     iconUploadUrl,
     packageUploadUrl,
+    sourceUploadUrl,
     connectionIconUploadUrls,
     connectionAvatarIconUploadUrls,
     component: { versionNumber },
@@ -228,6 +231,7 @@ export const publishDefinition = async (
   return {
     iconUploadUrl,
     packageUploadUrl,
+    sourceUploadUrl,
     connectionIconUploadUrls: uploadUrls,
     versionNumber,
   };
@@ -236,12 +240,16 @@ export const publishDefinition = async (
 export const uploadFile = async (filePath: string, destinationUrl: string) => {
   try {
     // TODO: Stream instead of Buffer.
-    const response = await axios.put(destinationUrl, await fs.readFile(filePath), {
-      headers: { "Content-Type": mimetypes.contentType(extname(filePath)) },
+    const response = await fetch(destinationUrl, {
+      method: "PUT",
+      body: await fs.readFile(filePath),
+      headers: {
+        "Content-Type": mimetypes.contentType(extname(filePath)) || "application/octet-stream",
+      },
     });
     return response;
   } catch (error) {
-    if (axios.isAxiosError(error)) {
+    if (error instanceof Error) {
       const { message } = error;
       throw new Error(message);
     }
@@ -280,21 +288,22 @@ export const uploadConnectionIcons = async (
     };
   }, {});
 
-  const promises = Object.entries(connectionIconUploadUrls).reduce<
-    Array<Promise<AxiosResponse<any, any>>>
-  >((acc, [connectionKey, { iconUploadUrl, avatarIconUploadUrl }]) => {
-    const connectionIconPaths = iconPaths[connectionKey];
+  const promises = Object.entries(connectionIconUploadUrls).reduce<Array<Promise<any>>>(
+    (acc, [connectionKey, { iconUploadUrl, avatarIconUploadUrl }]) => {
+      const connectionIconPaths = iconPaths[connectionKey];
 
-    if (connectionIconPaths.iconPath && iconUploadUrl) {
-      acc.push(uploadFile(connectionIconPaths.iconPath, iconUploadUrl));
-    }
+      if (connectionIconPaths.iconPath && iconUploadUrl) {
+        acc.push(uploadFile(connectionIconPaths.iconPath, iconUploadUrl));
+      }
 
-    if (connectionIconPaths.avatarIconPath && avatarIconUploadUrl) {
-      acc.push(uploadFile(connectionIconPaths.avatarIconPath, avatarIconUploadUrl));
-    }
+      if (connectionIconPaths.avatarIconPath && avatarIconUploadUrl) {
+        acc.push(uploadFile(connectionIconPaths.avatarIconPath, avatarIconUploadUrl));
+      }
 
-    return acc;
-  }, []);
+      return acc;
+    },
+    [],
+  );
 
   await Promise.all(promises);
 };

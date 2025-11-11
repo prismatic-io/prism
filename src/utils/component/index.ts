@@ -5,7 +5,7 @@ import tempy from "tempy";
 import archiver from "archiver";
 import { extname } from "path";
 
-import { seekPackageDistDirectory } from "../import.js";
+import { seekPackageDistDirectory, findPackageRoot } from "../import.js";
 import { exists } from "../../fs.js";
 
 /** Type defining leftover legacy backwards compat keys. */
@@ -61,6 +61,53 @@ export const createComponentPackage = async (): Promise<string> => {
     ...entry,
     date: new Date(0),
   }));
+  await zip.finalize();
+
+  return pathPromise;
+};
+
+export const createSourceCodePackage = async (): Promise<string> => {
+  const zip = archiver("zip", { zlib: { level: 9 } });
+  const pathPromise = tempy.write(zip, { extension: "zip" });
+
+  // Find the package root directory (where package.json is)
+  const sourceRoot = await findPackageRoot("component");
+
+  // Try to read tsconfig.json to determine source directories
+  let includePatterns: string[] = ["src"];
+  try {
+    const tsconfigPath = resolve(sourceRoot, "tsconfig.json");
+    if (await exists(tsconfigPath)) {
+      const tsconfigContent = await import(tsconfigPath, { assert: { type: "json" } });
+      if (tsconfigContent.default?.include && Array.isArray(tsconfigContent.default.include)) {
+        includePatterns = tsconfigContent.default.include;
+      }
+    }
+  } catch {
+    // Fall back to default if tsconfig can't be read
+  }
+
+  // Include essential files and the source directories
+  const essentialFiles = ["package.json", "tsconfig.json", "webpack.config.js", "jest.config.js"];
+
+  for (const file of essentialFiles) {
+    const filePath = resolve(sourceRoot, file);
+    if (await exists(filePath)) {
+      zip.file(filePath, { name: file, date: new Date(0) });
+    }
+  }
+
+  // Include directories from tsconfig include patterns or fallback to src
+  for (const pattern of includePatterns) {
+    const dirPath = resolve(sourceRoot, pattern);
+    if (await exists(dirPath)) {
+      zip.directory(dirPath, pattern, (entry) => ({
+        ...entry,
+        date: new Date(0),
+      }));
+    }
+  }
+
   await zip.finalize();
 
   return pathPromise;

@@ -2,8 +2,8 @@ import { fs } from "../../../fs.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
-import axios from "axios";
 import { deserialize, DeserializeResult, parseData } from "../../../utils/execution/stepResults.js";
+import { fetch } from "../../../utils/http.js";
 
 export default class GetCommand extends PrismaticBaseCommand {
   static description = "Gets the Result of a specified Step in an Instance Execution";
@@ -52,10 +52,9 @@ export default class GetCommand extends PrismaticBaseCommand {
     const stepResult = result?.executionResult?.stepResults.nodes?.[0];
 
     if (stepResult?.resultsUrl) {
-      const response = await axios.get(stepResult.resultsUrl, {
-        responseType: "arraybuffer",
-      });
-      const resultsBuffer = Buffer.from(await response.data);
+      const response = await fetch(stepResult.resultsUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      const resultsBuffer = Buffer.from(arrayBuffer);
       const { data: deserializedResult, contentType } = deserialize(
         resultsBuffer,
       ) as DeserializeResult;
