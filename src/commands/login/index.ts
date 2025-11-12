@@ -1,5 +1,5 @@
 import { Command, Flags, ux } from "@oclif/core";
-import { isLoggedIn, login } from "../auth.js";
+import { isLoggedIn, login } from "../../auth.js";
 
 export default class LoginCommand extends Command {
   static description = "Log in to your Prismatic account";
@@ -32,7 +32,6 @@ export default class LoginCommand extends Command {
     }
 
     await login({ url });
-
     this.log("Login complete!");
   }
 }

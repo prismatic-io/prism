@@ -1,4 +1,5 @@
-import LoginCommand from "./commands/login.js";
+import LoginCommand from "./commands/login/index.js";
+import LoginSwitchCommand from "./commands/login/switch.js";
 import LogoutCommand from "./commands/logout.js";
 import ComponentsDeleteCommand from "./commands/components/delete.js";
 import ComponentsListCommand from "./commands/components/list.js";
@@ -86,6 +87,7 @@ import GraphqlQueryCommand from "./commands/graphql/query.js";
 
 export const Commands = {
   login: LoginCommand,
+  "login:switch": LoginSwitchCommand,
   logout: LogoutCommand,
   "components:delete": ComponentsDeleteCommand,
   "components:list": ComponentsListCommand,

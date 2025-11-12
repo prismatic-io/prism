@@ -4,6 +4,7 @@ interface OrgUser {
   userType: "org";
   name: string;
   email: string;
+  tenantId?: string;
   org: {
     name: string;
   };
@@ -14,6 +15,7 @@ interface CustomerUser {
   userType: "customer";
   name: string;
   email: string;
+  tenantId: undefined;
   org: undefined;
   customer: {
     id: string;
@@ -30,6 +32,7 @@ export const whoAmI = async (): Promise<User> => {
         authenticatedUser {
           name
           email
+          tenantId
           org {
             name
           }
