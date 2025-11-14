@@ -3,10 +3,13 @@ import http from "http";
 import axios from "axios";
 import url from "url";
 import jwtDecode from "jwt-decode";
+import inquirer from "inquirer";
+import chalk from "chalk";
 import { configFileExists, deleteConfig, readConfig, writeConfig } from "./config.js";
 import { gqlRequest, gql } from "./graphql.js";
 import { AddressInfo } from "net";
 import open from "open";
+import { whoAmI } from "./utils/user/query.js";
 
 const urlEncodeBase64 = (value: Buffer | string): string => {
   const buffer = typeof value === "string" ? Buffer.from(value) : value;
@@ -78,6 +81,8 @@ export interface Auth {
   scope: string;
   /** Type of token */
   tokenType: string;
+  /** Tenant ID for multi-tenant support */
+  tenantId?: string;
 }
 
 /**
@@ -154,11 +159,12 @@ export class Authenticate {
     });
   }
 
-  async refresh(refreshToken: string): Promise<Auth> {
+  async refresh(refreshToken: string, tenantId?: string): Promise<Auth> {
     const data = {
       grant_type: "refresh_token",
       client_id: this.options.clientId,
       refresh_token: refreshToken,
+      tenant_id: tenantId,
     };
 
     const { data: response } = await axios({
@@ -175,6 +181,7 @@ export class Authenticate {
       refreshToken,
       scope: response.scope,
       tokenType: response.token_type,
+      tenantId,
     };
   }
 
@@ -291,17 +298,120 @@ const getAuthOptions = async () => {
   };
 };
 
+export interface Tenant {
+  tenantId: string;
+  url: string;
+  orgName: string;
+  awsRegion: string;
+}
+
+interface ListUserTenantsResponse {
+  listUserTenants: {
+    nodes: Tenant[];
+  };
+}
+
+export const fetchUserTenants = async (): Promise<Tenant[]> => {
+  const result = await gqlRequest<ListUserTenantsResponse>({
+    document: gql`
+      query ListUserTenants {
+        listUserTenants {
+          nodes {
+            tenantId
+            url
+            orgName
+            awsRegion
+          }
+        }
+      }
+    `,
+  });
+
+  return result.listUserTenants.nodes;
+};
+
+export const selectTenant = async (
+  tenants: Tenant[],
+  options: {
+    currentTenantId?: string;
+    message?: string;
+  } = {},
+): Promise<string | undefined> => {
+  const { currentTenantId, message = "Select a tenant:" } = options;
+
+  const choices = tenants.map((tenant) => {
+    const isCurrent = tenant.tenantId === currentTenantId;
+    const checkmark = isCurrent ? chalk.green("✓ ") : "  ";
+    const displayName = isCurrent
+      ? chalk.green(`${tenant.orgName} - ${tenant.url} (${tenant.awsRegion})`)
+      : `${tenant.orgName} - ${tenant.url} (${tenant.awsRegion})`;
+
+    return {
+      name: `${checkmark}${displayName}`,
+      value: tenant.tenantId,
+      short: tenant.orgName,
+    };
+  });
+
+  try {
+    const { tenantId } = await inquirer.prompt<{ tenantId: string }>([
+      {
+        type: "list",
+        name: "tenantId",
+        message,
+        choices,
+        default: currentTenantId,
+      },
+    ]);
+
+    return tenantId;
+  } catch (error) {
+    // User cancelled tenant selection
+    return;
+  }
+};
+
 export const login = async (props?: { url: boolean }) => {
   const authOptions = await getAuthOptions();
   const auth = new Authenticate(authOptions);
-  const response = await auth.login({ url: props?.url });
-  await writeConfig(response);
+
+  const initialAuth = await auth.login({ url: props?.url });
+  await writeConfig(initialAuth);
+
+  const tenants = await fetchUserTenants();
+
+  const user = await whoAmI();
+  const initialTenantId = user.tenantId;
+
+  if (initialTenantId) {
+    await writeConfig({
+      ...initialAuth,
+      tenantId: initialTenantId,
+    });
+  }
+
+  if (tenants.length <= 1) {
+    return;
+  }
+
+  const selectedTenantId = await selectTenant(
+    tenants,
+    initialTenantId ? { currentTenantId: initialTenantId } : undefined,
+  );
+
+  if (selectedTenantId) {
+    const tenantAuth = await auth.refresh(initialAuth.refreshToken, selectedTenantId);
+    await writeConfig(tenantAuth);
+  }
+
+  return;
 };
 
-export const refresh = async (refreshToken: string) => {
+export const refresh = async (refreshToken: string, tenantId?: string) => {
   const authOptions = await getAuthOptions();
   const auth = new Authenticate(authOptions);
-  const response = await auth.refresh(refreshToken);
+
+  const response = await auth.refresh(refreshToken, tenantId);
   await writeConfig(response);
   return response;
 };
@@ -319,18 +429,24 @@ export const logout = async () => {
  * also refresh the access token using the provided refresh token if possible.
  */
 export const getAccessToken = async (): Promise<string | undefined> => {
-  const { PRISM_ACCESS_TOKEN: envAccessToken, PRISM_REFRESH_TOKEN: envRefreshToken } = process.env;
+  const {
+    PRISM_ACCESS_TOKEN: envAccessToken,
+    PRISM_REFRESH_TOKEN: envRefreshToken,
+    PRISMATIC_TENANT_ID: envTenantId,
+  } = process.env;
 
   if (envRefreshToken && !envAccessToken) {
-    const { accessToken: refreshedAccessToken } = await refresh(envRefreshToken);
+    const { accessToken: refreshedAccessToken } = await refresh(envRefreshToken, envTenantId);
     return refreshedAccessToken;
   }
 
   const config = await readConfig();
   const { accessToken: configAccessToken, refreshToken: configRefreshToken } = config ?? {};
+  const configTenantId = config?.tenantId;
 
   const accessToken = envAccessToken ?? configAccessToken;
   const refreshToken = envRefreshToken ?? configRefreshToken;
+  const tenantId = envTenantId ?? configTenantId;
 
   if (accessToken && refreshToken) {
     const now = Math.floor(new Date().getTime() / 1000);
@@ -338,7 +454,7 @@ export const getAccessToken = async (): Promise<string | undefined> => {
 
     // Refresh if expired or expiring in 5 minutes or less
     if (exp - now < 5 * 60) {
-      const { accessToken: refreshedAccessToken } = await refresh(refreshToken);
+      const { accessToken: refreshedAccessToken } = await refresh(refreshToken, tenantId);
       return refreshedAccessToken;
     }
   }

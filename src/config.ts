@@ -9,6 +9,7 @@ export interface Configuration {
   refreshToken: string;
   scope: string;
   tokenType: string;
+  tenantId?: string;
 }
 
 const configDirectory = path.join(homedir(), ".config", "prism");
