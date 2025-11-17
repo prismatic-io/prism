@@ -1,5 +1,5 @@
 import { Flags, ux } from "@oclif/core";
-import { serverTypes } from "@prismatic-io/spectral"; // FIXME: Get rid of this and stop exporting it in Spectral.
+import serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import dotenv from "dotenv";
 import inquirer, { DistinctQuestion, Answers, ListQuestionOptions } from "inquirer";
 import { kebabCase, snakeCase, upperCase } from "lodash-es";
