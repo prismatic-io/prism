@@ -174,7 +174,17 @@ export class Authenticate {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
+
     const response = (await fetchResponse.json()) as any;
+
+    if (response.error === "access_denied") {
+      const description =
+        response.error_description || "You do not have access to the specified tenant.";
+      throw new Error(
+        `Access denied${tenantId ? ` for tenant ID '${tenantId}'` : ""}. ${description}`,
+      );
+    }
+
     return {
       accessToken: response.access_token,
       expiresIn: response.expires_in,
