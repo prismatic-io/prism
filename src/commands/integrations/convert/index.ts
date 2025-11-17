@@ -1,125 +1,118 @@
-import { Command, Config, Flags } from "@oclif/core";
-import path from "path";
-import { template, toArgv } from "../../../generate/util.js";
-import { exists } from "../../../fs.js";
-import { promises as fs } from "fs";
-import { load } from "js-yaml";
-import { v4 as uuid4 } from "uuid";
-import { prismaticUrl } from "../../../auth.js";
-import { writeIntegration, writePackageJson } from "../../../generate/formats/writer/yaml/index.js";
-import { IntegrationObjectFromYAML } from "../../../generate/formats/writer/yaml/types.js";
-import { formatInputValue } from "../../../generate/formats/writer/yaml/utils.js";
-import { kebabCase } from "lodash-es";
-import { formatSourceFiles, getFilesToFormat } from "../../../utils/generate.js";
+import { Args, Config, Flags, ux } from "@oclif/core";
+import { gql, gqlRequest } from "../../../graphql.js";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { toArgv } from "../../../generate/util.js";
 
-export default class ConvertIntegrationCommand extends Command {
+interface ConversionError {
+  path: string;
+  error: string;
+  errorType: string;
+}
+
+interface ConvertLowCodeIntegrationResult {
+  convertLowCodeIntegration: {
+    convertLowCodeIntegrationFormResult: {
+      url: string;
+      conversionErrors: ConversionError[];
+    };
+    errors: {
+      field: string;
+      messages: string[];
+    }[];
+  };
+}
+
+export default class ConvertIntegrationCommand extends PrismaticBaseCommand {
   static description = "Convert a Low-Code Integration's YAML file into a Code Native Integration";
-  static flags = {
-    yamlFile: Flags.string({
+  static args = {
+    integration: Args.string({
       required: true,
-      char: "y",
-      description: "Filepath to a Low-Code Integration's YAML",
+      description: "ID of the low-code integration to convert",
     }),
-    folder: Flags.string({
-      required: false,
-      char: "f",
-      description:
-        "Optional: Folder name to install the integration into (kebab-cased integration name by default)",
-    }),
+  };
+
+  static flags = {
     registryPrefix: Flags.string({
       required: false,
       char: "r",
-      description: "Optional: Your custom NPM registry prefix",
+      description: "The registry prefix to use for the converted integration",
+    }),
+    registryUrl: Flags.string({
+      required: false,
+      char: "u",
+      description: "The registry URL to use for the converted integration",
+    }),
+    includeComments: Flags.boolean({
+      required: false,
+      char: "c",
+      description: "Whether to include inline comments in the generated code",
+      default: false,
     }),
   };
 
   async run() {
-    const cwd = process.cwd();
+    const {
+      args: { integration },
+      flags: { registryPrefix, registryUrl, includeComments },
+    } = await this.parse(ConvertIntegrationCommand);
+
+    ux.action.start("Converting low-code integration to code-native integration");
 
     try {
-      const { flags } = await this.parse(ConvertIntegrationCommand);
-      const { yamlFile, registryPrefix, folder } = flags;
-
-      const yamlExists = await exists(yamlFile);
-
-      if (!yamlExists) {
-        this.error("Could not find a YAML file at the given filepath.");
-      }
-
-      const result = load(await fs.readFile(yamlFile, "utf-8")) as IntegrationObjectFromYAML;
-
-      if (result.definitionVersion !== 7) {
-        throw `
-The provided YAML definition version is incompatible with the CNI generator.
-Use "prism integrations:version:download $INTEGRATION_ID" to download a compatible version.`;
-      }
-
-      const integrationKey = uuid4();
-
-      const context = {
-        integration: {
-          name: result.name,
-          description: result.description ? formatInputValue(result.description) : undefined,
-          key: integrationKey,
-          documentation:
-            result.documentation ||
-            `# ${result.name}\n\nAdd internal integration documentation here.`,
+      const result = await gqlRequest<ConvertLowCodeIntegrationResult>({
+        document: gql`
+          mutation ConvertToCNI($id: ID!, $registryPrefix: String, $registryUrl: String, $includeComments: Boolean) {
+            convertLowCodeIntegration(input: { id: $id, registryPrefix: $registryPrefix, registryUrl: $registryUrl, includeComments: $includeComments }) {
+              convertLowCodeIntegrationFormResult {
+                url
+                conversionErrors {
+                  path
+                  error
+                  errorType
+                }
+              }
+              errors {
+                field
+                messages
+              }
+            }
+          }
+        `,
+        variables: {
+          id: integration,
+          registryPrefix,
+          registryUrl,
+          includeComments,
         },
-        registry: {
-          url: new URL("/packages/npm", prismaticUrl).toString(),
-          scope: "@component-manifests",
-        },
-      };
+      });
 
-      const folderName = folder ?? kebabCase(result.name);
+      ux.action.stop();
 
-      try {
-        await fs.mkdir(folderName);
-      } catch (e) {
-        throw `A folder named ${folderName} already exists. Rename it, or use the --folder flag to specify a different folder name.`;
+      const { url, conversionErrors } =
+        result.convertLowCodeIntegration.convertLowCodeIntegrationFormResult;
+
+      if (conversionErrors && conversionErrors.length > 0) {
+        this.warn("Conversion completed with warnings:");
+        for (const error of conversionErrors) {
+          this.warn(`  ${error.path}: ${error.error} (${error.errorType})`);
+        }
       }
-
-      process.chdir(folderName);
-
-      // Create template files based on YAML
-      const templateFiles = [
-        path.join("assets", "icon.png"),
-        path.join(".spectral", "index.ts"),
-        path.join(".spectral", "metadata.json"),
-        path.join("src", "markdown.d.ts"),
-        ".npmrc",
-        ".prettierignore",
-        "documentation.md",
-        "jest.config.js",
-        "package.json",
-        "tsconfig.json",
-        "webpack.config.js",
-      ];
-
-      const { usedComponents } = await writeIntegration(result, registryPrefix);
-
-      await Promise.all([
-        ...templateFiles.map((file) =>
-          template(
-            path.join("yaml", file.endsWith("icon.png") ? file : `${file}.ejs`),
-            file,
-            context,
-          ),
-        ),
-        writePackageJson(result.name, usedComponents),
-      ]);
-
-      const filesToFormat = await getFilesToFormat(folderName);
-      await formatSourceFiles(folderName, filesToFormat);
 
       this.log(`
-"${folderName}" has been successfully generated based on the provided YAML.
-Please run "npm install && npm update --save && npm run format" to prepare your project for development.
+Conversion completed successfully!
 
-For documentation on writing code-native integrations, visit https://prismatic.io/docs/integrations/code-native/
-      `);
-    } finally {
-      process.chdir(cwd);
+Download URL:\n${url}
+
+Next steps:
+  1. Download the zip file from the URL above
+  2. Extract it to your desired location
+  3. Run: npm install && npm update --save && npm run format
+
+If installation issues occur during step 3, double check your package.json file and component registry set-up.
+For documentation on code-native integrations, visit https://prismatic.io/docs/integrations/code-native/`);
+    } catch (error) {
+      ux.action.stop("failed");
+      throw error;
     }
   }
 
