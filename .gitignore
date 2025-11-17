@@ -62,3 +62,6 @@ src/commands/integrations/convert/temp
 
 # output created by translation
 translations_output.json
+
+# We use bun; never commit package-lock.json
+package-lock.json
