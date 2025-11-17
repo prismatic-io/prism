@@ -1,5 +1,6 @@
 import { URL } from "url";
 import { getAccessToken, prismaticUrl } from "./auth.js";
+import { fetch } from "./utils/http.js";
 
 type RequestDocument = string;
 
@@ -86,7 +87,7 @@ export const gqlRequest = async <T = any>({ document, variables }: GQLRequest): 
 
   let response: Response;
   try {
-    response = await fetch(url, {
+    response = (await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -97,7 +98,7 @@ export const gqlRequest = async <T = any>({ document, variables }: GQLRequest): 
         query: document,
         variables: variables || {},
       }),
-    });
+    })) as unknown as Response;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Network request to ${url} failed: ${errorMessage}`);

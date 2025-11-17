@@ -1,4 +1,3 @@
-import axios from "axios";
 import { renderFile } from "ejs";
 import { copyFile, mkdirp, outputFile, readJson } from "fs-extra";
 import striptags from "striptags";
@@ -7,6 +6,7 @@ import { startCase, camelCase, merge } from "lodash-es";
 import path from "path";
 import { fileURLToPath } from "url";
 import { exists } from "../fs.js";
+import { fetch } from "../utils/http.js";
 
 export const pascalCase = (str: string) => startCase(camelCase(str)).replace(/ /g, "");
 
@@ -51,7 +51,8 @@ const updateDependencies = async (dependencies: Record<string, string>) => {
   const promises = Object.entries(dependencies).map(async ([name, version]) => {
     try {
       if (version === "*" && !name.includes("@component-manifests")) {
-        const { data } = await axios.get(`https://registry.npmjs.org/${name}/latest`);
+        const response = await fetch(`https://registry.npmjs.org/${name}/latest`);
+        const data = (await response.json()) as any;
         return [name, data.version];
       }
     } catch {
