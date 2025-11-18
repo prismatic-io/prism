@@ -306,7 +306,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
       timeoutTimer = setTimeout(
         () => {
           this.quietLog("Timeout reached. Stopping polling.", quiet);
-          resolve();
+          process.exit(0);
         },
         (timeout ?? TIMEOUT_SECONDS) * 1000,
       );
