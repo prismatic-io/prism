@@ -27,6 +27,7 @@ import IntegrationsOpenCommand from "./commands/integrations/open.js";
 import IntegrationsPublishCommand from "./commands/integrations/publish.js";
 import IntegrationsSetDebugCommand from "./commands/integrations/set-debug.js";
 import IntegrationsUpdateCommand from "./commands/integrations/update.js";
+import IntegrationsValidateYamlCommand from "./commands/integrations/validate-yaml.js";
 import MeCommand from "./commands/me/index.js";
 import MeTokenCommand from "./commands/me/token.js";
 import OnPremResourcesDeleteCommand from "./commands/on-prem-resources/delete.js";
@@ -115,6 +116,7 @@ export const Commands = {
   "integrations:publish": IntegrationsPublishCommand,
   "integrations:set-debug": IntegrationsSetDebugCommand,
   "integrations:update": IntegrationsUpdateCommand,
+  "integrations:validate-yaml": IntegrationsValidateYamlCommand,
   me: MeCommand,
   "me:token": MeTokenCommand,
   "on-prem-resources:delete": OnPremResourcesDeleteCommand,
