@@ -171,7 +171,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         this.warn("The integration needs to be configured before it can be tested.");
       }
 
-      const url = new URL(`${prismaticUrl}/configure-instance/${systemInstanceId}`);
+      const url = new URL(`${prismaticUrl}/designer/${systemInstanceId}`);
       for (const [key, value] of Object.entries(CONFIGURE_INSTANCE_PARAMS)) {
         url.searchParams.set(key, value);
       }
