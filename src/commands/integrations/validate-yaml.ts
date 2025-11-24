@@ -1,4 +1,5 @@
 import { Args } from "@oclif/core";
+import chalk from "chalk";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gql, gqlRequest } from "../../graphql.js";
 import { exists, readStdin } from "../../fs.js";
@@ -71,7 +72,7 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
 
       // If validation passes
       if (result.validateIntegrationSchema?.result?.isValid) {
-        this.log("Integration YAML is valid");
+        this.log(`${chalk.green("✓ ")}Integration YAML is valid`);
       } else {
         // If the mutation returns valid: false but no errors were thrown
         this.error("Validation failed", { exit: 1 });
