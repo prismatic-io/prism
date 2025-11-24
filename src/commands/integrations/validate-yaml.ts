@@ -54,7 +54,9 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
         document: gql`
           mutation validateIntegrationSchema($definition: String!) {
             validateIntegrationSchema(input: { definition: $definition }) {
-              valid
+              result {
+                isValid
+              }
               errors {
                 field
                 messages
@@ -68,7 +70,7 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
       });
 
       // If validation passes
-      if (result.validateIntegrationSchema.valid) {
+      if (result.validateIntegrationSchema?.result?.isValid) {
         this.log("Integration YAML is valid");
       } else {
         // If the mutation returns valid: false but no errors were thrown
