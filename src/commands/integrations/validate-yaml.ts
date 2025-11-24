@@ -13,13 +13,16 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
     "<%= config.bin %> <%= command.id %> path/to/integration.yml",
     "",
     "# Validate from stdin",
-    "cat integration.yml | <%= config.bin %> <%= command.id %>",
+    "cat integration.yml | <%= config.bin %> <%= command.id %> -",
+    "",
+    "# Validate from stdin (alternative)",
+    "<%= config.bin %> <%= command.id %> - < integration.yml",
   ];
 
   static args = {
     path: Args.string({
-      description: "Path to YAML file (omit to read from stdin)",
-      required: false,
+      description: "Path to YAML file (use '-' for stdin)",
+      required: true,
     }),
   };
 
@@ -29,20 +32,17 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
     let definition: string;
 
     // Read YAML from file path or stdin
-    if (args.path) {
+    if (args.path === "-") {
+      // Explicit stdin indicator
+      definition = await readStdin();
+    } else {
+      // File path provided
       if (!(await exists(args.path))) {
         this.error(`Cannot find definition file at specified path "${args.path}"`, {
           exit: 2,
         });
       }
       definition = await extractYAMLFromPath(args.path);
-    } else {
-      if (process.stdin.isTTY) {
-        this.error("No file provided. Please provide a path or pipe via stdin.", {
-          exit: 2,
-        });
-      }
-      definition = await readStdin();
     }
 
     if (!definition.trim()) {
