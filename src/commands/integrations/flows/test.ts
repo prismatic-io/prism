@@ -2,7 +2,7 @@ import { Flags, ux } from "@oclif/core";
 import { decode } from "@msgpack/msgpack";
 import inquirer from "inquirer";
 import open from "open";
-import { prismaticUrl } from "../../../auth.js";
+import { getAccessToken, prismaticUrl } from "../../../auth.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { fetch } from "../../../utils/http.js";
 import {
@@ -171,12 +171,12 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         this.warn("The integration needs to be configured before it can be tested.");
       }
 
-      const url = new URL(`${prismaticUrl}/configure-instance/${systemInstanceId}`);
-      for (const [key, value] of Object.entries(CONFIGURE_INSTANCE_PARAMS)) {
-        url.searchParams.set(key, value);
-      }
-
-      const configUrl = url.toString();
+      const accessToken = await getAccessToken();
+      const params = new URLSearchParams({
+        ...CONFIGURE_INSTANCE_PARAMS,
+        ...(accessToken && { jwt: accessToken }),
+      });
+      const configUrl = `${prismaticUrl}/configure-instance/${systemInstanceId}/?${params.toString()}`;
 
       if (!isConfigured) {
         if (quiet) {
