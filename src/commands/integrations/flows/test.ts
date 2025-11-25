@@ -1,6 +1,5 @@
 import { Flags, ux } from "@oclif/core";
 import { decode } from "@msgpack/msgpack";
-import inquirer from "inquirer";
 import open from "open";
 import { getAccessToken, prismaticUrl } from "../../../auth.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
@@ -10,9 +9,9 @@ import {
   FetchLogsResult,
   getExecutionLogs,
   getExecutionStepResults,
-  getIntegrationFlows,
   LogNode,
   StepResultNode,
+  selectFlowPrompt,
 } from "../../../utils/integration/flows.js";
 import { exists, fs } from "../../../fs.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
@@ -21,6 +20,7 @@ import {
   getIntegrationSystemId,
   isIntegrationConfigured,
 } from "../../../utils/integration/query.js";
+import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
 
 type FormattedStepResult = {
   stepName: string;
@@ -201,36 +201,10 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     // Once we have an integrationId, prompt the user to select a flow.
     // If an invocation URL was provided, this gets skipped.
     if (integrationId) {
-      try {
-        const flows = await getIntegrationFlows(integrationId);
-
-        if (flows.length === 0) {
-          console.error("No flows were found for the given integration.");
-          return;
-        }
-
-        const { flow } = await inquirer.prompt({
-          type: "list",
-          name: "flow",
-          message: "Select the flow to test:",
-          choices: flows.map((flow) => {
-            return {
-              name: `${flow.name} ${flow.stableKey ? `(${flow.stableKey})` : ""}`,
-              value: {
-                invokeUrl: flow.testUrl,
-              },
-            };
-          }),
-        });
-
-        invokeUrl = flow.invokeUrl;
-      } catch (err) {
-        handleError({
-          message:
-            "There was an error looking up flows for your integration. Please provide an integration ID or reimport your integration.",
-          throwError: true,
-        });
-      }
+      const selectedFlow = await selectFlowPrompt(integrationId, {
+        message: "Select the flow to test:",
+      });
+      invokeUrl = selectedFlow.testUrl;
     }
 
     if (!invokeUrl) {
@@ -327,7 +301,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
     let nextCursor: string | undefined = undefined;
 
     while (true) {
-      await ux.wait(this.getPollIntervalMs());
+      await ux.wait(getAdaptivePollIntervalMs(this.startTime));
 
       const result = await this.fetchLogs(executionId, nextCursor);
       if (result === undefined) continue;
@@ -376,7 +350,7 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
     let nextCursor: string | undefined = undefined;
 
     while (true) {
-      await ux.wait(this.getPollIntervalMs());
+      await ux.wait(getAdaptivePollIntervalMs(this.startTime));
 
       const result = await this.fetchStepResults(executionId, nextCursor);
       if (result === undefined) {
@@ -481,33 +455,5 @@ prism integrations:flows:test -u=${invokeUrl} ${flagString}
       Date.now() - this.startTime > timeout * 1000 ||
       (autoEndPoll && (await isCniExecutionComplete(executionId)))
     );
-  }
-
-  private getPollIntervalMs() {
-    const timeElapsed = this.startTime - Date.now();
-    switch (true) {
-      case timeElapsed < 30000:
-        // every 1s for first 30s
-        return 1000;
-      case timeElapsed < 60000:
-        // every 5s for 30s-1min
-        return 5000;
-      case timeElapsed < 300000:
-        // every 30s for 1min-5min
-        return 30000;
-      default:
-        // every 1min for 5min+
-        return 60000;
-    }
-  }
-
-  private async quietLog(log: string, quiet = false, type?: "warn") {
-    if (!quiet) {
-      if (type === "warn") {
-        this.warn(log);
-      } else {
-        this.log(log);
-      }
-    }
   }
 }
