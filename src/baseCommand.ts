@@ -21,4 +21,20 @@ export abstract class PrismaticBaseCommand extends Command {
       },
     }),
   };
+
+  /**
+   * Log a message unless quiet mode is enabled.
+   * @param message - The message to log
+   * @param quiet - Whether quiet mode is enabled
+   * @param type - Optional type: "warn" for warnings, undefined for regular log
+   */
+  protected quietLog(message: string, quiet = false, type?: "warn"): void {
+    if (!quiet) {
+      if (type === "warn") {
+        this.warn(message);
+      } else {
+        this.log(message);
+      }
+    }
+  }
 }
