@@ -8,6 +8,15 @@ export type IntegrationFlow = {
   description: string;
   stableKey: string;
   testUrl: string;
+  trigger: {
+    action: {
+      component: {
+        key: string;
+      };
+      isPollingTrigger: boolean;
+      scheduleSupport: string;
+    };
+  };
 };
 
 export async function getIntegrationFlows(integrationId: string) {
@@ -31,6 +40,15 @@ export async function getIntegrationFlows(integrationId: string) {
                 name
                 description
                 testUrl
+                trigger {
+                  action {
+                    component {
+                      key
+                    }
+                    isPollingTrigger
+                    scheduleSupport
+                  }
+                }
               }
               pageInfo {
                 hasNextPage

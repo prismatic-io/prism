@@ -1,14 +1,35 @@
 import { Flags, ux } from "@oclif/core";
+import { decode } from "@msgpack/msgpack";
+import inquirer from "inquirer";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { fetch } from "../../../utils/http.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 import { exists, fs } from "../../../fs.js";
 import { handleError } from "../../../utils/errors.js";
-import { selectFlowPrompt } from "../../../utils/integration/flows.js";
+import {
+  getIntegrationFlows,
+  type IntegrationFlow,
+  selectFlowPrompt,
+} from "../../../utils/integration/flows.js";
+import { runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
 
 const DEFAULT_TIMEOUT_SECONDS = 1200; // 20 minutes
 const DEFAULT_OUTPUT_DIR = "./payloads";
+
+type PolledExecutionResult = {
+  executionResult: {
+    id: string;
+    endedAt: string | null;
+    stepResults: {
+      nodes: Array<{
+        id: string;
+        stepName: string;
+        resultsUrl: string;
+      }>;
+    };
+  };
+};
 
 type ExecutionResult = {
   id: string;
@@ -17,6 +38,8 @@ type ExecutionResult = {
   requestPayloadUrl: string;
   responsePayloadUrl: string;
 };
+
+type TriggerType = "WEBHOOK" | "POLLING";
 
 export default class ListenCommand extends PrismaticBaseCommand {
   private startTime = 0;
@@ -42,66 +65,179 @@ export default class ListenCommand extends PrismaticBaseCommand {
       description: "Timeout in seconds to stop listening.",
       default: DEFAULT_TIMEOUT_SECONDS,
     }),
+    "no-prompt": Flags.boolean({
+      char: "n",
+      description:
+        "For flows using polling triggers, automatically poll without a confirmation prompt.",
+    }),
   };
 
   async run() {
     const {
-      flags: { "integration-id": integrationId, "flow-id": flowIdFlag, output, timeout, quiet },
+      flags: {
+        "integration-id": integrationId,
+        "flow-id": flowIdFlag,
+        output,
+        timeout,
+        quiet,
+        "no-prompt": noPrompt,
+      },
     } = await this.parse(ListenCommand);
 
     let flowId = flowIdFlag;
+    let triggerType: TriggerType = "WEBHOOK";
     if (!flowId) {
       const selectedFlow = await selectFlowPrompt(integrationId, {
         message: "Select the flow to listen to:",
       });
       flowId = selectedFlow.id;
+      triggerType = this.getTriggerType(selectedFlow.trigger);
+    } else {
+      const flows = await getIntegrationFlows(integrationId);
+      const selectedFlow = flows.find((flow) => flow.id === flowId);
+
+      if (!selectedFlow) {
+        throw `There was an error locating a flow with the ID ${flowId}. Please verify that the given flowId is correct, or re-run without a flowId and just use an integrationId.`;
+      }
+
+      triggerType = this.getTriggerType(selectedFlow.trigger);
     }
 
     await this.setListeningMode(integrationId, true);
-
     this.startTime = Date.now();
 
-    this.quietLog("\nListening for webhook executions. Press CMD+C/CTRL+C to stop.\n", quiet);
-    this.quietLog(`This process will timeout after ${timeout / 60} minutes.\n`, quiet);
-    this.quietLog(
-      `To enable listening for this flow directly, you can run:\nprism integrations:flows:listen -i ${integrationId} -f ${flowId}\n`,
-      quiet,
-    );
+    if (triggerType === "WEBHOOK") {
+      this.quietLog("\nListening for webhook executions. Press CMD+C/CTRL+C to stop.\n", quiet);
+      this.quietLog(`This process will timeout after ${timeout} seconds.\n`, quiet);
+      this.quietLog(
+        `To enable listening for this flow directly, you can run:\nprism integrations:flows:listen -i ${integrationId} -f ${flowId}\n`,
+        quiet,
+      );
 
-    // Shared helper to safely set listening mode without throwing
-    const safeSetListeningMode = async (isListening: boolean, exitProcess = false) => {
-      try {
-        await this.setListeningMode(integrationId, isListening);
-      } catch (err) {
-        this.warn(
-          `Failed to ${isListening ? "enable" : "disable"} listening mode: ${
-            err instanceof Error ? err.message : String(err)
-          }`,
-        );
-      } finally {
-        if (exitProcess) {
-          process.exit(0);
+      await this.withCleanup(integrationId, async () => {
+        const execution = await this.pollForWebhookExecutions(flowId, timeout);
+
+        if (execution) {
+          ux.action.start("Downloading payload...");
+          await this.downloadAndSavePayload(execution.requestPayloadUrl, output, flowId, {
+            filePrefix: "payload",
+            useMsgpack: false,
+          });
+          ux.action.stop();
         }
-      }
-    };
+      });
+    } else if (triggerType === "POLLING") {
+      this.quietLog("\nListening for poll executions. Press CMD+C/CTRL+C to stop.\n", quiet);
+      this.quietLog(
+        `To enable listening for this flow directly, you can run:\nprism integrations:flows:listen -i ${integrationId} -f ${flowId}\n`,
+        quiet,
+      );
 
-    // Set up cleanup handler for SIGINT
+      if (!noPrompt) {
+        this.quietLog(
+          "When you are ready to initiate a test poll for your flow, please confirm below.\n",
+          quiet,
+        );
+
+        const result = await inquirer.prompt({
+          type: "confirm",
+          name: "confirm",
+          message: "Initiate poll?",
+        });
+
+        if (!result.confirm) {
+          await this.safeSetListeningMode(integrationId, false, false);
+          return;
+        }
+
+        this.quietLog(`This process will timeout after ${timeout} seconds.\n`, quiet);
+      }
+
+      await this.withCleanup(integrationId, async () => {
+        let executionId: string;
+        try {
+          const result = await runIntegrationFlow({ integrationId, flowId });
+          executionId = result.executionId;
+        } catch (err) {
+          handleError({
+            message: "Failed to initiate poll test run.",
+            err,
+            throwError: true,
+          });
+          throw err;
+        }
+
+        while (true) {
+          if (this.hasTimedOut(timeout)) {
+            this.warn("Timeout reached. Stopping listener.");
+            return;
+          }
+
+          await ux.wait(getAdaptivePollIntervalMs(this.startTime));
+
+          let result: PolledExecutionResult;
+          try {
+            result = await this.getPolledExecution(executionId);
+          } catch (err) {
+            handleError({
+              message: "Failed to fetch poll execution status.",
+              err,
+              throwError: true,
+            });
+            throw err;
+          }
+
+          // Having an endedAt means the execution completed.
+          if (result.executionResult.endedAt) {
+            const stepResult = result.executionResult.stepResults.nodes[0];
+            if (stepResult?.resultsUrl) {
+              ux.action.start("Downloading poll payload...");
+              await this.downloadAndSavePayload(stepResult.resultsUrl, output, flowId, {
+                filePrefix: "poll-payload",
+                useMsgpack: true,
+              });
+              ux.action.stop();
+            }
+            return;
+          }
+        }
+      });
+    }
+  }
+
+  // Safely set listening mode with error handling
+  private async safeSetListeningMode(
+    integrationId: string,
+    isListening: boolean,
+    exitProcess = false,
+  ): Promise<void> {
+    try {
+      await this.setListeningMode(integrationId, isListening);
+    } catch (err) {
+      this.warn(
+        `Failed to ${isListening ? "enable" : "disable"} listening mode: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    } finally {
+      if (exitProcess) {
+        process.exit(0);
+      }
+    }
+  }
+
+  // Execute a function with cleanup handling for SIGINT and listening mode
+  private async withCleanup(integrationId: string, fn: () => Promise<void>): Promise<void> {
     const cleanup = async () => {
       this.log("\nStopping listener...");
-      await safeSetListeningMode(false, true);
+      await this.safeSetListeningMode(integrationId, false, true);
     };
     process.on("SIGINT", cleanup);
 
     try {
-      const execution = await this.pollForWebhookExecutions(flowId, timeout);
-
-      if (execution) {
-        ux.action.start("Downloading payload...");
-        await this.downloadAndSavePayload(execution, output, flowId);
-        ux.action.stop();
-      }
+      await fn();
     } finally {
-      await safeSetListeningMode(false, false);
+      await this.safeSetListeningMode(integrationId, false, false);
       process.removeListener("SIGINT", cleanup);
     }
   }
@@ -125,7 +261,10 @@ export default class ListenCommand extends PrismaticBaseCommand {
     this.log(`Set listening mode to ${isListening} for integration ${integrationId}`);
   }
 
-  private async pollForWebhookExecutions(flowId: string, timeout: number): Promise<ExecutionResult | null> {
+  private async pollForWebhookExecutions(
+    flowId: string,
+    timeout: number,
+  ): Promise<ExecutionResult | null> {
     const listenStartDate = new Date().toISOString();
 
     while (true) {
@@ -174,46 +313,50 @@ export default class ListenCommand extends PrismaticBaseCommand {
     }
   }
 
-  /**
-   * Download payload file and save as JSON suitable for replay.
-   *   - Webhook payloads may be base64 encoded.
-   */
   private async downloadAndSavePayload(
-    execution: ExecutionResult,
+    url: string,
     outputDir: string,
     flowId: string,
+    options: { filePrefix: string; useMsgpack: boolean },
   ): Promise<void> {
     try {
       if (!(await exists(outputDir))) {
         await fs.mkdir(outputDir, { recursive: true });
       }
 
-      const response = await fetch(execution.requestPayloadUrl);
+      const response = await fetch(url);
       const arrayBuffer = await response.arrayBuffer();
       const resultsBuffer = Buffer.from(arrayBuffer);
 
       let decoded: Record<string, unknown>;
+      let payload: unknown;
 
-      const text = resultsBuffer.toString("utf-8");
-      try {
-        decoded = JSON.parse(text);
-      } catch {
-        // If not valid JSON, save as raw text
-        decoded = { body: text };
-      }
-
-      // Decode base64-encoded body field if present
-      let payload: unknown = decoded.body;
-      if (typeof payload === "string") {
+      if (options.useMsgpack) {
+        decoded = decode(resultsBuffer) as Record<string, unknown>;
+        const data = (decoded.data ?? decoded) as Record<string, unknown>;
+        const body = data.body as Record<string, unknown> | undefined;
+        payload = body?.data ?? data;
+      } else {
+        const text = resultsBuffer.toString("utf-8");
         try {
-          const decodedBody = Buffer.from(payload, "base64").toString("utf-8");
-          try {
-            payload = JSON.parse(decodedBody);
-          } catch {
-            payload = decodedBody;
-          }
+          decoded = JSON.parse(text);
         } catch {
-          // Keep original if base64 decode fails
+          decoded = { body: text };
+        }
+
+        // Decode base64-encoded body field if present
+        payload = decoded.body;
+        if (typeof payload === "string") {
+          try {
+            const decodedBody = Buffer.from(payload, "base64").toString("utf-8");
+            try {
+              payload = JSON.parse(decodedBody);
+            } catch {
+              payload = decodedBody;
+            }
+          } catch {
+            // Keep original if base64 decode fails
+          }
         }
       }
 
@@ -225,7 +368,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
       };
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const fileName = `${outputDir}/payload-${flowId}-${timestamp}.json`;
+      const fileName = `${outputDir}/${options.filePrefix}-${timestamp}.json`;
       await fs.writeFile(fileName, JSON.stringify(replayPayload, null, 2));
 
       this.log(`\nPayload saved to: ${fileName}`);
@@ -240,5 +383,37 @@ export default class ListenCommand extends PrismaticBaseCommand {
 
   private hasTimedOut(timeout: number): boolean {
     return Date.now() - this.startTime > timeout * 1000;
+  }
+
+  private getTriggerType(trigger: IntegrationFlow["trigger"]): TriggerType {
+    const { action } = trigger;
+    const isPolling =
+      action.isPollingTrigger ||
+      (action.scheduleSupport === "REQUIRED" && action.component.key !== "schedule-triggers");
+    return isPolling ? "POLLING" : "WEBHOOK";
+  }
+
+  private async getPolledExecution(executionId: string): Promise<PolledExecutionResult> {
+    return gqlRequest({
+      document: gql`
+      query getPolledExecution($executionId: ID!, $stepName: String) {
+        executionResult(id: $executionId) {
+          id
+          endedAt
+          stepResults(stepName: $stepName) {
+            nodes {
+              id
+              stepName
+              resultsUrl
+            }
+          }
+        }
+      }
+    `,
+      variables: {
+        executionId,
+        stepName: "trigger",
+      },
+    });
   }
 }
