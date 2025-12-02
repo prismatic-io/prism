@@ -85,23 +85,23 @@ export default class ListenCommand extends PrismaticBaseCommand {
     } = await this.parse(ListenCommand);
 
     let flowId = flowIdFlag;
-    let triggerType: TriggerType = "WEBHOOK";
+    let selectedFlow: IntegrationFlow | undefined;
+
     if (!flowId) {
-      const selectedFlow = await selectFlowPrompt(integrationId, {
+      selectedFlow = await selectFlowPrompt(integrationId, {
         message: "Select the flow to listen to:",
       });
       flowId = selectedFlow.id;
-      triggerType = this.getTriggerType(selectedFlow.trigger);
     } else {
       const flows = await getIntegrationFlows(integrationId);
-      const selectedFlow = flows.find((flow) => flow.id === flowId);
-
-      if (!selectedFlow) {
-        throw `There was an error locating a flow with the ID ${flowId}. Please verify that the given flowId is correct, or re-run without a flowId and just use an integrationId.`;
-      }
-
-      triggerType = this.getTriggerType(selectedFlow.trigger);
+      selectedFlow = flows.find((flow) => flow.id === flowId);
     }
+
+    if (!selectedFlow) {
+      throw `There was an error locating a flow with the ID ${flowId}. Please verify that the given flowId is correct, or re-run without a flowId and just use an integrationId.`;
+    }
+
+    const triggerType = this.getTriggerType(selectedFlow.trigger);
 
     await this.setListeningMode(integrationId, true);
     this.startTime = Date.now();
@@ -368,7 +368,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
       };
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const fileName = `${outputDir}/${options.filePrefix}-${timestamp}.json`;
+      const fileName = `${outputDir}/${options.filePrefix}-${flowId}-${timestamp}.json`;
       await fs.writeFile(fileName, JSON.stringify(replayPayload, null, 2));
 
       this.log(`\nPayload saved to: ${fileName}`);
