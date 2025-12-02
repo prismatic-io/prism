@@ -7,7 +7,7 @@ import { handleError } from "../../../utils/errors.js";
 import { selectFlowPrompt } from "../../../utils/integration/flows.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
 
-const DEFAULT_TIMEOUT_SECONDS = 60 * 20;
+const DEFAULT_TIMEOUT_SECONDS = 1200; // 20 minutes
 const DEFAULT_OUTPUT_DIR = "./payloads";
 
 type ExecutionResult = {
@@ -62,17 +62,33 @@ export default class ListenCommand extends PrismaticBaseCommand {
     this.startTime = Date.now();
 
     this.quietLog("\nListening for webhook executions. Press CMD+C/CTRL+C to stop.\n", quiet);
-    this.quietLog(`This process will timeout after ${timeout} seconds.\n`, quiet);
+    this.quietLog(`This process will timeout after ${timeout / 60} minutes.\n`, quiet);
     this.quietLog(
       `To enable listening for this flow directly, you can run:\nprism integrations:flows:listen -i ${integrationId} -f ${flowId}\n`,
       quiet,
     );
 
+    // Shared helper to safely set listening mode without throwing
+    const safeSetListeningMode = async (isListening: boolean, exitProcess = false) => {
+      try {
+        await this.setListeningMode(integrationId, isListening);
+      } catch (err) {
+        this.warn(
+          `Failed to ${isListening ? "enable" : "disable"} listening mode: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      } finally {
+        if (exitProcess) {
+          process.exit(0);
+        }
+      }
+    };
+
     // Set up cleanup handler for SIGINT
     const cleanup = async () => {
       this.log("\nStopping listener...");
-      await this.setListeningMode(integrationId, false);
-      process.exit(0);
+      await safeSetListeningMode(false, true);
     };
     process.on("SIGINT", cleanup);
 
@@ -85,7 +101,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
         ux.action.stop();
       }
     } finally {
-      await this.setListeningMode(integrationId, false);
+      await safeSetListeningMode(false, false);
       process.removeListener("SIGINT", cleanup);
     }
   }
@@ -212,7 +228,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
       };
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const fileName = `${outputDir}/payload-${timestamp}.json`;
+      const fileName = `${outputDir}/payload-${flowId}-${timestamp}.json`;
       await fs.writeFile(fileName, JSON.stringify(replayPayload, null, 2));
 
       this.log(`\nPayload saved to: ${fileName}`);
