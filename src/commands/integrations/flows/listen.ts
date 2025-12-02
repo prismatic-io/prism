@@ -125,10 +125,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
     this.log(`Set listening mode to ${isListening} for integration ${integrationId}`);
   }
 
-  private async pollForWebhookExecutions(
-    flowId: string,
-    timeout: number,
-  ): Promise<ExecutionResult | null> {
+  private async pollForWebhookExecutions(flowId: string, timeout: number): Promise<ExecutionResult | null> {
     const listenStartDate = new Date().toISOString();
 
     while (true) {
