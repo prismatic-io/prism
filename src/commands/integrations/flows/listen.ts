@@ -70,6 +70,10 @@ export default class ListenCommand extends PrismaticBaseCommand {
       description:
         "For flows using polling triggers, automatically poll without a confirmation prompt.",
     }),
+    reset: Flags.boolean({
+      char: "r",
+      description: "Manually turn off listening mode for a given integration.",
+    }),
   };
 
   async run() {
@@ -81,8 +85,13 @@ export default class ListenCommand extends PrismaticBaseCommand {
         timeout,
         quiet,
         "no-prompt": noPrompt,
+        reset,
       },
     } = await this.parse(ListenCommand);
+
+    if (reset) {
+      return await safeSetListeningMode(integrationId, false, true);
+    }
 
     let flowId = flowIdFlag;
     let selectedFlow: IntegrationFlow | undefined;
@@ -103,7 +112,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
 
     const triggerType = getTriggerType(selectedFlow.trigger);
 
-    await setListeningMode(integrationId, true);
+    await safeSetListeningMode(integrationId, true);
     this.startTime = Date.now();
 
     if (triggerType === "WEBHOOK") {
