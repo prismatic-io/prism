@@ -21,4 +21,14 @@ export abstract class PrismaticBaseCommand extends Command {
       },
     }),
   };
+
+  protected quietLog(message: string, quiet = false, type?: "warn"): void {
+    if (!quiet) {
+      if (type === "warn") {
+        this.warn(message);
+      } else {
+        this.log(message);
+      }
+    }
+  }
 }
