@@ -108,7 +108,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
 
     if (triggerType === "WEBHOOK") {
       this.quietLog("\nListening for webhook executions. Press CMD+C/CTRL+C to stop.\n", quiet);
-      this.quietLog(`This process will timeout after ${timeout} seconds.\n`, quiet);
+      this.quietLog(`This process will timeout after ${timeout / 60} minutes.\n`, quiet);
       this.quietLog(
         `To enable listening for this flow directly, you can run:\nprism integrations:flows:listen -i ${integrationId} -f ${flowId}\n`,
         quiet,
@@ -122,6 +122,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
           await downloadAndSavePayload(execution.requestPayloadUrl, output, flowId, {
             filePrefix: "payload",
             useMsgpack: false,
+            triggerType,
           });
           ux.action.stop();
         }
@@ -150,7 +151,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
           return;
         }
 
-        this.quietLog(`This process will timeout after ${timeout} seconds.\n`, quiet);
+        this.quietLog(`This process will timeout after ${timeout / 60} minutes.\n`, quiet);
       }
 
       await withCleanup(integrationId, async () => {
@@ -195,6 +196,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
               await downloadAndSavePayload(stepResult.resultsUrl, output, flowId, {
                 filePrefix: "poll-payload",
                 useMsgpack: true,
+                triggerType,
               });
               ux.action.stop();
             }
@@ -278,9 +280,11 @@ async function pollForWebhookExecutions(
               first: $limit
               isTestExecution: $isTestExecution
               startedAt_Gte: $startDate
+              flowConfig_Flow: $flowId
             ) {
               nodes {
                 id
+                endedAt
                 requestPayloadUrl
                 responsePayloadUrl
               }
@@ -318,7 +322,7 @@ async function downloadAndSavePayload(
   url: string,
   outputDir: string,
   flowId: string,
-  options: { filePrefix: string; useMsgpack: boolean },
+  options: { filePrefix: string; useMsgpack: boolean; triggerType: TriggerType },
 ): Promise<void> {
   try {
     if (!(await exists(outputDir))) {
@@ -363,6 +367,7 @@ async function downloadAndSavePayload(
 
     const replayPayload = {
       flowId,
+      triggerType: options.triggerType,
       payload,
       contentType: decoded.contentType || "application/json",
       headers: decoded.headers || "{}",
