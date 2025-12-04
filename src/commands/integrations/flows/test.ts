@@ -31,6 +31,42 @@ type FormattedStepResult = {
 const MISSING_ID_ERROR = "You must provide either a flow-url or an integration-id parameter.";
 const TIMEOUT_SECONDS = 60 * 20; // 20 minutes
 
+export type BuildFlagStringOptions = {
+  payloadFilePath?: string;
+  contentType?: string;
+  tailLogs?: boolean;
+  tailStepResults?: boolean;
+  sync?: boolean;
+  autoEndPoll?: boolean;
+  resultFilePath?: string;
+};
+
+export const buildFlagString = (options: BuildFlagStringOptions): string => {
+  const {
+    payloadFilePath,
+    contentType,
+    tailLogs,
+    tailStepResults,
+    sync,
+    autoEndPoll,
+    resultFilePath,
+  } = options;
+
+  const flags: string[] = [];
+
+  if (payloadFilePath) {
+    flags.push(`-p=${payloadFilePath}`);
+    flags.push(`-c=${contentType}`);
+  }
+  if (tailLogs) flags.push("--tail-logs");
+  if (tailStepResults) flags.push("--tail-results");
+  if (sync) flags.push("--sync");
+  if (autoEndPoll) flags.push("--cni-auto-end");
+  if (resultFilePath) flags.push(`-r=${resultFilePath}`);
+
+  return flags.join(" ");
+};
+
 export const CONFIGURE_INSTANCE_PARAMS = {
   embed: "true",
   theme: "LIGHT",
@@ -228,11 +264,15 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
 
     this.startTime = Date.now();
 
-    const flagString = `${payloadFilePath ? `-p=${payloadFilePath} -c=${contentType}` : ""}${
-      tailLogs ? "--tail-logs " : ""
-    }${tailStepResults ? "--tail-results " : ""}${sync ? "--sync " : ""}${
-      autoEndPoll ? "--cni-auto-end " : ""
-    }${resultFilePath ? `-r=${resultFilePath} ` : ""}`;
+    const flagString = buildFlagString({
+      payloadFilePath,
+      contentType,
+      tailLogs,
+      tailStepResults,
+      sync,
+      autoEndPoll,
+      resultFilePath,
+    });
 
     this.quietLog(
       `
