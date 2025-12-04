@@ -315,14 +315,18 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
 
     this.startTime = Date.now();
 
-    const flagString = `${
-      payloadFilePath ? `-p=${payloadFilePath} -c=${effectiveContentType} ` : ""
-    }${tailLogs ? "--tail-logs " : ""}${tailStepResults ? "--tail-results " : ""}${
-      sync ? "--sync " : ""
-    }${autoEndPoll ? "--cni-auto-end " : ""}${resultFilePath ? `-r=${resultFilePath} ` : ""}`;
+    const flagString = buildFlagString({
+      payloadFilePath,
+      contentType,
+      tailLogs,
+      tailStepResults,
+      sync,
+      autoEndPoll,
+      resultFilePath,
+    });
 
-    // Build re-run command based on what was provided
-    const flowArg = flowUrlFlag ? `-u="${invokeUrl}"` : `-i=${integrationId} -f=${selectedFlowId}`;
+    // Prefer flow-id for re-run hint, fall back to flow-url if that's what was provided
+    const flowArg = selectedFlowId ? `-f=${selectedFlowId}` : `-u=${invokeUrl}`;
 
     this.quietLog(
       `
@@ -598,3 +602,39 @@ async function validateIntegrationConfiguration(integrationId: string, quiet: bo
 
   return true;
 }
+
+export type BuildFlagStringOptions = {
+  payloadFilePath?: string;
+  contentType?: string;
+  tailLogs?: boolean;
+  tailStepResults?: boolean;
+  sync?: boolean;
+  autoEndPoll?: boolean;
+  resultFilePath?: string;
+};
+
+export const buildFlagString = (options: BuildFlagStringOptions): string => {
+  const {
+    payloadFilePath,
+    contentType,
+    tailLogs,
+    tailStepResults,
+    sync,
+    autoEndPoll,
+    resultFilePath,
+  } = options;
+
+  const flags: string[] = [];
+
+  if (payloadFilePath) {
+    flags.push(`-p=${payloadFilePath}`);
+    flags.push(`-c=${contentType}`);
+  }
+  if (tailLogs) flags.push("--tail-logs");
+  if (tailStepResults) flags.push("--tail-results");
+  if (sync) flags.push("--sync");
+  if (autoEndPoll) flags.push("--cni-auto-end");
+  if (resultFilePath) flags.push(`-r=${resultFilePath}`);
+
+  return flags.join(" ");
+};
