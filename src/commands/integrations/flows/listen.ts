@@ -106,33 +106,39 @@ export default class ListenCommand extends PrismaticBaseCommand {
     await setListeningMode(integrationId, true);
     this.startTime = Date.now();
 
+    this.quietLog(
+      `To enable listening for this flow directly, you can run:\nprism integrations:flows:listen -i ${integrationId} -f ${flowId}\n`,
+      quiet,
+    );
+
     if (triggerType === "WEBHOOK") {
       this.quietLog("\nListening for webhook executions. Press CMD+C/CTRL+C to stop.\n", quiet);
       this.quietLog(`This process will timeout after ${timeout / 60} minutes.\n`, quiet);
-      this.quietLog(
-        `To enable listening for this flow directly, you can run:\nprism integrations:flows:listen -i ${integrationId} -f ${flowId}\n`,
-        quiet,
-      );
 
       await withCleanup(integrationId, async () => {
         const execution = await pollForWebhookExecutions(flowId, this.startTime, timeout);
 
         if (execution) {
           ux.action.start("Downloading payload...");
-          await downloadAndSavePayload(execution.requestPayloadUrl, output, flowId, {
-            filePrefix: "payload",
-            useMsgpack: false,
-            triggerType,
-          });
+          const filepath = await downloadAndSavePayload(
+            execution.requestPayloadUrl,
+            output,
+            flowId,
+            {
+              filePrefix: "payload",
+              useMsgpack: false,
+              triggerType,
+            },
+          );
+          this.quietLog(
+            `\nTo replay this payload, you can run:\nprism integrations:flows:test -i ${integrationId} -f ${flowId} -p ${filepath}\n`,
+            quiet,
+          );
           ux.action.stop();
         }
       });
     } else if (triggerType === "POLLING") {
       this.quietLog("\nListening for poll executions. Press CMD+C/CTRL+C to stop.\n", quiet);
-      this.quietLog(
-        `To enable listening for this flow directly, you can run:\nprism integrations:flows:listen -i ${integrationId} -f ${flowId}\n`,
-        quiet,
-      );
 
       if (!noPrompt) {
         this.quietLog(
@@ -193,11 +199,15 @@ export default class ListenCommand extends PrismaticBaseCommand {
             const stepResult = result.executionResult.stepResults.nodes[0];
             if (stepResult?.resultsUrl) {
               ux.action.start("Downloading poll payload...");
-              await downloadAndSavePayload(stepResult.resultsUrl, output, flowId, {
+              const filepath = await downloadAndSavePayload(stepResult.resultsUrl, output, flowId, {
                 filePrefix: "poll-payload",
                 useMsgpack: true,
                 triggerType,
               });
+              this.quietLog(
+                `\nTo replay this payload, you can run:\nprism integrations:flows:test -i ${integrationId} -f ${flowId} -p ${filepath}\n`,
+                quiet,
+              );
               ux.action.stop();
             }
             return;
@@ -323,7 +333,7 @@ async function downloadAndSavePayload(
   outputDir: string,
   flowId: string,
   options: { filePrefix: string; useMsgpack: boolean; triggerType: TriggerType },
-): Promise<void> {
+): Promise<string | undefined> {
   try {
     if (!(await exists(outputDir))) {
       await fs.mkdir(outputDir, { recursive: true });
@@ -378,6 +388,7 @@ async function downloadAndSavePayload(
     await fs.writeFile(fileName, JSON.stringify(replayPayload, null, 2));
 
     console.log(`\nPayload saved to: ${fileName}`);
+    return fileName;
   } catch (err) {
     handleError({
       message: "There was an error downloading or saving the payload.",
@@ -394,11 +405,11 @@ function hasTimedOut(startTime: number, timeout: number): boolean {
 async function getPolledExecution(executionId: string): Promise<PolledExecutionResult> {
   return gqlRequest({
     document: gql`
-      query getPolledExecution($executionId: ID!, $stepName: String) {
+      query getPolledExecution($executionId: ID!) {
         executionResult(id: $executionId) {
           id
           endedAt
-          stepResults(stepName: $stepName) {
+          stepResults(orderBy: { direction: ASC, field: STARTED_AT }, first: 1) {
             nodes {
               id
               stepName
@@ -410,7 +421,6 @@ async function getPolledExecution(executionId: string): Promise<PolledExecutionR
     `,
     variables: {
       executionId,
-      stepName: "trigger",
     },
   });
 }
