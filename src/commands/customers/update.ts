@@ -39,7 +39,7 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       description:
         "Apply multiple labels to a customer (note: previously set labels will be overwritten)",
       command:
-        'prism customers:update Q3VzdG9tZXI6MmUzZDllOTUtMWIyMy00N2FjLTk3MjUtMzU1OTA2YzgyZWZj --label "Prod Customers" --label "Beta Testers"',
+        '<%= config.bin %> <%= command.id %> Q3VzdG9tZXI6MmUzZDllOTUtMWIyMy00N2FjLTk3MjUtMzU1OTA2YzgyZWZj --label "Prod Customers" --label "Beta Testers"',
     },
   ];
 

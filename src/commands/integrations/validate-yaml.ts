@@ -9,14 +9,18 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
   static description = "Validate a YAML integration definition without importing it";
 
   static examples = [
-    "# Validate a YAML file",
-    "<%= config.bin %> <%= command.id %> path/to/integration.yml",
-    "",
-    "# Validate from stdin",
-    "cat integration.yml | <%= config.bin %> <%= command.id %> -",
-    "",
-    "# Validate from stdin (alternative)",
-    "<%= config.bin %> <%= command.id %> - < integration.yml",
+    {
+      description: "Validate a YAML file",
+      command: "<%= config.bin %> <%= command.id %> path/to/integration.yml",
+    },
+    {
+      description: "Validate from stdin",
+      command: "cat integration.yml | <%= config.bin %> <%= command.id %> -",
+    },
+    {
+      description: "Validate from stdin (alternative)",
+      command: "<%= config.bin %> <%= command.id %> - < integration.yml",
+    },
   ];
 
   static args = {

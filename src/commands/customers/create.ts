@@ -30,7 +30,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
     {
       description: "Apply multiple labels to a customer",
       command:
-        'prism customers:create --name "Widgets Inc" --externalId "abc-123" --label "Prod Customers" --label "Beta Testers"',
+        '<%= config.bin %> <%= command.id %> --name "Widgets Inc" --externalId "abc-123" --label "Prod Customers" --label "Beta Testers"',
     },
   ];
 
