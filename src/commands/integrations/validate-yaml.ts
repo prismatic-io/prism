@@ -31,12 +31,9 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
 
     let definition: string;
 
-    // Read YAML from file path or stdin
     if (args.path === "-") {
-      // Explicit stdin indicator
       definition = await readStdin();
     } else {
-      // File path provided
       if (!(await exists(args.path))) {
         this.error(`Cannot find definition file at specified path "${args.path}"`, {
           exit: 2,
@@ -49,7 +46,6 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
       this.error("YAML definition is empty", { exit: 2 });
     }
 
-    // Call the validateIntegrationSchema mutation
     try {
       const result = await gqlRequest({
         document: gql`
@@ -70,15 +66,12 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
         },
       });
 
-      // If validation passes
       if (result.validateIntegrationSchema?.result?.isValid) {
         this.log(`${chalk.green("✓ ")}Integration YAML is valid`);
       } else {
-        // If the mutation returns valid: false but no errors were thrown
         this.error("Validation failed", { exit: 1 });
       }
     } catch (error) {
-      // gqlRequest automatically formats GraphQL errors
       this.error(`Validation failed: ${error instanceof Error ? error.message : String(error)}`, {
         exit: 1,
       });
