@@ -4,13 +4,11 @@ import inquirer from "inquirer";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { fetch } from "../../../utils/http.js";
 import { gqlRequest } from "../../../graphql.js";
-import {
-  GetExecutionsDocument,
-  type GetExecutionsQuery,
-  GetPolledExecutionDocument,
-  type GetPolledExecutionQuery,
-} from "../../../graphql/executions.generated.js";
-import { UpdateIntegrationFlowListeningModeDocument } from "../../../graphql/integrations.generated.js";
+import { GET_EXECUTIONS } from "../../../graphql/executions/getExecutions.js";
+import type { GetExecutionsQuery } from "../../../graphql/executions/getExecutions.generated.js";
+import { GET_POLLED_EXECUTION } from "../../../graphql/executions/getPolledExecution.js";
+import type { GetPolledExecutionQuery } from "../../../graphql/executions/getPolledExecution.generated.js";
+import { UPDATE_INTEGRATION_FLOW_LISTENING_MODE } from "../../../graphql/integrations/updateIntegrationFlowListeningMode.js";
 import { exists, fs } from "../../../fs.js";
 import { handleError } from "../../../utils/errors.js";
 import {
@@ -253,7 +251,7 @@ async function withCleanup(integrationId: string, fn: () => Promise<void>): Prom
 
 async function setListeningMode(integrationId: string, isListening: boolean): Promise<void> {
   await gqlRequest({
-    document: UpdateIntegrationFlowListeningModeDocument,
+    document: UPDATE_INTEGRATION_FLOW_LISTENING_MODE,
     variables: { integrationId, isListening },
   });
   console.log(`Set listening mode to ${isListening} for integration ${integrationId}`);
@@ -270,7 +268,7 @@ async function pollForWebhookExecutions(
     await ux.wait(getAdaptivePollIntervalMs(startTime));
 
     const result = await gqlRequest<GetExecutionsQuery>({
-      document: GetExecutionsDocument,
+      document: GET_EXECUTIONS,
       variables: {
         limit: 1,
         isTestExecution: true,
@@ -374,7 +372,7 @@ function hasTimedOut(startTime: number, timeout: number): boolean {
 
 async function getPolledExecution(executionId: string): Promise<PolledExecutionResult> {
   return gqlRequest<GetPolledExecutionQuery>({
-    document: GetPolledExecutionDocument,
+    document: GET_POLLED_EXECUTION,
     variables: { executionId },
   });
 }

@@ -533,7 +533,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
 
         stepResults.push({
           stepName: stepName ?? "unknown",
-          endedAt,
+          endedAt: endedAt ?? "",
           result,
         });
       } catch (err) {

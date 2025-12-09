@@ -34,7 +34,6 @@
     "manifest": "oclif manifest",
     "test": "bun run clean-test-temp && bun test src",
     "test:snapshots": "bun run clean-test-temp && bun test --update-snapshots",
-    "graphql:introspection": "export GRAPHQL_AUTH_KEY=$(prism me:token) && graphql-codegen --config introspection.ts",
     "codegen:clean": "find src -name '*.generated.ts' -delete",
     "codegen": "bun run codegen:clean && export GRAPHQL_AUTH_KEY=$(prism me:token) && export PRISMATIC_URL=$(echo $PRISMATIC_URL) && npx graphql-codegen --config codegen.ts"
   },
@@ -75,11 +74,9 @@
   "devDependencies": {
     "@biomejs/biome": "1.6.3",
     "@graphql-codegen/cli": "6.1.0",
-    "@graphql-codegen/near-operation-file-preset": "^4.0.0",
-    "@graphql-codegen/typed-document-node": "^6.1.4",
+    "@graphql-codegen/near-operation-file-preset": "^3.0.0",
     "@graphql-codegen/typescript": "5.0.6",
-    "@graphql-codegen/typescript-operations": "^5.0.6",
-    "@graphql-typed-document-node/core": "^3.2.0",
+    "@graphql-codegen/typescript-operations": "^4.4.0",
     "@oclif/test": "3.2.8",
     "@prismatic-io/spectral": "10.11.3",
     "@types/archiver": "6.0.2",

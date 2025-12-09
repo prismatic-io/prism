@@ -1,11 +1,9 @@
 import { gqlRequest } from "../../graphql.js";
-import {
-  GetIntegrationFlowDocument,
-  type GetIntegrationFlowQuery,
-  TestIntegrationFlowDocument,
-  type TestIntegrationFlowMutation,
-  DeleteIntegrationDocument,
-} from "../../graphql/integrations.generated.js";
+import { GET_INTEGRATION_FLOW } from "../../graphql/integrations/getIntegrationFlow.js";
+import type { GetIntegrationFlowQuery } from "../../graphql/integrations/getIntegrationFlow.generated.js";
+import { TEST_INTEGRATION_FLOW } from "../../graphql/integrations/testIntegrationFlow.js";
+import type { TestIntegrationFlowMutation } from "../../graphql/integrations/testIntegrationFlow.generated.js";
+import { DELETE_INTEGRATION } from "../../graphql/integrations/deleteIntegration.js";
 
 /** Return Flow ID of given flow name on specified Integration. */
 export const getIntegrationFlow = async (
@@ -14,7 +12,7 @@ export const getIntegrationFlow = async (
 ): Promise<string> => {
   // TODO: Make flows searchable by name.
   const result = await gqlRequest<GetIntegrationFlowQuery>({
-    document: GetIntegrationFlowDocument,
+    document: GET_INTEGRATION_FLOW,
     variables: { id: integrationId },
   });
 
@@ -44,7 +42,7 @@ export const getIntegrationFlow = async (
 /** Delete a specified integration by ID */
 export const deleteIntegration = async (integrationId: string) => {
   await gqlRequest({
-    document: DeleteIntegrationDocument,
+    document: DELETE_INTEGRATION,
     variables: { id: integrationId },
   });
 };
@@ -71,7 +69,7 @@ export const runIntegrationFlow = async ({
   }
 
   const result = await gqlRequest<TestIntegrationFlowMutation>({
-    document: TestIntegrationFlowDocument,
+    document: TEST_INTEGRATION_FLOW,
     variables: { id: integrationFlowId },
   });
 

@@ -1,18 +1,14 @@
 import inquirer from "inquirer";
 import { gqlRequest } from "../../graphql.js";
 import { handleError } from "../errors.js";
-import {
-  GetIntegrationFlowsDocument,
-  type GetIntegrationFlowsQuery,
-} from "../../graphql/integrations.generated.js";
-import {
-  GetExecutionLogsDocument,
-  type GetExecutionLogsQuery,
-  GetExecutionStepResultsDocument,
-  type GetExecutionStepResultsQuery,
-  IsCniExecutionCompleteDocument,
-  type IsCniExecutionCompleteQuery,
-} from "../../graphql/executions.generated.js";
+import { GET_INTEGRATION_FLOWS } from "../../graphql/integrations/getIntegrationFlows.js";
+import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getIntegrationFlows.generated.js";
+import { GET_EXECUTION_LOGS } from "../../graphql/executions/getExecutionLogs.js";
+import type { GetExecutionLogsQuery } from "../../graphql/executions/getExecutionLogs.generated.js";
+import { GET_EXECUTION_STEP_RESULTS } from "../../graphql/executions/getExecutionStepResults.js";
+import type { GetExecutionStepResultsQuery } from "../../graphql/executions/getExecutionStepResults.generated.js";
+import { IS_CNI_EXECUTION_COMPLETE } from "../../graphql/executions/isCniExecutionComplete.js";
+import type { IsCniExecutionCompleteQuery } from "../../graphql/executions/isCniExecutionComplete.generated.js";
 
 type IntegrationFlowNode = NonNullable<
   NonNullable<GetIntegrationFlowsQuery["integration"]>["flows"]["nodes"][number]
@@ -27,7 +23,7 @@ export async function getIntegrationFlows(integrationId: string): Promise<Integr
 
   while (hasNextPage) {
     const result: GetIntegrationFlowsQuery = await gqlRequest<GetIntegrationFlowsQuery>({
-      document: GetIntegrationFlowsDocument,
+      document: GET_INTEGRATION_FLOWS,
       variables: {
         id: integrationId,
         after: cursor,
@@ -62,7 +58,7 @@ export interface FetchLogsResult {
 
 export async function getExecutionLogs(executionId: string, nextCursor?: string) {
   return await gqlRequest<GetExecutionLogsQuery>({
-    document: GetExecutionLogsDocument,
+    document: GET_EXECUTION_LOGS,
     variables: {
       executionId,
       nextCursor,
@@ -79,7 +75,7 @@ export interface StepResultNode {
 
 export async function getExecutionStepResults(executionId: string, nextCursor?: string) {
   return await gqlRequest<GetExecutionStepResultsQuery>({
-    document: GetExecutionStepResultsDocument,
+    document: GET_EXECUTION_STEP_RESULTS,
     variables: {
       executionId,
       nextCursor,
@@ -89,7 +85,7 @@ export async function getExecutionStepResults(executionId: string, nextCursor?: 
 
 export async function isCniExecutionComplete(executionId: string) {
   const result = await gqlRequest<IsCniExecutionCompleteQuery>({
-    document: IsCniExecutionCompleteDocument,
+    document: IS_CNI_EXECUTION_COMPLETE,
     variables: {
       executionId,
     },
