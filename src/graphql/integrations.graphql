@@ -1,0 +1,74 @@
+mutation UpdateIntegrationFlowListeningMode(
+  $integrationId: ID!
+  $isListening: Boolean
+) {
+  updateWorkflowTestConfiguration(
+    input: { id: $integrationId, listeningMode: $isListening }
+  ) {
+    errors {
+      field
+      messages
+    }
+  }
+}
+
+query GetIntegrationFlows($id: ID!, $after: String) {
+  integration(id: $id) {
+    flows(after: $after) {
+      nodes {
+        id
+        stableKey
+        name
+        description
+        testUrl
+        trigger {
+          action {
+            component {
+              key
+            }
+            isPollingTrigger
+            scheduleSupport
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+
+query GetIntegrationFlow($id: ID!) {
+  integration(id: $id) {
+    flows {
+      nodes {
+        id
+        name
+      }
+    }
+  }
+}
+
+mutation TestIntegrationFlow($id: ID!) {
+  testIntegrationFlow(input: { id: $id }) {
+    testIntegrationFlowResult {
+      execution {
+        id
+      }
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}
+
+mutation DeleteIntegration($id: ID!) {
+  deleteIntegration(input: { id: $id }) {
+    errors {
+      field
+      messages
+    }
+  }
+}

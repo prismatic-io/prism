@@ -1,0 +1,78 @@
+query GetExecutions(
+  $flowId: ID
+  $isTestExecution: Boolean
+  $limit: Int
+  $startDate: DateTime
+) {
+  executionResults(
+    first: $limit
+    isTestExecution: $isTestExecution
+    startedAt_Gte: $startDate
+    flowConfig_Flow: $flowId
+  ) {
+    nodes {
+      id
+      endedAt
+      requestPayloadUrl
+      responsePayloadUrl
+    }
+  }
+}
+
+query GetPolledExecution($executionId: ID!) {
+  executionResult(id: $executionId) {
+    id
+    endedAt
+    stepResults(orderBy: { direction: ASC, field: STARTED_AT }, first: 1) {
+      nodes {
+        id
+        stepName
+        resultsUrl
+      }
+    }
+  }
+}
+
+query GetExecutionLogs($executionId: ID!, $nextCursor: String) {
+  logs(
+    executionResult: $executionId
+    after: $nextCursor
+    orderBy: { field: TIMESTAMP, direction: ASC }
+  ) {
+    edges {
+      node {
+        timestamp
+        severity
+        message
+      }
+      cursor
+    }
+  }
+}
+
+query GetExecutionStepResults($executionId: ID!, $nextCursor: String) {
+  executionResult(id: $executionId) {
+    stepResults(
+      after: $nextCursor
+      orderBy: { field: ENDED_AT, direction: ASC }
+    ) {
+      edges {
+        node {
+          stepName
+          endedAt
+          resultsUrl
+        }
+        cursor
+      }
+      totalCount
+    }
+  }
+}
+
+query IsCniExecutionComplete($executionId: ID!) {
+  executionResult(id: $executionId) {
+    stepResults {
+      totalCount
+    }
+  }
+}

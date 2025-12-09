@@ -1,12 +1,14 @@
 import { URL } from "url";
+import { print, type DocumentNode } from "graphql";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { getAccessToken, prismaticUrl } from "./auth.js";
 import { fetch } from "./utils/http.js";
 
-type RequestDocument = string;
+type RequestDocument = string | DocumentNode | TypedDocumentNode<unknown, unknown>;
 
-interface GQLRequest {
+interface GQLRequest<TVariables = Record<string, unknown>> {
   document: RequestDocument;
-  variables?: Record<string, unknown>;
+  variables?: TVariables;
 }
 
 interface GraphQLResponse<T> {
@@ -74,13 +76,18 @@ const formatError = (field: string, messages: string[]) => {
   return `${field}: ${message}`;
 };
 
-export const gqlRequest = async <T = any>({ document, variables }: GQLRequest): Promise<T> => {
+export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>({
+  document,
+  variables,
+}: GQLRequest<TVariables>): Promise<T> => {
   const accessToken = await getAccessToken();
   const url = new URL("/api", prismaticUrl).toString();
 
+  const query = typeof document === "string" ? document : print(document);
+
   if (process.env.PRISMATIC_PRINT_REQUESTS) {
     console.log("=================================");
-    console.log(`GraphQL Request: ${document}`);
+    console.log(`GraphQL Request: ${query}`);
     console.log(`Variables: ${JSON.stringify(variables)}`);
     console.log("=================================");
   }
@@ -95,7 +102,7 @@ export const gqlRequest = async <T = any>({ document, variables }: GQLRequest): 
         "Prismatic-Client": "prism",
       },
       body: JSON.stringify({
-        query: document,
+        query,
         variables: variables || {},
       }),
     })) as unknown as Response;
@@ -116,7 +123,7 @@ export const gqlRequest = async <T = any>({ document, variables }: GQLRequest): 
         status: response.status,
         headers: headersObj,
       },
-      { query: document, variables },
+      { query, variables: variables || {} },
     );
   }
 
@@ -127,7 +134,7 @@ export const gqlRequest = async <T = any>({ document, variables }: GQLRequest): 
         status: response.status,
         headers: headersObj,
       },
-      { query: document, variables },
+      { query, variables: variables || {} },
     );
   }
 
