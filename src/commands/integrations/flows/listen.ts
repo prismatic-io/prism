@@ -9,8 +9,8 @@ import {
   type GetExecutionsQuery,
   GetPolledExecutionDocument,
   type GetPolledExecutionQuery,
-  UpdateIntegrationFlowListeningModeDocument,
-} from "../../../generated/graphql.js";
+} from "../../../graphql/executions.generated.js";
+import { UpdateIntegrationFlowListeningModeDocument } from "../../../graphql/integrations.generated.js";
 import { exists, fs } from "../../../fs.js";
 import { handleError } from "../../../utils/errors.js";
 import {
