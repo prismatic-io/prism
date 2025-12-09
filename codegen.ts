@@ -14,20 +14,20 @@ const config: CodegenConfig = {
       },
     },
   ],
-  documents: ["src/**/*.graphql"],
+  documents: ["src/graphql/**/*.ts"],
   generates: {
-    // Base schema types only
-    "src/generated/graphql.ts": {
+    // Base schema types (enums, scalars, input types)
+    "src/graphql/schema.generated.ts": {
       plugins: ["typescript"],
     },
-    // Operation types + documents co-located with .graphql files
-    "src/": {
+    // Operation types co-located with query files
+    "src/graphql/": {
       preset: "near-operation-file",
       presetConfig: {
         extension: ".generated.ts",
-        baseTypesPath: "generated/graphql.js",
+        baseTypesPath: "schema.generated.js",
       },
-      plugins: ["typescript-operations", "typed-document-node"],
+      plugins: ["typescript-operations"],
     },
   },
 };

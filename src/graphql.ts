@@ -1,13 +1,9 @@
 import { URL } from "url";
-import { print, type DocumentNode } from "graphql";
-import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { getAccessToken, prismaticUrl } from "./auth.js";
 import { fetch } from "./utils/http.js";
 
-type RequestDocument = string | DocumentNode | TypedDocumentNode<unknown, unknown>;
-
 interface GQLRequest<TVariables = Record<string, unknown>> {
-  document: RequestDocument;
+  document: string;
   variables?: TVariables;
 }
 
@@ -83,7 +79,7 @@ export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>(
   const accessToken = await getAccessToken();
   const url = new URL("/api", prismaticUrl).toString();
 
-  const query = typeof document === "string" ? document : print(document);
+  const query = document;
 
   if (process.env.PRISMATIC_PRINT_REQUESTS) {
     console.log("=================================");
