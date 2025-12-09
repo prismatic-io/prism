@@ -4,13 +4,15 @@ import { handleError } from "../errors.js";
 import {
   GetIntegrationFlowsDocument,
   type GetIntegrationFlowsQuery,
+} from "../../graphql/integrations.generated.js";
+import {
   GetExecutionLogsDocument,
   type GetExecutionLogsQuery,
   GetExecutionStepResultsDocument,
   type GetExecutionStepResultsQuery,
   IsCniExecutionCompleteDocument,
   type IsCniExecutionCompleteQuery,
-} from "../../generated/graphql.js";
+} from "../../graphql/executions.generated.js";
 
 type IntegrationFlowNode = NonNullable<
   NonNullable<GetIntegrationFlowsQuery["integration"]>["flows"]["nodes"][number]

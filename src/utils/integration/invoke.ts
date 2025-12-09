@@ -5,7 +5,7 @@ import {
   TestIntegrationFlowDocument,
   type TestIntegrationFlowMutation,
   DeleteIntegrationDocument,
-} from "../../generated/graphql.js";
+} from "../../graphql/integrations.generated.js";
 
 /** Return Flow ID of given flow name on specified Integration. */
 export const getIntegrationFlow = async (

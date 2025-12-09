@@ -493,9 +493,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
       return undefined;
     }
 
-    const logs = edges
-      .filter((edge): edge is NonNullable<typeof edge> => edge?.node != null)
-      .map(({ node }) => node as LogNode);
+    const logs = edges.flatMap((edge) => (edge?.node ? [edge.node] : []));
 
     const lastEdge = edges[edges.length - 1];
     const cursor = lastEdge?.cursor;

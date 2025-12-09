@@ -4,6 +4,7 @@ const schemaUrl = new URL("/api", process.env.PRISMATIC_URL).toString();
 
 const config: CodegenConfig = {
   overwrite: true,
+  emitLegacyCommonJSImports: false,
   schema: [
     {
       [schemaUrl]: {
@@ -15,8 +16,18 @@ const config: CodegenConfig = {
   ],
   documents: ["src/**/*.graphql"],
   generates: {
+    // Base schema types only
     "src/generated/graphql.ts": {
-      plugins: ["typescript", "typescript-operations", "typed-document-node"],
+      plugins: ["typescript"],
+    },
+    // Operation types + documents co-located with .graphql files
+    "src/": {
+      preset: "near-operation-file",
+      presetConfig: {
+        extension: ".generated.ts",
+        baseTypesPath: "generated/graphql.js",
+      },
+      plugins: ["typescript-operations", "typed-document-node"],
     },
   },
 };
