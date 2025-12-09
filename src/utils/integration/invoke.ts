@@ -1,13 +1,11 @@
-import { gqlRequest, gql } from "../../graphql.js";
-
-interface Integration {
-  flows: {
-    nodes: {
-      id: string;
-      name: string;
-    }[];
-  };
-}
+import { gqlRequest } from "../../graphql.js";
+import {
+  GetIntegrationFlowDocument,
+  type GetIntegrationFlowQuery,
+  TestIntegrationFlowDocument,
+  type TestIntegrationFlowMutation,
+  DeleteIntegrationDocument,
+} from "../../generated/graphql.js";
 
 /** Return Flow ID of given flow name on specified Integration. */
 export const getIntegrationFlow = async (
@@ -15,24 +13,18 @@ export const getIntegrationFlow = async (
   flowName: string,
 ): Promise<string> => {
   // TODO: Make flows searchable by name.
-  const result = await gqlRequest({
-    document: gql`
-      query flowId($integrationID: ID!) {
-        integration(id: $id) {
-          flows {
-            nodes {
-              id
-              name
-            }
-          }
-        }
-      }
-    `,
-    variables: { integrationID: integrationId },
+  const result = await gqlRequest<GetIntegrationFlowQuery>({
+    document: GetIntegrationFlowDocument,
+    variables: { id: integrationId },
   });
 
-  const integration: Integration = result.integration;
+  const integration = result.integration;
+  if (!integration) {
+    throw new Error(`Integration not found: ${integrationId}`);
+  }
+
   const flows = integration.flows.nodes
+    .filter((n): n is NonNullable<typeof n> => n !== null)
     .map(({ id, name }) => ({
       id,
       name: name.toLowerCase().trim(),
@@ -52,16 +44,7 @@ export const getIntegrationFlow = async (
 /** Delete a specified integration by ID */
 export const deleteIntegration = async (integrationId: string) => {
   await gqlRequest({
-    document: gql`
-      mutation deleteIntegration($id: ID!) {
-        deleteIntegration(input: { id: $id }) {
-          errors {
-            field
-            messages
-          }
-        }
-      }
-    `,
+    document: DeleteIntegrationDocument,
     variables: { id: integrationId },
   });
 };
@@ -83,25 +66,18 @@ export const runIntegrationFlow = async ({
 }: IntegrationFlowRunProps): Promise<IntegrationFlowRunResult> => {
   const integrationFlowId = flowName ? await getIntegrationFlow(integrationId, flowName) : flowId;
 
-  const result = await gqlRequest({
-    document: gql`
-      mutation testIntegrationFlow($id: ID!) {
-        testIntegrationFlow(input: { id: $id }) {
-          testIntegrationFlowResult {
-            execution {
-              id
-            }
-          }
-          errors {
-            field
-            messages
-          }
-        }
-      }
-    `,
+  if (!integrationFlowId) {
+    throw new Error("Either flowId or flowName must be provided");
+  }
+
+  const result = await gqlRequest<TestIntegrationFlowMutation>({
+    document: TestIntegrationFlowDocument,
     variables: { id: integrationFlowId },
   });
 
-  const executionId: string = result.testIntegrationFlow.testIntegrationFlowResult.execution.id;
+  const executionId = result.testIntegrationFlow?.testIntegrationFlowResult?.execution?.id;
+  if (!executionId) {
+    throw new Error("Failed to get execution ID from test integration flow result");
+  }
   return { executionId };
 };

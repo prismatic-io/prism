@@ -498,22 +498,24 @@ prism integrations:flows:test ${flowArg} ${flagString}
   ): Promise<FetchLogsResult | undefined> {
     const results = await getExecutionLogs(executionId, nextCursor);
 
-    const { edges }: { edges: { node: LogNode; cursor?: string }[] } = results.logs;
+    const { edges } = results.logs;
     if (!edges || edges.length === 0) {
       return undefined;
     }
 
-    const logs = edges.map(({ node }) => node);
+    const logs = edges
+      .filter((edge): edge is NonNullable<typeof edge> => edge?.node != null)
+      .map(({ node }) => node as LogNode);
 
-    const { cursor } = edges[edges.length - 1];
+    const lastEdge = edges[edges.length - 1];
+    const cursor = lastEdge?.cursor;
     return { logs, cursor };
   }
 
   private async fetchStepResults(executionId: string, nextCursor?: string) {
     const results = await getExecutionStepResults(executionId, nextCursor);
 
-    const { edges }: { edges: { node: StepResultNode; cursor?: string }[] } =
-      results.executionResult.stepResults;
+    const { edges } = results.executionResult?.stepResults ?? { edges: [] };
 
     if (!edges || edges.length === 0) {
       return undefined;
@@ -522,6 +524,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
     const stepResults: Array<FormattedStepResult> = [];
 
     for (const edge of edges) {
+      if (!edge?.node) continue;
       const { endedAt, resultsUrl, stepName } = edge.node;
 
       try {
@@ -531,7 +534,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
         const result = decode(resultsBuffer) as Record<string, unknown>;
 
         stepResults.push({
-          stepName,
+          stepName: stepName ?? "unknown",
           endedAt,
           result,
         });
@@ -545,7 +548,8 @@ prism integrations:flows:test ${flowArg} ${flagString}
       }
     }
 
-    const { cursor } = edges[edges.length - 1];
+    const lastEdge = edges[edges.length - 1];
+    const cursor = lastEdge?.cursor;
     return { stepResults, cursor };
   }
 
