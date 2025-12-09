@@ -22,19 +22,16 @@ export default class RunCommand extends PrismaticBaseCommand {
   static examples = [
     {
       description: `To simply print an integration's basic auth config variable named "My Connection" and pipe the resulting JSON to jq, run:`,
-      command: `$ prism components:dev:run
-    --integrationId SW50ZWexample
-    --connectionKey "My Connection" --
-    printenv PRISMATIC_CONNECTION_VALUE | jq`,
+      command: `<%= config.bin %> <%= command.id %> --integrationId SW50ZWexample --connectionKey "My Connection" -- printenv PRISMATIC_CONNECTION_VALUE | jq`,
     },
     {
       description: `If one of your integrations has an authenticated OAuth 2.0 config variable "Slack Connection", you could run your component's unit tests with that environment variable:`,
-      command: `$ prism components:dev:run -i SW50ZWexample -c "Slack Connection" -- yarn run test`,
+      command: `<%= config.bin %> <%= command.id %> -i SW50ZWexample -c "Slack Connection" -- yarn run test`,
     },
     {
       description:
         "If you would like to fetch a connection from an instance deployed to one of your customers, specify the --instanceId flag instead",
-      command: `$ prism components:dev:run --instanceId SW50ZWexample -c "Slack Connection" -- yarn run test`,
+      command: `<%= config.bin %> <%= command.id %> --instanceId SW50ZWexample -c "Slack Connection" -- yarn run test`,
     },
   ];
 

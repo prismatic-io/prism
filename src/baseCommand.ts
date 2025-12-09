@@ -22,6 +22,9 @@ export abstract class PrismaticBaseCommand extends Command {
     }),
   };
 
+  // Ensure consistency across commands and allow for easier parsing in documentation generation
+  static examples: Array<{ description: string; command: string }>;
+
   protected quietLog(message: string, quiet = false, type?: "warn"): void {
     if (!quiet) {
       if (type === "warn") {

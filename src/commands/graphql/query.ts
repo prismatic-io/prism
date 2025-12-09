@@ -8,26 +8,38 @@ export default class QueryCommand extends PrismaticBaseCommand {
   static description = "Execute an arbitrary GraphQL query against the Prismatic API";
 
   static examples = [
-    "# Direct query string",
-    "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }'",
-    "",
-    "# From file",
-    "<%= config.bin %> <%= command.id %> --file query.graphql",
-    "",
-    "# From stdin",
-    "cat query.graphql | <%= config.bin %> <%= command.id %>",
-    "",
-    "# With variables",
-    '<%= config.bin %> <%= command.id %> --file query.graphql --variables \'{"id":"Q3VzdG9tZXI6..."}\'',
-    "",
-    "# Variables from file",
-    "<%= config.bin %> <%= command.id %> 'query($id: ID!) { customer(id: $id) { name } }' --variables @vars.json",
-    "",
-    "# YAML output",
-    "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }' --output yaml",
-    "",
-    "# Table output with nested data",
-    "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }' --output table --data-path customers.nodes --columns id,name",
+    {
+      description: "Direct query string",
+      command: "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }'",
+    },
+    {
+      description: "From file",
+      command: "<%= config.bin %> <%= command.id %> --file query.graphql",
+    },
+    {
+      description: "From stdin",
+      command: "cat query.graphql | <%= config.bin %> <%= command.id %>",
+    },
+    {
+      description: "With variables",
+      command:
+        '<%= config.bin %> <%= command.id %> --file query.graphql --variables \'{"id":"Q3VzdG9tZXI6..."}\'',
+    },
+    {
+      description: "Variables from file",
+      command:
+        "<%= config.bin %> <%= command.id %> 'query($id: ID!) { customer(id: $id) { name } }' --variables @vars.json",
+    },
+    {
+      description: "YAML output",
+      command:
+        "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }' --output yaml",
+    },
+    {
+      description: "Table output with nested data",
+      command:
+        "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }' --output table --data-path customers.nodes --columns id,name",
+    },
   ];
 
   static args = {
