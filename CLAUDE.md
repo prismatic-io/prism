@@ -112,6 +112,8 @@ All commands inherit these base flags from `PrismaticBaseCommand`:
 
 **Component Validation**: The `@prismatic-io/spectral` package is used for component validation (dev dependency).
 
+**Comments**: Comments explaining what code does should be avoided. Comments should be reserved for explaining "why" code does what it does where necessary.
+
 ## Node Version
 
 Requires Node.js >= 18 (see `engines` in package.json).
