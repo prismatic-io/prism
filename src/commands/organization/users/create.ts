@@ -4,6 +4,20 @@ import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create a User for your Organization";
+
+  static examples = [
+    {
+      description: "Get the ID of the 'Integrator' role:",
+      command:
+        "ROLE_ID=$(prism organization:users:roles --columns id --no-header --filter 'name=^Integrator$')",
+    },
+    {
+      description: "Create an organization user and assign the role:",
+      command:
+        "<%= config.bin %> <%= command.id %> --email 'foo@email.com' --name 'Susan Foo' --role ${ROLE_ID}",
+    },
+  ];
+
   static flags = {
     name: Flags.string({ char: "n", description: "name of the user" }),
     email: Flags.string({

@@ -18,6 +18,14 @@ import { whoAmI } from "../../utils/user/query.js";
 
 export default class PublishCommand extends PrismaticBaseCommand {
   static description = "Publish a Component to Prismatic";
+
+  static examples = [
+    {
+      description: "Build and publish a component:",
+      command: "npx webpack && <%= config.bin %> <%= command.id %>",
+    },
+  ];
+
   static flags = {
     comment: Flags.string({
       required: false,

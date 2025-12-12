@@ -12,6 +12,19 @@ interface TriggerNode {
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Triggers that Components implement";
+
+  static examples = [
+    {
+      description: "Get the ID of the Webhook trigger of the Webhook Triggers component by key:",
+      command:
+        "<%= config.bin %> <%= command.id %> --columns id --filter 'key=^webhook$' --no-header webhook-triggers",
+    },
+    {
+      description: "Get triggers related to the Management Triggers component:",
+      command: "<%= config.bin %> <%= command.id %> management-triggers",
+    },
+  ];
+
   static flags = {
     ...ux.table.flags(),
     public: Flags.boolean({

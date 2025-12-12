@@ -14,6 +14,14 @@ interface DataSourceNode {
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Data Sources that Components implement";
+
+  static examples = [
+    {
+      description: "Get data sources related to the Salesforce component:",
+      command: "<%= config.bin %> <%= command.id %> salesforce",
+    },
+  ];
+
   static flags = {
     ...ux.table.flags(),
     public: Flags.boolean({

@@ -17,7 +17,7 @@ interface ConfigVariable {
 
 export default class RunCommand extends PrismaticBaseCommand {
   static description =
-    `Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.`;
+    "Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.\nAfter specifying an integration ID and connection config variable name, this command executes a CLI command with that connection's fields saved as a config variable named PRISMATIC_CONNECTION_VALUE.";
   static usage = "components:dev:run -i <value> -c <value> -- /command/to/run";
   static examples = [
     {

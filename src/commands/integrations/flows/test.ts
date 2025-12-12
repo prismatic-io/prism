@@ -58,6 +58,16 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
   private startTime = 0;
 
   static description = "Run a test execution of a flow";
+
+  static examples = [
+    {
+      description:
+        "Test an integration flow with a payload file and tail the logs and step results:",
+      command:
+        "<%= config.bin %> <%= command.id %> -p=some_payload_file.xml -c=application/xml --tail-logs --tail-results",
+    },
+  ];
+
   static flags = {
     "flow-id": Flags.string({
       char: "f",

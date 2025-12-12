@@ -6,7 +6,21 @@ import { deserialize, DeserializeResult, parseData } from "../../../utils/execut
 import { fetch } from "../../../utils/http.js";
 
 export default class GetCommand extends PrismaticBaseCommand {
-  static description = "Gets the Result of a specified Step in an Instance Execution";
+  static description =
+    "Gets the Result of a specified Step in an Instance Execution.\nThis command can be used to pull down step results for both integration tests and instance executions.";
+
+  static examples = [
+    {
+      description: "Run a test of a flow to get an execution ID:",
+      command: "prism integrations:flows:test ${FLOW_ID}",
+    },
+    {
+      description: "Get step results from a specific execution:",
+      command:
+        '<%= config.bin %> <%= command.id %> --executionId SW5zdGFuY2VFeGVjdXRpb25SZXN1bHQ6MWFkZTYwMGQtMjg2Ni00ZTljLWI2N2EtYmUxNzgwOWY4ODI4 --stepName "Fetch Invoice Info"',
+    },
+  ];
+
   static flags = {
     executionId: Flags.string({
       char: "e",
