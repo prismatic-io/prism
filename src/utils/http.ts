@@ -3,7 +3,7 @@ import { fetch as undiciFetch, ProxyAgent, RequestInit } from "undici";
 /**
  * Determines if a URL should use proxy based on NO_PROXY environment variable
  */
-function shouldUseProxy(url: string): boolean {
+export function shouldUseProxy(url: string): boolean {
   const noProxy = process.env.NO_PROXY || process.env.no_proxy;
   if (!noProxy) return true;
 
