@@ -14,7 +14,7 @@ import inquirer from "inquirer";
 
 vi.mock("../../../auth.js", () => ({
   getAccessToken: vi.fn(() => Promise.resolve("test-token")),
-  prismaticUrl: "https://test.prismatic.io",
+  prismaticUrl: "https://example.com",
 }));
 
 vi.mock("../../../utils/http.js", async () => {
@@ -38,8 +38,8 @@ vi.mock("inquirer", () => ({
   },
 }));
 
-vi.mock("@oclif/core", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@oclif/core")>();
+vi.mock(import("@oclif/core"), async (importOriginal) => {
+  const actual = await importOriginal();
   return {
     ...actual,
     ux: {
@@ -49,7 +49,7 @@ vi.mock("@oclif/core", async (importOriginal) => {
   };
 });
 
-const api = graphql.link("https://test.prismatic.io/api");
+const api = graphql.link("https://example.com/api");
 
 type IntegrationFlowNode = NonNullable<
   NonNullable<GetIntegrationFlowsQuery["integration"]>["flows"]["nodes"][number]
@@ -60,7 +60,7 @@ const createWebhookFlow = (id: string, name: string): IntegrationFlowNode => ({
   name,
   stableKey: `${name.toLowerCase().replace(/\s/g, "-")}-key`,
   description: `${name} description`,
-  testUrl: `https://test.prismatic.io/test/${id}`,
+  testUrl: `https://example.com/test/${id}`,
   trigger: {
     action: {
       isPollingTrigger: false,
@@ -75,7 +75,7 @@ const createPollingFlow = (id: string, name: string): IntegrationFlowNode => ({
   name,
   stableKey: `${name.toLowerCase().replace(/\s/g, "-")}-key`,
   description: `${name} description`,
-  testUrl: `https://test.prismatic.io/test/${id}`,
+  testUrl: `https://example.com/test/${id}`,
   trigger: {
     action: {
       isPollingTrigger: true,
@@ -166,7 +166,7 @@ const server = setupServer(
 
 describe("ListenCommand", () => {
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: "bypass" });
+    server.listen({ onUnhandledRequest: "error" });
   });
 
   afterAll(() => {
@@ -479,7 +479,7 @@ describe("ListenCommand", () => {
         name: "Scheduled Flow",
         stableKey: "scheduled-flow-key",
         description: "A scheduled flow",
-        testUrl: "https://test.prismatic.io/test/flow-scheduled-123",
+        testUrl: "https://example.com/test/flow-scheduled-123",
         trigger: {
           action: {
             isPollingTrigger: false,
