@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest
 import { encode } from "@msgpack/msgpack";
 import { setupServer } from "msw/node";
 import { graphql, HttpResponse, http } from "msw";
-import ListenCommand, { getTriggerType } from "./listen.js";
+import ListenCommand, { getTriggerType, listenFlagsSchema } from "./listen.js";
 import { ActionScheduleSupport } from "../../../graphql/schema.generated.js";
 import type { GetIntegrationFlowsQuery } from "../../../graphql/integrations/getIntegrationFlows.generated.js";
 import type { GetExecutionsQuery } from "../../../graphql/executions/getExecutions.generated.js";
@@ -12,6 +12,7 @@ import type { UpdateIntegrationFlowListeningModeMutation } from "../../../graphq
 import { fs } from "../../../fs.js";
 import inquirer from "inquirer";
 import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
+import { formatValidationError } from "../../../utils/validation.js";
 
 vi.mock("../../../fs.js", () => ({
   exists: vi.fn(() => Promise.resolve(true)),
@@ -494,6 +495,47 @@ describe("ListenCommand", () => {
           "5",
         ]),
       ).rejects.toThrow("Cannot listen to scheduled flows");
+    });
+  });
+
+  describe("input flag validation", () => {
+    it("should validate correct flags", () => {
+      const result = listenFlagsSchema.safeParse({
+        "integration-id": "test-integration",
+        "flow-id": "test-flow",
+        output: "./output",
+        timeout: 300,
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data["integration-id"]).toBe("test-integration");
+        expect(result.data["flow-id"]).toBe("test-flow");
+      }
+    });
+
+    it("should apply default values", () => {
+      const result = listenFlagsSchema.safeParse({
+        "integration-id": "test-integration",
+      });
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.output).toBe("./payloads");
+        expect(result.data.timeout).toBe(1200);
+      }
+    });
+
+    it("should fail when integration-id is missing", () => {
+      const result = listenFlagsSchema.safeParse({
+        "flow-id": "test-flow",
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const formatted = formatValidationError(result.error);
+        expect(formatted).toContain("integration-id");
+      }
     });
   });
 });

@@ -69,7 +69,8 @@
     "ts-morph": "22.0.0",
     "undici": "6.22.0",
     "uuid": "9.0.1",
-    "wsdl-tsclient": "1.7.1"
+    "wsdl-tsclient": "1.7.1",
+    "zod": "^4.2.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.3",

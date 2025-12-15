@@ -9,6 +9,7 @@
     "moduleResolution": "node16",
     "outDir": "./lib",
     "noEmit": true,
+    "skipLibCheck": true,
     "types": ["node"]
   },
   "include": ["src", "bin"],

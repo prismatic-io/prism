@@ -18,9 +18,31 @@ import {
 } from "../../../utils/integration/flows.js";
 import { runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
+import { validateFlags } from "../../../utils/validation.js";
+import z from "zod";
 
 const DEFAULT_TIMEOUT_SECONDS = 1200; // 20 minutes
 const DEFAULT_OUTPUT_DIR = "./payloads";
+
+/**
+ * Zod schema for listen command flags.
+ * Validates command arguments and provides type-safe access to flag values.
+ */
+export const listenFlagsSchema = z.object({
+  "integration-id": z.string().min(1, "Integration ID cannot be empty"),
+  "flow-id": z.string().min(1, "Flow ID cannot be empty").optional(),
+  output: z.string().default(DEFAULT_OUTPUT_DIR),
+  timeout: z
+    .number()
+    .int()
+    .positive("Timeout must be a positive integer")
+    .default(DEFAULT_TIMEOUT_SECONDS),
+  "no-prompt": z.boolean().optional(),
+  reset: z.boolean().optional(),
+  quiet: z.boolean().optional(),
+});
+
+export type ListenFlags = z.infer<typeof listenFlagsSchema>;
 
 type ExecutionResult = NonNullable<GetExecutionsQuery["executionResults"]["nodes"][number]>;
 type PolledExecutionResult = GetPolledExecutionQuery;
@@ -63,17 +85,18 @@ export default class ListenCommand extends PrismaticBaseCommand {
   };
 
   async run() {
+    const { flags: rawFlags } = await this.parse(ListenCommand);
+    const validatedFlags = validateFlags(listenFlagsSchema, rawFlags);
+
     const {
-      flags: {
-        "integration-id": integrationId,
-        "flow-id": flowIdFlag,
-        output,
-        timeout,
-        quiet,
-        "no-prompt": noPrompt,
-        reset,
-      },
-    } = await this.parse(ListenCommand);
+      "integration-id": integrationId,
+      "flow-id": flowIdFlag,
+      output,
+      timeout,
+      quiet,
+      "no-prompt": noPrompt,
+      reset,
+    } = validatedFlags;
 
     if (reset) {
       return await safeSetListeningMode(integrationId, false, true);
