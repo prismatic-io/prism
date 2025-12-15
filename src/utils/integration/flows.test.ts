@@ -71,7 +71,7 @@ const server = setupServer();
 
 describe("flows utils", () => {
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: "bypass" });
+    server.listen({ onUnhandledRequest: "error" });
   });
 
   afterAll(() => {

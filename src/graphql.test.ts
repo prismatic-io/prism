@@ -53,7 +53,7 @@ describe("gql", () => {
 
 describe("gqlRequest", () => {
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: "bypass" });
+    server.listen({ onUnhandledRequest: "error" });
   });
 
   afterAll(() => {
