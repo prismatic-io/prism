@@ -6,18 +6,7 @@ import { ActionScheduleSupport } from "../../graphql/schema.generated.js";
 import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getIntegrationFlows.generated.js";
 import type { IsCniExecutionCompleteQuery } from "../../graphql/executions/isCniExecutionComplete.generated.js";
 import inquirer from "inquirer";
-
-vi.mock("../../auth.js", () => ({
-  getAccessToken: vi.fn(() => Promise.resolve("test-token")),
-  prismaticUrl: "https://test.prismatic.io",
-}));
-
-vi.mock("../../utils/http.js", async () => {
-  return {
-    fetch: (...args: Parameters<typeof fetch>) => fetch(...args),
-    createFetch: () => fetch,
-  };
-});
+import { TEST_PRISMATIC_URL } from "../../../vitest.setup.js";
 
 vi.mock("inquirer", () => ({
   default: {
@@ -25,7 +14,7 @@ vi.mock("inquirer", () => ({
   },
 }));
 
-const api = graphql.link("https://test.prismatic.io/api");
+const api = graphql.link(`${TEST_PRISMATIC_URL}/api`);
 
 type IntegrationFlowNode = NonNullable<
   NonNullable<GetIntegrationFlowsQuery["integration"]>["flows"]["nodes"][number]
