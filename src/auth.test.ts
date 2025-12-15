@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { Authenticate, createRequestParams } from "./auth.js";
 import { fetch } from "./utils/http.js";
 
