@@ -19,7 +19,7 @@ export type JsonValue =
 
 export const deserialize = (data: Buffer): DeserializeResult | unknown => decode(data);
 
-export const parseData = (data: unknown, contentType = ""): Buffer | JsonValue => {
+export const parseData = (data: Buffer | JsonValue | undefined, contentType = ""): Buffer | JsonValue => {
   if (data === null || data === undefined) {
     return "";
   }
@@ -39,7 +39,7 @@ export const parseData = (data: unknown, contentType = ""): Buffer | JsonValue =
         throw new Error("Received malformed JSON payload.");
       }
     }
-    return data as string;
+    return data;
   } else if (contentType.startsWith("binary/")) {
     return data as Buffer;
   }
