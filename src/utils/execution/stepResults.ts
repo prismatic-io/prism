@@ -19,7 +19,10 @@ export type JsonValue =
 
 export const deserialize = (data: Buffer): DeserializeResult | unknown => decode(data);
 
-export const parseData = (data: Buffer | JsonValue | undefined, contentType = ""): Buffer | JsonValue => {
+export const parseData = (
+  data: Buffer | JsonValue | undefined,
+  contentType = "",
+): Buffer | JsonValue => {
   if (data === null || data === undefined) {
     return "";
   }
