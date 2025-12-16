@@ -43,8 +43,8 @@ export const parseData = (
       }
     }
     return data;
-  } else if (contentType.startsWith("binary/")) {
-    return data as Buffer;
+  } else if (contentType.startsWith("binary/") && Buffer.isBuffer(data)) {
+    return data;
   }
 
   return typeof data === "string" || (typeof data === "object" && Buffer.isBuffer(data))
