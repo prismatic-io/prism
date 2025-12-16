@@ -74,11 +74,13 @@ export default class GetCommand extends PrismaticBaseCommand {
       ) as DeserializeResult;
 
       const output = parseData(deserializedResult as string, contentType);
+      const outputStr =
+        typeof output === "string" || Buffer.isBuffer(output) ? output : JSON.stringify(output);
 
       if (outputPath) {
-        await fs.writeFile(outputPath, output);
+        await fs.writeFile(outputPath, outputStr);
       } else {
-        console.log(output);
+        console.log(outputStr);
       }
     } else {
       console.error("No step results found. Did you enter the correct step name?");

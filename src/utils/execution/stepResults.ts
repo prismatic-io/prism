@@ -9,9 +9,20 @@ export interface DeserializeResult {
   contentType: string;
 }
 
+export type JsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
 export const deserialize = (data: Buffer): DeserializeResult | unknown => decode(data);
 
-export const parseData = (data: any, contentType = ""): string | Buffer => {
+export const parseData = (
+  data: Buffer | JsonValue | undefined,
+  contentType = "",
+): Buffer | JsonValue => {
   if (data === null || data === undefined) {
     return "";
   }
@@ -32,7 +43,7 @@ export const parseData = (data: any, contentType = ""): string | Buffer => {
       }
     }
     return data;
-  } else if (contentType.startsWith("binary/")) {
+  } else if (contentType.startsWith("binary/") && Buffer.isBuffer(data)) {
     return data;
   }
 
@@ -75,7 +86,11 @@ export const writeFinalStepResults = async (
   fileName: string,
 ): Promise<void> => {
   const result = await getFinalStepResult(executionId);
-  await fs.writeFile(fileName, result.data);
+  const output =
+    typeof result.data === "string" || Buffer.isBuffer(result.data)
+      ? result.data
+      : JSON.stringify(result.data);
+  await fs.writeFile(fileName, output);
 };
 
 export const printFinalStepResults = async (executionId: string): Promise<void> => {
