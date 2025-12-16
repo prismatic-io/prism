@@ -30,12 +30,8 @@ const DEFAULT_OUTPUT_DIR = "./payloads";
 export const listenFlagsSchema = z.object({
   "integration-id": z.string().min(1, "Integration ID cannot be empty"),
   "flow-id": z.string().min(1, "Flow ID cannot be empty").optional(),
-  output: z.string().default(DEFAULT_OUTPUT_DIR),
-  timeout: z
-    .number()
-    .int()
-    .positive("Timeout must be a positive integer")
-    .default(DEFAULT_TIMEOUT_SECONDS),
+  output: z.string(),
+  timeout: z.number().int().positive("Timeout must be a positive integer"),
   "no-prompt": z.boolean().optional(),
   reset: z.boolean().optional(),
   quiet: z.boolean().optional(),

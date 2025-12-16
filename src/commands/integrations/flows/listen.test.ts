@@ -153,6 +153,64 @@ const server = setupServer(
   ),
 );
 
+describe("oclif defaults and Zod validation integration", () => {
+  beforeAll(() => {
+    server.listen({ onUnhandledRequest: "error" });
+  });
+
+  afterAll(() => {
+    server.close();
+  });
+
+  afterEach(() => {
+    server.resetHandlers();
+    vi.restoreAllMocks();
+  });
+
+  it("applies oclif defaults for output and timeout when flags are omitted", async () => {
+    const webhookFlow = createWebhookFlow("flow-defaults-test", "Defaults Test Flow");
+
+    server.use(
+      api.query("GetIntegrationFlows", () =>
+        HttpResponse.json(buildGetIntegrationFlowsResponse([webhookFlow])),
+      ),
+      api.query("GetExecutions", () =>
+        HttpResponse.json(
+          buildGetExecutionsResponse([
+            {
+              id: "exec-defaults-test",
+              endedAt: new Date().toISOString(),
+              requestPayloadUrl: "https://storage.example.com/payload.json",
+            },
+          ]),
+        ),
+      ),
+      http.get("https://storage.example.com/payload.json", () =>
+        HttpResponse.json({
+          body: Buffer.from(JSON.stringify({ test: "data" })).toString("base64"),
+          contentType: "application/json",
+          headers: "{}",
+        }),
+      ),
+    );
+
+    // Run command WITHOUT --output or --timeout flags
+    // If oclif defaults aren't applied before Zod validation, this would throw
+    await ListenCommand.run([
+      "--integration-id",
+      "test-integration",
+      "--flow-id",
+      "flow-defaults-test",
+    ]);
+
+    // Verify the default output directory was used
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expect.stringContaining("./payloads/"),
+      expect.any(String),
+    );
+  });
+});
+
 describe("ListenCommand", () => {
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "error" });

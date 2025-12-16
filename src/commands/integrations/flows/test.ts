@@ -57,7 +57,7 @@ export const testFlagsSchema = z
     "flow-url": z.string().min(1, "Flow URL cannot be empty").optional(),
     "integration-id": z.string().min(1, "Integration ID cannot be empty").optional(),
     payload: z.string().optional(),
-    "payload-content-type": z.string().default("application/json"),
+    "payload-content-type": z.string(),
     sync: z.boolean().optional(),
     "tail-results": z.boolean().optional(),
     "tail-logs": z.boolean().optional(),
