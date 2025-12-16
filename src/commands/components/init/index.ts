@@ -12,6 +12,22 @@ import GenerateFormatsCommand from "./formats.js";
 
 export default class InitializeComponent extends Command {
   static description = "Initialize a new Component";
+
+  static examples = [
+    {
+      description:
+        "Initialize a new component directory for a component named 'send-customer-invoices':",
+      command: "<%= config.bin %> <%= command.id %> send-customer-invoices",
+    },
+    {
+      description:
+        "Initialize a component from a WSDL definition file, then install dependencies, build, and publish it:",
+      command: `<%= config.bin %> <%= command.id %> --wsdl-path ./example.wsdl "Example WSDL"
+cd "Example WSDL" && yarn install && yarn build
+prism components:publish`,
+    },
+  ];
+
   static flags = {
     "wsdl-path": Flags.string({
       required: false,

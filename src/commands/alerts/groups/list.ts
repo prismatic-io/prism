@@ -4,6 +4,15 @@ import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Alert Groups in your Organization";
+
+  static examples = [
+    {
+      description:
+        "Fetch the ID and Name of all alert groups in JSON format, sorted descending by name:",
+      command: '<%= config.bin %> <%= command.id %> --columns "id,name" --output json --sort name',
+    },
+  ];
+
   static flags = { ...ux.table.flags() };
 
   async run() {

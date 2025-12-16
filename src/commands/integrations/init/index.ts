@@ -17,6 +17,26 @@ const CLEANABLE_TEMPLATES = [
 
 export default class InitializeIntegration extends Command {
   static description = "Initialize a new Code Native Integration";
+
+  static examples = [
+    {
+      description: "Initialize a new directory for a Code Native Integration:",
+      command: "<%= config.bin %> <%= command.id %> acme-integration",
+    },
+    {
+      description: "Install dependencies:",
+      command: "npm install",
+    },
+    {
+      description: "Build the integration:",
+      command: "npm run build",
+    },
+    {
+      description: "Import the integration into Prismatic:",
+      command: "prism integrations:import",
+    },
+  ];
+
   static args = {
     name: Args.string({
       required: true,

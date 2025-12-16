@@ -5,6 +5,14 @@ import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create an Alert Group";
+
+  static examples = [
+    {
+      description: "Create a group for 'DevOps':",
+      command: `<%= config.bin %> <%= command.id %> --name DevOps --users "[\\"$(prism organization:users:list --columns id --filter 'Name=John Doe' --no-header)\\"]"`,
+    },
+  ];
+
   static flags = {
     name: Flags.string({
       char: "n",

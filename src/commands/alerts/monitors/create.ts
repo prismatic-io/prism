@@ -5,7 +5,31 @@ import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description =
-    "Create an Alert Monitor by attaching an Alert Trigger and a set of users and webhooks to an Instance";
+    "Create an Alert Monitor by attaching an Alert Trigger and a set of users and webhooks to an Instance.\nWhile individual users and webhooks can be tied to alert monitors, it is recommended that you create alert groups and attach alert groups to alert monitors. This helps in the case that you need to add a user to a set of monitors: it's simpler to edit a single alert group than to edit dozens of alert monitors.";
+
+  static examples = [
+    {
+      description: "Get the ID of an alert group named 'DevOps':",
+      command:
+        "ALERT_GROUP_ID=$(prism alerts:groups:list --columns id --filter 'name=^DevOps$' --no-header)",
+    },
+    {
+      description: "Get the ID of an instance named 'My Instance':",
+      command:
+        "INSTANCE_ID=$(prism instances:list --columns id --filter 'name=^My Instance$' --no-header)",
+    },
+    {
+      description: "Get the ID of an execution duration trigger:",
+      command:
+        "TRIGGER_ID=$(prism alerts:triggers:list --columns id --filter 'name=^Execution Duration Matched or Exceeded$' --no-header)",
+    },
+    {
+      description:
+        "Create an alert monitor that alerts the DevOps group when an instance execution takes longer than 10 seconds:",
+      command:
+        '<%= config.bin %> <%= command.id %> --name "Alert Devops of slow execution" --instance ${INSTANCE_ID} --triggers "[\\"${TRIGGER_ID}\\"]" --duration 10 --groups "[\\"${ALERT_GROUP_ID}\\"]"',
+    },
+  ];
 
   static flags = {
     name: Flags.string({

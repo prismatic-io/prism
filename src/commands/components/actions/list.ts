@@ -12,6 +12,19 @@ interface ActionNode {
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Actions that Components implement";
+
+  static examples = [
+    {
+      description: "Get the ID of the GET action of the HTTP component by action key:",
+      command:
+        "<%= config.bin %> <%= command.id %> --columns id --filter 'key=^httpGet$' --no-header http",
+    },
+    {
+      description: "Get actions related to the SFTP component:",
+      command: "<%= config.bin %> <%= command.id %> sftp",
+    },
+  ];
+
   static flags = {
     ...ux.table.flags(),
     public: Flags.boolean({
