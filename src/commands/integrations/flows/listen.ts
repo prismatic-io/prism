@@ -18,7 +18,6 @@ import {
 } from "../../../utils/integration/flows.js";
 import { runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
-import { validateFlags } from "../../../utils/validation.js";
 import z from "zod";
 
 const DEFAULT_TIMEOUT_SECONDS = 1200; // 20 minutes
@@ -85,8 +84,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
   };
 
   async run() {
-    const { flags: rawFlags } = await this.parse(ListenCommand);
-    const validatedFlags = validateFlags(listenFlagsSchema, rawFlags);
+    const { flags } = await this.parseWithSchema(listenFlagsSchema);
 
     const {
       "integration-id": integrationId,
@@ -96,7 +94,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
       quiet,
       "no-prompt": noPrompt,
       reset,
-    } = validatedFlags;
+    } = flags;
 
     if (reset) {
       return await safeSetListeningMode(integrationId, false, true);

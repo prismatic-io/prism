@@ -1,4 +1,6 @@
 import { Command, Flags } from "@oclif/core";
+import { z } from "zod";
+import { validateFlags } from "./utils/validation.js";
 
 export abstract class PrismaticBaseCommand extends Command {
   static baseFlags = {
@@ -30,5 +32,18 @@ export abstract class PrismaticBaseCommand extends Command {
         this.log(message);
       }
     }
+  }
+
+  /**
+   * Parse command arguments and validate flags against a Zod schema.
+   * Returns parsed args and validated, typed flags.
+   */
+  protected async parseWithSchema<T extends z.ZodType>(
+    schema: T,
+  ): Promise<{ args: Record<string, unknown>; flags: z.infer<T> }> {
+    const commandClass = this.constructor as typeof Command;
+    const { args, flags } = await this.parse(commandClass);
+    const validatedFlags = validateFlags(schema, flags);
+    return { args, flags: validatedFlags };
   }
 }

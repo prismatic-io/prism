@@ -23,7 +23,6 @@ import {
   isIntegrationConfigured,
 } from "../../../utils/integration/query.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
-import { validateFlags } from "../../../utils/validation.js";
 
 type FormattedStepResult = {
   stepName: string;
@@ -122,6 +121,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
   private startTime = 0;
 
   static description = "Run a test execution of a flow";
+
   static flags = {
     "flow-id": Flags.string({
       char: "f",
@@ -181,8 +181,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
   };
 
   async run() {
-    const { flags: rawFlags } = await this.parse(TestFlowCommand);
-    const validatedFlags = validateFlags(testFlagsSchema, rawFlags);
+    const { flags } = await this.parseWithSchema(testFlagsSchema);
 
     const {
       sync,
@@ -199,7 +198,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       debug,
       quiet,
       apiKey,
-    } = validatedFlags;
+    } = flags;
 
     let triggerPayload = "";
     let payloadHeaders: Record<string, string> = {};
