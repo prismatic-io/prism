@@ -18,7 +18,11 @@ export default class LoginSwitchCommand extends Command {
     const tenants = await fetchUserTenants();
 
     if (tenants.length <= 1) {
-      this.log("Your account is not yet configured for multi-tenant access.");
+      const log_msg =
+        tenants.length === 1
+          ? "You are currently authenticated with the only tenant available on this stack. To switch to a tenant on another stack, update the PRISMATIC_URL value to access additional tenants."
+          : "Your user does not have access to tenants on this stack. Check the PRISMATIC_URL value.";
+      this.log(log_msg);
       return;
     }
 
