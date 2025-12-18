@@ -11,11 +11,7 @@ import type { GetPolledExecutionQuery } from "../../../graphql/executions/getPol
 import { UPDATE_INTEGRATION_FLOW_LISTENING_MODE } from "../../../graphql/integrations/updateIntegrationFlowListeningMode.js";
 import { exists, fs } from "../../../fs.js";
 import { handleError } from "../../../utils/errors.js";
-import {
-  getIntegrationFlows,
-  type IntegrationFlow,
-  selectFlowPrompt,
-} from "../../../utils/integration/flows.js";
+import { resolveFlow, type IntegrationFlow } from "../../../utils/integration/flows.js";
 import { runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
 import z from "zod";
@@ -30,6 +26,7 @@ const DEFAULT_OUTPUT_DIR = "./payloads";
 export const listenFlagsSchema = z.object({
   "integration-id": z.string().min(1, "Integration ID cannot be empty"),
   "flow-id": z.string().min(1, "Flow ID cannot be empty").optional(),
+  "flow-name": z.string().min(1, "Flow name cannot be empty").optional(),
   output: z.string(),
   timeout: z.number().int().positive("Timeout must be a positive integer"),
   "no-prompt": z.boolean().optional(),
@@ -57,6 +54,12 @@ export default class ListenCommand extends PrismaticBaseCommand {
     "flow-id": Flags.string({
       char: "f",
       description: "ID of the flow to listen to. If not provided, you will be prompted to select.",
+      exclusive: ["flow-name"],
+    }),
+    "flow-name": Flags.string({
+      char: "n",
+      description: "Name of the flow to listen to.",
+      exclusive: ["flow-id"],
     }),
     output: Flags.string({
       char: "o",
@@ -85,6 +88,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
     const {
       "integration-id": integrationId,
       "flow-id": flowIdFlag,
+      "flow-name": flowNameFlag,
       output,
       timeout,
       quiet,
@@ -96,23 +100,13 @@ export default class ListenCommand extends PrismaticBaseCommand {
       return await safeSetListeningMode(integrationId, false, true);
     }
 
-    let flowId = flowIdFlag;
-    let selectedFlow: IntegrationFlow | undefined;
-
-    if (!flowId) {
-      selectedFlow = await selectFlowPrompt(integrationId, {
-        message: "Select the flow to listen to:",
-      });
-      flowId = selectedFlow.id;
-    } else {
-      const flows = await getIntegrationFlows(integrationId);
-      selectedFlow = flows.find((flow) => flow.id === flowId);
-    }
-
-    if (!selectedFlow) {
-      throw `There was an error locating a flow with the ID ${flowId}. Please verify that the given flowId is correct, or re-run without a flowId and just use an integrationId.`;
-    }
-
+    const selectedFlow = await resolveFlow({
+      integrationId,
+      flowId: flowIdFlag,
+      flowName: flowNameFlag,
+      promptMessage: "Select the flow to listen to:",
+    });
+    const flowId = selectedFlow.id;
     const triggerType = getTriggerType(selectedFlow.trigger);
 
     await safeSetListeningMode(integrationId, true);
@@ -181,9 +175,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
           handleError({
             message: "Failed to initiate poll test run.",
             err,
-            throwError: true,
           });
-          throw err;
         }
 
         while (true) {
@@ -201,9 +193,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
             handleError({
               message: "Failed to fetch poll execution status.",
               err,
-              throwError: true,
             });
-            throw err;
           }
 
           // Having an endedAt means the execution completed.
@@ -378,7 +368,6 @@ async function downloadAndSavePayload(
     handleError({
       message: "There was an error downloading or saving the payload.",
       err,
-      throwError: true,
     });
   }
 }
