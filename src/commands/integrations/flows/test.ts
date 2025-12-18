@@ -10,8 +10,7 @@ import {
   FetchLogsResult,
   getExecutionLogs,
   getExecutionStepResults,
-  selectFlowPrompt,
-  getIntegrationFlows,
+  resolveFlow,
   type IntegrationFlow,
 } from "../../../utils/integration/flows.js";
 import { getTriggerType } from "./listen.js";
@@ -55,6 +54,7 @@ export const testFlagsSchema = z
   .object({
     "flow-id": z.string().min(1, "Flow ID cannot be empty").optional(),
     "flow-url": z.string().min(1, "Flow URL cannot be empty").optional(),
+    "flow-name": z.string().min(1, "Flow name cannot be empty").optional(),
     "integration-id": z.string().min(1, "Integration ID cannot be empty").optional(),
     payload: z.string().optional(),
     "payload-content-type": z.string(),
@@ -135,7 +135,12 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     "flow-id": Flags.string({
       char: "f",
       description: "ID of the flow to test. Base64 encoded.",
-      exclusive: ["flow-url"],
+      exclusive: ["flow-url", "flow-name"],
+    }),
+    "flow-name": Flags.string({
+      char: "n",
+      description: "Name of the flow to test.",
+      exclusive: ["flow-url", "flow-id"],
     }),
     "flow-url": Flags.string({
       char: "u",
@@ -196,6 +201,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       sync,
       "flow-id": flowIdFlag,
       "flow-url": flowUrlFlag,
+      "flow-name": flowNameFlag,
       "integration-id": integrationIdFlag,
       payload: payloadFilePath,
       "payload-content-type": contentType,
@@ -218,7 +224,6 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       if (!(await exists(payloadFilePath))) {
         handleError({
           message: `No file found at ${payloadFilePath}. Please check the --trigger-payload-file (-p) parameter.`,
-          throwError: true,
         });
       }
 
@@ -268,7 +273,6 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
             handleError({
               message:
                 "The provided trigger payload file contains malformed JSON. Please check the payload file (-p) and Content-Type (-c).",
-              throwError: true,
             });
           }
         }
@@ -296,9 +300,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         } catch (err) {
           handleError({
             message: MISSING_ID_ERROR,
-            throwError: true,
           });
-          throw err;
         }
       }
 
@@ -310,33 +312,14 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         return;
       }
 
-      if (!selectedFlowId) {
-        // Without a provided flowId, we need to prompt the user to select one.
-        selectedFlow = await selectFlowPrompt(integrationId, {
-          message: "Select the flow to test:",
-        });
-        selectedFlowId = selectedFlow.id;
-
-        if (!selectedFlowId) {
-          handleError({ message: MISSING_ID_ERROR, throwError: true });
-        }
-      } else {
-        // flow-id was provided, look up the flow from integration to get trigger info
-        const flows = await getIntegrationFlows(integrationId);
-        selectedFlow = flows.find((flow) => flow.id === selectedFlowId);
-
-        if (!selectedFlow) {
-          handleError({
-            message: `Could not find flow with ID ${selectedFlowId} in integration ${integrationId}. Please verify that the flow ID is correct.`,
-            throwError: true,
-          });
-        }
-      }
-
-      // Use the test URL from the selected flow
-      if (selectedFlow) {
-        invokeUrl = selectedFlow.testUrl;
-      }
+      selectedFlow = await resolveFlow({
+        integrationId,
+        flowId: selectedFlowId,
+        flowName: flowNameFlag,
+        promptMessage: "Select the flow to test:",
+      });
+      selectedFlowId = selectedFlow.id;
+      invokeUrl = selectedFlow.testUrl;
     }
 
     const isPollingFromPayload = replayablePayload?.triggerType === "POLLING";
@@ -601,11 +584,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
         });
       } catch (err) {
         // Allow the process to keep running, just skip rendering the step result.
-        handleError({
-          message: `There was an error fetching step results for step: ${stepName}`,
-          err,
-          throwError: false,
-        });
+        console.error(`There was an error fetching step results for step: ${stepName}:\n${err}`);
       }
     }
 

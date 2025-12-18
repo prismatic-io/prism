@@ -469,7 +469,7 @@ describe("ListenCommand", () => {
           "--timeout",
           "5",
         ]),
-      ).rejects.toMatch(/error locating a flow/i);
+      ).rejects.toThrow(/Could not find flow/i);
     });
   });
 

@@ -103,6 +103,45 @@ export type SelectFlowOptions = {
   lookupError?: string;
 };
 
+export type ResolveFlowOptions = {
+  /** The integration ID to fetch flows from */
+  integrationId: string;
+  /** The flow ID to look up (mutually exclusive with flowName) */
+  flowId?: string;
+  /** The flow name to look up (mutually exclusive with flowId) */
+  flowName?: string;
+  /** The prompt message to show if prompting for selection */
+  promptMessage?: string;
+};
+
+/**
+ * Resolve a flow by ID, name, or prompt the user to select one.
+ * @param options - Configuration for flow resolution
+ * @returns The resolved flow
+ * @throws If the flow cannot be found or resolved
+ */
+export async function resolveFlow(options: ResolveFlowOptions): Promise<IntegrationFlow> {
+  const { integrationId, flowId, flowName, promptMessage = "Select a flow:" } = options;
+  const hasFlowIdentifier = flowId || flowName;
+
+  if (!hasFlowIdentifier) {
+    return selectFlowPrompt(integrationId, { message: promptMessage });
+  }
+
+  const flows = await getIntegrationFlows(integrationId);
+  const selectedFlow = flows.find((flow) => flow.id === flowId || flow.name === flowName);
+
+  if (!selectedFlow) {
+    handleError({
+      message: `Could not find flow ${
+        flowId ? `with ID ${flowId}` : `named "${flowName}"`
+      }. Please verify that the given flow identifier is correct, or re-run without it to select from a list.`,
+    });
+  }
+
+  return selectedFlow;
+}
+
 /**
  * Prompt the user to select a flow from an integration.
  * @param integrationId - The integration ID to fetch flows from
@@ -119,36 +158,30 @@ export async function selectFlowPrompt(
     lookupError = "There was an error looking up flows for your integration. Please provide an integration ID or reimport your integration.",
   } = options;
 
+  let flows: IntegrationFlow[];
   try {
-    const flows = await getIntegrationFlows(integrationId);
-
-    if (flows.length === 0) {
-      handleError({
-        message: noFlowsError,
-        throwError: true,
-      });
-    }
-
-    const { selectedFlow } = await inquirer.prompt({
-      type: "list",
-      name: "selectedFlow",
-      message,
-      choices: flows.map((flow) => ({
-        name: `${flow.name} ${flow.stableKey ? `(${flow.stableKey})` : ""}`,
-        value: flow,
-      })),
-    });
-
-    return selectedFlow;
+    flows = await getIntegrationFlows(integrationId);
   } catch (err) {
-    // Re-throw if it's our own error from handleError
-    if (err instanceof Error && err.message === noFlowsError) {
-      throw err;
-    }
     handleError({
       message: lookupError,
-      throwError: true,
     });
-    throw err; // TypeScript needs this even though handleError throws
   }
+
+  if (flows.length === 0) {
+    handleError({
+      message: noFlowsError,
+    });
+  }
+
+  const { selectedFlow } = await inquirer.prompt({
+    type: "list",
+    name: "selectedFlow",
+    message,
+    choices: flows.map((flow) => ({
+      name: `${flow.name} ${flow.stableKey ? `(${flow.stableKey})` : ""}`,
+      value: flow,
+    })),
+  });
+
+  return selectedFlow;
 }

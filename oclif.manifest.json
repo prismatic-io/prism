@@ -4831,7 +4831,21 @@
         "flow-id": {
           "char": "f",
           "description": "ID of the flow to listen to. If not provided, you will be prompted to select.",
+          "exclusive": [
+            "flow-name"
+          ],
           "name": "flow-id",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "flow-name": {
+          "char": "n",
+          "description": "Name of the flow to listen to.",
+          "exclusive": [
+            "flow-id"
+          ],
+          "name": "flow-name",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -4908,9 +4922,22 @@
           "char": "f",
           "description": "ID of the flow to test. Base64 encoded.",
           "exclusive": [
-            "flow-url"
+            "flow-url",
+            "flow-name"
           ],
           "name": "flow-id",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "flow-name": {
+          "char": "n",
+          "description": "Name of the flow to test.",
+          "exclusive": [
+            "flow-url",
+            "flow-id"
+          ],
+          "name": "flow-name",
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
@@ -6252,5 +6279,5 @@
       "enableJsonFlag": false
     }
   },
-  "version": "8.2.0"
+  "version": "9.0.0"
 }
