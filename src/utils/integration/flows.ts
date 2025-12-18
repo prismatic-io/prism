@@ -158,29 +158,30 @@ export async function selectFlowPrompt(
     lookupError = "There was an error looking up flows for your integration. Please provide an integration ID or reimport your integration.",
   } = options;
 
+  let flows: IntegrationFlow[];
   try {
-    const flows = await getIntegrationFlows(integrationId);
-
-    if (flows.length === 0) {
-      handleError({
-        message: noFlowsError,
-      });
-    }
-
-    const { selectedFlow } = await inquirer.prompt({
-      type: "list",
-      name: "selectedFlow",
-      message,
-      choices: flows.map((flow) => ({
-        name: `${flow.name} ${flow.stableKey ? `(${flow.stableKey})` : ""}`,
-        value: flow,
-      })),
-    });
-
-    return selectedFlow;
+    flows = await getIntegrationFlows(integrationId);
   } catch (err) {
     handleError({
       message: lookupError,
     });
   }
+
+  if (flows.length === 0) {
+    handleError({
+      message: noFlowsError,
+    });
+  }
+
+  const { selectedFlow } = await inquirer.prompt({
+    type: "list",
+    name: "selectedFlow",
+    message,
+    choices: flows.map((flow) => ({
+      name: `${flow.name} ${flow.stableKey ? `(${flow.stableKey})` : ""}`,
+      value: flow,
+    })),
+  });
+
+  return selectedFlow;
 }
