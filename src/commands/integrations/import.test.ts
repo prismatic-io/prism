@@ -1,5 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
-import { setupServer } from "msw/node";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import ImportCommand from "./import.js";
 import { ux } from "@oclif/core";
 import { ComponentDefinition } from "../../utils/component/index.js";
@@ -48,19 +47,8 @@ vi.mock("../../utils/integration/open.js", () => ({
   openIntegration: vi.fn(() => Promise.resolve()),
 }));
 
-const server = setupServer();
-
 describe("ImportCommand", () => {
-  beforeAll(() => {
-    server.listen({ onUnhandledRequest: "error" });
-  });
-
-  afterAll(() => {
-    server.close();
-  });
-
   afterEach(() => {
-    server.resetHandlers();
     vi.restoreAllMocks();
   });
 
