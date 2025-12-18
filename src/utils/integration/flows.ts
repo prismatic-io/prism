@@ -179,10 +179,6 @@ export async function selectFlowPrompt(
 
     return selectedFlow;
   } catch (err) {
-    // Re-throw if it's our own error from handleError
-    if (err instanceof Error && err.message === noFlowsError) {
-      throw err;
-    }
     handleError({
       message: lookupError,
     });

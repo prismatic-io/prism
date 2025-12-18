@@ -1,7 +1,6 @@
 interface HandleErrorProps {
   message: string;
   err?: unknown;
-  throwError?: boolean;
 }
 
 export function handleError({ message, err }: HandleErrorProps): never {
