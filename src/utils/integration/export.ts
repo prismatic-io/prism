@@ -58,6 +58,7 @@ export interface IntegrationDefinition {
   description?: string;
   requiredConfigVars?: ConfigVar[];
   flows: Flow[];
+  category: string;
 }
 
 export const exportDefinition = async ({

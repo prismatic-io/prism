@@ -1,4 +1,4 @@
-import { expect, it, describe } from "bun:test";
+import { expect, it, describe } from "vitest";
 import fs from "fs";
 import path from "path";
 import { kebabCase } from "lodash-es";

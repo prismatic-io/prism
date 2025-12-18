@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { getAdaptivePollIntervalMs } from "./polling.js";
 
 describe("getAdaptivePollIntervalMs", () => {

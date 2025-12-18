@@ -1,6 +1,7 @@
 import { Flags, ux } from "@oclif/core";
 import { decode } from "@msgpack/msgpack";
 import open from "open";
+import z from "zod";
 import { getAccessToken, prismaticUrl } from "../../../auth.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { fetch } from "../../../utils/http.js";
@@ -9,8 +10,6 @@ import {
   FetchLogsResult,
   getExecutionLogs,
   getExecutionStepResults,
-  LogNode,
-  StepResultNode,
   selectFlowPrompt,
   getIntegrationFlows,
   type IntegrationFlow,
@@ -42,6 +41,70 @@ type ReplayablePayload = {
 
 const MISSING_ID_ERROR = "You must provide either a flow-id or integration-id parameter.";
 const TIMEOUT_SECONDS = 1200; // 20 minutes
+
+/**
+ * Zod schema for test command flags.
+ * Validates command arguments and provides type-safe access to flag values.
+ *
+ * Complex validations handled:
+ * - Tailing flags (cni-auto-end, result-file, jsonl) require tail-logs or tail-results
+ * - Empty string validation for IDs/URLs
+ * - Timeout must be a positive integer
+ */
+export const testFlagsSchema = z
+  .object({
+    "flow-id": z.string().min(1, "Flow ID cannot be empty").optional(),
+    "flow-url": z.string().min(1, "Flow URL cannot be empty").optional(),
+    "integration-id": z.string().min(1, "Integration ID cannot be empty").optional(),
+    payload: z.string().optional(),
+    "payload-content-type": z.string(),
+    sync: z.boolean().optional(),
+    "tail-results": z.boolean().optional(),
+    "tail-logs": z.boolean().optional(),
+    "cni-auto-end": z.boolean().optional(),
+    timeout: z
+      .number()
+      .int("Timeout must be an integer")
+      .positive("Timeout must be a positive integer")
+      .optional(),
+    "result-file": z.string().optional(),
+    jsonl: z.boolean().optional(),
+    debug: z.boolean().optional(),
+    apiKey: z.string().optional(),
+    quiet: z.boolean().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const isTailing = data["tail-logs"] || data["tail-results"];
+
+    // cni-auto-end only makes sense when tailing
+    if (data["cni-auto-end"] && !isTailing) {
+      ctx.addIssue({
+        code: "custom",
+        message: "--cni-auto-end requires --tail-logs or --tail-results",
+        path: ["cni-auto-end"],
+      });
+    }
+
+    // result-file only makes sense when tailing
+    if (data["result-file"] && !isTailing) {
+      ctx.addIssue({
+        code: "custom",
+        message: "--result-file requires --tail-logs or --tail-results",
+        path: ["result-file"],
+      });
+    }
+
+    // jsonl only makes sense when tailing
+    if (data.jsonl && !isTailing) {
+      ctx.addIssue({
+        code: "custom",
+        message: "--jsonl requires --tail-logs or --tail-results",
+        path: ["jsonl"],
+      });
+    }
+  });
+
+export type TestFlags = z.infer<typeof testFlagsSchema>;
 
 export const CONFIGURE_INSTANCE_PARAMS = {
   embed: "true",
@@ -127,24 +190,24 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
   };
 
   async run() {
+    const { flags } = await this.parseWithSchema(testFlagsSchema);
+
     const {
-      flags: {
-        sync,
-        "flow-id": flowIdFlag,
-        "flow-url": flowUrlFlag,
-        "integration-id": integrationIdFlag,
-        payload: payloadFilePath,
-        "payload-content-type": contentType,
-        "tail-logs": tailLogs,
-        "tail-results": tailStepResults,
-        "cni-auto-end": autoEndPoll,
-        "result-file": resultFilePath,
-        timeout,
-        debug,
-        quiet,
-        apiKey,
-      },
-    } = await this.parse(TestFlowCommand);
+      sync,
+      "flow-id": flowIdFlag,
+      "flow-url": flowUrlFlag,
+      "integration-id": integrationIdFlag,
+      payload: payloadFilePath,
+      "payload-content-type": contentType,
+      "tail-logs": tailLogs,
+      "tail-results": tailStepResults,
+      "cni-auto-end": autoEndPoll,
+      "result-file": resultFilePath,
+      timeout,
+      debug,
+      quiet,
+      apiKey,
+    } = flags;
 
     let triggerPayload = "";
     let payloadHeaders: Record<string, string> = {};
@@ -498,22 +561,22 @@ prism integrations:flows:test ${flowArg} ${flagString}
   ): Promise<FetchLogsResult | undefined> {
     const results = await getExecutionLogs(executionId, nextCursor);
 
-    const { edges }: { edges: { node: LogNode; cursor?: string }[] } = results.logs;
+    const { edges } = results.logs;
     if (!edges || edges.length === 0) {
       return undefined;
     }
 
-    const logs = edges.map(({ node }) => node);
+    const logs = edges.flatMap((edge) => (edge?.node ? [edge.node] : []));
 
-    const { cursor } = edges[edges.length - 1];
+    const lastEdge = edges[edges.length - 1];
+    const cursor = lastEdge?.cursor;
     return { logs, cursor };
   }
 
   private async fetchStepResults(executionId: string, nextCursor?: string) {
     const results = await getExecutionStepResults(executionId, nextCursor);
 
-    const { edges }: { edges: { node: StepResultNode; cursor?: string }[] } =
-      results.executionResult.stepResults;
+    const { edges } = results.executionResult?.stepResults ?? { edges: [] };
 
     if (!edges || edges.length === 0) {
       return undefined;
@@ -522,6 +585,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
     const stepResults: Array<FormattedStepResult> = [];
 
     for (const edge of edges) {
+      if (!edge?.node) continue;
       const { endedAt, resultsUrl, stepName } = edge.node;
 
       try {
@@ -531,8 +595,8 @@ prism integrations:flows:test ${flowArg} ${flagString}
         const result = decode(resultsBuffer) as Record<string, unknown>;
 
         stepResults.push({
-          stepName,
-          endedAt,
+          stepName: stepName ?? "unknown",
+          endedAt: endedAt ?? "",
           result,
         });
       } catch (err) {
@@ -545,7 +609,8 @@ prism integrations:flows:test ${flowArg} ${flagString}
       }
     }
 
-    const { cursor } = edges[edges.length - 1];
+    const lastEdge = edges[edges.length - 1];
+    const cursor = lastEdge?.cursor;
     return { stepResults, cursor };
   }
 
@@ -575,7 +640,7 @@ function parseReplayablePayload(content: string): ReplayablePayload | null {
   }
 }
 
-async function validateIntegrationConfiguration(integrationId: string, quiet: boolean) {
+async function validateIntegrationConfiguration(integrationId: string, quiet?: boolean) {
   const isConfigured = await isIntegrationConfigured(integrationId);
   const systemInstanceId = await getIntegrationSystemId(integrationId);
 

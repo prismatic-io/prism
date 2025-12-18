@@ -3,7 +3,12 @@ import { decode } from "@msgpack/msgpack";
 import inquirer from "inquirer";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { fetch } from "../../../utils/http.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
+import { GET_EXECUTIONS } from "../../../graphql/executions/getExecutions.js";
+import type { GetExecutionsQuery } from "../../../graphql/executions/getExecutions.generated.js";
+import { GET_POLLED_EXECUTION } from "../../../graphql/executions/getPolledExecution.js";
+import type { GetPolledExecutionQuery } from "../../../graphql/executions/getPolledExecution.generated.js";
+import { UPDATE_INTEGRATION_FLOW_LISTENING_MODE } from "../../../graphql/integrations/updateIntegrationFlowListeningMode.js";
 import { exists, fs } from "../../../fs.js";
 import { handleError } from "../../../utils/errors.js";
 import {
@@ -13,31 +18,29 @@ import {
 } from "../../../utils/integration/flows.js";
 import { runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
+import z from "zod";
 
 const DEFAULT_TIMEOUT_SECONDS = 1200; // 20 minutes
 const DEFAULT_OUTPUT_DIR = "./payloads";
 
-type PolledExecutionResult = {
-  executionResult: {
-    id: string;
-    endedAt: string | null;
-    stepResults: {
-      nodes: Array<{
-        id: string;
-        stepName: string;
-        resultsUrl: string;
-      }>;
-    };
-  };
-};
+/**
+ * Zod schema for listen command flags.
+ * Validates command arguments and provides type-safe access to flag values.
+ */
+export const listenFlagsSchema = z.object({
+  "integration-id": z.string().min(1, "Integration ID cannot be empty"),
+  "flow-id": z.string().min(1, "Flow ID cannot be empty").optional(),
+  output: z.string(),
+  timeout: z.number().int().positive("Timeout must be a positive integer"),
+  "no-prompt": z.boolean().optional(),
+  reset: z.boolean().optional(),
+  quiet: z.boolean().optional(),
+});
 
-type ExecutionResult = {
-  id: string;
-  startedAt: string;
-  endedAt: string | null;
-  requestPayloadUrl: string;
-  responsePayloadUrl: string;
-};
+export type ListenFlags = z.infer<typeof listenFlagsSchema>;
+
+type ExecutionResult = NonNullable<GetExecutionsQuery["executionResults"]["nodes"][number]>;
+type PolledExecutionResult = GetPolledExecutionQuery;
 
 type TriggerType = "WEBHOOK" | "POLLING";
 
@@ -77,17 +80,17 @@ export default class ListenCommand extends PrismaticBaseCommand {
   };
 
   async run() {
+    const { flags } = await this.parseWithSchema(listenFlagsSchema);
+
     const {
-      flags: {
-        "integration-id": integrationId,
-        "flow-id": flowIdFlag,
-        output,
-        timeout,
-        quiet,
-        "no-prompt": noPrompt,
-        reset,
-      },
-    } = await this.parse(ListenCommand);
+      "integration-id": integrationId,
+      "flow-id": flowIdFlag,
+      output,
+      timeout,
+      quiet,
+      "no-prompt": noPrompt,
+      reset,
+    } = flags;
 
     if (reset) {
       return await safeSetListeningMode(integrationId, false, true);
@@ -204,7 +207,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
           }
 
           // Having an endedAt means the execution completed.
-          if (result.executionResult.endedAt) {
+          if (result.executionResult?.endedAt) {
             const stepResult = result.executionResult.stepResults.nodes[0];
             if (stepResult?.resultsUrl) {
               ux.action.start("Downloading poll payload...");
@@ -265,18 +268,7 @@ async function withCleanup(integrationId: string, fn: () => Promise<void>): Prom
 
 async function setListeningMode(integrationId: string, isListening: boolean): Promise<void> {
   await gqlRequest({
-    document: gql`
-        mutation updateIntegrationFlowListeningMode($integrationId: ID!, $isListening: Boolean) {
-          updateWorkflowTestConfiguration(
-            input: {id: $integrationId, listeningMode: $isListening}
-          ) {
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    document: UPDATE_INTEGRATION_FLOW_LISTENING_MODE,
     variables: { integrationId, isListening },
   });
   console.log(`Set listening mode to ${isListening} for integration ${integrationId}`);
@@ -292,24 +284,8 @@ async function pollForWebhookExecutions(
   while (true) {
     await ux.wait(getAdaptivePollIntervalMs(startTime));
 
-    const result = await gqlRequest({
-      document: gql`
-          query getExecutions($flowId: ID, $isTestExecution: Boolean, $limit: Int, $startDate: DateTime) {
-            executionResults(
-              first: $limit
-              isTestExecution: $isTestExecution
-              startedAt_Gte: $startDate
-              flowConfig_Flow: $flowId
-            ) {
-              nodes {
-                id
-                endedAt
-                requestPayloadUrl
-                responsePayloadUrl
-              }
-            }
-          }
-        `,
+    const result = await gqlRequest<GetExecutionsQuery>({
+      document: GET_EXECUTIONS,
       variables: {
         limit: 1,
         isTestExecution: true,
@@ -326,8 +302,8 @@ async function pollForWebhookExecutions(
     if (result.executionResults.nodes.length > 0) {
       const execution = result.executionResults.nodes[0];
 
-      if (!execution.endedAt) {
-        console.log(`\nExecution ${execution.id} started, waiting for completion...`);
+      if (!execution?.endedAt) {
+        console.log(`\nExecution ${execution?.id} started, waiting for completion...`);
         continue;
       }
 
@@ -412,25 +388,9 @@ function hasTimedOut(startTime: number, timeout: number): boolean {
 }
 
 async function getPolledExecution(executionId: string): Promise<PolledExecutionResult> {
-  return gqlRequest({
-    document: gql`
-      query getPolledExecution($executionId: ID!) {
-        executionResult(id: $executionId) {
-          id
-          endedAt
-          stepResults(orderBy: { direction: ASC, field: STARTED_AT }, first: 1) {
-            nodes {
-              id
-              stepName
-              resultsUrl
-            }
-          }
-        }
-      }
-    `,
-    variables: {
-      executionId,
-    },
+  return gqlRequest<GetPolledExecutionQuery>({
+    document: GET_POLLED_EXECUTION,
+    variables: { executionId },
   });
 }
 
@@ -438,7 +398,7 @@ export function getTriggerType(trigger: IntegrationFlow["trigger"]): TriggerType
   const { action } = trigger;
 
   // Reject scheduled flows - they run on a schedule, not via webhook or polling
-  if (action.scheduleSupport === "REQUIRED" && action.component.key === "schedule-triggers") {
+  if (action.scheduleSupport === "REQUIRED" && action.component?.key === "schedule-triggers") {
     throw new Error(
       "Cannot listen to scheduled flows. This flow uses a schedule trigger and runs automatically on a schedule, not in response to webhooks or manual polling.",
     );
@@ -446,6 +406,6 @@ export function getTriggerType(trigger: IntegrationFlow["trigger"]): TriggerType
 
   const isPolling =
     action.isPollingTrigger ||
-    (action.scheduleSupport === "REQUIRED" && action.component.key !== "schedule-triggers");
+    (action.scheduleSupport === "REQUIRED" && action.component?.key !== "schedule-triggers");
   return isPolling ? "POLLING" : "WEBHOOK";
 }

@@ -1,5 +1,47 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import { setupServer } from "msw/node";
+import { http, HttpResponse } from "msw";
 import { buildFlagString } from "./test.js";
+import TestFlowCommand from "./test.js";
+
+const server = setupServer();
+
+describe("oclif defaults and Zod validation integration", () => {
+  beforeAll(() => {
+    server.listen({ onUnhandledRequest: "error" });
+  });
+
+  afterAll(() => {
+    server.close();
+  });
+
+  afterEach(() => {
+    server.resetHandlers();
+    vi.restoreAllMocks();
+  });
+
+  it("applies oclif default for payload-content-type when flag is omitted", async () => {
+    const testFlowUrl = "https://hooks.example.com/trigger/test-flow";
+    let requestReceived = false;
+
+    server.use(
+      http.post(testFlowUrl, () => {
+        requestReceived = true;
+        return HttpResponse.json(
+          { executionId: "exec-123" },
+          { headers: { "prismatic-executionid": "exec-123" } },
+        );
+      }),
+    );
+
+    // Run command WITHOUT --payload-content-type flag
+    // If oclif defaults aren't applied before Zod validation, this would throw
+    await TestFlowCommand.run(["--flow-url", testFlowUrl]);
+
+    // Verify the command executed past Zod validation and made the HTTP request
+    expect(requestReceived).toBe(true);
+  });
+});
 
 describe("buildFlagString", () => {
   it("should return empty string when no options are provided", () => {
