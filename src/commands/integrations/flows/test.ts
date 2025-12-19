@@ -17,10 +17,7 @@ import { getTriggerType } from "./listen.js";
 import { exists, fs } from "../../../fs.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
 import { handleError } from "../../../utils/errors.js";
-import {
-  getIntegrationSystemId,
-  isIntegrationConfigured,
-} from "../../../utils/integration/query.js";
+import { getIntegrationSystemInstance } from "../../../utils/integration/query.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
 
 type FormattedStepResult = {
@@ -38,7 +35,7 @@ type ReplayablePayload = {
   triggerType?: "WEBHOOK" | "POLLING";
 };
 
-const MISSING_ID_ERROR = "You must provide either a flow-id or integration-id parameter.";
+const MISSING_ID_ERROR = "You must provide an integration ID.";
 const TIMEOUT_SECONDS = 1200; // 20 minutes
 
 /**
@@ -207,7 +204,6 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       "payload-content-type": contentType,
       "tail-logs": tailLogs,
       "tail-results": tailStepResults,
-      "cni-auto-end": autoEndPoll,
       "result-file": resultFilePath,
       timeout,
       debug,
@@ -219,6 +215,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     let payloadHeaders: Record<string, string> = {};
     let effectiveContentType = contentType;
     let replayablePayload: ReplayablePayload | null = null;
+    let autoEndPoll = flags["cni-auto-end"];
 
     if (payloadFilePath) {
       if (!(await exists(payloadFilePath))) {
@@ -304,12 +301,30 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         }
       }
 
+      const { isConfigured, isCodeNative, systemInstanceId } =
+        await getIntegrationSystemInstance(integrationId);
+
+      if (!systemInstanceId) {
+        handleError({
+          message:
+            "No system instance was found for the given integration. Please re-import or contact support.",
+        });
+      }
+
       // Once we have an integration ID, we should validate that it's fully configured for testing.
       // Unfortunately can't do this in the direct invocation path b/c there's no reasonable way to
       // reverse-lookup integration ID from a webhook URL.
-      const integrationIsValid = await validateIntegrationConfiguration(integrationId, quiet);
-      if (!integrationIsValid) {
+      await promptIntegrationValidation(isConfigured, systemInstanceId, quiet);
+      if (!isConfigured) {
         return;
+      }
+
+      if (!isCodeNative && autoEndPoll) {
+        console.warn(
+          "The given integration is not code-native but the --cni-auto-end flag was configured.",
+          "\nThis process will continue but ignore the --cni-auto-end flag.",
+        );
+        autoEndPoll = false;
       }
 
       selectedFlow = await resolveFlow({
@@ -619,10 +634,11 @@ function parseReplayablePayload(content: string): ReplayablePayload | null {
   }
 }
 
-async function validateIntegrationConfiguration(integrationId: string, quiet?: boolean) {
-  const isConfigured = await isIntegrationConfigured(integrationId);
-  const systemInstanceId = await getIntegrationSystemId(integrationId);
-
+async function promptIntegrationValidation(
+  isConfigured: boolean,
+  systemInstanceId: string,
+  quiet?: boolean,
+) {
   if (!isConfigured) {
     console.warn("The integration needs to be configured before it can be tested.");
   }
@@ -650,11 +666,7 @@ async function validateIntegrationConfiguration(integrationId: string, quiet?: b
         );
       }
     }
-
-    return false;
   }
-
-  return true;
 }
 
 export type BuildFlagStringOptions = {

@@ -3,23 +3,38 @@ import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { buildFlagString } from "./test.js";
 import TestFlowCommand from "./test.js";
+import { ActionScheduleSupport, LogSeverityLevel } from "../../../graphql/schema.generated.js";
+
+vi.mock("../../../utils/integration/query.js", () => ({
+  getIntegrationSystemInstance: vi.fn(),
+}));
+
+vi.mock(import("../../../utils/integration/flows.js"), async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    resolveFlow: vi.fn(),
+    getExecutionLogs: vi.fn(),
+    isCniExecutionComplete: vi.fn(),
+  };
+});
 
 const server = setupServer();
 
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "error" });
+});
+
+afterAll(() => {
+  server.close();
+});
+
+afterEach(() => {
+  server.resetHandlers();
+  vi.restoreAllMocks();
+});
+
 describe("oclif defaults and Zod validation integration", () => {
-  beforeAll(() => {
-    server.listen({ onUnhandledRequest: "error" });
-  });
-
-  afterAll(() => {
-    server.close();
-  });
-
-  afterEach(() => {
-    server.resetHandlers();
-    vi.restoreAllMocks();
-  });
-
   it("applies oclif default for payload-content-type when flag is omitted", async () => {
     const testFlowUrl = "https://hooks.example.com/trigger/test-flow";
     let requestReceived = false;
@@ -101,5 +116,105 @@ describe("buildFlagString", () => {
         resultFilePath: "out.jsonl",
       }),
     ).toBe("--tail-logs --sync -r=out.jsonl");
+  });
+});
+
+describe("--cni-auto-end flag on non-code-native integrations", () => {
+  const integrationId = "SW50ZWdyYXRpb246dGVzdC1pZA==";
+  const flowId = "flow-123";
+  const testFlowUrl = "https://hooks.example.com/trigger/test-flow";
+
+  const setupMocks = async (isCodeNative: boolean) => {
+    const { getIntegrationSystemInstance } = await import("../../../utils/integration/query.js");
+    const { resolveFlow, getExecutionLogs, isCniExecutionComplete } = await import(
+      "../../../utils/integration/flows.js"
+    );
+
+    vi.mocked(getIntegrationSystemInstance).mockResolvedValue({
+      isCodeNative,
+      isConfigured: true,
+      systemInstanceId: "system-instance-123",
+    });
+
+    vi.mocked(resolveFlow).mockResolvedValue({
+      id: flowId,
+      name: "Test Flow",
+      stableKey: "test-flow",
+      description: "A test flow",
+      testUrl: testFlowUrl,
+      trigger: {
+        action: {
+          isPollingTrigger: false,
+          scheduleSupport: ActionScheduleSupport.Valid,
+          component: { key: "webhook-triggers" },
+        },
+      },
+    });
+
+    // Mock getExecutionLogs to return some logs, then signal completion
+    vi.mocked(getExecutionLogs).mockResolvedValue({
+      logs: {
+        edges: [
+          {
+            node: {
+              timestamp: new Date().toISOString(),
+              severity: LogSeverityLevel.Info,
+              message: "Test log message",
+            },
+            cursor: "cursor-1",
+          },
+        ],
+      },
+    });
+
+    // Mock isCniExecutionComplete to return true so the tailing loop exits
+    vi.mocked(isCniExecutionComplete).mockResolvedValue(true);
+
+    server.use(
+      http.post(testFlowUrl, () =>
+        HttpResponse.json(
+          { executionId: "exec-123" },
+          { headers: { "prismatic-executionid": "exec-123" } },
+        ),
+      ),
+    );
+  };
+
+  it("should warn when --cni-auto-end is used with a non-code-native integration", async () => {
+    await setupMocks(false);
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await TestFlowCommand.run([
+      "--integration-id",
+      integrationId,
+      "--flow-id",
+      flowId,
+      "--tail-logs",
+      "--cni-auto-end",
+    ]);
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      "The given integration is not code-native but the --cni-auto-end flag was configured.",
+      "\nThis process will continue but ignore the --cni-auto-end flag.",
+    );
+  });
+
+  it("should not warn when --cni-auto-end is used with a code-native integration", async () => {
+    await setupMocks(true);
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    await TestFlowCommand.run([
+      "--integration-id",
+      integrationId,
+      "--flow-id",
+      flowId,
+      "--tail-logs",
+      "--cni-auto-end",
+    ]);
+
+    expect(warnSpy).not.toHaveBeenCalledWith(
+      "The given integration is not code-native but the --cni-auto-end flag was configured.",
+      "\nThis process will continue but ignore the --cni-auto-end flag.",
+    );
   });
 });
