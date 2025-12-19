@@ -3511,6 +3511,20 @@ export enum DeployedInstancesQuantity {
   Zero = "ZERO",
 }
 
+export type DisableOrganizationAccessInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** The Organization that the User belongs to, if any. If this is NULL then Customer will be specified. */
+  orgId: Scalars["ID"]["input"];
+};
+
+export type DisableOrganizationAccessPayload = {
+  __typename?: "DisableOrganizationAccessPayload";
+  clientMutationId?: Maybe<Scalars["String"]["output"]>;
+  errors: Array<ErrorType>;
+  result?: Maybe<AdminOperationResult>;
+};
+
 export type DisableOrganizationInput = {
   /** A unique identifier for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
@@ -3629,6 +3643,20 @@ export type EmbeddedRequiredComponentsArgs = {
   versionIsAvailable?: InputMaybe<Scalars["Boolean"]["input"]>;
   versionNumber?: InputMaybe<Scalars["Int"]["input"]>;
   versionSequenceId?: InputMaybe<Scalars["UUID"]["input"]>;
+};
+
+export type EnableOrganizationAccessInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** The Organization that the User belongs to, if any. If this is NULL then Customer will be specified. */
+  orgId: Scalars["ID"]["input"];
+};
+
+export type EnableOrganizationAccessPayload = {
+  __typename?: "EnableOrganizationAccessPayload";
+  clientMutationId?: Maybe<Scalars["String"]["output"]>;
+  errors: Array<ErrorType>;
+  result?: Maybe<AdminOperationResult>;
 };
 
 export type EnableOrganizationInput = {
@@ -5599,6 +5627,15 @@ export enum InstanceProfileOrderField {
   Name = "NAME",
 }
 
+/** Aggregated statistics about Instances deployed for an Integration. */
+export type InstanceStats = {
+  __typename?: "InstanceStats";
+  /** The total number of Instances deployed for this Integration. */
+  totalInstanceCount: Scalars["Int"]["output"];
+  /** Distribution of Instances across Integration versions. */
+  versionDistribution: VersionDistributionConnection;
+};
+
 /**
  * Represents the result of executing a specific step of an Integration as
  * part of an Instance execution.
@@ -5768,6 +5805,8 @@ export type Integration = Node & {
   hasUnpublishedChanges: Scalars["Boolean"]["output"];
   /** The ID of the object */
   id: Scalars["ID"]["output"];
+  /** Aggregated statistics about Instances deployed for this Integration. */
+  instanceStats: InstanceStats;
   /** The Integration that has been deployed for the Instance. */
   instances: InstanceConnection;
   /** Specifies whether this Integration is a Code Native Integration. */
@@ -8502,6 +8541,18 @@ export type RootMutation = {
    */
   disableOrganization?: Maybe<DisableOrganizationPayload>;
   /**
+   *
+   * Disable access to an organization that was enabled for support.
+   * Soft-deletes the User record and removes from control plane.
+   *
+   *
+   * Access is permitted when any of the following condition(s) are met:
+   *     1. The signed-in User has any of the following permissions for the associated Organization: [org_admin_users] when the specified object is not the signed-in User and a value for 'customer' does not exist on the object.
+   *     2. The signed-in User has any of the following permissions for the object's 'customer' attribute: [customer_admin_users] when the specified object is not the signed-in User and a value for 'customer' exists on the object.
+   *     3. The signed-in User has any of the following permissions for the associated Organization: [org_admin_customer_permissions, org_manage_customers] when the specified object is not the signed-in User and a value for 'customer' exists on the object.
+   */
+  disableOrganizationAccess?: Maybe<DisableOrganizationAccessPayload>;
+  /**
    *     None
    *
    * Access is permitted when any of the following condition(s) are met:
@@ -8561,6 +8612,19 @@ export type RootMutation = {
    *     1. The signed-in User has any of the following permissions for the object: [org_admin_users].
    */
   enableOrganization?: Maybe<EnableOrganizationPayload>;
+  /**
+   *
+   * Enable access to a target organization for support/impersonation.
+   * Creates a new User record in the target organization with the current user's email.
+   * Does not send an Auth0 invite as the user already has an Auth0 account.
+   *
+   *
+   * Access is permitted when any of the following condition(s) are met:
+   *     1. The signed-in User has any of the following permissions for the associated Organization: [org_admin_users] when 'customer' is not provided in the access function context.
+   *     2. The signed-in User has any of the following permissions for the access function context object 'customer': [customer_admin_users] when 'customer' is provided in the access function context.
+   *     3. The signed-in User has any of the following permissions for the associated Organization: [org_admin_customer_permissions, org_manage_customers] when 'customer' is provided in the access function context.
+   */
+  enableOrganizationAccess?: Maybe<EnableOrganizationAccessPayload>;
   /**
    *     None
    *
@@ -8844,18 +8908,6 @@ export type RootMutation = {
    *     1. The signed-in User has any of the following permissions for the object: [org_admin_users].
    */
   setPlanEnabledFeatures?: Maybe<SetPlanEnabledFeaturesPayload>;
-  /**
-   *
-   * Switch the Organization of the specified Organization User.
-   *
-   *
-   * Access is permitted when any of the following condition(s) are met:
-   *     1. The specified object is the signed-in User.
-   *     2. The signed-in User has any of the following permissions for the associated Organization: [org_admin_users] when a value for 'customer' does not exist on the object.
-   *     3. The signed-in User has any of the following permissions for the object's 'customer' attribute: [customer_admin_users] when a value for 'customer' exists on the object.
-   *     4. The signed-in User has any of the following permissions for the associated Organization: [org_admin_customer_permissions, org_manage_customers] when a value for 'customer' exists on the object.
-   */
-  switchOrganization?: Maybe<SwitchOrganizationPayload>;
   /**
    *
    * Tests an IntegrationFlow's trigger event function for the specified event type.
@@ -9450,6 +9502,10 @@ export type RootMutationDisableOrganizationArgs = {
   input: DisableOrganizationInput;
 };
 
+export type RootMutationDisableOrganizationAccessArgs = {
+  input: DisableOrganizationAccessInput;
+};
+
 export type RootMutationDisableWorkflowArgs = {
   input: DisableWorkflowInput;
 };
@@ -9472,6 +9528,10 @@ export type RootMutationDisconnectUserLevelConnectionArgs = {
 
 export type RootMutationEnableOrganizationArgs = {
   input: EnableOrganizationInput;
+};
+
+export type RootMutationEnableOrganizationAccessArgs = {
+  input: EnableOrganizationAccessInput;
 };
 
 export type RootMutationEnableWorkflowArgs = {
@@ -9588,10 +9648,6 @@ export type RootMutationSetOrganizationSalesforceIdArgs = {
 
 export type RootMutationSetPlanEnabledFeaturesArgs = {
   input: SetPlanEnabledFeaturesInput;
-};
-
-export type RootMutationSwitchOrganizationArgs = {
-  input: SwitchOrganizationInput;
 };
 
 export type RootMutationTestFlowTriggerEventArgs = {
@@ -11330,6 +11386,7 @@ export type RootQueryOnPremiseResourcesArgs = {
   customer_Isnull?: InputMaybe<Scalars["Boolean"]["input"]>;
   first?: InputMaybe<Scalars["Int"]["input"]>;
   last?: InputMaybe<Scalars["Int"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
   name_Icontains?: InputMaybe<Scalars["String"]["input"]>;
   offset?: InputMaybe<Scalars["Int"]["input"]>;
   orderBy?: InputMaybe<OnPremiseResourceOrder>;
@@ -12206,22 +12263,6 @@ export type StarredRecordOrder = {
 export enum StarredRecordOrderField {
   Timestamp = "TIMESTAMP",
 }
-
-export type SwitchOrganizationInput = {
-  /** A unique identifier for the client performing the mutation. */
-  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
-  /** The Organization that the User belongs to, if any. If this is NULL then Customer will be specified. */
-  orgId: Scalars["ID"]["input"];
-  /** Email of Organization User to modify (case insensitive) */
-  user: Scalars["String"]["input"];
-};
-
-export type SwitchOrganizationPayload = {
-  __typename?: "SwitchOrganizationPayload";
-  clientMutationId?: Maybe<Scalars["String"]["output"]>;
-  errors: Array<ErrorType>;
-  result?: Maybe<AdminOperationResult>;
-};
 
 /** Represents test data for webhook requests used to simulate events from connection triggers. */
 export type TestCase = Node & {
@@ -13946,6 +13987,13 @@ export type VersionConnection = {
   totalCount: Scalars["Int"]["output"];
 };
 
+/** Connection type for version distribution data. */
+export type VersionDistributionConnection = {
+  __typename?: "VersionDistributionConnection";
+  /** List of version instance counts. */
+  nodes: Array<VersionInstanceCount>;
+};
+
 /** A Relay edge containing a `Version` and its cursor. */
 export type VersionEdge = {
   __typename?: "VersionEdge";
@@ -13953,6 +14001,15 @@ export type VersionEdge = {
   cursor: Scalars["String"]["output"];
   /** The item at the end of the edge */
   node?: Maybe<Version>;
+};
+
+/** Represents the instance count for a specific integration version. */
+export type VersionInstanceCount = {
+  __typename?: "VersionInstanceCount";
+  /** The number of Instances deployed at this version. */
+  instanceCount: Scalars["Int"]["output"];
+  /** The version number of the Integration. */
+  versionNumber: Scalars["Int"]["output"];
 };
 
 /** Allows specifying which field and direction to order by. */

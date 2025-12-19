@@ -1,4 +1,6 @@
 import { gqlRequest, gql } from "../../graphql.js";
+import { GET_INTEGRATION_SYSTEM_INSTANCE } from "../../graphql/integrations/getIntegrationSystemInstance.js";
+import type { GetIntegrationSystemInstanceQuery } from "../../graphql/integrations/getIntegrationSystemInstance.generated.js";
 
 interface IntegrationByNameResult {
   id: string;
@@ -26,23 +28,21 @@ export const integrationByName = async (
   return integration;
 };
 
-export const isIntegrationConfigured = async (integrationId: string): Promise<boolean> => {
-  const result = await gqlRequest({
-    document: gql`
-      query getIntegrationConfigurationState($integrationId: ID!) {
-        integration(id: $integrationId) {
-          systemInstance {
-            configState
-          }
-        }
-      }
-    `,
+export const getIntegrationSystemInstance = async (
+  integrationId: string,
+): Promise<{ isCodeNative?: boolean; isConfigured: boolean; systemInstanceId?: string }> => {
+  const result = await gqlRequest<GetIntegrationSystemInstanceQuery>({
+    document: GET_INTEGRATION_SYSTEM_INSTANCE,
     variables: {
       integrationId,
     },
   });
 
-  return result.integration.systemInstance.configState !== "NEEDS_INSTANCE_CONFIGURATION";
+  return {
+    isCodeNative: result.integration?.isCodeNative,
+    isConfigured: result.integration?.systemInstance.configState !== "NEEDS_INSTANCE_CONFIGURATION",
+    systemInstanceId: result.integration?.systemInstance.id,
+  };
 };
 
 export const pollForActiveConfigVarState = async (
@@ -86,20 +86,4 @@ export const pollForActiveConfigVarState = async (
       }
     }, 5000);
   });
-};
-
-export const getIntegrationSystemId = async (integrationId: string): Promise<string> => {
-  const result = await gqlRequest({
-    document: gql`
-      query integration($integrationId: ID!) {
-        integration(id: $integrationId) {
-          systemInstance {
-            id
-          }
-        }
-      }
-    `,
-    variables: { integrationId },
-  });
-  return result.integration.systemInstance.id;
 };

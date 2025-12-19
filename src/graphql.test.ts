@@ -1,21 +1,10 @@
 import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from "vitest";
 import { setupServer } from "msw/node";
 import { graphql, HttpResponse } from "msw";
+import { TEST_PRISMATIC_URL } from "../vitest.setup.js";
 import { gql, gqlRequest } from "./graphql.js";
 
-vi.mock("./auth.js", () => ({
-  getAccessToken: vi.fn(() => Promise.resolve("test-token")),
-  prismaticUrl: "https://example.com",
-}));
-
-vi.mock("./utils/http.js", async () => {
-  return {
-    fetch: (...args: Parameters<typeof fetch>) => fetch(...args),
-    createFetch: () => fetch,
-  };
-});
-
-const api = graphql.link("https://example.com/api");
+const api = graphql.link(`${TEST_PRISMATIC_URL}/api`);
 
 const server = setupServer(
   api.operation(({ operationName }) => {
