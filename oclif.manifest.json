@@ -1386,6 +1386,12 @@
           "hasDynamicHelp": false,
           "multiple": true,
           "type": "option"
+        },
+        "confirm": {
+          "description": "Interactively confirm the import when using --replace",
+          "name": "confirm",
+          "allowNo": true,
+          "type": "boolean"
         }
       },
       "hasDynamicHelp": false,
