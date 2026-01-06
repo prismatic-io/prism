@@ -51,6 +51,11 @@ export default class ImportCommand extends PrismaticBaseCommand {
       multiple: true,
       required: false,
     }),
+    confirm: Flags.boolean({
+      allowNo: true,
+      default: true,
+      description: "Interactively confirm the import when using --replace",
+    }),
   };
 
   async run() {
@@ -62,6 +67,7 @@ export default class ImportCommand extends PrismaticBaseCommand {
         open,
         replace,
         "test-api-key": testApiKey,
+        confirm,
       },
     } = await this.parse(ImportCommand);
 
@@ -95,9 +101,11 @@ export default class ImportCommand extends PrismaticBaseCommand {
           )}`,
         );
 
-        const confirm = await ux.confirm("Continue? (yes/no)");
-        if (!confirm) {
-          this.error("Import canceled", { exit: 1 });
+        if (confirm) {
+          const shouldContinue = await ux.confirm("Continue? (yes/no)");
+          if (!shouldContinue) {
+            this.error("Import canceled", { exit: 1 });
+          }
         }
       }
     }
@@ -109,9 +117,11 @@ export default class ImportCommand extends PrismaticBaseCommand {
 
 There will be no way to restore the existing draft. If you wish to save it, either publish it or export its YAML before proceeding.`);
 
-      const confirm = await ux.confirm("Continue? (yes/no)");
-      if (!confirm) {
-        this.error("Import canceled", { exit: 1 });
+      if (confirm) {
+        const shouldContinue = await ux.confirm("Continue? (yes/no)");
+        if (!shouldContinue) {
+          this.error("Import canceled", { exit: 1 });
+        }
       }
     }
 
