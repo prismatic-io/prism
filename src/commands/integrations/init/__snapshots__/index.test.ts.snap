@@ -113,7 +113,7 @@ exports[`integrations:init > clean scaffold generation > should match scaffoldin
     "extends": ["@prismatic-io/eslint-config-spectral"]
   },
   "dependencies": {
-    "@prismatic-io/spectral": "10.14.0"
+    "@prismatic-io/spectral": "VERSION"
   },
   "devDependencies": {
     "@prismatic-io/eslint-config-spectral": "2.1.0",
@@ -421,7 +421,7 @@ exports[`integrations:init > scaffold generation > should match scaffolding snap
     "extends": ["@prismatic-io/eslint-config-spectral"]
   },
   "dependencies": {
-    "@prismatic-io/spectral": "10.14.0"
+    "@prismatic-io/spectral": "VERSION"
   },
   "devDependencies": {
     "@prismatic-io/eslint-config-spectral": "2.1.0",
