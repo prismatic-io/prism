@@ -45,11 +45,16 @@ describe("integrations:init", () => {
         const targets = await walkDir(integrationName, [".png", "webpack.config.js"]);
         for (const target of targets) {
           const contents = await readFile(target, "utf-8");
-          // Normalize generated UUIDs in snapshots to make them stable
-          const normalizedContents = contents.replace(
-            /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
-            "00000000-0000-0000-0000-000000000000",
-          );
+          // Normalize generated UUIDs and spectral version in snapshots to make them stable
+          const normalizedContents = contents
+            .replace(
+              /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+              "00000000-0000-0000-0000-000000000000",
+            )
+            .replace(
+              /"@prismatic-io\/spectral": "\d+\.\d+\.\d+"/,
+              '"@prismatic-io/spectral": "VERSION"',
+            );
           expect(normalizedContents).toMatchSnapshot(target);
         }
       },
@@ -81,11 +86,16 @@ describe("integrations:init", () => {
         const targets = await walkDir(cleanIntegrationName, [".png", "webpack.config.js"]);
         for (const target of targets) {
           const contents = await readFile(target, "utf-8");
-          // Normalize generated UUIDs in snapshots to make them stable
-          const normalizedContents = contents.replace(
-            /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
-            "00000000-0000-0000-0000-000000000000",
-          );
+          // Normalize generated UUIDs and spectral version in snapshots to make them stable
+          const normalizedContents = contents
+            .replace(
+              /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+              "00000000-0000-0000-0000-000000000000",
+            )
+            .replace(
+              /"@prismatic-io\/spectral": "\d+\.\d+\.\d+"/,
+              '"@prismatic-io/spectral": "VERSION"',
+            );
           expect(normalizedContents).toMatchSnapshot(`clean-${target}`);
         }
       },
