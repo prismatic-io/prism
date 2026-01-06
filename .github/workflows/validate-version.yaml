@@ -1,0 +1,19 @@
+name: Validate Version Bump
+on: [push]
+jobs:
+  validate-version:
+    name: Validate Version Bump
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify oclif manifest version matches package.json
+        run: |
+          PACKAGE_VERSION=$(jq -r '.version' package.json)
+          MANIFEST_VERSION=$(jq -r '.version' oclif.manifest.json)
+          if [ "$PACKAGE_VERSION" != "$MANIFEST_VERSION" ]; then
+            echo "::error::Version mismatch: package.json ($PACKAGE_VERSION) != oclif.manifest.json ($MANIFEST_VERSION)"
+            echo "Run 'bun run manifest' to regenerate the manifest"
+            exit 1
+          fi
+          echo "Versions match: $PACKAGE_VERSION"
