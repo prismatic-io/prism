@@ -1,18 +1,18 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/.env.testing 1`] = `
-"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
+ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
 ACME_API_KEY=P@s$W0rD
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/.npmrc 1`] = `
-"@component-manifests:registry=https://example.com/packages/npm
-"
+@component-manifests:registry=https://example.com/packages/npm
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/.spectral/index.ts 1`] = `
-"import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
+import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
 
 import type {
   // @ts-ignore
@@ -56,48 +56,48 @@ declare module "@prismatic-io/spectral" {
   // eslint-disable-next-line @typescript-eslint/no-empty-interface
   interface IntegrationDefinitionScopedConfigVars extends TScopedConfigVarMap {}
 }
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/.vscode/extensions.json 1`] = `
-"{
+{
   "recommendations": [
     "dbaeumer.vscode-eslint",
     "visualstudioexptteam.vscodeintellicode",
     "esbenp.prettier-vscode"
   ]
 }
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/.vscode/settings.json 1`] = `
-"{
+{
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true
 }
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/documentation.md 1`] = `
-"# clean-test-integration
+# clean-test-integration
 
 You can make notes about this integration here.
 Use [Markdown](https://www.markdownguide.org/basic-syntax/) syntax to format your text.
 
 Your documentation will appear within Prismatic under Management > Documentation.
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/jest.config.js 1`] = `
-"module.exports = {
+module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
 };
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/package.json 1`] = `
-"{
+{
   "name": "clean-test-integration",
   "version": "0.0.1",
   "main": "index.js",
@@ -130,11 +130,11 @@ exports[`integrations:init > clean scaffold generation > should match scaffoldin
     "webpack-cli": "6.0.1"
   }
 }
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/src/client.ts 1`] = `
-"/**
+/**
  * Your flows and data sources likely connect to third-party APIs.
  * In this file, you can set up reusable, authenticated HTTP clients
  * that flows and data sources can use.
@@ -156,11 +156,11 @@ export function createApiClient(connection: Connection) {
       Authorization: \`Bearer \${apiKey}\`,
     },
   });
-}"
+}
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/src/componentRegistry.ts 1`] = `
-"/**
+/**
  * Your code-native integration can invoke existing connectors.
  * This is where you declare which connectors your code-native
  * integration uses. For more information, see
@@ -172,11 +172,11 @@ import { componentManifests } from "@prismatic-io/spectral";
 export const componentRegistry = componentManifests({
   // This is where you'll register your component manifests
 });
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/src/configPages.ts 1`] = `
-"/**
+/**
  * When a customer deploys an instance of your integration,
  * they will walk through a configuration wizard. Define your
  * configuration pages here.
@@ -199,11 +199,11 @@ export const configPages = {
     },
   }),
 };
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/src/flows.test.ts 1`] = `
-"/**
+/**
  * Your flows can be tested locally prior to publishing your
  * code-native integration. Add your tests here.
  *
@@ -220,11 +220,11 @@ describe("Flow tests", () => {
     // Insert test here.
   });
 });
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/src/flows.ts 1`] = `
-"/**
+/**
  * Your integration will contain one or more flows that each perform different functions.
  * When the flow is invoked, the onTrigger function runs first, followed by the onExecution
  * function.
@@ -247,11 +247,11 @@ export const exampleFlow = flow({
 });
 
 export default [exampleFlow];
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/src/index.ts 1`] = `
-"/**
+/**
  * This project represents a code-native integration. A customer
  * user will walk through a config wizard (defined in configPages.ts),
  * and flows for that customer (defined in flows.ts) will run.
@@ -278,22 +278,22 @@ export default integration({
   configPages,
   componentRegistry,
 });
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/src/markdown.d.ts 1`] = `
-"/**
+/**
  * Allow importing markdown files as strings.
  */
 declare module "*.md" {
   const content: string;
   export default content;
 }
-"
+
 `;
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/tsconfig.json 1`] = `
-"{
+{
   "compilerOptions": {
     "target": "es6",
     "lib": ["esnext"],
@@ -305,22 +305,22 @@ exports[`integrations:init > clean scaffold generation > should match scaffoldin
   },
   "include": ["src", ".spectral/*"]
 }
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/.env.testing 1`] = `
-"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
+ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
 ACME_API_KEY=P@s$W0rD
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/.npmrc 1`] = `
-"@component-manifests:registry=https://example.com/packages/npm
-"
+@component-manifests:registry=https://example.com/packages/npm
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/.spectral/index.ts 1`] = `
-"import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
+import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
 
 import type {
   // @ts-ignore
@@ -364,48 +364,48 @@ declare module "@prismatic-io/spectral" {
   // eslint-disable-next-line @typescript-eslint/no-empty-interface
   interface IntegrationDefinitionScopedConfigVars extends TScopedConfigVarMap {}
 }
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/.vscode/extensions.json 1`] = `
-"{
+{
   "recommendations": [
     "dbaeumer.vscode-eslint",
     "visualstudioexptteam.vscodeintellicode",
     "esbenp.prettier-vscode"
   ]
 }
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/.vscode/settings.json 1`] = `
-"{
+{
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true
 }
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/documentation.md 1`] = `
-"# test-integration
+# test-integration
 
 You can make notes about this integration here.
 Use [Markdown](https://www.markdownguide.org/basic-syntax/) syntax to format your text.
 
 Your documentation will appear within Prismatic under Management > Documentation.
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/jest.config.js 1`] = `
-"module.exports = {
+module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
 };
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/package.json 1`] = `
-"{
+{
   "name": "test-integration",
   "version": "0.0.1",
   "main": "index.js",
@@ -438,11 +438,11 @@ exports[`integrations:init > scaffold generation > should match scaffolding snap
     "webpack-cli": "6.0.1"
   }
 }
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/src/client.ts 1`] = `
-"/**
+/**
  * Your flows and data sources likely connect to third-party APIs.
  * In this file, you will see an example of how to set up a reusable,
  * authenticated HTTP client that flows and data sources can use.
@@ -469,11 +469,11 @@ export function createAcmeClient(acmeConnection: Connection) {
     },
   });
 }
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/src/componentRegistry.ts 1`] = `
-"/**
+/**
  * Your code-native integration can invoke existing connectors.
  * This is where you declare which connectors your code-native
  * integration uses. For more information, see
@@ -485,11 +485,11 @@ import { componentManifests } from "@prismatic-io/spectral";
 export const componentRegistry = componentManifests({
   // This is where you'll register your component manifests
 });
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/src/configPages.ts 1`] = `
-"/**
+/**
  * When a customer deploys an instance of your integration,
  * they will walk through a configuration wizard. In this
  * example configuration wizard, we prompt the customer for
@@ -564,11 +564,11 @@ export const configPages = {
     },
   }),
 };
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/src/flows.test.ts 1`] = `
-"/**
+/**
  * Your flows can be tested locally prior to publishing your
  * code-native integration. In this file, we invoke our flow
  * twice and describe the results we expect to see.
@@ -615,11 +615,11 @@ describe("Verify flow works as expected", () => {
     expect(loggerMock.info).toHaveBeenCalledWith('Item "Widgets" with ID "1" has quantity "20"');
   });
 });
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/src/flows.ts 1`] = `
-"/**
+/**
  * Your integration will contain one or more flows that each perform different functions.
  * When the flow is invoked, the onTrigger function runs first, followed by the onExecution
  * function. This example flow fetches data from a third-party API and logs out metadata
@@ -663,11 +663,11 @@ export const listItems = flow({
 });
 
 export default [listItems];
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/src/index.ts 1`] = `
-"/**
+/**
  * This project represents a code-native integration. A customer
  * user will walk through a config wizard (defined in configPages.ts),
  * and flows for that customer (defined in flows.ts) will run.
@@ -694,22 +694,22 @@ export default integration({
   configPages,
   componentRegistry,
 });
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/src/markdown.d.ts 1`] = `
-"/**
+/**
  * Allow importing markdown files as strings.
  */
 declare module "*.md" {
   const content: string;
   export default content;
 }
-"
+
 `;
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/tsconfig.json 1`] = `
-"{
+{
   "compilerOptions": {
     "target": "es6",
     "lib": ["esnext"],
@@ -721,5 +721,5 @@ exports[`integrations:init > scaffold generation > should match scaffolding snap
   },
   "include": ["src", ".spectral/*"]
 }
-"
+
 `;

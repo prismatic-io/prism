@@ -7,6 +7,21 @@ import { walkDir } from "../../../fs.js";
 
 const GENERATION_TIMEOUT_SECONDS = 6000; // 1 minute
 
+expect.addSnapshotSerializer({
+  test(val) {
+    return typeof val === "string";
+  },
+  serialize(val: string, config, indentation, depth, refs, printer) {
+    const normalized = val
+      .replace(
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+        "00000000-0000-0000-0000-000000000000",
+      )
+      .replace(/"@prismatic-io\/spectral": "\d+\.\d+\.\d+"/, '"@prismatic-io/spectral": "VERSION"');
+    return normalized;
+  },
+});
+
 describe("integrations:init", () => {
   const basePath = process.env.PWD ?? process.cwd();
   const tempPath = path.resolve("src/commands/integrations/init/temp");
@@ -45,17 +60,7 @@ describe("integrations:init", () => {
         const targets = await walkDir(integrationName, [".png", "webpack.config.js"]);
         for (const target of targets) {
           const contents = await readFile(target, "utf-8");
-          // Normalize generated UUIDs and spectral version in snapshots to make them stable
-          const normalizedContents = contents
-            .replace(
-              /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
-              "00000000-0000-0000-0000-000000000000",
-            )
-            .replace(
-              /"@prismatic-io\/spectral": "\d+\.\d+\.\d+"/,
-              '"@prismatic-io/spectral": "VERSION"',
-            );
-          expect(normalizedContents).toMatchSnapshot(target);
+          expect(contents).toMatchSnapshot(target);
         }
       },
       GENERATION_TIMEOUT_SECONDS,
@@ -86,17 +91,7 @@ describe("integrations:init", () => {
         const targets = await walkDir(cleanIntegrationName, [".png", "webpack.config.js"]);
         for (const target of targets) {
           const contents = await readFile(target, "utf-8");
-          // Normalize generated UUIDs and spectral version in snapshots to make them stable
-          const normalizedContents = contents
-            .replace(
-              /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
-              "00000000-0000-0000-0000-000000000000",
-            )
-            .replace(
-              /"@prismatic-io\/spectral": "\d+\.\d+\.\d+"/,
-              '"@prismatic-io/spectral": "VERSION"',
-            );
-          expect(normalizedContents).toMatchSnapshot(`clean-${target}`);
+          expect(contents).toMatchSnapshot(`clean-${target}`);
         }
       },
       GENERATION_TIMEOUT_SECONDS,
