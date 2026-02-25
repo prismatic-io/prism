@@ -61,11 +61,7 @@ declare module "@prismatic-io/spectral" {
 
 exports[`integrations:init > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration/.vscode/extensions.json 1`] = `
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "visualstudioexptteam.vscodeintellicode",
-    "esbenp.prettier-vscode"
-  ]
+  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
 }
 
 `;
@@ -369,11 +365,7 @@ declare module "@prismatic-io/spectral" {
 
 exports[`integrations:init > scaffold generation > should match scaffolding snapshots for default template > test-integration/.vscode/extensions.json 1`] = `
 {
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "visualstudioexptteam.vscodeintellicode",
-    "esbenp.prettier-vscode"
-  ]
+  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
 }
 
 `;

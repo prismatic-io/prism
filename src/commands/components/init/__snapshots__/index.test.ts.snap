@@ -1946,11 +1946,7 @@ ACME_API_KEY=P@s$W0rD
 
 exports[`component generation tests > wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice/.vscode/extensions.json 1`] = `
 "{
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "visualstudioexptteam.vscodeintellicode",
-    "esbenp.prettier-vscode"
-  ]
+  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
 }
 "
 `;
@@ -5413,11 +5409,7 @@ ACME_API_KEY=P@s$W0rD
 
 exports[`component generation tests > wsdl - numberconversion > should match scaffolding snapshots > numberconversion/.vscode/extensions.json 1`] = `
 "{
-  "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "visualstudioexptteam.vscodeintellicode",
-    "esbenp.prettier-vscode"
-  ]
+  "recommendations": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
 }
 "
 `;
