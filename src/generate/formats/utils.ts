@@ -65,6 +65,8 @@ export type Input = Omit<InputFieldDefinition, "clean" | "model"> & {
   key: string;
   // FIXME: Improve type safety here by using the original model definition from InputFieldDefinition.
   model?: InputFieldChoice[];
+  /** Language for code input type */
+  language?: string;
 };
 
 export type Action = Omit<

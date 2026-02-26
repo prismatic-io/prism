@@ -11,6 +11,7 @@ type InputType = {
   cleanReturnType?: string;
   allowOptional?: boolean;
   collection?: InputFieldCollection;
+  language?: string;
 };
 
 const toInputType: {
@@ -40,6 +41,52 @@ const toInputType: {
     cleanReturnType: "boolean",
     allowOptional: false,
   },
+  object: {
+    type: "code",
+    language: "json",
+    cleanFn: "toObject",
+    cleanReturnType: "object",
+    allowOptional: true,
+  },
+};
+
+const getDefaultValueForType = (
+  schema: OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject,
+): unknown => {
+  if (schema.example !== undefined) return schema.example;
+  if (schema.default !== undefined) return schema.default;
+
+  switch (schema.type) {
+    case "string":
+      return "";
+    case "integer":
+    case "number":
+      return 0;
+    case "boolean":
+      return false;
+    case "array":
+      return [];
+    case "object":
+      return generateObjectTemplate(schema);
+    default:
+      return "";
+  }
+};
+
+const generateObjectTemplate = (
+  schema: OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject,
+): Record<string, unknown> | undefined => {
+  if (schema.example !== undefined) return schema.example;
+
+  const properties = schema.properties ?? {};
+  if (Object.keys(properties).length === 0) return undefined;
+
+  const template: Record<string, unknown> = {};
+  for (const [key, prop] of Object.entries(properties)) {
+    if ("$ref" in prop) continue;
+    template[key] = getDefaultValueForType(prop);
+  }
+  return template;
 };
 
 const getInputModel = (
@@ -135,7 +182,7 @@ const buildBodyInputs = (
         inputType = toInputType[schemaType as string] ?? toInputType.string;
       }
 
-      const { type, cleanFn, cleanReturnType, allowOptional, collection } = inputType;
+      const { type, cleanFn, cleanReturnType, allowOptional, collection, language } = inputType;
 
       const required = requiredKeys.has(propKey) || !allowOptional;
       let clean: string | undefined;
@@ -153,15 +200,25 @@ const buildBodyInputs = (
         : cleanIdentifier(propKey);
       seenKeys.add(key);
 
+      // For object types, generate a JSON template as the default value
+      let defaultValue = prop.default;
+      if (schemaType === "object" && defaultValue === undefined) {
+        const template = generateObjectTemplate(prop);
+        if (template !== undefined) {
+          defaultValue = JSON.stringify(template, null, 2);
+        }
+      }
+
       return stripUndefined<Input>({
         upstreamKey: propKey,
         key,
         label: startCase(propKey),
         type,
         collection,
+        language,
         required,
         comments: prop.description,
-        default: prop.default,
+        default: defaultValue,
         example: prop.example,
         model: getInputModel(prop),
         clean,
