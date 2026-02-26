@@ -19,6 +19,7 @@ const writeInput = (
     label,
     type,
     collection,
+    language,
     comments,
     clean,
     default: defaultValue,
@@ -32,9 +33,16 @@ const writeInput = (
     .writeLine(`${key}: input({`)
     .writeLine(`label: "${label}",`)
     .writeLine(`type: "${type}",`)
+    .conditionalWriteLine(language !== undefined, `language: "${language}",`)
     .conditionalWriteLine(required !== undefined, `required: ${required},`)
     .conditionalWriteLine(placeholder !== undefined, `placeholder: "${placeholder}",`)
-    .conditionalWriteLine(defaultValue !== undefined, `default: "${defaultValue}",`)
+    .conditionalWriteLine(defaultValue !== undefined, () => {
+      // Use template literal for multi-line defaults (e.g., JSON templates)
+      if (typeof defaultValue === "string" && defaultValue.includes("\n")) {
+        return `default: \`${defaultValue}\`,`;
+      }
+      return `default: "${defaultValue}",`;
+    })
     .conditionalWriteLine(collection !== undefined, `collection: "${collection}",`)
     .conditionalWriteLine(model !== undefined && model.length > 0, () => {
       const options = (model ?? []).map<string>(
