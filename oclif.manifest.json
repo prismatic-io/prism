@@ -5328,7 +5328,29 @@
       "aliases": [],
       "args": {},
       "description": "Revoke all refresh tokens for your user",
-      "flags": {},
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "confirm": {
+          "description": "Prompt for confirmation before revoking tokens. Use --no-confirm to skip.",
+          "name": "confirm",
+          "allowNo": true,
+          "type": "boolean"
+        }
+      },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
       "id": "me:token:revoke",
@@ -6285,5 +6307,5 @@
       "enableJsonFlag": false
     }
   },
-  "version": "9.2.1"
+  "version": "9.2.2"
 }
