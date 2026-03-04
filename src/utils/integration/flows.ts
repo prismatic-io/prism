@@ -1,13 +1,13 @@
 import inquirer from "inquirer";
 import { gqlRequest } from "../../graphql.js";
 import { handleError } from "../errors.js";
-import { GET_INTEGRATION_FLOWS } from "../../graphql/integrations/getIntegrationFlows.js";
+import GET_INTEGRATION_FLOWS from "../../graphql/integrations/getIntegrationFlows.graphql";
 import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getIntegrationFlows.generated.js";
-import { GET_EXECUTION_LOGS } from "../../graphql/executions/getExecutionLogs.js";
+import GET_EXECUTION_LOGS from "../../graphql/executions/getExecutionLogs.graphql";
 import type { GetExecutionLogsQuery } from "../../graphql/executions/getExecutionLogs.generated.js";
-import { GET_EXECUTION_STEP_RESULTS } from "../../graphql/executions/getExecutionStepResults.js";
+import GET_EXECUTION_STEP_RESULTS from "../../graphql/executions/getExecutionStepResults.graphql";
 import type { GetExecutionStepResultsQuery } from "../../graphql/executions/getExecutionStepResults.generated.js";
-import { IS_CNI_EXECUTION_COMPLETE } from "../../graphql/executions/isCniExecutionComplete.js";
+import IS_CNI_EXECUTION_COMPLETE from "../../graphql/executions/isCniExecutionComplete.graphql";
 import type { IsCniExecutionCompleteQuery } from "../../graphql/executions/isCniExecutionComplete.generated.js";
 
 type IntegrationFlowNode = NonNullable<

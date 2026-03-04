@@ -24,8 +24,8 @@
     "clean-test-temp": "rm -rf src/commands/components/temp src/commands/components/init/temp src/commands/integrations/convert/temp",
     "copy": "copyfiles --error --all --exclude='.* !(|.spectral)' 'templates/**' 'lib' && copyfiles --error --up 1 'src/run.cmd' 'lib'",
     "build": "bun run clean && bun run format && bun run lint && tsc && bun run bundle && bun run manifest && bun run copy",
-    "bundle": "bun build src/index.ts src/run.ts --external debug --minify --outdir lib --target node",
-    "bundle:debug": "bun run bundle -- --sourcemap=external",
+    "bundle": "bun run build.ts",
+    "bundle:debug": "bun run build.ts --debug",
     "prepack": "bun run build",
     "lint": "biome lint .",
     "lint-fix": "biome lint --apply-unsafe .",
@@ -35,7 +35,7 @@
     "test": "bun run clean-test-temp && vitest run",
     "test:snapshots": "bun run clean-test-temp && vitest run --update",
     "codegen:clean": "find src -name '*.generated.ts' -delete",
-    "codegen": "bun run codegen:clean && export GRAPHQL_AUTH_KEY=$(prism me:token) && export PRISMATIC_URL=$(echo $PRISMATIC_URL) && npx graphql-codegen --config codegen.ts"
+    "codegen": "bun run codegen:clean && export GRAPHQL_AUTH_KEY=$(prism me:token) && export PRISMATIC_URL=$(echo $PRISMATIC_URL) && graphql-codegen --config codegen.ts && bun run format"
   },
   "files": ["oclif.manifest.json", "bin", "lib"],
   "dependencies": {

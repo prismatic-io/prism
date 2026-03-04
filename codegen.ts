@@ -10,15 +10,19 @@ const config: CodegenConfig = {
       [schemaUrl]: {
         headers: {
           Authorization: `Bearer ${process.env.GRAPHQL_AUTH_KEY}`,
+          "Prismatic-Docs-Introspection": "true",
         },
       },
     },
   ],
-  documents: ["src/graphql/**/*.ts"],
+  documents: ["src/graphql/**/*.graphql"],
   generates: {
     // Base schema types (enums, scalars, input types)
     "src/graphql/schema.generated.ts": {
       plugins: ["typescript"],
+      config: {
+        onlyOperationTypes: true,
+      },
     },
     // Operation types co-located with query files
     "src/graphql/": {
