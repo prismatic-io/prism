@@ -1,0 +1,10 @@
+query GetIntegrationFlow($id: ID!) {
+  integration(id: $id) {
+    flows {
+      nodes {
+        id
+        name
+      }
+    }
+  }
+}

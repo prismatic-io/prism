@@ -1,0 +1,13 @@
+mutation TestIntegrationFlow($id: ID!) {
+  testIntegrationFlow(input: { id: $id }) {
+    testIntegrationFlowResult {
+      execution {
+        id
+      }
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

@@ -1,0 +1,9 @@
+query GetIntegrationSystemInstance($integrationId: ID!) {
+  integration(id: $integrationId) {
+    isCodeNative
+    systemInstance {
+      id
+      configState
+    }
+  }
+}

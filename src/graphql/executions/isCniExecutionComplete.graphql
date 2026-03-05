@@ -1,0 +1,7 @@
+query IsCniExecutionComplete($executionId: ID!) {
+  executionResult(id: $executionId) {
+    stepResults {
+      totalCount
+    }
+  }
+}

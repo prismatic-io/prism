@@ -1,5 +1,5 @@
 import { gqlRequest, gql } from "../../graphql.js";
-import { GET_INTEGRATION_SYSTEM_INSTANCE } from "../../graphql/integrations/getIntegrationSystemInstance.js";
+import GET_INTEGRATION_SYSTEM_INSTANCE from "../../graphql/integrations/getIntegrationSystemInstance.graphql";
 import type { GetIntegrationSystemInstanceQuery } from "../../graphql/integrations/getIntegrationSystemInstance.generated.js";
 
 interface IntegrationByNameResult {
