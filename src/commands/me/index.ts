@@ -13,6 +13,7 @@ export default class WhoAmICommand extends Command {
     this.log("Email:", email);
     if (org) {
       this.log("Organization:", org.name);
+      this.log("Organization ID:", org.id);
     } else if (customer) {
       this.log("Customer:", customer.name);
     }
