@@ -6,6 +6,7 @@ interface OrgUser {
   email: string;
   tenantId?: string;
   org: {
+    id: string;
     name: string;
   };
   customer: undefined;
@@ -34,6 +35,7 @@ export const whoAmI = async (): Promise<User> => {
           email
           tenantId
           org {
+            id
             name
           }
           customer {
