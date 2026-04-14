@@ -311,6 +311,7 @@ export interface Tenant {
   url: string;
   orgName: string;
   awsRegion: string;
+  systemSuspended: boolean;
 }
 
 interface ListUserTenantsResponse {
@@ -329,6 +330,7 @@ export const fetchUserTenants = async (): Promise<Tenant[]> => {
             url
             orgName
             awsRegion
+            systemSuspended
           }
         }
       }
@@ -347,12 +349,31 @@ export const selectTenant = async (
 ): Promise<string | undefined> => {
   const { currentTenantId, message = "Select a tenant:" } = options;
 
-  const choices = tenants.map((tenant) => {
-    const isCurrent = tenant.tenantId === currentTenantId;
+  const currentTenant = tenants.find((t) => t.tenantId === currentTenantId);
+  const currentTenantSuspended = currentTenant?.systemSuspended ?? false;
+
+  // Delete config when org is suspended to avoid an active session with a suspended org.
+  if (currentTenantSuspended) {
+    await deleteConfig();
+  }
+
+  const activeTenants = tenants.filter((t) => !t.systemSuspended);
+  if (activeTenants.length === 0) {
+    console.log(
+      chalk.red(
+        "You have no active tenants on this stack. Please contact Prismatic support for assistance.",
+      ),
+    );
+    return;
+  }
+
+  const effectiveCurrentId = currentTenantSuspended ? undefined : currentTenantId;
+
+  const choices = activeTenants.map((tenant) => {
+    const isCurrent = tenant.tenantId === effectiveCurrentId;
     const checkmark = isCurrent ? chalk.green("✓ ") : "  ";
-    const displayName = isCurrent
-      ? chalk.green(`${tenant.orgName} - ${tenant.url} (${tenant.awsRegion})`)
-      : `${tenant.orgName} - ${tenant.url} (${tenant.awsRegion})`;
+    const label = `${tenant.orgName} - ${tenant.url} (${tenant.awsRegion})`;
+    const displayName = isCurrent ? chalk.green(label) : label;
 
     return {
       name: `${checkmark}${displayName}`,
@@ -368,7 +389,7 @@ export const selectTenant = async (
         name: "tenantId",
         message,
         choices,
-        default: currentTenantId,
+        default: effectiveCurrentId,
       },
     ]);
 
@@ -391,22 +412,24 @@ export const login = async (props?: { url: boolean }) => {
 
   const user = await whoAmI();
   const initialTenantId = user.tenantId;
+  const initialTenant = tenants.find((t) => t.tenantId === initialTenantId);
+  const initialTenantSuspended = initialTenant?.systemSuspended ?? false;
 
-  if (initialTenantId) {
+  if (!initialTenantSuspended && initialTenantId) {
     await writeConfig({
       ...initialAuth,
       tenantId: initialTenantId,
     });
   }
 
-  if (tenants.length <= 1) {
+  const activeTenants = tenants.filter((t) => !t.systemSuspended);
+  if (!initialTenantSuspended && activeTenants.length <= 1) {
     return;
   }
 
-  const selectedTenantId = await selectTenant(
-    tenants,
-    initialTenantId ? { currentTenantId: initialTenantId } : undefined,
-  );
+  const selectedTenantId = await selectTenant(tenants, {
+    currentTenantId: initialTenantId,
+  });
 
   if (selectedTenantId) {
     const tenantAuth = await auth.refresh(initialAuth.refreshToken, selectedTenantId);
