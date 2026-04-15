@@ -28,7 +28,7 @@
     "bundle:debug": "bun run build.ts --debug",
     "prepack": "bun run build",
     "lint": "biome lint .",
-    "lint-fix": "biome lint --apply-unsafe .",
+    "lint-fix": "biome lint --write --unsafe .",
     "format": "bun run lint-fix && biome format --write .",
     "check-format": "biome format .",
     "manifest": "oclif manifest",
@@ -73,7 +73,7 @@
     "zod": "^4.2.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.6.3",
+    "@biomejs/biome": "2.4.12",
     "@graphql-codegen/cli": "6.3.0",
     "@graphql-codegen/near-operation-file-preset": "^3.0.0",
     "@graphql-codegen/typescript": "5.0.10",
