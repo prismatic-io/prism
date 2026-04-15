@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
-import { setupServer } from "msw/node";
-import { graphql, HttpResponse } from "msw";
-import { ActionScheduleSupport } from "../../graphql/schema.generated.js";
-import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getIntegrationFlows.generated.js";
-import type { IsCniExecutionCompleteQuery } from "../../graphql/executions/isCniExecutionComplete.generated.js";
 import inquirer from "inquirer";
+import { graphql, HttpResponse } from "msw";
+import { setupServer } from "msw/node";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { TEST_PRISMATIC_URL } from "../../../vitest.setup.js";
+import type { IsCniExecutionCompleteQuery } from "../../graphql/executions/isCniExecutionComplete.generated.js";
+import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getIntegrationFlows.generated.js";
+import { ActionScheduleSupport } from "../../graphql/schema.generated.js";
 import { getIntegrationFlows, isCniExecutionComplete, selectFlowPrompt } from "./flows.js";
 
 vi.mock("inquirer", () => ({

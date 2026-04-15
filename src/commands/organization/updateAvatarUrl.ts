@@ -1,6 +1,6 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gqlRequest, gql } from "../../graphql.js";
+import { gql, gqlRequest } from "../../graphql.js";
 
 export default class UpdateAvatarUrlCommand extends PrismaticBaseCommand {
   // TODO: Add more flags once optional updates are implemented

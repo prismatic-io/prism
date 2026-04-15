@@ -1,4 +1,4 @@
-import { gqlRequest, gql } from "../../graphql.js";
+import { gql, gqlRequest } from "../../graphql.js";
 import { loadYaml } from "../serialize.js";
 
 /** The version of the Integration definition to request.

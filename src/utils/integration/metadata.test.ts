@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
 
 const mockExists = vi.fn();

@@ -112,7 +112,7 @@ export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>(
   let responseBody: GraphQLResponse<T>;
   try {
     responseBody = await response.json();
-  } catch (error) {
+  } catch (_error) {
     throw new ClientError(
       {
         errors: [{ message: `Failed to parse response: ${response.statusText}` }],

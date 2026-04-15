@@ -23,6 +23,7 @@ const setResultProperty = (property?: string | null) => {
 };
 
 const processProperties = (properties: Array<string | undefined | null>) => {
+  // biome-ignore lint/suspicious/useIterableCallbackReturn: TODO
   properties.forEach((property) => setResultProperty(property));
 };
 
@@ -39,6 +40,7 @@ const processIntegration = (integration: MarketplaceIntegration) => {
     return;
   }
 
+  // biome-ignore lint/suspicious/useIterableCallbackReturn: TODO
   instances.nodes.forEach((instance) => processIntegrationInstance(instance));
 };
 
@@ -68,6 +70,7 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
   configPages?.forEach((page) => {
     setResultProperty(page.name);
     setResultProperty(page.tagline);
+    // biome-ignore lint/suspicious/useIterableCallbackReturn: TODO
     page.elements.forEach((element) => setResultProperty(element.value));
   });
 

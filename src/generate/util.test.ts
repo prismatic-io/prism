@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
 import { promises as fs } from "fs";
+import { describe, expect, it } from "vitest";
 import { createDescription } from "./util.js";
 
 const getComplexDescription = async () =>

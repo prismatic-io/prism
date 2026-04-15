@@ -1,7 +1,7 @@
 import { Flags, ux } from "@oclif/core";
 import serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import dotenv from "dotenv";
-import inquirer, { DistinctQuestion, Answers, ListQuestionOptions } from "inquirer";
+import inquirer, { Answers, DistinctQuestion, ListQuestionOptions } from "inquirer";
 import { kebabCase, snakeCase, upperCase } from "lodash-es";
 import open from "open";
 import { promisify } from "util";

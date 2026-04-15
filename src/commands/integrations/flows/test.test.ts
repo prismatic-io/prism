@@ -1,18 +1,17 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
+import { graphql, HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
-import { graphql, http, HttpResponse } from "msw";
-import { buildFlagString } from "./test.js";
-import TestFlowCommand from "./test.js";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
+import type { GetExecutionLogsQuery } from "../../../graphql/executions/getExecutionLogs.generated.js";
+import type { IsCniExecutionCompleteQuery } from "../../../graphql/executions/isCniExecutionComplete.generated.js";
+import type { GetIntegrationFlowsQuery } from "../../../graphql/integrations/getIntegrationFlows.generated.js";
+import type { GetIntegrationSystemInstanceQuery } from "../../../graphql/integrations/getIntegrationSystemInstance.generated.js";
 import {
   ActionScheduleSupport,
   InstanceConfigState,
   LogSeverityLevel,
 } from "../../../graphql/schema.generated.js";
-import type { GetIntegrationSystemInstanceQuery } from "../../../graphql/integrations/getIntegrationSystemInstance.generated.js";
-import type { GetIntegrationFlowsQuery } from "../../../graphql/integrations/getIntegrationFlows.generated.js";
-import type { GetExecutionLogsQuery } from "../../../graphql/executions/getExecutionLogs.generated.js";
-import type { IsCniExecutionCompleteQuery } from "../../../graphql/executions/isCniExecutionComplete.generated.js";
-import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
+import TestFlowCommand, { buildFlagString } from "./test.js";
 
 const api = graphql.link(`${TEST_PRISMATIC_URL}/api`);
 

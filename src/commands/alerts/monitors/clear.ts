@@ -1,6 +1,6 @@
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gqlRequest, gql } from "../../../graphql.js";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ClearCommand extends PrismaticBaseCommand {
   static description = "Clear an Alert Monitor";

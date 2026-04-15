@@ -1,15 +1,15 @@
 import {
   ActionDefinition,
   ComponentDefinition,
-  InputFieldDefinition,
   ConnectionDefinition,
   ConnectionInput as ConnectionInputDefinition,
   InputFieldChoice,
+  InputFieldDefinition,
 } from "@prismatic-io/spectral";
 import { camelCase } from "lodash-es";
+import { toWords } from "number-to-words";
 import stripTags from "striptags";
 import { WriterFunction } from "ts-morph";
-import { toWords } from "number-to-words";
 
 const keywordReplacements: Record<string, string> = {
   default: "defaultValue",

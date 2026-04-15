@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { run, flush, handle, settings } from "@oclif/core";
+import { flush, handle, run, settings } from "@oclif/core";
 import { processError } from "./errors.js";
 
 try {

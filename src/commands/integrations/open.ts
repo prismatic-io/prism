@@ -1,4 +1,4 @@
-import { Command, Args } from "@oclif/core";
+import { Args, Command } from "@oclif/core";
 import { openIntegration } from "../../utils/integration/open.js";
 
 export default class OpenCommand extends Command {

@@ -1,7 +1,7 @@
-import prettier from "prettier";
-import { glob } from "glob";
 import { promises as fs } from "fs";
+import { glob } from "glob";
 import * as path from "path";
+import prettier from "prettier";
 
 export const VALID_NAME_REGEX = /^[a-zA-Z0-9][a-zA-Z0-9-_]*[a-zA-Z0-9]$/;
 

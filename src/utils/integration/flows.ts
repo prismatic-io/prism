@@ -1,14 +1,14 @@
 import inquirer from "inquirer";
+import type { GetExecutionLogsQuery } from "../../graphql/executions/getExecutionLogs.generated.js";
+import GET_EXECUTION_LOGS from "../../graphql/executions/getExecutionLogs.graphql";
+import type { GetExecutionStepResultsQuery } from "../../graphql/executions/getExecutionStepResults.generated.js";
+import GET_EXECUTION_STEP_RESULTS from "../../graphql/executions/getExecutionStepResults.graphql";
+import type { IsCniExecutionCompleteQuery } from "../../graphql/executions/isCniExecutionComplete.generated.js";
+import IS_CNI_EXECUTION_COMPLETE from "../../graphql/executions/isCniExecutionComplete.graphql";
+import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getIntegrationFlows.generated.js";
+import GET_INTEGRATION_FLOWS from "../../graphql/integrations/getIntegrationFlows.graphql";
 import { gqlRequest } from "../../graphql.js";
 import { handleError } from "../errors.js";
-import GET_INTEGRATION_FLOWS from "../../graphql/integrations/getIntegrationFlows.graphql";
-import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getIntegrationFlows.generated.js";
-import GET_EXECUTION_LOGS from "../../graphql/executions/getExecutionLogs.graphql";
-import type { GetExecutionLogsQuery } from "../../graphql/executions/getExecutionLogs.generated.js";
-import GET_EXECUTION_STEP_RESULTS from "../../graphql/executions/getExecutionStepResults.graphql";
-import type { GetExecutionStepResultsQuery } from "../../graphql/executions/getExecutionStepResults.generated.js";
-import IS_CNI_EXECUTION_COMPLETE from "../../graphql/executions/isCniExecutionComplete.graphql";
-import type { IsCniExecutionCompleteQuery } from "../../graphql/executions/isCniExecutionComplete.generated.js";
 
 type IntegrationFlowNode = NonNullable<
   NonNullable<GetIntegrationFlowsQuery["integration"]>["flows"]["nodes"][number]
@@ -19,7 +19,7 @@ export type IntegrationFlow = IntegrationFlowNode;
 export async function getIntegrationFlows(integrationId: string): Promise<IntegrationFlow[]> {
   let flows: IntegrationFlow[] = [];
   let hasNextPage = true;
-  let cursor: string | undefined = undefined;
+  let cursor: string | undefined;
 
   while (hasNextPage) {
     const result: GetIntegrationFlowsQuery = await gqlRequest<GetIntegrationFlowsQuery>({
@@ -161,7 +161,7 @@ export async function selectFlowPrompt(
   let flows: IntegrationFlow[];
   try {
     flows = await getIntegrationFlows(integrationId);
-  } catch (err) {
+  } catch (_err) {
     handleError({
       message: lookupError,
     });

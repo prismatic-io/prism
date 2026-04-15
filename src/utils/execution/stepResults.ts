@@ -1,7 +1,7 @@
 import { decode } from "@msgpack/msgpack";
+import { extension } from "mime-types";
 import { fs } from "../../fs.js";
 import { gql, gqlRequest } from "../../graphql.js";
-import { extension } from "mime-types";
 import { fetch } from "../http.js";
 
 export interface DeserializeResult {

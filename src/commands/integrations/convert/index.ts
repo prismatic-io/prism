@@ -1,7 +1,7 @@
 import { Args, Config, Flags, ux } from "@oclif/core";
-import { gql, gqlRequest } from "../../../graphql.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { toArgv } from "../../../generate/util.js";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 interface ConversionError {
   path: string;

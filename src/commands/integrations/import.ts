@@ -2,12 +2,12 @@ import { Flags, ux } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { exists } from "../../fs.js";
 import {
-  importYamlIntegration,
-  importCodeNativeIntegration,
-  getIntegrationDefinition,
-  extractYAMLFromPath,
-  loadCodeNativeIntegrationEntryPoint,
   compareConfigVars,
+  extractYAMLFromPath,
+  getIntegrationDefinition,
+  importCodeNativeIntegration,
+  importYamlIntegration,
+  loadCodeNativeIntegrationEntryPoint,
 } from "../../utils/integration/import.js";
 import { openIntegration } from "../../utils/integration/open.js";
 

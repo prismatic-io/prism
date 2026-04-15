@@ -1,24 +1,24 @@
-import { Flags, ux } from "@oclif/core";
 import { decode } from "@msgpack/msgpack";
+import { Flags, ux } from "@oclif/core";
 import open from "open";
 import z from "zod";
 import { getAccessToken, prismaticUrl } from "../../../auth.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { exists, fs } from "../../../fs.js";
+import { handleError } from "../../../utils/errors.js";
 import { fetch } from "../../../utils/http.js";
 import {
-  isCniExecutionComplete,
   FetchLogsResult,
   getExecutionLogs,
   getExecutionStepResults,
-  resolveFlow,
   type IntegrationFlow,
+  isCniExecutionComplete,
+  resolveFlow,
 } from "../../../utils/integration/flows.js";
-import { getTriggerType } from "./listen.js";
-import { exists, fs } from "../../../fs.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
-import { handleError } from "../../../utils/errors.js";
 import { getIntegrationSystemInstance } from "../../../utils/integration/query.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
+import { getTriggerType } from "./listen.js";
 
 type FormattedStepResult = {
   stepName: string;
@@ -294,7 +294,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
           if (!integrationId) {
             throw new Error();
           }
-        } catch (err) {
+        } catch (_err) {
           handleError({
             message: MISSING_ID_ERROR,
           });
@@ -435,8 +435,8 @@ prism integrations:flows:test ${flowArg} ${flagString}
     if (tailLogs) tailPromises.push(this.tailLogs(executionId));
     if (tailStepResults) tailPromises.push(this.tailStepResults(executionId));
 
-    let timeoutTimer: NodeJS.Timeout | undefined = undefined;
-    const timeoutPromise = new Promise<void>((resolve) => {
+    let timeoutTimer: NodeJS.Timeout | undefined;
+    const timeoutPromise = new Promise<void>((_resolve) => {
       timeoutTimer = setTimeout(
         () => {
           this.quietLog("Timeout reached. Stopping polling.", quiet);
@@ -458,7 +458,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
       flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout, jsonl },
     } = await this.parse(TestFlowCommand);
 
-    let nextCursor: string | undefined = undefined;
+    let nextCursor: string | undefined;
 
     while (true) {
       await ux.wait(getAdaptivePollIntervalMs(this.startTime));
@@ -507,7 +507,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
       flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout, jsonl },
     } = await this.parse(TestFlowCommand);
 
-    let nextCursor: string | undefined = undefined;
+    let nextCursor: string | undefined;
 
     while (true) {
       await ux.wait(getAdaptivePollIntervalMs(this.startTime));
@@ -542,7 +542,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
       }
 
       if (resultFilePath) {
-        for (const result of stepResults) {
+        for (const _result of stepResults) {
           await fs.appendFile(resultFilePath, JSON.stringify(stepResults));
         }
       }

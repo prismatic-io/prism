@@ -97,6 +97,7 @@ const buildActionDeclaration = ({
         .write(",")
         .write("inputs: ")
         .block(() =>
+          // biome-ignore lint/suspicious/useIterableCallbackReturn: TODO
           Object.entries(inputs).forEach(([key, input]) => writeInput(writer, key, input as Input)),
         )
         .write(",")
@@ -137,6 +138,7 @@ const writeActionGroup = (project: Project, groupTag: string, actions: Action[])
   file.addExportAssignment({
     isExportEquals: false,
     expression: (writer) =>
+      // biome-ignore lint/suspicious/useIterableCallbackReturn: TODO
       writer.block(() => names.forEach((name) => writer.writeLine(`${name},`))),
   });
 
@@ -168,6 +170,7 @@ const writeActionExport = (project: Project, groupTags: string[]): SourceFile =>
     isExportEquals: false,
     expression: (writer) =>
       writer.block(() => {
+        // biome-ignore lint/suspicious/useIterableCallbackReturn: TODO
         groupTags.forEach((tag) => writer.writeLine(`...${tag},`));
         writer.writeLine("rawRequest: buildRawRequestAction(baseUrl),");
       }),

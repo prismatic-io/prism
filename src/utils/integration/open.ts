@@ -1,5 +1,5 @@
-import * as path from "path";
 import open from "open";
+import * as path from "path";
 import { prismaticUrl } from "../../auth.js";
 
 export const openIntegration = async (integrationId: string) => {

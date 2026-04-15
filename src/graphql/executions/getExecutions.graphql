@@ -1,9 +1,4 @@
-query GetExecutions(
-  $flowId: ID
-  $isTestExecution: Boolean
-  $limit: Int
-  $startDate: DateTime
-) {
+query GetExecutions($flowId: ID, $isTestExecution: Boolean, $limit: Int, $startDate: DateTime) {
   executionResults(
     first: $limit
     isTestExecution: $isTestExecution

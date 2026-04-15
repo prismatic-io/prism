@@ -1,5 +1,5 @@
 import * as path from "path";
-import { Project, MethodSignature, SourceFile, ParameterDeclaration } from "ts-morph";
+import { MethodSignature, ParameterDeclaration, Project, SourceFile } from "ts-morph";
 import { ProjectStructure } from "./index.js";
 import { pascalCase } from "./util.js";
 
@@ -17,7 +17,7 @@ const getWSDLClientMethods = (
     const wsdlClientInterface = wsdlClientSource.getInterfaceOrThrow(clientInterface);
 
     return wsdlClientInterface?.getMethods();
-  } catch (error) {
+  } catch (_error) {
     console.error("Unable to find methods for Action Generation.");
     process.exit(1);
   }
