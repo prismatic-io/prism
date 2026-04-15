@@ -1,7 +1,7 @@
 import { camelCase } from "lodash-es";
 import * as path from "path";
-import { Project, SourceFile } from "ts-morph";
-import { ProjectStructure } from "./index.js";
+import { Project, type SourceFile } from "ts-morph";
+import type { ProjectStructure } from "./index.js";
 
 const initializeActionFile = (componentProject: Project, projectRoot: string): SourceFile => {
   const actionFile = componentProject.createSourceFile(

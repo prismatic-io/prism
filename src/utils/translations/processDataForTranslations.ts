@@ -1,4 +1,4 @@
-import {
+import type {
   MarketplaceTranslations,
   MarketplaceTranslations_marketplaceIntegrations_nodes_instances_nodes as MarketplaceInstance,
   MarketplaceTranslations_marketplaceIntegrations_nodes as MarketplaceIntegration,

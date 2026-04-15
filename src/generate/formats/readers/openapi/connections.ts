@@ -1,7 +1,12 @@
 import { OAuth2Type } from "@prismatic-io/spectral";
 import { camelCase, startCase } from "lodash-es";
-import { OpenAPIV3 } from "openapi-types";
-import { Connection, ConnectionInput, createDescription, stripUndefined } from "../../utils.js";
+import type { OpenAPIV3 } from "openapi-types";
+import {
+  type Connection,
+  type ConnectionInput,
+  createDescription,
+  stripUndefined,
+} from "../../utils.js";
 
 export const buildConnections = (
   key: string,

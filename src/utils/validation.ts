@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod";
 
 /**
  * Format a Zod error into a user-friendly message for CLI output.

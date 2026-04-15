@@ -1,4 +1,4 @@
-import * as Types from "../schema.generated.js";
+import type * as Types from "../schema.generated.js";
 
 export type GetIntegrationFlowsQueryVariables = Types.Exact<{
   id: Types.Scalars["ID"]["input"];

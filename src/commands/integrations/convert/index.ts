@@ -1,4 +1,4 @@
-import { Args, Config, Flags, ux } from "@oclif/core";
+import { Args, type Config, Flags, ux } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { toArgv } from "../../../generate/util.js";
 import { gql, gqlRequest } from "../../../graphql.js";

@@ -1,4 +1,4 @@
-import { Command, Config, Flags } from "@oclif/core";
+import { Command, type Config, Flags } from "@oclif/core";
 import inquirer from "inquirer";
 import { camelCase } from "lodash-es";
 import path from "path";

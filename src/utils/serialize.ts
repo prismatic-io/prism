@@ -1,4 +1,4 @@
-import { DumpOptions, dump, LoadOptions, load } from "js-yaml";
+import { type DumpOptions, dump, type LoadOptions, load } from "js-yaml";
 
 export const dumpYaml = (
   value: unknown,

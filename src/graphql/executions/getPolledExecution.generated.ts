@@ -1,4 +1,4 @@
-import * as Types from "../schema.generated.js";
+import type * as Types from "../schema.generated.js";
 
 export type GetPolledExecutionQueryVariables = Types.Exact<{
   executionId: Types.Scalars["ID"]["input"];

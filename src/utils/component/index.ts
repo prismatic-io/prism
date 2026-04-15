@@ -1,5 +1,5 @@
 import { ux } from "@oclif/core";
-import { Component as ComponentDefinitionTemplate } from "@prismatic-io/spectral/dist/serverTypes";
+import type { Component as ComponentDefinitionTemplate } from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import archiver from "archiver";
 import { extname, resolve } from "path";
 import tempy from "tempy";
@@ -76,7 +76,7 @@ export const createSourceCodePackage = async (): Promise<string> => {
   try {
     const tsconfigPath = resolve(sourceRoot, "tsconfig.json");
     if (await exists(tsconfigPath)) {
-      const tsconfigContent = await import(tsconfigPath, { assert: { type: "json" } });
+      const tsconfigContent = await import(tsconfigPath, { with: { type: "json" } });
       if (tsconfigContent.default?.include && Array.isArray(tsconfigContent.default.include)) {
         includePatterns = tsconfigContent.default.include;
       }

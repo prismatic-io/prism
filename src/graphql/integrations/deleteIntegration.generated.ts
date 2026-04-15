@@ -1,4 +1,4 @@
-import * as Types from "../schema.generated.js";
+import type * as Types from "../schema.generated.js";
 
 export type DeleteIntegrationMutationVariables = Types.Exact<{
   id: Types.Scalars["ID"]["input"];

@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   buildConnectionConfigVar,
   buildStep,
-  ComponentTestInfo,
+  type ComponentTestInfo,
   defaultDefinition,
 } from "./definition.js";
-import { Expression } from "./export.js";
+import type { Expression } from "./export.js";
 
 describe("buildConnectionConfigVar", () => {
   it("should build connection config var for public component", () => {

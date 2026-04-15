@@ -1,6 +1,6 @@
 import * as path from "path";
-import { MethodSignature, ParameterDeclaration, Project, SourceFile } from "ts-morph";
-import { ProjectStructure } from "./index.js";
+import type { MethodSignature, ParameterDeclaration, Project, SourceFile } from "ts-morph";
+import type { ProjectStructure } from "./index.js";
 import { pascalCase } from "./util.js";
 
 interface ServiceMethods {

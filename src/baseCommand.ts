@@ -1,5 +1,5 @@
 import { Command, Flags } from "@oclif/core";
-import { z } from "zod";
+import type { z } from "zod";
 import { validateFlags } from "./utils/validation.js";
 
 export abstract class PrismaticBaseCommand extends Command {
