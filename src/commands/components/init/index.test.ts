@@ -1,10 +1,10 @@
-import { expect, it, describe } from "vitest";
 import fs from "fs";
-import path from "path";
-import { kebabCase } from "lodash-es";
-import InitializeComponent from ".";
 import { readFile } from "fs-extra";
+import { kebabCase } from "lodash-es";
+import path from "path";
+import { describe, expect, it } from "vitest";
 import { walkDir } from "../../../fs";
+import InitializeComponent from ".";
 
 const COMPONENT_GENERATION_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 

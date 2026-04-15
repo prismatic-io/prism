@@ -1,6 +1,6 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gqlRequest, gql } from "../../../graphql.js";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create a User for the specified Customer";
@@ -19,6 +19,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
     {
       description: "Add a new 'Member' user for the customer:",
       command:
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
         "<%= config.bin %> <%= command.id %> --email 'bar@email.com' --name 'Thomas Bar' --customer ${CUSTOMER_ID} --role ${ROLE_ID}",
     },
   ];

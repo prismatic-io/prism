@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "fs";
-import path from "path";
-import InitializeIntegration from "./index.js";
 import { readFile } from "fs-extra";
+import path from "path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { walkDir } from "../../../fs.js";
+import InitializeIntegration from "./index.js";
 
 const GENERATION_TIMEOUT_SECONDS = 6000; // 1 minute
 
@@ -11,7 +11,7 @@ expect.addSnapshotSerializer({
   test(val) {
     return typeof val === "string";
   },
-  serialize(val: string, config, indentation, depth, refs, printer) {
+  serialize(val: string, _config, _indentation, _depth, _refs, _printer) {
     const normalized = val
       .replace(
         /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,

@@ -1,7 +1,7 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { extractYAMLFromPath } from "../../utils/integration/import.js";
 import { gql, gqlRequest } from "../../graphql.js";
+import { extractYAMLFromPath } from "../../utils/integration/import.js";
 
 interface ImportWorkflowResult {
   importWorkflow: {

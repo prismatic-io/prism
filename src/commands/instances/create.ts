@@ -15,6 +15,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
     {
       description: "Get the version ID of the latest available published version:",
       command:
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
         "VERSION_ID=$(prism integrations:versions ${INTEGRATION_ID} --latest-available --columns id --no-header)",
     },
     {
@@ -25,6 +26,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
     {
       description: "Create an instance with config variables and labels:",
       command:
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
         '<%= config.bin %> <%= command.id %> --name \'Acme Inc\' --description \'Acme Inc instance for Smith Rocket Co\' --integration ${VERSION_ID} --customer ${CUSTOMER_ID} --config-vars \'[{"key":"My Endpoint","value":"https://example.com/api"},{"key":"Do Thing?","value":"true"},{"key":"Acme Basic Auth","values":"${CREDENTIALS}"}]\' --label \'Production\' --label \'Paid\'',
     },
   ];

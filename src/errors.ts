@@ -1,7 +1,7 @@
 import { handle } from "@oclif/core";
 import { OclifError } from "@oclif/core/lib/interfaces";
+import { getReasonPhrase, StatusCodes } from "http-status-codes";
 import { ClientError } from "./graphql.js";
-import { StatusCodes, getReasonPhrase } from "http-status-codes";
 
 const isError = (error: unknown): error is Error =>
   Boolean(error) && typeof error === "object" && error !== null && "message" in error;
@@ -26,7 +26,7 @@ const extractResponseError = ({ response: { errors = [], status } }: ClientError
     const statusMessage = getStatusMessage(status);
     const errorMessages = errors.map(({ message }) => message);
     return [statusMessage, ...errorMessages].filter(Boolean).join("\n");
-  } catch (e) {
+  } catch (_e) {
     return `GraphQL Error (Code: ${status})`;
   }
 };

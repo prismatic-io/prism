@@ -1,6 +1,6 @@
 import { Args, ux } from "@oclif/core";
-import { gqlRequest, gql } from "../../../graphql.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Alert Events for an Alert Monitor";

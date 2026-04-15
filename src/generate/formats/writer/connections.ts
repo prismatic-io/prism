@@ -86,6 +86,7 @@ const buildConnectionDeclaration = ({
         })
         .write("inputs: ")
         .block(() =>
+          // biome-ignore lint/suspicious/useIterableCallbackReturn: TODO
           Object.entries(inputs).forEach(([key, input]) => writeInput(writer, key, input)),
         )
         .writeLine("})"),

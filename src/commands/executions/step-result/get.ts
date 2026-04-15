@@ -1,8 +1,8 @@
-import { fs } from "../../../fs.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { fs } from "../../../fs.js";
 import { gql, gqlRequest } from "../../../graphql.js";
-import { deserialize, DeserializeResult, parseData } from "../../../utils/execution/stepResults.js";
+import { DeserializeResult, deserialize, parseData } from "../../../utils/execution/stepResults.js";
 import { fetch } from "../../../utils/http.js";
 
 export default class GetCommand extends PrismaticBaseCommand {
@@ -12,6 +12,7 @@ export default class GetCommand extends PrismaticBaseCommand {
   static examples = [
     {
       description: "Run a test of a flow to get an execution ID:",
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
       command: "prism integrations:flows:test ${FLOW_ID}",
     },
     {

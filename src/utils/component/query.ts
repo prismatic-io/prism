@@ -1,4 +1,4 @@
-import { gqlRequest, gql } from "../../graphql.js";
+import { gql, gqlRequest } from "../../graphql.js";
 
 interface ComponentInfo {
   id: string;

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Authenticate, createRequestParams } from "./auth.js";
 import { fetch } from "./utils/http.js";
 

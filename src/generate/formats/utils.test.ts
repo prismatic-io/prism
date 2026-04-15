@@ -1,13 +1,13 @@
-import { describe, it, expect } from "vitest";
-import { createDescription, cleanIdentifier } from "./utils.js";
+import { describe, expect, it } from "vitest";
+import { cleanIdentifier, createDescription } from "./utils.js";
 
 describe("createDescription", () => {
-  it.each([{ value: "Bob's", expected: "Bob's" }])(
-    "should not flip quotes",
-    ({ value, expected }) => {
-      expect(createDescription(value)).toStrictEqual(expected);
-    },
-  );
+  it.each([{ value: "Bob's", expected: "Bob's" }])("should not flip quotes", ({
+    value,
+    expected,
+  }) => {
+    expect(createDescription(value)).toStrictEqual(expected);
+  });
 });
 
 describe("cleanIdentifier", () => {

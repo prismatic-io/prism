@@ -1,5 +1,5 @@
 import { Command } from "@oclif/core";
-import { isLoggedIn, refresh, fetchUserTenants, selectTenant } from "../../auth.js";
+import { fetchUserTenants, isLoggedIn, refresh, selectTenant } from "../../auth.js";
 import { readConfig, writeConfig } from "../../config.js";
 import { whoAmI } from "../../utils/user/query.js";
 

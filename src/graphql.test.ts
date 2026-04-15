@@ -1,3 +1,4 @@
+// biome-ignore lint/correctness/noUnusedImports: TODO
 import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from "vitest";
 import { setupServer } from "msw/node";
 import { graphql, HttpResponse } from "msw";
@@ -7,6 +8,7 @@ import { gql, gqlRequest } from "./graphql.js";
 const api = graphql.link(`${TEST_PRISMATIC_URL}/api`);
 
 const server = setupServer(
+  // biome-ignore lint/correctness/noUnusedFunctionParameters: TODO
   api.operation(({ operationName }) => {
     return HttpResponse.json({ data: null });
   }),

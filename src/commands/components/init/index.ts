@@ -1,12 +1,12 @@
+import { Args, Command, Flags } from "@oclif/core";
 import { promises as fs } from "fs";
 import * as path from "path";
-import { Args, Command, Flags } from "@oclif/core";
 import { parseAndGenerate } from "wsdl-tsclient";
 import { Logger as WsdlTsClientLogger } from "wsdl-tsclient/dist/src/utils/logger.js";
 import { generate } from "../../../generate/index.js";
 import { updatePackageJson } from "../../../generate/util.js";
 import { devDependencies } from "../../../utils/devDependencies.js";
-import { VALID_NAME_REGEX, formatSourceFiles, getFilesToFormat } from "../../../utils/generate.js";
+import { formatSourceFiles, getFilesToFormat, VALID_NAME_REGEX } from "../../../utils/generate.js";
 import GenerateComponentCommand from "./component.js";
 import GenerateFormatsCommand from "./formats.js";
 

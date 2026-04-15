@@ -171,6 +171,7 @@ export const importYamlIntegration = async (
 ): Promise<string> => {
   const definition = await extractYAMLFromPath(path);
 
+  // biome-ignore lint/correctness/noUnusedVariables: TODO
   const { integrationId: integrationImportId, systemInstance } = await importDefinition(
     definition,
     integrationId,
@@ -213,6 +214,7 @@ export const importCodeNativeIntegration = async (
       const allKeysForFlow = [...existingKeys];
 
       // Add CLI keys for providers that this flow might need
+      // biome-ignore lint/correctness/noUnusedVariables: TODO
       for (const [provider, keys] of Object.entries(cliApiKeys)) {
         allKeysForFlow.push(...keys);
       }
@@ -307,6 +309,7 @@ interface PublishingMetadata {
   }[];
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: TODO
 interface ParsedApiKey {
   provider: string;
   key: string;
@@ -583,9 +586,12 @@ export const compareConfigVars = async (current: string, next: string): Promise<
   });
 
   // Return missing config vars.
-  return Object.entries(requiredMatches)
-    .filter(([key, match]) => !match)
-    .map(([key]) => key);
+  return (
+    Object.entries(requiredMatches)
+      // biome-ignore lint/correctness/noUnusedFunctionParameters: TODO
+      .filter(([key, match]) => !match)
+      .map(([key]) => key)
+  );
 };
 
 export const extractYAMLFromPath = async (path: string): Promise<string> => {

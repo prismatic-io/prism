@@ -14,6 +14,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
     {
       description: "Create an organization user and assign the role:",
       command:
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
         "<%= config.bin %> <%= command.id %> --email 'foo@email.com' --name 'Susan Foo' --role ${ROLE_ID}",
     },
   ];

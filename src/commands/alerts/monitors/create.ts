@@ -27,6 +27,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
       description:
         "Create an alert monitor that alerts the DevOps group when an instance execution takes longer than 10 seconds:",
       command:
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
         '<%= config.bin %> <%= command.id %> --name "Alert Devops of slow execution" --instance ${INSTANCE_ID} --triggers "[\\"${TRIGGER_ID}\\"]" --duration 10 --groups "[\\"${ALERT_GROUP_ID}\\"]"',
     },
   ];

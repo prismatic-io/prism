@@ -1,12 +1,12 @@
-import path from "path";
 import { Args, Command, Flags } from "@oclif/core";
 import fs from "fs/promises";
 import { camelCase } from "lodash-es";
+import path from "path";
 import { v4 as uuid4 } from "uuid";
 import { prismaticUrl } from "../../../auth.js";
 import { template, updatePackageJson } from "../../../generate/util.js";
-import { VALID_NAME_REGEX } from "../../../utils/generate.js";
 import { devDependencies } from "../../../utils/devDependencies.js";
+import { VALID_NAME_REGEX } from "../../../utils/generate.js";
 
 const CLEANABLE_TEMPLATES = [
   "src/client.ts",

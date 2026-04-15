@@ -1,6 +1,6 @@
-import { dumpYaml } from "../serialize.js";
 import { merge } from "lodash-es";
-import { exportDefinition, IntegrationDefinition, Expression, ConfigVar, Step } from "./export.js";
+import { dumpYaml } from "../serialize.js";
+import { ConfigVar, Expression, exportDefinition, IntegrationDefinition, Step } from "./export.js";
 
 interface ConnectionInfo {
   key: string;

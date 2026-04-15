@@ -1,6 +1,6 @@
 import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { readFileSync } from "fs";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
 export default class ImportCommand extends PrismaticBaseCommand {

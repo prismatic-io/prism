@@ -1,8 +1,8 @@
 import { InputFieldType } from "@prismatic-io/spectral";
 import * as path from "path";
 import { Project, SourceFile } from "ts-morph";
-import { initializeProject } from "./sourceFile.js";
 import { generateActions } from "./action.js";
+import { initializeProject } from "./sourceFile.js";
 
 export interface ProjectStructure {
   projectRoot: string;

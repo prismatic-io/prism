@@ -33,7 +33,7 @@ const extractRequestParams = (url: string): Record<string, string> => {
   const paramRegex = new RegExp(/([a-z]+)=([^=&]+)/, "g");
   const params: Record<string, string> = {};
   let param: RegExpExecArray | null;
-  // biome-ignore lint/suspicious/noAssignInExpressions:
+  // biome-ignore lint/suspicious/noAssignInExpressions: TODO
   while ((param = paramRegex.exec(url)) !== null) {
     params[`${param[1]}`] = param[2];
   }
@@ -373,6 +373,7 @@ export const selectTenant = async (
     ]);
 
     return tenantId;
+    // biome-ignore lint/correctness/noUnusedVariables: TODO
   } catch (error) {
     // User cancelled tenant selection
     return;
@@ -457,6 +458,7 @@ export const getAccessToken = async (): Promise<string | undefined> => {
   const tenantId = envTenantId ?? configTenantId;
 
   if (accessToken && refreshToken) {
+    // biome-ignore lint/complexity/useDateNow: TODO
     const now = Math.floor(new Date().getTime() / 1000);
     const { exp } = jwtDecode<{ exp: number }>(accessToken);
 

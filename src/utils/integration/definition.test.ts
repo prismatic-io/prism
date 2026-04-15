@@ -1,9 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   buildConnectionConfigVar,
   buildStep,
-  defaultDefinition,
   ComponentTestInfo,
+  defaultDefinition,
 } from "./definition.js";
 import { Expression } from "./export.js";
 

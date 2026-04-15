@@ -1,9 +1,9 @@
 import { renderFile } from "ejs";
 import { copyFile, mkdirp, outputFile, readJson } from "fs-extra";
-import striptags from "striptags";
-import prettier from "prettier";
-import { startCase, camelCase, merge } from "lodash-es";
+import { camelCase, merge, startCase } from "lodash-es";
 import path from "path";
+import prettier from "prettier";
+import striptags from "striptags";
 import { fileURLToPath } from "url";
 import { exists } from "../fs.js";
 import { fetch } from "../utils/http.js";

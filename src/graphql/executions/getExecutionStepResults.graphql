@@ -1,9 +1,6 @@
 query GetExecutionStepResults($executionId: ID!, $nextCursor: String) {
   executionResult(id: $executionId) {
-    stepResults(
-      after: $nextCursor
-      orderBy: { field: ENDED_AT, direction: ASC }
-    ) {
+    stepResults(after: $nextCursor, orderBy: { field: ENDED_AT, direction: ASC }) {
       edges {
         node {
           stepName

@@ -1,10 +1,10 @@
 import { Command, Config, Flags } from "@oclif/core";
-import { camelCase } from "lodash-es";
-import { template, toArgv, updatePackageJson } from "../../../generate/util.js";
-import path, { extname } from "path";
 import { copy } from "fs-extra";
+import { camelCase } from "lodash-es";
+import path, { extname } from "path";
 import { read } from "../../../generate/formats/readers/openapi/index.js";
 import { write } from "../../../generate/formats/writer/index.js";
+import { template, toArgv } from "../../../generate/util.js";
 
 export default class GenerateFormatsCommand extends Command {
   static hidden = true;

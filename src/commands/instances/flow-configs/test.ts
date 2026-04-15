@@ -92,7 +92,7 @@ export default class TestCommand extends PrismaticBaseCommand {
   private async tailLogs(executionId: string) {
     const { flags } = await this.parse(TestCommand);
 
-    let nextCursor: string | undefined = undefined;
+    let nextCursor: string | undefined;
     while (true) {
       await ux.wait(500);
 

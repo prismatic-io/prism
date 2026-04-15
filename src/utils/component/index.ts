@@ -1,12 +1,10 @@
-import { Component as ComponentDefinitionTemplate } from "@prismatic-io/spectral/dist/serverTypes";
 import { ux } from "@oclif/core";
-import { resolve } from "path";
-import tempy from "tempy";
+import { Component as ComponentDefinitionTemplate } from "@prismatic-io/spectral/dist/serverTypes";
 import archiver from "archiver";
-import { extname } from "path";
-
-import { seekPackageDistDirectory, findPackageRoot } from "../import.js";
+import { extname, resolve } from "path";
+import tempy from "tempy";
 import { exists } from "../../fs.js";
+import { findPackageRoot, seekPackageDistDirectory } from "../import.js";
 
 /** Type defining leftover legacy backwards compat keys. */
 type LegacyDefinition = {

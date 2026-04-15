@@ -1,12 +1,11 @@
-import { extname } from "path";
-import crypto from "crypto";
 import { ux } from "@oclif/core";
+import crypto from "crypto";
 import mimetypes from "mime-types";
-
-import { ComponentDefinition } from "./index.js";
+import { extname } from "path";
 import { fs } from "../../fs.js";
-import { gqlRequest, gql } from "../../graphql.js";
+import { gql, gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
+import { ComponentDefinition } from "./index.js";
 
 const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {
   actions: true,
@@ -265,8 +264,7 @@ export const uploadConnectionIcons = async (
   >,
 ): Promise<void> => {
   if (
-    !connections ||
-    !connections.length ||
+    !connections?.length ||
     !connectionIconUploadUrls ||
     !Object.keys(connectionIconUploadUrls).length
   ) {

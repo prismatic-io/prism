@@ -1,11 +1,11 @@
+import { InputFieldType } from "@prismatic-io/spectral";
 import {
-  VariableDeclarationKind,
   ObjectLiteralExpression,
-  Writers,
   ParameterDeclaration,
   SourceFile,
+  VariableDeclarationKind,
+  Writers,
 } from "ts-morph";
-import { InputFieldType } from "@prismatic-io/spectral";
 import { InputPropertyStructure, ProjectStructure } from "./index.js";
 import { pascalCase } from "./util.js";
 

@@ -1,9 +1,9 @@
-import { gqlRequest } from "../../graphql.js";
-import GET_INTEGRATION_FLOW from "../../graphql/integrations/getIntegrationFlow.graphql";
-import type { GetIntegrationFlowQuery } from "../../graphql/integrations/getIntegrationFlow.generated.js";
-import TEST_INTEGRATION_FLOW from "../../graphql/integrations/testIntegrationFlow.graphql";
-import type { TestIntegrationFlowMutation } from "../../graphql/integrations/testIntegrationFlow.generated.js";
 import DELETE_INTEGRATION from "../../graphql/integrations/deleteIntegration.graphql";
+import type { GetIntegrationFlowQuery } from "../../graphql/integrations/getIntegrationFlow.generated.js";
+import GET_INTEGRATION_FLOW from "../../graphql/integrations/getIntegrationFlow.graphql";
+import type { TestIntegrationFlowMutation } from "../../graphql/integrations/testIntegrationFlow.generated.js";
+import TEST_INTEGRATION_FLOW from "../../graphql/integrations/testIntegrationFlow.graphql";
+import { gqlRequest } from "../../graphql.js";
 
 /** Return Flow ID of given flow name on specified Integration. */
 export const getIntegrationFlow = async (

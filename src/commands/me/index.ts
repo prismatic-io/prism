@@ -1,6 +1,5 @@
 import { Command } from "@oclif/core";
 import { prismaticUrl } from "../../auth.js";
-import { readConfig } from "../../config.js";
 import { whoAmI } from "../../utils/user/query.js";
 
 export default class WhoAmICommand extends Command {

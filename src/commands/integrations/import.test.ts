@@ -1,7 +1,7 @@
-import { describe, it, expect, afterEach, vi } from "vitest";
-import ImportCommand from "./import.js";
 import { ux } from "@oclif/core";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ComponentDefinition } from "../../utils/component/index.js";
+import ImportCommand from "./import.js";
 
 vi.mock("../../fs.js", () => ({
   exists: vi.fn(),

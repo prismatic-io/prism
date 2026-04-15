@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { encode } from "@msgpack/msgpack";
-import { setupServer } from "msw/node";
+import inquirer from "inquirer";
 import { graphql, HttpResponse, http } from "msw";
-import { ActionScheduleSupport } from "../../../graphql/schema.generated.js";
-import type { GetIntegrationFlowsQuery } from "../../../graphql/integrations/getIntegrationFlows.generated.js";
+import { setupServer } from "msw/node";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
+import { fs } from "../../../fs.js";
 import type { GetExecutionsQuery } from "../../../graphql/executions/getExecutions.generated.js";
 import type { GetPolledExecutionQuery } from "../../../graphql/executions/getPolledExecution.generated.js";
+import type { GetIntegrationFlowsQuery } from "../../../graphql/integrations/getIntegrationFlows.generated.js";
 import type { TestIntegrationFlowMutation } from "../../../graphql/integrations/testIntegrationFlow.generated.js";
 import type { UpdateIntegrationFlowListeningModeMutation } from "../../../graphql/integrations/updateIntegrationFlowListeningMode.generated.js";
-import { fs } from "../../../fs.js";
-import inquirer from "inquirer";
-import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
+import { ActionScheduleSupport } from "../../../graphql/schema.generated.js";
 import ListenCommand, { getTriggerType } from "./listen.js";
 
 vi.mock("../../../fs.js", () => ({

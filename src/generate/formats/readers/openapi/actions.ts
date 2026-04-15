@@ -1,8 +1,8 @@
-import { OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 import { camelCase, isEmpty, startCase } from "lodash-es";
-import { getInputs } from "./inputs.js";
-import { Action, Input, cleanIdentifier, stripUndefined } from "../../utils.js";
+import { OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 import { WriterFunction } from "ts-morph";
+import { Action, cleanIdentifier, Input, stripUndefined } from "../../utils.js";
+import { getInputs } from "./inputs.js";
 import { toGroupTag } from "./util.js";
 
 const buildPerformFunction = (

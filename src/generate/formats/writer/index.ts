@@ -1,9 +1,9 @@
+import { minBy } from "lodash-es";
 import path from "path";
 import { Project, ScriptKind, SourceFile } from "ts-morph";
-import { minBy } from "lodash-es";
-import { Component, Result, createDescription, Connection, Action, Input } from "../utils.js";
-import { writeConnections } from "./connections.js";
+import { Action, Component, Connection, createDescription, Input, Result } from "../utils.js";
 import { writeActions } from "./actions.js";
+import { writeConnections } from "./connections.js";
 
 const writeComponentIndex = (
   project: Project,
@@ -120,23 +120,28 @@ const writeClient = (project: Project, baseUrl: string, connections: Connection[
         )
         .writeLine("const accessToken = util.types.toString(connection.token?.access_token);")
         .writeLine("if (accessToken) {")
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
         .writeLine("return { Authorization: `Bearer ${accessToken}` };")
         .writeLine("}")
         .blankLine()
         .writeLine("const apiKey = util.types.toString(connection.fields?.apiKey);")
         .writeLine("if (apiKey) {")
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
         .writeLine("return { Authorization: `Bearer ${apiKey}` };")
         .writeLine("}")
         .blankLine()
         .writeLine("const username = util.types.toString(connection.fields?.username);")
         .writeLine("const password = util.types.toString(connection.fields?.password);")
         .writeLine("if (username && password) {")
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
         .writeLine('const encoded = Buffer.from(`${username}:${password}`).toString("base64");')
+        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
         .writeLine("return { Authorization: `Basic ${encoded}` };")
         .writeLine("}")
         .blankLine()
         .writeLine("throw new Error(")
         .writeLine(
+          // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
           "`Failed to guess at authorization parameters for Connection: ${connection.key}`",
         )
         .writeLine(");")
@@ -151,6 +156,7 @@ const writeClient = (project: Project, baseUrl: string, connections: Connection[
             .join(", ")}].includes(connection.key)) {`,
         )
         .writeLine(
+          // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
           "throw new ConnectionError(connection, `Received unexpected connection type: ${connection.key}`);",
         )
         .writeLine("}")

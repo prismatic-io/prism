@@ -1,10 +1,5 @@
-mutation UpdateIntegrationFlowListeningMode(
-  $integrationId: ID!
-  $isListening: Boolean
-) {
-  updateWorkflowTestConfiguration(
-    input: { id: $integrationId, listeningMode: $isListening }
-  ) {
+mutation UpdateIntegrationFlowListeningMode($integrationId: ID!, $isListening: Boolean) {
+  updateWorkflowTestConfiguration(input: { id: $integrationId, listeningMode: $isListening }) {
     errors {
       field
       messages

@@ -36,7 +36,7 @@ export default class SetDebugCommand extends PrismaticBaseCommand {
       try {
         const metadata = await getPrismMetadata();
         integrationId = metadata.integrationId;
-      } catch (e) {
+      } catch (_e) {
         throw MISSING_ID_ERROR;
       }
 
