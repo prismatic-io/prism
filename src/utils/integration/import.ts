@@ -11,13 +11,13 @@ import {
   uploadConnectionIcons,
 } from "../component/publish.js";
 import {
-  ComponentDefinition,
+  type ComponentDefinition,
   createComponentPackage,
   validateDefinition,
 } from "../component/index.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
 import { loadYaml } from "../serialize.js";
-import { IntegrationObjectFromYAML } from "./types.js";
+import type { IntegrationObjectFromYAML } from "./types.js";
 
 interface ImportDefinitionResult {
   integrationId: string;

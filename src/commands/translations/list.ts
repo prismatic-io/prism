@@ -3,7 +3,7 @@ import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { fs } from "../../fs.js";
 import { gqlRequest } from "../../graphql.js";
 import { GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS } from "../../queries.graphql.js";
-import { MarketplaceTranslations } from "../../types.js";
+import type { MarketplaceTranslations } from "../../types.js";
 import { processIntegrationsForTranslations } from "../../utils/translations/processDataForTranslations.js";
 
 export default class TranslationsCommand extends PrismaticBaseCommand {

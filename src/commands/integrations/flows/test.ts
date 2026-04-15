@@ -8,7 +8,7 @@ import { exists, fs } from "../../../fs.js";
 import { handleError } from "../../../utils/errors.js";
 import { fetch } from "../../../utils/http.js";
 import {
-  FetchLogsResult,
+  type FetchLogsResult,
   getExecutionLogs,
   getExecutionStepResults,
   type IntegrationFlow,

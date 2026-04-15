@@ -1,6 +1,12 @@
 import SwaggerParser, { dereference } from "@apidevtools/swagger-parser";
-import { OpenAPI } from "openapi-types";
-import { Action, Component, Connection, Result, stripUndefined } from "../../utils.js";
+import type { OpenAPI } from "openapi-types";
+import {
+  type Action,
+  type Component,
+  type Connection,
+  type Result,
+  stripUndefined,
+} from "../../utils.js";
 import { operationsToActions } from "./actions.js";
 import { buildConnections } from "./connections.js";
 

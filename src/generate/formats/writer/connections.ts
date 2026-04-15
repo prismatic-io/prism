@@ -1,15 +1,15 @@
 import { OAuth2Type } from "@prismatic-io/spectral";
 import { sortBy } from "lodash-es";
 import {
-  CodeBlockWriter,
-  Project,
+  type CodeBlockWriter,
+  type Project,
   ScriptKind,
-  SourceFile,
+  type SourceFile,
   StructureKind,
   VariableDeclarationKind,
-  VariableDeclarationStructure,
+  type VariableDeclarationStructure,
 } from "ts-morph";
-import { Connection, ConnectionInput, cleanIdentifier, escapeText } from "../utils.js";
+import { type Connection, type ConnectionInput, cleanIdentifier, escapeText } from "../utils.js";
 import path from "path";
 
 const writeInput = (

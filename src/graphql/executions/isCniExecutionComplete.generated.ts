@@ -1,4 +1,4 @@
-import * as Types from "../schema.generated.js";
+import type * as Types from "../schema.generated.js";
 
 export type IsCniExecutionCompleteQueryVariables = Types.Exact<{
   executionId: Types.Scalars["ID"]["input"];

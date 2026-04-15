@@ -1,4 +1,4 @@
-import * as Types from "../schema.generated.js";
+import type * as Types from "../schema.generated.js";
 
 export type UpdateIntegrationFlowListeningModeMutationVariables = Types.Exact<{
   integrationId: Types.Scalars["ID"]["input"];

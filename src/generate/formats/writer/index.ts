@@ -1,7 +1,14 @@
 import { minBy } from "lodash-es";
 import path from "path";
-import { Project, ScriptKind, SourceFile } from "ts-morph";
-import { Action, Component, Connection, createDescription, Input, Result } from "../utils.js";
+import { Project, ScriptKind, type SourceFile } from "ts-morph";
+import {
+  type Action,
+  type Component,
+  type Connection,
+  createDescription,
+  type Input,
+  type Result,
+} from "../utils.js";
 import { writeActions } from "./actions.js";
 import { writeConnections } from "./connections.js";
 
@@ -87,7 +94,7 @@ const writeTests = (
       .block(() => {
         writer.conditionalWriteLine(Boolean(connectionKey), "connection,");
         Object.entries(inputs).forEach(([key, input]) => {
-          const value = `${(input as Input).default}` ?? null;
+          const value = `${(input as Input).default}`;
           writer.conditionalWriteLine(key !== "connection", `${key}: ${value},`);
         });
       })

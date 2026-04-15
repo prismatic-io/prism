@@ -1,6 +1,6 @@
-import { InputFieldType } from "@prismatic-io/spectral";
+import type { InputFieldType } from "@prismatic-io/spectral";
 import * as path from "path";
-import { Project, SourceFile } from "ts-morph";
+import type { Project, SourceFile } from "ts-morph";
 import { generateActions } from "./action.js";
 import { initializeProject } from "./sourceFile.js";
 

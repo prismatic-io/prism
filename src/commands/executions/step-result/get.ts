@@ -2,7 +2,11 @@ import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { fs } from "../../../fs.js";
 import { gql, gqlRequest } from "../../../graphql.js";
-import { DeserializeResult, deserialize, parseData } from "../../../utils/execution/stepResults.js";
+import {
+  type DeserializeResult,
+  deserialize,
+  parseData,
+} from "../../../utils/execution/stepResults.js";
 import { fetch } from "../../../utils/http.js";
 
 export default class GetCommand extends PrismaticBaseCommand {

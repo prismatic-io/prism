@@ -1,4 +1,4 @@
-import {
+import type {
   ActionDefinition,
   ComponentDefinition,
   ConnectionDefinition,
@@ -9,7 +9,7 @@ import {
 import { camelCase } from "lodash-es";
 import { toWords } from "number-to-words";
 import stripTags from "striptags";
-import { WriterFunction } from "ts-morph";
+import type { WriterFunction } from "ts-morph";
 
 const keywordReplacements: Record<string, string> = {
   default: "defaultValue",

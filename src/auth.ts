@@ -6,7 +6,7 @@ import inquirer from "inquirer";
 import chalk from "chalk";
 import { configFileExists, deleteConfig, readConfig, writeConfig } from "./config.js";
 import { gqlRequest, gql } from "./graphql.js";
-import { AddressInfo } from "net";
+import type { AddressInfo } from "net";
 import open from "open";
 import { whoAmI } from "./utils/user/query.js";
 import { fetch } from "./utils/http.js";

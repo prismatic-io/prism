@@ -1,4 +1,4 @@
-import * as Types from "../schema.generated.js";
+import type * as Types from "../schema.generated.js";
 
 export type GetExecutionsQueryVariables = Types.Exact<{
   flowId?: Types.InputMaybe<Types.Scalars["ID"]["input"]>;

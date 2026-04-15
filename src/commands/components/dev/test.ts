@@ -1,7 +1,7 @@
 import { Flags, ux } from "@oclif/core";
-import serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
+import type serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import dotenv from "dotenv";
-import inquirer, { Answers, DistinctQuestion, ListQuestionOptions } from "inquirer";
+import inquirer, { type Answers, type DistinctQuestion, type ListQuestionOptions } from "inquirer";
 import { kebabCase, snakeCase, upperCase } from "lodash-es";
 import open from "open";
 import { promisify } from "util";
@@ -26,10 +26,10 @@ import {
 } from "../../../utils/execution/stepResults.js";
 import {
   buildComponentTestHarnessIntegration,
-  ComponentTestInfo,
+  type ComponentTestInfo,
   componentTestIntegrationName,
 } from "../../../utils/integration/definition.js";
-import { Expression } from "../../../utils/integration/export.js";
+import type { Expression } from "../../../utils/integration/export.js";
 import { importDefinition } from "../../../utils/integration/import.js";
 import { deleteIntegration, runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { pollForActiveConfigVarState } from "../../../utils/integration/query.js";

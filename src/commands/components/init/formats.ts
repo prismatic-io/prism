@@ -1,4 +1,4 @@
-import { Command, Config, Flags } from "@oclif/core";
+import { Command, type Config, Flags } from "@oclif/core";
 import { copy } from "fs-extra";
 import { camelCase } from "lodash-es";
 import path, { extname } from "path";

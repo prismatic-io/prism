@@ -1,14 +1,14 @@
 import { camelCase, sortBy, uniq, uniqBy } from "lodash-es";
 import * as path from "path";
 import {
-  MethodSignature,
-  ObjectLiteralExpression,
-  ParameterDeclaration,
-  SourceFile,
+  type MethodSignature,
+  type ObjectLiteralExpression,
+  type ParameterDeclaration,
+  type SourceFile,
   VariableDeclarationKind,
   Writers,
 } from "ts-morph";
-import { InputPropertyStructure, ProjectStructure } from "./index.js";
+import type { InputPropertyStructure, ProjectStructure } from "./index.js";
 import { getActionMethodInputProperties, writeInputs } from "./input.js";
 import { getActionMethods, getParamTypeDefinition } from "./parse.js";
 import { createDescription, pascalCase } from "./util.js";

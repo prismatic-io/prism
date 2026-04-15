@@ -1,4 +1,4 @@
-import { ProxyAgent, RequestInit, fetch as undiciFetch } from "undici";
+import { ProxyAgent, type RequestInit, fetch as undiciFetch } from "undici";
 
 /**
  * Determines if a URL should use proxy based on NO_PROXY environment variable

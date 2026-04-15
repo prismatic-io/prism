@@ -1,12 +1,12 @@
-import { InputFieldType } from "@prismatic-io/spectral";
+import type { InputFieldType } from "@prismatic-io/spectral";
 import {
-  ObjectLiteralExpression,
-  ParameterDeclaration,
-  SourceFile,
+  type ObjectLiteralExpression,
+  type ParameterDeclaration,
+  type SourceFile,
   VariableDeclarationKind,
   Writers,
 } from "ts-morph";
-import { InputPropertyStructure, ProjectStructure } from "./index.js";
+import type { InputPropertyStructure, ProjectStructure } from "./index.js";
 import { pascalCase } from "./util.js";
 
 export const getActionMethodInputProperties = (

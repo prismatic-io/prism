@@ -1,7 +1,8 @@
-import { handle } from "@oclif/core";
-import { OclifError } from "@oclif/core/lib/interfaces";
+import type { handle, Interfaces } from "@oclif/core";
 import { getReasonPhrase, StatusCodes } from "http-status-codes";
-import { ClientError } from "./graphql.js";
+import type { ClientError } from "./graphql.js";
+
+type OclifError = Interfaces.OclifError;
 
 const isError = (error: unknown): error is Error =>
   Boolean(error) && typeof error === "object" && error !== null && "message" in error;

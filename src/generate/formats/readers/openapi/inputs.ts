@@ -1,7 +1,11 @@
-import { OpenAPI, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
+import type { OpenAPI, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 import { startCase, merge } from "lodash-es";
-import { Input, cleanIdentifier, stripUndefined } from "../../utils.js";
-import { InputFieldChoice, InputFieldCollection, InputFieldType } from "@prismatic-io/spectral";
+import { type Input, cleanIdentifier, stripUndefined } from "../../utils.js";
+import type {
+  InputFieldChoice,
+  InputFieldCollection,
+  InputFieldType,
+} from "@prismatic-io/spectral";
 
 type ParameterObject = OpenAPIV3.ParameterObject | OpenAPIV3_1.ParameterObject;
 

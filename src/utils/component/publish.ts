@@ -5,7 +5,7 @@ import { extname } from "path";
 import { fs } from "../../fs.js";
 import { gql, gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
-import { ComponentDefinition } from "./index.js";
+import type { ComponentDefinition } from "./index.js";
 
 const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {
   actions: true,

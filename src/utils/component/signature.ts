@@ -1,5 +1,5 @@
 import { gql, gqlRequest } from "../../graphql.js";
-import { ComponentDefinition } from "./index.js";
+import type { ComponentDefinition } from "./index.js";
 
 interface GetPackageSignatureFromApiProps {
   componentDefinition: ComponentDefinition;
