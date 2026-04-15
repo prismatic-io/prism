@@ -1,4 +1,4 @@
-import { Flags, ux } from "@oclif/core";
+import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { exists } from "../../fs.js";
 import {
@@ -10,6 +10,7 @@ import {
   loadCodeNativeIntegrationEntryPoint,
 } from "../../utils/integration/import.js";
 import { openIntegration } from "../../utils/integration/open.js";
+import { ux } from "../../utils/ux.js";
 
 export default class ImportCommand extends PrismaticBaseCommand {
   static description =

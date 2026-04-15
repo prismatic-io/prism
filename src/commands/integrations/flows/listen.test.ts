@@ -13,7 +13,7 @@ import type { UpdateIntegrationFlowListeningModeMutation } from "../../../graphq
 import { ActionScheduleSupport } from "../../../graphql/schema.generated.js";
 import ListenCommand, { getTriggerType } from "./listen.js";
 
-vi.mock("../../../fs.js", () => ({
+vi.mock(import("../../../fs.js"), () => ({
   exists: vi.fn(() => Promise.resolve(true)),
   fs: {
     mkdir: vi.fn(() => Promise.resolve()),
@@ -21,13 +21,13 @@ vi.mock("../../../fs.js", () => ({
   },
 }));
 
-vi.mock("inquirer", () => ({
+vi.mock(import("inquirer"), () => ({
   default: {
     prompt: vi.fn(() => Promise.resolve({ confirm: true, selectedFlow: null })),
   },
 }));
 
-vi.mock(import("@oclif/core"), async (importOriginal) => {
+vi.mock(import("../../../utils/ux.js"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,

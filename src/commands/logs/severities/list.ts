@@ -1,6 +1,6 @@
-import { ux } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
+import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Log Severities for use by Alert Triggers";

@@ -1,4 +1,4 @@
-import { Flags, ux } from "@oclif/core";
+import { Flags } from "@oclif/core";
 import type serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import dotenv from "dotenv";
 import inquirer, { type Answers, type DistinctQuestion, type ListQuestionOptions } from "inquirer";
@@ -7,6 +7,7 @@ import open from "open";
 import { promisify } from "util";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { exists } from "../../../fs.js";
+import { ux } from "../../../utils/ux.js";
 import { deleteComponentByKey } from "../../../utils/component/deleteByKey.js";
 import {
   createComponentPackage,

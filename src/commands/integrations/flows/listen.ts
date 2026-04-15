@@ -1,5 +1,5 @@
 import { decode } from "@msgpack/msgpack";
-import { Flags, ux } from "@oclif/core";
+import { Flags } from "@oclif/core";
 import inquirer from "inquirer";
 import z from "zod";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
@@ -15,6 +15,7 @@ import { fetch } from "../../../utils/http.js";
 import { type IntegrationFlow, resolveFlow } from "../../../utils/integration/flows.js";
 import { runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
+import { ux } from "../../../utils/ux.js";
 
 const DEFAULT_TIMEOUT_SECONDS = 1200; // 20 minutes
 const DEFAULT_OUTPUT_DIR = "./payloads";

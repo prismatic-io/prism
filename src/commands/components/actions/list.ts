@@ -1,6 +1,7 @@
-import { Args, Flags, ux } from "@oclif/core";
+import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
+import { ux } from "../../../utils/ux.js";
 
 interface ActionNode {
   [index: string]: unknown;

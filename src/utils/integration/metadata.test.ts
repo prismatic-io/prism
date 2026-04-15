@@ -5,7 +5,7 @@ const mockExists = vi.fn();
 const mockReadFile = vi.fn();
 const mockWriteFile = vi.fn();
 
-vi.mock("../../fs.js", () => ({
+vi.mock(import("../../fs.js"), () => ({
   exists: (...args: unknown[]) => mockExists(...args),
   fs: {
     readFile: (...args: unknown[]) => mockReadFile(...args),
