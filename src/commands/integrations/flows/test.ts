@@ -1,5 +1,5 @@
 import { decode } from "@msgpack/msgpack";
-import { Flags, ux } from "@oclif/core";
+import { Flags } from "@oclif/core";
 import open from "open";
 import z from "zod";
 import { getAccessToken, prismaticUrl } from "../../../auth.js";
@@ -7,6 +7,7 @@ import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { exists, fs } from "../../../fs.js";
 import { handleError } from "../../../utils/errors.js";
 import { fetch } from "../../../utils/http.js";
+import { ux } from "../../../utils/ux.js";
 import {
   type FetchLogsResult,
   getExecutionLogs,

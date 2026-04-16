@@ -1,10 +1,10 @@
-import { ux } from "@oclif/core";
 import crypto from "crypto";
 import mimetypes from "mime-types";
 import { extname } from "path";
 import { fs } from "../../fs.js";
 import { gql, gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
+import { ux } from "../ux.js";
 import type { ComponentDefinition } from "./index.js";
 
 const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {

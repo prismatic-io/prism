@@ -1,8 +1,8 @@
-import { ux } from "@oclif/core";
 import chalk from "chalk";
 import { promisify } from "util";
 import { gql, gqlRequest } from "../../graphql.js";
 import { formatTimestamp } from "../date.js";
+import { ux } from "../ux.js";
 
 const setTimeoutPromise = promisify(setTimeout);
 

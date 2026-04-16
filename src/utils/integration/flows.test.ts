@@ -8,7 +8,7 @@ import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getInt
 import { ActionScheduleSupport } from "../../graphql/schema.generated.js";
 import { getIntegrationFlows, isCniExecutionComplete, selectFlowPrompt } from "./flows.js";
 
-vi.mock("inquirer", () => ({
+vi.mock(import("inquirer"), () => ({
   default: {
     prompt: vi.fn(() => Promise.resolve({ selectedFlow: null })),
   },

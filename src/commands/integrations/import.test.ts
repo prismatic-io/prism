@@ -1,9 +1,9 @@
-import { ux } from "@oclif/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ComponentDefinition } from "../../utils/component/index.js";
+import { ux } from "../../utils/ux.js";
 import ImportCommand from "./import.js";
 
-vi.mock("../../fs.js", () => ({
+vi.mock(import("../../fs.js"), () => ({
   exists: vi.fn(),
   fs: {
     readFile: vi.fn(),
@@ -43,7 +43,7 @@ configPages:
   };
 });
 
-vi.mock("../../utils/integration/open.js", () => ({
+vi.mock(import("../../utils/integration/open.js"), () => ({
   openIntegration: vi.fn(() => Promise.resolve()),
 }));
 

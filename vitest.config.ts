@@ -21,5 +21,6 @@ export default defineConfig({
     exclude: ["**/node_modules/**"],
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
+    disableConsoleIntercept: true,
   },
 });

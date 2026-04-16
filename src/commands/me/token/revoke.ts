@@ -1,6 +1,7 @@
-import { Flags, ux } from "@oclif/core";
+import { Flags } from "@oclif/core";
 import { revokeRefreshToken } from "../../../auth.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { ux } from "../../../utils/ux.js";
 
 export default class RevokeTokenCommand extends PrismaticBaseCommand {
   static description = "Revoke all refresh tokens for your user";

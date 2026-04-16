@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
 import { dumpYaml } from "../../utils/serialize.js";
+import { ux } from "../../utils/ux.js";
 
 export default class QueryCommand extends PrismaticBaseCommand {
   static description = "Execute an arbitrary GraphQL query against the Prismatic API";
@@ -122,7 +123,6 @@ export default class QueryCommand extends PrismaticBaseCommand {
       };
     }
 
-    const { ux } = require("@oclif/core");
     ux.table(items, columnDefs);
   }
 
