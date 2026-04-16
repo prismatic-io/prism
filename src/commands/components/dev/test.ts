@@ -1,7 +1,7 @@
 import { Flags } from "@oclif/core";
 import type serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import dotenv from "dotenv";
-import inquirer, { type Answers, type DistinctQuestion, type ListQuestionOptions } from "inquirer";
+import inquirer, { type Answers, type Question } from "inquirer";
 import { kebabCase, snakeCase, upperCase } from "lodash-es";
 import open from "open";
 import { promisify } from "util";
@@ -41,10 +41,10 @@ const setTimeoutPromise = promisify(setTimeout);
 
 const envVarCase = (name: string): string => upperCase(snakeCase(name)).replace(/\s+/g, "_");
 
-const toInquirerInputType = (
-  type: string,
-  collection: string | undefined,
-): Required<DistinctQuestion["type"]> => {
+type PromptType = "editor" | "select" | "password" | "input";
+type InputQuestion = Question<Answers, PromptType>;
+
+const toInquirerInputType = (type: string, collection: string | undefined): PromptType => {
   if (collection) {
     // FIXME: Improve prompting instead of instantly bailing to editor.
     return "editor";
@@ -52,7 +52,7 @@ const toInquirerInputType = (
 
   switch (type) {
     case "boolean":
-      return "list";
+      return "select";
     case "password":
       return "password";
     case "code":
@@ -68,7 +68,7 @@ const getInputQuestion = ({
   type,
   collection,
   default: defaultValue,
-}: serverTypes.Input): DistinctQuestion | ListQuestionOptions => {
+}: serverTypes.Input): InputQuestion => {
   const questionBase = {
     type: toInquirerInputType(type, collection),
     name: key,
@@ -272,7 +272,7 @@ export default class TestCommand extends PrismaticBaseCommand {
     const actions = definition.actions || {};
 
     const { action } = await inquirer.prompt<{ action: serverTypes.Action }>({
-      type: "list",
+      type: "select",
       name: "action",
       message: "Action:",
       choices: Object.entries(actions).map(
@@ -308,7 +308,7 @@ export default class TestCommand extends PrismaticBaseCommand {
       const { connection } = await inquirer.prompt<{
         connection: serverTypes.Connection;
       }>({
-        type: "list",
+        type: "select",
         name: "connection",
         message: "Connection:",
         choices: connections.map(({ key, label }) => ({
@@ -317,7 +317,7 @@ export default class TestCommand extends PrismaticBaseCommand {
           short: key,
         })),
         default: Object.keys(connections)[0],
-        filter: (value) => {
+        filter: (value: string) => {
           const [connection] = connections.filter(({ key }) => value === key);
           return connection;
         },

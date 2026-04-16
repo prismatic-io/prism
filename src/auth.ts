@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import http from "http";
 import url from "url";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import inquirer from "inquirer";
 import chalk from "chalk";
 import { configFileExists, deleteConfig, readConfig, writeConfig } from "./config.js";
@@ -385,7 +385,7 @@ export const selectTenant = async (
   try {
     const { tenantId } = await inquirer.prompt<{ tenantId: string }>([
       {
-        type: "list",
+        type: "select",
         name: "tenantId",
         message,
         choices,

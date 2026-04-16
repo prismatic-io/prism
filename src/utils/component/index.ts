@@ -3,7 +3,7 @@ import type { Component as ComponentDefinitionTemplate } from "@prismatic-io/spe
 import archiver from "archiver";
 import { createRequire } from "node:module";
 import { extname, resolve } from "path";
-import tempy from "tempy";
+import { temporaryWrite } from "tempy";
 import { exists } from "../../fs.js";
 import { findPackageRoot, seekPackageDistDirectory } from "../import.js";
 
@@ -54,7 +54,7 @@ export const loadEntrypoint = async (): Promise<ComponentDefinition> => {
 
 export const createComponentPackage = async (): Promise<string> => {
   const zip = archiver("zip", { zlib: { level: 9 } });
-  const pathPromise = tempy.write(zip, { extension: "zip" });
+  const pathPromise = temporaryWrite(zip, { extension: "zip" });
 
   // Zip all files in the current directory (since we found the index.js entrypoint)
   // Set all files' dates to the Unix epoch so that the zip hash is deterministic
@@ -69,7 +69,7 @@ export const createComponentPackage = async (): Promise<string> => {
 
 export const createSourceCodePackage = async (): Promise<string> => {
   const zip = archiver("zip", { zlib: { level: 9 } });
-  const pathPromise = tempy.write(zip, { extension: "zip" });
+  const pathPromise = temporaryWrite(zip, { extension: "zip" });
 
   // Find the package root directory (where package.json is)
   const sourceRoot = await findPackageRoot("component");
