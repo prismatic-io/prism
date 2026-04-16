@@ -200,7 +200,7 @@ describe("flows utils", () => {
 
       expect(inquirer.prompt).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: "list",
+          type: "select",
           name: "selectedFlow",
           message: "Select a flow:",
         }),

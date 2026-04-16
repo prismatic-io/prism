@@ -174,7 +174,7 @@ export async function selectFlowPrompt(
   }
 
   const { selectedFlow } = await inquirer.prompt({
-    type: "list",
+    type: "select",
     name: "selectedFlow",
     message,
     choices: flows.map((flow) => ({
