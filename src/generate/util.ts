@@ -1,4 +1,4 @@
-import { renderFile } from "ejs";
+import ejs from "ejs";
 import { copyFile, mkdirp, outputFile, readJson } from "fs-extra";
 import { camelCase, merge, startCase } from "lodash-es";
 import path from "path";
@@ -29,17 +29,15 @@ export const template = async (
   destination: string = source.replace(/\.ejs$/, ""),
   data: Record<string, unknown> = {},
 ): Promise<void> => {
-  const basePath =
-    process.env.NODE_ENV === "test"
-      ? path.join(__dirname, "..", "..")
-      : path.dirname(fileURLToPath(import.meta.url));
+  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+  const basePath = process.env.NODE_ENV === "test" ? path.join(moduleDir, "..", "..") : moduleDir;
 
   const templatePath = path.join(basePath, "templates", source);
 
   const isTemplate = [".js", ".ts", ".json", ".md", ""].includes(path.extname(destination));
 
   if (isTemplate) {
-    const rendered = await renderFile(templatePath, data);
+    const rendered = await ejs.renderFile(templatePath, data);
     await outputFile(destination, rendered, { encoding: "utf-8" });
   } else {
     await mkdirp(path.dirname(destination));

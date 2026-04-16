@@ -1,5 +1,6 @@
 import chardet from "chardet";
 import { ux } from "@oclif/core";
+import { createRequire } from "node:module";
 import { gqlRequest, gql } from "../../graphql.js";
 import { uploadAvatar } from "../../utils/avatar.js";
 import { exists, fs } from "../../fs.js";
@@ -18,6 +19,8 @@ import {
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
 import { loadYaml } from "../serialize.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
+
+const require = createRequire(import.meta.url);
 
 interface ImportDefinitionResult {
   integrationId: string;
