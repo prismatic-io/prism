@@ -6,6 +6,7 @@ export default class GenerateCommand extends PrismaticBaseCommand {
     "Generate an embedded marketplace signing key.\nThe RSA public key is saved in Prismatic, and the private key is returned and immediately removed from Prismatic. Once the private key is returned, it cannot be retrieved again.";
 
   async run() {
+    await this.parse(GenerateCommand);
     const result = await gqlRequest({
       document: gql`
         mutation generateSigningKey {

@@ -6,6 +6,7 @@ export default class WhoAmICommand extends Command {
   static description = "Print your user profile information";
 
   async run() {
+    await this.parse(WhoAmICommand);
     const me = await whoAmI();
     const { name, email, org, customer, tenantId } = me;
     this.log("Name:", name);
