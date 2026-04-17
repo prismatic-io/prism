@@ -7,6 +7,7 @@ export default class LoginSwitchCommand extends Command {
   static description = "Switch between organization tenants";
 
   async run() {
+    await this.parse(LoginSwitchCommand);
     const config = await readConfig();
     const loggedIn = (await isLoggedIn()) && config;
     if (!loggedIn) {
