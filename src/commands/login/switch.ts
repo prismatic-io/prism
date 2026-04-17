@@ -7,7 +7,6 @@ export default class LoginSwitchCommand extends Command {
   static description = "Switch between organization tenants";
 
   async run() {
-    // Check if user is logged in
     const config = await readConfig();
     const loggedIn = (await isLoggedIn()) && config;
     if (!loggedIn) {
@@ -17,16 +16,6 @@ export default class LoginSwitchCommand extends Command {
 
     const tenants = await fetchUserTenants();
 
-    if (tenants.length <= 1) {
-      const log_msg =
-        tenants.length === 1
-          ? "You are currently authenticated with the only tenant available on this stack. To switch to a tenant on another stack, update the PRISMATIC_URL value to access additional tenants."
-          : "Your user does not have access to tenants on this stack. Check the PRISMATIC_URL value.";
-      this.log(log_msg);
-      return;
-    }
-
-    // Get current tenant ID - either from config or from API
     let currentTenantId = config.tenantId;
     if (!currentTenantId) {
       const user = await whoAmI();
@@ -34,7 +23,19 @@ export default class LoginSwitchCommand extends Command {
     }
 
     const currentTenant = tenants.find((t) => t.tenantId === currentTenantId);
-    if (currentTenant) {
+    const currentTenantSuspended = currentTenant?.systemSuspended ?? false;
+    const activeTenants = tenants.filter((t) => !t.systemSuspended);
+
+    if (!currentTenantSuspended && activeTenants.length <= 1) {
+      const log_msg =
+        activeTenants.length === 1
+          ? "You are currently authenticated with the only tenant available on this stack. To switch to a tenant on another stack, update the PRISMATIC_URL value to access additional tenants."
+          : "Your user does not have access to tenants on this stack. Check the PRISMATIC_URL value.";
+      this.log(log_msg);
+      return;
+    }
+
+    if (!currentTenantSuspended && currentTenant) {
       this.log(`Current tenant: ${currentTenant.orgName} (${currentTenant.url})\n`);
     }
 
@@ -44,13 +45,12 @@ export default class LoginSwitchCommand extends Command {
     });
 
     if (!selectedTenantId || selectedTenantId === currentTenantId) {
-      if (currentTenantId) {
+      if (currentTenantId && !currentTenantSuspended) {
         await writeConfig({
           ...config,
           tenantId: currentTenantId,
         });
-        const selectedTenant = tenants.find((t) => t.tenantId === currentTenantId);
-        this.log(`Active tenant: ${selectedTenant?.orgName} (${selectedTenant?.url})`);
+        this.log(`Active tenant: ${currentTenant?.orgName} (${currentTenant?.url})`);
       }
       return;
     }
