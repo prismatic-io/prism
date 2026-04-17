@@ -41,6 +41,6 @@ if [ "$BUMP" != "patch" ] && [ "$BUMP" != "minor" ] && [ "$BUMP" != "major" ] &&
   echo "ERROR: Invalid bump type '$BUMP'. Must be patch, minor, major, or preview."
   exit 1
 fi
-gh workflow run release.yaml -f bump="$BUMP"
+gh workflow run release.yml -f bump="$BUMP"
 echo "Release workflow triggered with bump=$BUMP"
 """
