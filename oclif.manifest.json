@@ -151,7 +151,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -192,7 +192,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -491,7 +491,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -532,7 +532,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -944,7 +944,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -985,7 +985,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -1453,7 +1453,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -1494,7 +1494,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -1993,7 +1993,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2034,7 +2034,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2301,7 +2301,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2342,7 +2342,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2513,7 +2513,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2554,7 +2554,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2803,7 +2803,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2844,7 +2844,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2910,7 +2910,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -2951,7 +2951,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3119,7 +3119,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3160,7 +3160,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3242,7 +3242,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3283,7 +3283,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3375,7 +3375,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3416,7 +3416,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3776,7 +3776,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -3817,7 +3817,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4019,7 +4019,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4060,7 +4060,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4126,7 +4126,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4167,7 +4167,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4378,7 +4378,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4419,7 +4419,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4491,7 +4491,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4532,7 +4532,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4748,7 +4748,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -4789,7 +4789,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5153,7 +5153,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5194,7 +5194,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5267,7 +5267,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5308,7 +5308,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5410,7 +5410,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5451,7 +5451,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5647,7 +5647,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5688,7 +5688,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5856,7 +5856,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5897,7 +5897,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -5963,7 +5963,7 @@
           "type": "boolean"
         },
         "filter": {
-          "description": "filter property by partial string matching, ex: name=foo",
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
           "name": "filter",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -6004,7 +6004,7 @@
           "type": "option"
         },
         "sort": {
-          "description": "property to sort by (prepend '-' for descending)",
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
           "name": "sort",
           "hasDynamicHelp": false,
           "multiple": false,
@@ -6307,5 +6307,5 @@
       "enableJsonFlag": false
     }
   },
-  "version": "9.2.3"
+  "version": "9.3.1"
 }

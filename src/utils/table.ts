@@ -1,5 +1,11 @@
+// Minimal reimplementation of @oclif/core v3's ux.table (removed in v4), preserving the
+// flag shape, output format, and the case-insensitive key-or-header lookup that --filter,
+// --columns, and --sort used.
+
 import { Errors, Flags } from "@oclif/core";
+import chalk from "chalk";
 import { startCase } from "lodash-es";
+import { orderBy } from "natural-orderby";
 import { dumpYaml } from "./serialize.js";
 
 export type ColumnDef<T> = {
@@ -32,7 +38,7 @@ export type TableFlags = {
   "no-truncate"?: boolean;
 };
 
-// Order matches cli-ux's ux.table.flags() so oclif.manifest.json stays byte-stable. Don't reorder.
+// Flag order is part of the oclif manifest contract; don't reorder.
 const allFlags = () => ({
   columns: Flags.string({
     exclusive: ["extended"],
@@ -48,7 +54,7 @@ const allFlags = () => ({
     description: "show extra columns",
   }),
   filter: Flags.string({
-    description: "filter property by partial string matching, ex: name=foo",
+    description: "filter property by regex, ex: name=^foo (prefix key with - to invert)",
   }),
   "no-header": Flags.boolean({
     exclusive: ["csv"],
@@ -64,7 +70,7 @@ const allFlags = () => ({
     options: ["csv", "json", "yaml"],
   }),
   sort: Flags.string({
-    description: "property to sort by (prepend '-' for descending)",
+    description: "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
   }),
 });
 
@@ -76,10 +82,7 @@ export const tableFlags = (opts: { only?: TableFlagKey[]; except?: TableFlagKey[
   return Object.fromEntries(keys.map((k) => [k, flags[k]])) as Partial<ReturnType<typeof allFlags>>;
 };
 
-// Display-only view of a column — what format functions need.
 type Column = { key: string; header: string; minWidth: number };
-
-// Adds the value accessor used by `project` to resolve each cell from its source row.
 type ResolvedColumn<T> = Column & { get: (row: T) => unknown };
 
 const toCell = (value: unknown): string => {
@@ -94,51 +97,92 @@ const toCell = (value: unknown): string => {
   return String(value);
 };
 
-// RFC 4180 per-cell quoting. (cli-ux quoted whole rows; we don't — any parser handles this.)
 const csvEscape = (cell: string): string =>
   /[",\n\r]/.test(cell) ? `"${cell.replaceAll('"', '""')}"` : cell;
 
-const resolveColumns = <T>(columns: ColumnsConfig<T>, flags: TableFlags): ResolvedColumn<T>[] => {
-  const entries = Object.entries(columns) as Array<[string, ColumnDef<T>]>;
-  const picked = flags.columns
-    ? flags.columns
-        .split(",")
-        .map((k) => k.trim())
-        .filter(Boolean)
-        .flatMap((key) => {
-          const def = columns[key];
-          return def ? [[key, def] as [string, ColumnDef<T>]] : [];
-        })
-    : entries.filter(([, def]) => flags.extended || !def.extended);
-  return picked.map(([key, def]) => ({
+// Raw keys take precedence over headers on collision.
+const buildKeyIndex = <T>(columns: ColumnsConfig<T>): Map<string, string> => {
+  const index = new Map<string, string>();
+  for (const [key, def] of Object.entries(columns)) {
+    index.set(key.toLowerCase(), key);
+    const header = (def.header ?? startCase(key)).toLowerCase();
+    if (!index.has(header)) index.set(header, key);
+  }
+  return index;
+};
+
+const buildAllColumns = <T>(columns: ColumnsConfig<T>): ResolvedColumn<T>[] =>
+  Object.entries(columns).map(([key, def]) => ({
     key,
     header: def.header ?? startCase(key),
     minWidth: def.minWidth ?? 0,
     get: def.get ?? ((row: T) => (row as Record<string, unknown>)[key]),
   }));
+
+const pickDisplayColumns = <T>(
+  all: ResolvedColumn<T>[],
+  columns: ColumnsConfig<T>,
+  flags: TableFlags,
+): ResolvedColumn<T>[] => {
+  if (flags.columns) {
+    const index = buildKeyIndex(columns);
+    const seen = new Set<string>();
+    return flags.columns
+      .split(",")
+      .map((k) => k.trim())
+      .filter(Boolean)
+      .flatMap((input) => {
+        const key = index.get(input.toLowerCase());
+        if (!key || seen.has(key)) return [];
+        seen.add(key);
+        const col = all.find((c) => c.key === key);
+        return col ? [col] : [];
+      });
+  }
+  return all.filter((c) => flags.extended || !columns[c.key].extended);
 };
 
 const project = <T>(data: T[], columns: ResolvedColumn<T>[]): Array<Record<string, string>> =>
   data.map((row) => Object.fromEntries(columns.map((c) => [c.key, toCell(c.get(row))])));
 
-// cli-ux contract: `key=needle`, case-sensitive substring match. `key` must be a declared
-// column (whitespace-free, non-empty) and `needle` must be non-empty — otherwise hard-error
-// so scripts relying on exit code 2 keep working.
-const applyFilter = (rows: Array<Record<string, string>>, filter: string, validKeys: string[]) => {
+const applyFilter = <T>(
+  rows: Array<Record<string, string>>,
+  filter: string,
+  columns: ColumnsConfig<T>,
+): Array<Record<string, string>> => {
+  const invalid = () => new Errors.CLIError("Filter flag has an invalid value", { exit: 1 });
   const eq = filter.indexOf("=");
-  const key = eq < 0 ? "" : filter.slice(0, eq);
-  const needle = eq < 0 ? "" : filter.slice(eq + 1);
-  if (!key || !needle || /\s/.test(key) || !validKeys.includes(key)) {
-    throw new Errors.CLIError("Filter flag has an invalid value", { exit: 1 });
+  const rawInput = eq < 0 ? "" : filter.slice(0, eq);
+  const pattern = eq < 0 ? "" : filter.slice(eq + 1);
+  const negate = rawInput.startsWith("-");
+  const input = negate ? rawInput.slice(1) : rawInput;
+  const key = input ? buildKeyIndex(columns).get(input.toLowerCase()) : undefined;
+  if (!key || !pattern) throw invalid();
+  let regex: RegExp;
+  try {
+    regex = new RegExp(pattern);
+  } catch {
+    throw invalid();
   }
-  return rows.filter((r) => (r[key] ?? "").includes(needle));
+  return rows.filter((r) => negate !== regex.test(r[key] ?? ""));
 };
 
-const applySort = (rows: Array<Record<string, string>>, sort: string) => {
-  const desc = sort.startsWith("-");
-  const key = desc ? sort.slice(1) : sort;
-  const direction = desc ? -1 : 1;
-  return [...rows].sort((a, b) => direction * (a[key] ?? "").localeCompare(b[key] ?? ""));
+const applySort = <T>(
+  rows: Array<Record<string, string>>,
+  sort: string,
+  columns: ColumnsConfig<T>,
+): Array<Record<string, string>> => {
+  const index = buildKeyIndex(columns);
+  const sorters = sort.split(",").map((s) => {
+    const desc = s.startsWith("-");
+    const input = desc ? s.slice(1) : s;
+    return { key: index.get(input.toLowerCase()) ?? input, order: desc ? "desc" : "asc" } as const;
+  });
+  return orderBy(
+    rows,
+    sorters.map((s) => (r: Record<string, string>) => r[s.key] ?? ""),
+    sorters.map((s) => s.order),
+  );
 };
 
 const formatText = (
@@ -146,7 +190,6 @@ const formatText = (
   rows: Array<Record<string, string>>,
   flags: TableFlags,
 ): string => {
-  // Cells with embedded \n expand into continuation rows (other columns blank).
   const rowLines = rows.map((row) => {
     const cellLines = columns.map((c) => (row[c.key] ?? "").split("\n"));
     const height = Math.max(...cellLines.map((l) => l.length));
@@ -154,7 +197,7 @@ const formatText = (
   });
 
   const widths = columns.map((c, i) => {
-    // cli-ux's minWidth includes the trailing separator, so text is padded to minWidth - 1.
+    // minWidth counts the trailing separator; subtract 1 for pad width.
     const fromCells = rowLines.flat().reduce((m, line) => Math.max(m, (line[i] ?? "").length), 0);
     return Math.max(Math.max(0, c.minWidth - 1), c.header.length, fromCells);
   });
@@ -162,16 +205,16 @@ const formatText = (
   const pad = (cell: string, width: number) =>
     flags["no-truncate"] || cell.length <= width
       ? cell.padEnd(width)
-      : `${cell.slice(0, Math.max(0, width - 1))}…`;
+      : `${cell.slice(0, Math.max(0, width - 2))}… `;
 
-  // Leading + trailing space margin matches cli-ux; scripts parsing by column position depend on it.
+  // Scripts parse output by column position; the leading/trailing space margin is load-bearing.
   const line = (cells: string[]) =>
     ` ${cells.map((c, i) => pad(c, widths[i] ?? c.length)).join(" ")} `;
 
   const out: string[] = [];
   if (!flags["no-header"]) {
-    out.push(line(columns.map((c) => c.header)));
-    out.push(line(widths.map((w) => "─".repeat(w))));
+    out.push(chalk.bold(line(columns.map((c) => c.header))));
+    out.push(chalk.bold(line(widths.map((w) => "─".repeat(w)))));
   }
   for (const physicalRow of rowLines) {
     for (const logicalLine of physicalRow) {
@@ -199,23 +242,30 @@ export const printTable = <T>(
   columns: ColumnsConfig<T>,
   flags: TableFlags = {},
 ): void => {
-  const resolved = resolveColumns(columns, flags);
-  let rows = project(data, resolved);
-  if (flags.filter) rows = applyFilter(rows, flags.filter, Object.keys(columns));
-  if (flags.sort) rows = applySort(rows, flags.sort);
+  // Filter and sort run against every column, then we narrow to the display set — so
+  // `--filter label=X --columns id` still matches rows by the hidden `label`.
+  const all = buildAllColumns(columns);
+  let rows = project(data, all);
+  if (flags.filter) rows = applyFilter(rows, flags.filter, columns);
+  if (flags.sort) rows = applySort(rows, flags.sort, columns);
+
+  const display = pickDisplayColumns(all, columns, flags);
+  const displayRows = rows.map((r) =>
+    Object.fromEntries(display.map((c) => [c.key, r[c.key] ?? ""])),
+  );
 
   switch (resolveOutput(flags)) {
     case "json":
-      process.stdout.write(`${JSON.stringify(rows, null, 2)}\n`);
+      process.stdout.write(`${JSON.stringify(displayRows, null, 2)}\n`);
       return;
     case "yaml":
-      process.stdout.write(dumpYaml(rows));
+      process.stdout.write(dumpYaml(displayRows));
       return;
     case "csv":
-      process.stdout.write(`${formatCsv(resolved, rows)}\n`);
+      process.stdout.write(`${formatCsv(display, displayRows)}\n`);
       return;
     case "text": {
-      const text = formatText(resolved, rows, flags);
+      const text = formatText(display, displayRows, flags);
       if (text) process.stdout.write(`${text}\n`);
       return;
     }

@@ -68,8 +68,8 @@ describe("printTable", () => {
 
   it("uses startCase on unspecified headers and preserves explicit `header` overrides", async () => {
     const stdout = await render();
-    expect(stdout).toContain("Role"); // explicit header
-    expect(stdout).toContain("Name"); // startCase("name")
+    expect(stdout).toContain("Role");
+    expect(stdout).toContain("Name");
   });
 
   it("invokes `get` to resolve column values", async () => {
@@ -78,7 +78,7 @@ describe("printTable", () => {
     expect(stdout).toContain("EX-A");
   });
 
-  it("renders a ─ separator row beneath the header (cli-ux parity)", async () => {
+  it("renders a ─ separator row beneath the header", async () => {
     const stdout = await render();
     const headerRowIndex = stdout.indexOf("Name");
     const separatorIndex = stdout.indexOf("─");
@@ -100,14 +100,14 @@ describe("printTable", () => {
     expect(stdout).toMatch(/zeta|alpha|mike/);
   });
 
-  it("filters rows with --filter key=substr (substring anywhere, case-sensitive)", async () => {
+  it("filters rows with --filter key=pattern (regex, matches anywhere by default)", async () => {
     const stdout = await render({ filter: "name=mi" });
     expect(stdout).toContain("mike");
     expect(stdout).not.toContain("alpha");
     expect(stdout).not.toContain("zeta");
   });
 
-  it("filter matches substring anywhere in the value, not just a prefix", async () => {
+  it("filter matches anywhere in the value, not just a prefix", async () => {
     const stdout = await render({ filter: "name=lpha" });
     expect(stdout).toContain("alpha");
     expect(stdout).not.toContain("mike");
@@ -119,6 +119,36 @@ describe("printTable", () => {
     expect(stdout).not.toContain("mike");
     expect(stdout).not.toContain("alpha");
     expect(stdout).not.toContain("zeta");
+  });
+
+  it("filter supports regex anchors, metacharacters, and alternation", async () => {
+    const anchored = await render({ filter: "name=^m" });
+    expect(anchored).toContain("mike");
+    expect(anchored).not.toContain("alpha");
+    expect(anchored).not.toContain("zeta");
+
+    const metachar = await render({ filter: "name=.ke" });
+    expect(metachar).toContain("mike");
+    expect(metachar).not.toContain("alpha");
+
+    const alternation = await render({ filter: "name=^(zeta|alpha)$" });
+    expect(alternation).toContain("zeta");
+    expect(alternation).toContain("alpha");
+    expect(alternation).not.toContain("mike");
+  });
+
+  it("filter negates the match when the key is prefixed with -", async () => {
+    const stdout = await render({ filter: "-name=^m" });
+    expect(stdout).toContain("alpha");
+    expect(stdout).toContain("zeta");
+    expect(stdout).not.toContain("mike");
+  });
+
+  it("filter rejects invalid regex patterns", async () => {
+    const { error } = await captureOutput(async () => {
+      printTable(rows, columns, { filter: "name=[unclosed" });
+    });
+    expect(error?.message).toBe("Filter flag has an invalid value");
   });
 
   it("filter preserves `=` characters inside the value (splits on first `=` only)", async () => {
@@ -153,6 +183,74 @@ describe("printTable", () => {
     expect(error?.message).toBe("Filter flag has an invalid value");
   });
 
+  it("filter resolves keys case-insensitively against the raw key", async () => {
+    const stdout = await render({ filter: "NAME=mike" });
+    expect(stdout).toContain("mike");
+    expect(stdout).not.toContain("alpha");
+  });
+
+  it("filter resolves keys against display headers (startCase-derived)", async () => {
+    const stdout = await render({ filter: "Name=mike" });
+    expect(stdout).toContain("mike");
+    expect(stdout).not.toContain("alpha");
+  });
+
+  it("filter resolves keys against explicit header overrides", async () => {
+    const stdout = await render({ filter: "Role=admin" });
+    expect(stdout).toContain("zeta");
+    expect(stdout).not.toContain("mike");
+    expect(stdout).not.toContain("alpha");
+  });
+
+  it("--columns accepts raw keys, display headers, and mixed case", async () => {
+    const stdout = await render({ columns: "Role,NAME" });
+    const headerLine = stdout.split("\n")[0];
+    expect(headerLine.indexOf("Role")).toBeLessThan(headerLine.indexOf("Name"));
+    expect(headerLine).not.toMatch(/\bId\b/);
+  });
+
+  it("--columns matches extended columns by header (e.g. `Id`)", async () => {
+    const stdout = await render({ columns: "Id" });
+    expect(stdout).toMatch(/\bId\b/);
+    expect(stdout).toContain("a1");
+  });
+
+  it("filter runs on the full dataset when --columns hides the filter column", async () => {
+    const stdout = await render({ filter: "name=alpha", columns: "role" });
+    expect(stdout).toContain("user");
+    expect(stdout).not.toContain("admin");
+    const lines = stdout.trim().split("\n");
+    expect(lines).toHaveLength(3);
+  });
+
+  it("sort runs on the full dataset when --columns hides the sort column", async () => {
+    const stdout = await render({ sort: "name", columns: "role" });
+    const headerLine = stdout.split("\n")[0];
+    expect(headerLine).not.toMatch(/\bName\b/);
+    const dataLines = stdout.trim().split("\n").slice(2);
+    expect(dataLines[0]).toContain("user");
+    expect(dataLines[2]).toContain("admin");
+  });
+
+  it("filter can match an extended column even without --extended", async () => {
+    const stdout = await render({ filter: "extra=EX-Z" });
+    expect(stdout).toContain("zeta");
+    expect(stdout).not.toContain("alpha");
+    expect(stdout).not.toMatch(/\bExtra\b/);
+  });
+
+  it("sort accepts case-insensitive header match", async () => {
+    const stdout = await render({ sort: "Name" });
+    const positions = ["alpha", "mike", "zeta"].map((name) => stdout.indexOf(name));
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+
+  it("--columns narrows JSON output to requested columns in requested order", async () => {
+    const stdout = await render({ output: "json", columns: "role,name" });
+    const parsed = JSON.parse(stdout) as Array<Record<string, string>>;
+    expect(Object.keys(parsed[0])).toEqual(["role", "name"]);
+  });
+
   it.each([
     ["ascending", "name", ["alpha", "mike", "zeta"]],
     ["descending", "-name", ["zeta", "mike", "alpha"]],
@@ -162,13 +260,58 @@ describe("printTable", () => {
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
   });
 
+  it("sorts by multiple keys with --sort key1,key2", async () => {
+    const multi = [
+      { id: "1", name: "b", role: "user" },
+      { id: "2", name: "a", role: "user" },
+      { id: "3", name: "a", role: "admin" },
+    ];
+    const { stdout } = await captureOutput(async () => {
+      printTable(multi, columns, { sort: "name,role" });
+    });
+    const dataLines = stdout.trim().split("\n").slice(2);
+    expect(dataLines[0]).toContain("admin");
+    expect(dataLines[1]).toMatch(/a .* user/);
+    expect(dataLines[2]).toMatch(/b .* user/);
+  });
+
+  it("supports per-key direction in multi-key sort", async () => {
+    const multi = [
+      { id: "1", name: "b", role: "user" },
+      { id: "2", name: "a", role: "user" },
+      { id: "3", name: "a", role: "admin" },
+    ];
+    const { stdout } = await captureOutput(async () => {
+      printTable(multi, columns, { sort: "name,-role" });
+    });
+    const dataLines = stdout.trim().split("\n").slice(2);
+    expect(dataLines[0]).toMatch(/a .* user/);
+    expect(dataLines[1]).toMatch(/a .* admin/);
+    expect(dataLines[2]).toMatch(/b .* user/);
+  });
+
+  it("sorts naturally — item2 comes before item10", async () => {
+    const natural = [{ name: "item10" }, { name: "item2" }, { name: "item1" }];
+    const { stdout } = await captureOutput(async () => {
+      printTable(natural, { name: {} }, { sort: "name" });
+    });
+    const positions = ["item1", "item2", "item10"].map((n) => stdout.indexOf(n));
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+
+  it("--columns dedupes repeated entries", async () => {
+    const stdout = await render({ columns: "name,name,Name" });
+    const headerLine = stdout.split("\n")[0];
+    expect(headerLine.match(/Name/g)).toHaveLength(1);
+  });
+
   it("emits JSON with --output=json", async () => {
     const stdout = await render({ output: "json" });
     const parsed = JSON.parse(stdout);
     expect(Array.isArray(parsed)).toBe(true);
     expect(parsed).toHaveLength(rows.length);
     expect(parsed[0]).toHaveProperty("name");
-    expect(parsed[0]).not.toHaveProperty("id"); // extended column hidden
+    expect(parsed[0]).not.toHaveProperty("id");
   });
 
   it.each([
@@ -192,7 +335,6 @@ describe("printTable", () => {
     });
     const lines = stdout.trim().split("\n");
     expect(lines[1]).toBe('"has, comma","has ""quote"""');
-    // embedded \n splits the row across two CSV lines
     expect(lines[2]).toContain('"has');
   });
 
