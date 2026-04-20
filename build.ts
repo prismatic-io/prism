@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { cp } from "node:fs/promises";
 import type { BunPlugin } from "bun";
 
 const graphqlLoader: BunPlugin = {
@@ -55,3 +56,6 @@ if (!result.success) {
   }
   process.exit(1);
 }
+
+await cp("templates", "lib/templates", { recursive: true });
+await cp("src/run.cmd", "lib/run.cmd");

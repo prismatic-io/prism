@@ -1,11 +1,10 @@
 import { ux } from "@oclif/core";
 import type { Component as ComponentDefinitionTemplate } from "@prismatic-io/spectral/dist/serverTypes/index.js";
-import archiver from "archiver";
 import { createRequire } from "node:module";
-import { extname, resolve } from "path";
-import { temporaryWrite } from "tempy";
+import { extname, resolve } from "node:path";
 import { exists } from "../../fs.js";
 import { findPackageRoot, seekPackageDistDirectory } from "../import.js";
+import { createZip } from "../zip.js";
 
 const require = createRequire(import.meta.url);
 
@@ -52,29 +51,12 @@ export const loadEntrypoint = async (): Promise<ComponentDefinition> => {
   return definition;
 };
 
-export const createComponentPackage = async (): Promise<string> => {
-  const zip = archiver("zip", { zlib: { level: 9 } });
-  const pathPromise = temporaryWrite(zip, { extension: "zip" });
-
-  // Zip all files in the current directory (since we found the index.js entrypoint)
-  // Set all files' dates to the Unix epoch so that the zip hash is deterministic
-  zip.directory(process.cwd(), false, (entry) => ({
-    ...entry,
-    date: new Date(0),
-  }));
-  await zip.finalize();
-
-  return pathPromise;
-};
+export const createComponentPackage = (): Promise<string> =>
+  createZip((zip) => zip.addDirectory(process.cwd()));
 
 export const createSourceCodePackage = async (): Promise<string> => {
-  const zip = archiver("zip", { zlib: { level: 9 } });
-  const pathPromise = temporaryWrite(zip, { extension: "zip" });
-
-  // Find the package root directory (where package.json is)
   const sourceRoot = await findPackageRoot("component");
 
-  // Try to read tsconfig.json to determine source directories
   let includePatterns: string[] = ["src"];
   try {
     const tsconfigPath = resolve(sourceRoot, "tsconfig.json");
@@ -88,30 +70,23 @@ export const createSourceCodePackage = async (): Promise<string> => {
     // Fall back to default if tsconfig can't be read
   }
 
-  // Include essential files and the source directories
   const essentialFiles = ["package.json", "tsconfig.json", "webpack.config.js", "jest.config.js"];
 
-  for (const file of essentialFiles) {
-    const filePath = resolve(sourceRoot, file);
-    if (await exists(filePath)) {
-      zip.file(filePath, { name: file, date: new Date(0) });
+  return createZip(async (zip) => {
+    for (const file of essentialFiles) {
+      const filePath = resolve(sourceRoot, file);
+      if (await exists(filePath)) {
+        zip.addFile(filePath, file);
+      }
     }
-  }
 
-  // Include directories from tsconfig include patterns or fallback to src
-  for (const pattern of includePatterns) {
-    const dirPath = resolve(sourceRoot, pattern);
-    if (await exists(dirPath)) {
-      zip.directory(dirPath, pattern, (entry) => ({
-        ...entry,
-        date: new Date(0),
-      }));
+    for (const pattern of includePatterns) {
+      const dirPath = resolve(sourceRoot, pattern);
+      if (await exists(dirPath)) {
+        await zip.addDirectory(dirPath, pattern);
+      }
     }
-  }
-
-  await zip.finalize();
-
-  return pathPromise;
+  });
 };
 
 export const validateDefinition = async (
