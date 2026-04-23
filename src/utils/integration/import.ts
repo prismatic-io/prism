@@ -509,7 +509,7 @@ export const waitForCodeNativeComponentAvailable = async (
   attemptNumber = 0,
   maximumAttempts = 10,
 ): Promise<boolean> => {
-  // Retrieve the current availability status.
+  // Wait until component becomes available
   const results = await gqlRequest({
     document: gql`
       query component($componentKey: String!, $versionNumber: Int!) {
@@ -520,7 +520,7 @@ export const waitForCodeNativeComponentAvailable = async (
           includeComponentsForCodeNativeIntegrations: true
         ) {
           nodes {
-            versionIsAvailable
+            id
           }
         }
       }
@@ -531,15 +531,8 @@ export const waitForCodeNativeComponentAvailable = async (
     },
   });
 
-  const {
-    components: {
-      nodes: [{ versionIsAvailable }],
-    },
-  } = results;
-
-  if (versionIsAvailable) {
-    // Component is ready.
-    return versionIsAvailable;
+  if (results.components.nodes.length > 0) {
+    return true;
   } else if (attemptNumber < maximumAttempts) {
     // Wait 1 second and try again.
     await new Promise((resolve) => setTimeout(resolve, 1000));
