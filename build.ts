@@ -40,20 +40,12 @@ const ejsShimStripper: BunPlugin = {
 
 const isDebug = process.argv.includes("--debug");
 
-// Node 20 compat: undici 8.x calls util.markAsUncloneable (added in Node 22.2)
-// from node:worker_threads at module-load time. It uses it defensively to
-// reject cross-thread cloning of Request/Response — this CLI never does that,
-// so a no-op shim is functionally equivalent. Injected as a bundler banner so
-// it runs before the bundled undici code.
-const node20Polyfill = `import $wt0 from "node:worker_threads";if(typeof $wt0.markAsUncloneable!=="function")$wt0.markAsUncloneable=()=>{};`;
-
 const result = await Bun.build({
   entrypoints: ["src/index.ts", "src/run.ts"],
   outdir: "lib",
   target: "node",
   minify: !isDebug,
   sourcemap: isDebug ? "external" : "none",
-  banner: node20Polyfill,
   plugins: [graphqlLoader, ejsShimStripper],
 });
 

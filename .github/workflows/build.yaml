@@ -15,4 +15,5 @@ jobs:
       - uses: jdx/mise-action@v4
       - run: mise install node@${{ matrix.node-version }}
       - run: bun install --frozen-lockfile
+      - run: mise exec node@${{ matrix.node-version }} -- npm install --dry-run --engine-strict
       - run: mise run validate:node${{ matrix.node-version }}
