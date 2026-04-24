@@ -71,7 +71,7 @@
     "tempy": "^3.2.0",
     "terminal-link": "^5.0.0",
     "ts-morph": "^28.0.0",
-    "undici": "^8.1.0",
+    "undici": "^7.25.0",
     "uuid": "^14.0.0",
     "tinyglobby": "^0.2.16",
     "wsdl-tsclient": "^1.7.1",
