@@ -19,9 +19,29 @@ run = "bun run lint"
 description = "Run tests"
 run = "bun run test"
 
+[tasks."test:node20"]
+description = "Run tests against Node 20 (minimum supported runtime)"
+run = "MISE_NODE_VERSION=20 mise run test"
+
+[tasks."test:node22"]
+description = "Run tests against Node 22"
+run = "MISE_NODE_VERSION=22 mise run test"
+
 [tasks.validate]
 description = "Run all validation checks"
 depends = ["format:check", "lint", "build", "test"]
+
+[tasks."validate:node20"]
+description = "Run all validation checks against Node 20 (minimum supported runtime)"
+run = "MISE_NODE_VERSION=20 mise run validate"
+
+[tasks."validate:node22"]
+description = "Run all validation checks against Node 22"
+run = "MISE_NODE_VERSION=22 mise run validate"
+
+[tasks."validate:node24"]
+description = "Run all validation checks against Node 24"
+run = "MISE_NODE_VERSION=24 mise run validate"
 
 [tasks.version-bump]
 description = "Bump package.json version (set BUMP_TYPE=patch|minor|major|preview)"
