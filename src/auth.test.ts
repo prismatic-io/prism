@@ -6,14 +6,14 @@ import { fetch } from "./utils/http.js";
 
 vi.unmock("./auth.js");
 
-vi.mock("./config.js", () => ({
+vi.mock(import("./config.js"), () => ({
   configFileExists: vi.fn(),
   deleteConfig: vi.fn(),
   readConfig: vi.fn(),
   writeConfig: vi.fn(),
 }));
 
-vi.mock("inquirer", () => ({
+vi.mock(import("inquirer"), () => ({
   default: {
     prompt: vi.fn(),
   },
