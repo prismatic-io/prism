@@ -2,7 +2,7 @@ import { beforeEach, onTestFailed, vi } from "vitest";
 
 export const TEST_PRISMATIC_URL = "https://example.com";
 
-vi.mock("./src/auth.js", () => ({
+vi.mock(import("./src/auth.js"), () => ({
   getAccessToken: vi.fn(() => Promise.resolve("test-token")),
   prismaticUrl: TEST_PRISMATIC_URL,
   createRequestParams: (data: Record<string, string | undefined>): string =>
@@ -11,7 +11,7 @@ vi.mock("./src/auth.js", () => ({
     ).toString(),
 }));
 
-vi.mock("./src/utils/http.js", () => ({
+vi.mock(import("./src/utils/http.js"), () => ({
   fetch: (...args: Parameters<typeof fetch>) => fetch(...args),
   createFetch: () => fetch,
 }));
