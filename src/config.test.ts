@@ -161,3 +161,73 @@ describe("config without PRISM_CONFIG_FILE", () => {
     expect(await readConfig()).toBeNull();
   });
 });
+
+describe("config schema validation", () => {
+  let tmpDir: string;
+  let configPath: string;
+
+  beforeAll(async () => {
+    tmpDir = await mkdtemp(path.join(tmpdir(), "prism-config-schema-"));
+  });
+
+  afterAll(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  beforeEach(() => {
+    configPath = path.join(tmpDir, "config.yml");
+    stubFakeHome(tmpDir);
+    vi.stubEnv("PRISM_CONFIG_FILE", configPath);
+  });
+
+  afterEach(async () => {
+    vi.unstubAllEnvs();
+    await rm(configPath, { force: true });
+  });
+
+  it("refuses to write a configuration missing required fields", async () => {
+    const invalid = { accessToken: "tok" } as unknown as Configuration;
+    await expect(writeConfig(invalid)).rejects.toThrow(/Refusing to write invalid configuration/);
+  });
+
+  it("refuses to write a configuration with empty required strings", async () => {
+    const invalid = makeConfig({ accessToken: "" });
+    await expect(writeConfig(invalid)).rejects.toThrow(/accessToken cannot be empty/);
+  });
+
+  it("refuses to write a configuration with the wrong field type", async () => {
+    const invalid = makeConfig({ expiresIn: "soon" as unknown as number });
+    await expect(writeConfig(invalid)).rejects.toThrow(/Refusing to write invalid configuration/);
+  });
+
+  it("rejects a config file missing required fields when reading", async () => {
+    await writeFile(configPath, "accessToken: tok\n", { encoding: "utf-8" });
+    await expect(readConfig()).rejects.toThrow(/Invalid configuration/);
+  });
+
+  it("rejects a config file containing the wrong field type when reading", async () => {
+    await writeFile(
+      configPath,
+      [
+        "accessToken: tok",
+        "expiresIn: not-a-number",
+        "refreshToken: r",
+        "scope: s",
+        "tokenType: Bearer",
+      ].join("\n"),
+      { encoding: "utf-8" },
+    );
+    await expect(readConfig()).rejects.toThrow(/Invalid configuration/);
+  });
+
+  it("throws a helpful error when the config file is not valid yaml", async () => {
+    await writeFile(configPath, "::: not yaml :::\n\t- :", { encoding: "utf-8" });
+    await expect(readConfig()).rejects.toThrow(/Failed to parse configuration/);
+  });
+
+  it("accepts an optional tenantId when present", async () => {
+    await writeConfig(makeConfig({ tenantId: "tenant-1" }));
+    const result = await readConfig();
+    expect(result?.tenantId).toBe("tenant-1");
+  });
+});
