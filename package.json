@@ -80,10 +80,10 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.12",
-    "@graphql-codegen/cli": "^6.3.1",
+    "@graphql-codegen/cli": "^7.0.0",
     "@graphql-codegen/near-operation-file-preset": "^5.1.0",
-    "@graphql-codegen/typescript": "^5.0.10",
-    "@graphql-codegen/typescript-operations": "^5.1.0",
+    "@graphql-codegen/typescript": "^6.0.0",
+    "@graphql-codegen/typescript-operations": "^6.0.0",
     "@oclif/test": "^4.1.18",
     "@prismatic-io/spectral": "^10.18.1",
     "@types/ejs": "^3.1.5",
