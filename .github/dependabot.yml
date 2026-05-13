@@ -17,6 +17,16 @@ updates:
       - dependency-name: "@biomejs/biome"
       # undici 8.x requires Node 22.19+. Pinned to 7.x for >=20 compat.
       - dependency-name: "undici"
+      # graphql-codegen v7/v6 majors pull in listr2 10 which requires Node
+      # 22.13+. Pinned for >=20 compat.
+      - dependency-name: "@graphql-codegen/cli"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@graphql-codegen/typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@graphql-codegen/typescript-operations"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@graphql-codegen/near-operation-file-preset"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
