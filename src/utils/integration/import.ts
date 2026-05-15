@@ -127,6 +127,9 @@ export const importDefinition = async (
   });
 
   const integration = result.importIntegration.integration;
+  if (!integration) {
+    throw new Error("Failed to import integration");
+  }
   return {
     integrationId: integration.id,
     pendingAuthorizations: integration.testConfigVariables.nodes.map(
@@ -195,13 +198,6 @@ export const importCodeNativeIntegration = async (
 ): Promise<string> => {
   const { integrationDefinition, componentDefinition, publishingMetadata } =
     await loadCodeNativeIntegrationEntryPoint();
-
-  if (!integrationDefinition) {
-    ux.error(
-      "Failed to find Code Native Integration definition in 'index.js' entrypoint file. Is the current path a Code Native Integration?",
-      { exit: 1 },
-    );
-  }
 
   await validateDefinition(componentDefinition, {
     forCodeNativeIntegration: true,
@@ -496,6 +492,13 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
   const entrypointPath = resolve(cwd, "./index.js");
   const { default: componentDefinition }: CodeNativeIntegrationEntrypoint = require(entrypointPath);
 
+  if (!componentDefinition?.codeNativeIntegrationYAML) {
+    ux.error(
+      "Failed to find Code Native Integration definition in 'index.js' entrypoint file. Is the current path a Code Native Integration?",
+      { exit: 1 },
+    );
+  }
+
   return {
     integrationDefinition: componentDefinition.codeNativeIntegrationYAML,
     componentDefinition: componentDefinition,
@@ -559,6 +562,9 @@ export const getIntegrationDefinition = async (integrationId: string): Promise<s
     `,
     variables: { integrationId },
   });
+  if (!result.integration) {
+    throw new Error(`Integration not found: ${integrationId}`);
+  }
   return result.integration.definition;
 };
 

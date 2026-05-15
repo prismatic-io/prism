@@ -1,5 +1,46 @@
-import { describe, expect, it } from "vitest";
-import { compareConfigVars, parseTestApiKeys } from "./import.js";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
+import { temporaryDirectoryTask } from "tempy";
+import { describe, expect, it, vi } from "vitest";
+import {
+  compareConfigVars,
+  importDefinition,
+  loadCodeNativeIntegrationEntryPoint,
+  parseTestApiKeys,
+} from "./import.js";
+
+const mockGqlRequest = vi.fn();
+vi.mock(import("../../graphql.js"), async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    gqlRequest: (...args: unknown[]) => mockGqlRequest(...args),
+  };
+});
+
+describe("importDefinition", () => {
+  it("should throw when the server response omits the integration", async () => {
+    mockGqlRequest.mockResolvedValueOnce({ importIntegration: { integration: null, errors: [] } });
+    await expect(importDefinition("definition")).rejects.toThrow("Failed to import integration");
+  });
+});
+
+describe("loadCodeNativeIntegrationEntryPoint", () => {
+  it("should error when the entrypoint lacks a Code Native Integration definition", async () => {
+    const originalCwd = process.cwd();
+    await temporaryDirectoryTask(async (tmpDir) => {
+      await writeFile(path.join(tmpDir, "index.js"), "module.exports = { default: {} };");
+      process.chdir(tmpDir);
+      try {
+        await expect(loadCodeNativeIntegrationEntryPoint()).rejects.toThrow(
+          /Failed to find Code Native Integration definition/,
+        );
+      } finally {
+        process.chdir(originalCwd);
+      }
+    });
+  });
+});
 
 describe("compareConfigVars", () => {
   it("should correctly identify missing config vars", async () => {
