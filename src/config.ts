@@ -1,6 +1,6 @@
-import { homedir } from "os";
 import path from "path";
 import { z } from "zod";
+import { getEnv } from "./env.js";
 import { exists, fs } from "./fs.js";
 import { dumpYaml, loadYaml } from "./utils/serialize.js";
 import { formatValidationError } from "./utils/validation.js";
@@ -16,9 +16,7 @@ export const configurationSchema = z.object({
 
 export type Configuration = z.infer<typeof configurationSchema>;
 
-const defaultConfigFilePath = () => path.join(homedir(), ".config", "prism", "config.yml");
-
-const getConfigFilePath = (): string => process.env.PRISM_CONFIG_FILE || defaultConfigFilePath();
+const getConfigFilePath = (): string => getEnv().PRISM_CONFIG_FILE;
 
 const ensureConfigDirectoryExists = async (configFilePath: string) => {
   const dir = path.dirname(configFilePath);

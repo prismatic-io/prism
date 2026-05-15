@@ -29,10 +29,10 @@ bun run lint-fix      # Auto-fix issues
 bun run format        # Format and fix
 bun run check-format  # Check only
 
-# Testing
-bun run test                # Run all tests
-bun test src/path/to/file   # Run specific test file
-bun run test:snapshots      # Update test snapshots
+# Testing (Vitest)
+bun run test                      # Run all tests
+bun run test src/path/to/file     # Run specific test file
+bun run test:snapshots            # Update test snapshots
 ```
 
 **Pre-pack**: The `prepack` script runs the full build automatically before npm publish.
@@ -84,7 +84,8 @@ Commands handle both types with different code paths (check for YAML vs package.
 
 ## Testing
 
-- Uses Bun's built-in test runner
+- Uses Vitest (`vitest run`), configured in `vitest.config.ts` with global setup in `vitest.setup.ts`
+- `vitest.setup.ts` mocks `src/auth.js` and `src/utils/http.js` and intercepts stdout/stderr; use `vi.stubEnv` to set env vars in tests
 - Test files use `.test.ts` suffix
 - Tests are excluded from TypeScript compilation (`tsconfig.json`)
 - Clean temp directories before tests: `src/commands/components/temp`, `src/commands/components/init/temp`, `src/commands/integrations/convert/temp`

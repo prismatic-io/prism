@@ -5,6 +5,7 @@ import { jwtDecode } from "jwt-decode";
 import inquirer from "inquirer";
 import chalk from "chalk";
 import { configFileExists, deleteConfig, readConfig, writeConfig } from "./config.js";
+import { getEnv } from "./env.js";
 import { gqlRequest, gql } from "./graphql.js";
 import type { AddressInfo } from "net";
 import open from "open";
@@ -41,7 +42,7 @@ const extractRequestParams = (url: string): Record<string, string> => {
   return params;
 };
 
-export const prismaticUrl = process.env.PRISMATIC_URL ?? "https://app.prismatic.io";
+export const prismaticUrl = getEnv().PRISMATIC_URL;
 
 export const createRequestParams = (data: Record<string, string | undefined>): string =>
   Object.entries(data).reduce((result, [key, value]) => {
@@ -465,7 +466,7 @@ export const getAccessToken = async (): Promise<string | undefined> => {
     PRISM_ACCESS_TOKEN: envAccessToken,
     PRISM_REFRESH_TOKEN: envRefreshToken,
     PRISMATIC_TENANT_ID: envTenantId,
-  } = process.env;
+  } = getEnv();
 
   if (envRefreshToken && !envAccessToken) {
     const { accessToken: refreshedAccessToken } = await refresh(envRefreshToken, envTenantId);
