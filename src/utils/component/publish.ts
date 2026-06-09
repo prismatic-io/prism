@@ -1,3 +1,4 @@
+import type { OutputSchema } from "@prismatic-io/spectral";
 import crypto from "crypto";
 import mimetypes from "mime-types";
 import { extname } from "path";
@@ -66,6 +67,33 @@ export const confirmPublish = async (
   return await ux.confirm(`Would you like to publish ${label}? (y/N)`);
 };
 
+const serializeOutputSchema = (
+  outputSchemaBase: unknown,
+):
+  | { type: string; schema?: string; schemas?: Array<{ name: string; schema: string }> }
+  | undefined => {
+  if (!outputSchemaBase || typeof outputSchemaBase !== "object") {
+    return undefined;
+  }
+
+  const outputSchema = outputSchemaBase as OutputSchema;
+
+  if (outputSchema.type === "actionOutput") {
+    return { type: "actionOutput", schema: JSON.stringify(outputSchema.schema) };
+  }
+
+  if (outputSchema.type === "branchingOutput") {
+    const schemas = outputSchema.branches.map((b) => ({
+      name: b.name,
+      schema: JSON.stringify(b.schema),
+    }));
+
+    return { type: "branchingOutput", schemas };
+  }
+
+  return undefined;
+};
+
 export const publishDefinition = async (
   { actions, triggers, dataSources, connections, ...rest }: ComponentDefinition,
   {
@@ -106,11 +134,13 @@ export const publishDefinition = async (
   componentDefinition.forCodeNativeIntegration = forCodeNativeIntegration;
 
   const actionDefinitions = Object.values(actions || {}).map((action) => {
+    const outputSchema = serializeOutputSchema(action?.outputSchema);
     return {
       ...action,
       examplePayload: action?.examplePayload
         ? JSON.stringify(action?.examplePayload)
         : JSON.stringify({}),
+      ...(outputSchema ? { outputSchema } : {}),
     };
   });
 
