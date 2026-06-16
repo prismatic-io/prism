@@ -29,6 +29,10 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@graphql-codegen/near-operation-file-preset"
         update-types: ["version-update:semver-major"]
+      # inquirer 14.x drops Node 20 (its mute-stream 4 dep requires Node
+      # 22.22+). Pinned to 13.x for >=20 compat.
+      - dependency-name: "inquirer"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
