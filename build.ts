@@ -15,29 +15,6 @@ const graphqlLoader: BunPlugin = {
   },
 };
 
-// EJS 5's ESM files carry a dead-code CJS shim that Bun's bundler mishandles,
-// producing a ReferenceError at load time. Strip the shim so ejs stays ESM.
-// See https://github.com/oven-sh/bun/issues/5654.
-const ejsShimStripper: BunPlugin = {
-  name: "ejs-shim-stripper",
-  setup: (build) => {
-    build.onLoad({ filter: /\/ejs\/lib\/esm\/[^/]+\.js$/ }, (args) => {
-      const source = readFileSync(args.path, "utf-8");
-      const contents = source.replace(
-        /if\s*\(\s*typeof\s+(?:exports|module)\s*!=\s*['"]undefined['"]\s*\)\s*\{\s*module\.exports\s*=[^}]*\}/g,
-        "",
-      );
-      if (contents === source) {
-        throw new Error(
-          `ejs-shim-stripper: expected CJS shim not found in ${args.path}. ` +
-            "Upstream may be fixed — remove this plugin.",
-        );
-      }
-      return { contents, loader: "js" };
-    });
-  },
-};
-
 const isDebug = process.argv.includes("--debug");
 
 const result = await Bun.build({
@@ -46,7 +23,7 @@ const result = await Bun.build({
   target: "node",
   minify: !isDebug,
   sourcemap: isDebug ? "external" : "none",
-  plugins: [graphqlLoader, ejsShimStripper],
+  plugins: [graphqlLoader],
 });
 
 if (!result.success) {
