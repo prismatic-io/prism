@@ -20,6 +20,7 @@ const keywordReplacements: Record<string, string> = {
   context: "ctx",
   data: "aData",
   case: "aCase",
+  void: "voidOperation",
 };
 
 /** Convert key to a "safe key" or "clean identifier". Specifically avoiding Javascript/Typescript keywords
