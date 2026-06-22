@@ -320,6 +320,13 @@
               "type": "string"
             },
             "description": "Optional tags for categorization"
+          },
+          "reminderOffsets": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Minutes before the due date to send reminders"
           }
         }
       },
