@@ -1473,7 +1473,7 @@ const createTodo = action({
   },
   perform: async (
     context,
-    { connection, title, description, completed, tags },
+    { connection, title, description, completed, tags, reminderOffsets },
   ) => {
     const client = await createClient(connection);
     const { data } = await client.post(\`/todos\`, {
@@ -1481,6 +1481,7 @@ const createTodo = action({
       description,
       completed,
       tags,
+      reminderOffsets,
     });
     return { data };
   },
@@ -1525,6 +1526,17 @@ const createTodo = action({
           util.types.toString(value),
         ),
       comments: "Optional tags for categorization",
+    }),
+    reminderOffsets: input({
+      label: "Reminder Offsets",
+      type: "string",
+      required: true,
+      collection: "valuelist",
+      clean: (values) =>
+        ((values as unknown[]) || []).map((value) =>
+          util.types.toNumber(value),
+        ),
+      comments: "Minutes before the due date to send reminders",
     }),
   },
 });
@@ -1562,7 +1574,15 @@ const updateTodo = action({
   },
   perform: async (
     context,
-    { connection, todoId, title, description, completed, tags },
+    {
+      connection,
+      todoId,
+      title,
+      description,
+      completed,
+      tags,
+      reminderOffsets,
+    },
   ) => {
     const client = await createClient(connection);
     const { data } = await client.put(\`/todos/\${todoId}\`, {
@@ -1570,6 +1590,7 @@ const updateTodo = action({
       description,
       completed,
       tags,
+      reminderOffsets,
     });
     return { data };
   },
@@ -1621,6 +1642,17 @@ const updateTodo = action({
           util.types.toString(value),
         ),
       comments: "Optional tags for categorization",
+    }),
+    reminderOffsets: input({
+      label: "Reminder Offsets",
+      type: "string",
+      required: true,
+      collection: "valuelist",
+      clean: (values) =>
+        ((values as unknown[]) || []).map((value) =>
+          util.types.toNumber(value),
+        ),
+      comments: "Minutes before the due date to send reminders",
     }),
   },
 });
@@ -2135,6 +2167,13 @@ exports[`component generation tests > openApi - todo-api > should match scaffold
               "type": "string"
             },
             "description": "Optional tags for categorization"
+          },
+          "reminderOffsets": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Minutes before the due date to send reminders"
           }
         }
       },

@@ -299,12 +299,12 @@ const formatArrayInput = (schema: OpenAPIV3.ArraySchemaObject | OpenAPIV3_1.Arra
         cleanFn: "toObject",
       };
     } else {
-      const type = items.type as unknown as InputFieldType;
+      const mapped = toInputType[items.type as string] ?? toInputType.string;
       return {
-        type,
+        type: mapped.type,
         collection: "valuelist" as InputFieldCollection,
         required: "minimum" in items && items.minimum,
-        cleanFn: type in toInputType ? toInputType[type].cleanFn : toInputType.string.cleanFn,
+        cleanFn: mapped.cleanFn,
       };
     }
   } else {
