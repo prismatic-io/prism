@@ -68,3 +68,8 @@ package-lock.json
 
 # We do want to commit the oclif manifest
 !oclif.manifest.json
+
+# Scaffolding templates include .vscode/ files that must be committed even though
+# .vscode/ is commonly ignored globally.
+!templates/**/.vscode/
+!templates/**/.vscode/**

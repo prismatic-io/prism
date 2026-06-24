@@ -5,8 +5,12 @@ import { parseAndGenerate } from "wsdl-tsclient";
 import { Logger as WsdlTsClientLogger } from "wsdl-tsclient/dist/src/utils/logger.js";
 import { generate } from "../../../generate/index.js";
 import { updatePackageJson } from "../../../generate/util.js";
-import { devDependencies } from "../../../utils/devDependencies.js";
 import { formatSourceFiles, getFilesToFormat, VALID_NAME_REGEX } from "../../../utils/generate.js";
+import {
+  DEFAULT_TOOLCHAIN,
+  getToolchain,
+  TOOLCHAIN_NAMES,
+} from "../../../utils/toolchain/index.js";
 import GenerateComponentCommand from "./component.js";
 import GenerateFormatsCommand from "./formats.js";
 
@@ -43,6 +47,12 @@ prism components:publish`,
       default: false,
       description: "Output more verbose logging from Component generation",
     }),
+    toolchain: Flags.option({
+      options: TOOLCHAIN_NAMES,
+      default: DEFAULT_TOOLCHAIN,
+      description:
+        "Toolchain to scaffold: 'modern' (tsdown + vitest + Biome) or 'legacy' (webpack + jest + eslint)",
+    })(),
   };
   static args = {
     name: Args.string({
@@ -58,9 +68,15 @@ prism components:publish`,
     try {
       const {
         args: { name },
-        flags: { verbose, "wsdl-path": rawWsdlPath, "open-api-path": rawOpenApiPath },
+        flags: {
+          verbose,
+          "wsdl-path": rawWsdlPath,
+          "open-api-path": rawOpenApiPath,
+          toolchain: toolchainName,
+        },
       } = await this.parse(InitializeComponent);
 
+      const toolchain = getToolchain(toolchainName);
       const wsdlPath = rawWsdlPath ? path.resolve(rawWsdlPath) : undefined;
       const openApiPath = rawOpenApiPath ? path.resolve(rawOpenApiPath) : undefined;
 
@@ -87,6 +103,7 @@ prism components:publish`,
           {
             name,
             openapi: openApiPath,
+            toolchain: toolchain.name,
           },
           this.config,
         );
@@ -95,6 +112,7 @@ prism components:publish`,
           {
             name,
             description: "Prism-generated Component",
+            toolchain: toolchain.name,
           },
           this.config,
         );
@@ -127,23 +145,22 @@ prism components:publish`,
       await updatePackageJson({
         path: "package.json",
         scripts: {
-          build: "webpack",
+          build: toolchain.scripts.build,
           publish: "npm run build && prism components:publish",
           "generate:manifest": "npm run build && npx @prismatic-io/spectral component-manifest",
           "generate:manifest:dev":
             "npm run build && npx @prismatic-io/spectral component-manifest --skip-signature-verify",
-          test: "jest",
-          lint: "eslint --ext .ts .",
+          test: toolchain.scripts.test,
+          lint: toolchain.scripts.lint,
+          typecheck: toolchain.scripts.typecheck,
+          format: toolchain.scripts.format,
         },
-        eslintConfig: {
-          root: true,
-          extends: ["@prismatic-io/eslint-config-spectral"],
-        },
+        ...toolchain.packageJson,
         dependencies: {
           "@prismatic-io/spectral": "*",
           ...(wsdlPath ? { soap: "1.1.10" } : {}),
         },
-        devDependencies,
+        devDependencies: toolchain.devDependencies,
       });
 
       const filesToFormat = await getFilesToFormat(name);

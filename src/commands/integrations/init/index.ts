@@ -5,8 +5,12 @@ import path from "path";
 import { v4 as uuid4 } from "uuid";
 import { prismaticUrl } from "../../../auth.js";
 import { template, updatePackageJson } from "../../../generate/util.js";
-import { devDependencies } from "../../../utils/devDependencies.js";
 import { VALID_NAME_REGEX } from "../../../utils/generate.js";
+import {
+  DEFAULT_TOOLCHAIN,
+  getToolchain,
+  TOOLCHAIN_NAMES,
+} from "../../../utils/toolchain/index.js";
 
 const CLEANABLE_TEMPLATES = [
   "src/client.ts",
@@ -49,13 +53,21 @@ export default class InitializeIntegration extends Command {
       description: "Generate clean scaffold without example code",
       default: false,
     }),
+    toolchain: Flags.option({
+      options: TOOLCHAIN_NAMES,
+      default: DEFAULT_TOOLCHAIN,
+      description:
+        "Toolchain to scaffold: 'modern' (tsdown + vitest + Biome) or 'legacy' (webpack + jest + eslint)",
+    })(),
   };
 
   async run() {
     const {
       args: { name },
-      flags: { clean },
+      flags: { clean, toolchain: toolchainName },
     } = await this.parse(InitializeIntegration);
+
+    const toolchain = getToolchain(toolchainName);
 
     if (!VALID_NAME_REGEX.test(name)) {
       this.error(
@@ -89,7 +101,17 @@ export default class InitializeIntegration extends Command {
     };
 
     const templateSuffix = clean ? ".clean" : "";
-    const templateFiles = [
+    const resolveTemplateSource = (file: string): string => {
+      if (file.endsWith("icon.png")) {
+        return file;
+      }
+      if (CLEANABLE_TEMPLATES.includes(file)) {
+        return `${file}${templateSuffix}.ejs`;
+      }
+      return `${file}.ejs`;
+    };
+
+    const sharedFiles = [
       path.join("assets", "icon.png"),
       path.join("src", "index.ts"),
       path.join("src", "client.ts"),
@@ -99,46 +121,33 @@ export default class InitializeIntegration extends Command {
       path.join("src", "componentRegistry.ts"),
       path.join("src", "markdown.d.ts"),
       path.join(".spectral", "index.ts"),
-      path.join(".vscode", "extensions.json"),
-      path.join(".vscode", "settings.json"),
       ".env.testing",
       ".npmrc",
       "documentation.md",
-      "jest.config.js",
       "package.json",
-      "tsconfig.json",
-      "webpack.config.js",
     ];
-
     await Promise.all([
-      ...templateFiles.map((file) => {
-        const cleanable = CLEANABLE_TEMPLATES.includes(file);
-        const templateFile = file.endsWith("icon.png")
-          ? file
-          : cleanable
-            ? `${file}${templateSuffix}.ejs`
-            : `${file}.ejs`;
-
-        return template(path.join("integration", templateFile), file, context);
-      }),
+      ...sharedFiles.map((file) =>
+        template(path.join("integration", resolveTemplateSource(file)), file, context),
+      ),
+      toolchain.renderTemplates(context),
     ]);
 
     await updatePackageJson({
       path: "package.json",
       scripts: {
-        build: "webpack",
+        build: toolchain.scripts.build,
         import: "npm run build && prism integrations:import",
-        test: "jest",
-        lint: "eslint --ext .ts .",
+        test: toolchain.scripts.test,
+        lint: toolchain.scripts.lint,
+        typecheck: toolchain.scripts.typecheck,
+        format: toolchain.scripts.format,
       },
-      eslintConfig: {
-        root: true,
-        extends: ["@prismatic-io/eslint-config-spectral"],
-      },
+      ...toolchain.packageJson,
       dependencies: {
         "@prismatic-io/spectral": "*",
       },
-      devDependencies,
+      devDependencies: toolchain.devDependencies,
     });
 
     this.log(`

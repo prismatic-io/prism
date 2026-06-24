@@ -232,7 +232,7 @@
       "examples": [
         {
           "description": "Build and publish a component:",
-          "command": "npx webpack && <%= config.bin %> <%= command.id %>"
+          "command": "npm run build && <%= config.bin %> <%= command.id %>"
         }
       ],
       "flags": {
@@ -3606,6 +3606,18 @@
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"
+        },
+        "toolchain": {
+          "hidden": true,
+          "name": "toolchain",
+          "default": "modern",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "modern",
+            "legacy"
+          ],
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -3661,6 +3673,18 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "toolchain": {
+          "description": "Toolchain to scaffold: 'modern' (tsdown + vitest + Biome) or 'legacy' (webpack + jest + eslint)",
+          "name": "toolchain",
+          "default": "modern",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "modern",
+            "legacy"
+          ],
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -5085,6 +5109,18 @@
           "name": "clean",
           "allowNo": false,
           "type": "boolean"
+        },
+        "toolchain": {
+          "description": "Toolchain to scaffold: 'modern' (tsdown + vitest + Biome) or 'legacy' (webpack + jest + eslint)",
+          "name": "toolchain",
+          "default": "modern",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "modern",
+            "legacy"
+          ],
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,

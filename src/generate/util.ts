@@ -5,7 +5,7 @@ import path from "path";
 import prettier from "prettier";
 import striptags from "striptags";
 import { fileURLToPath } from "url";
-import { exists } from "../fs.js";
+import { exists, walkDir } from "../fs.js";
 import { fetch } from "../utils/http.js";
 
 export const pascalCase = (str: string) => startCase(camelCase(str)).replace(/ /g, "");
@@ -24,17 +24,20 @@ export const createDescription = (text?: string): string => {
 export const toArgv = (args: Record<string, unknown>): string[] =>
   Object.entries(args).flatMap(([key, value]) => [`--${key}`, `${value}`]);
 
+const templatesRoot = (): string => {
+  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+  const basePath = process.env.NODE_ENV === "test" ? path.join(moduleDir, "..", "..") : moduleDir;
+  return path.join(basePath, "templates");
+};
+
 export const template = async (
   source: string,
   destination: string = source.replace(/\.ejs$/, ""),
   data: Record<string, unknown> = {},
 ): Promise<void> => {
-  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-  const basePath = process.env.NODE_ENV === "test" ? path.join(moduleDir, "..", "..") : moduleDir;
+  const templatePath = path.join(templatesRoot(), source);
 
-  const templatePath = path.join(basePath, "templates", source);
-
-  const isTemplate = [".js", ".ts", ".json", ".md", ""].includes(path.extname(destination));
+  const isTemplate = [".js", ".ts", ".mts", ".json", ".md", ""].includes(path.extname(destination));
 
   if (isTemplate) {
     const rendered = await ejs.renderFile(templatePath, data);
@@ -43,6 +46,24 @@ export const template = async (
     await mkdirp(path.dirname(destination));
     await copyFile(templatePath, destination);
   }
+};
+
+/**
+ * Render every template file under a templates subdirectory, preserving its
+ * structure in the output.
+ */
+export const templateDirectory = async (
+  sourceDir: string,
+  data: Record<string, unknown> = {},
+): Promise<void> => {
+  const absoluteDir = path.join(templatesRoot(), sourceDir);
+  const files = await walkDir(absoluteDir);
+  await Promise.all(
+    files.map((file) => {
+      const relativePath = path.relative(absoluteDir, file);
+      return template(path.join(sourceDir, relativePath), relativePath.replace(/\.ejs$/, ""), data);
+    }),
+  );
 };
 
 const updateDependencies = async (dependencies: Record<string, string>) => {

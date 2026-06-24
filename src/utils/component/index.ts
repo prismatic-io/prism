@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import { extname, resolve } from "node:path";
 import { exists } from "../../fs.js";
 import { findPackageRoot, seekPackageDistDirectory } from "../import.js";
+import { TOOLCHAIN_CONFIG_OUTPUTS } from "../toolchain/index.js";
 import { createZip } from "../zip.js";
 
 const require = createRequire(import.meta.url);
@@ -70,7 +71,9 @@ export const createSourceCodePackage = async (): Promise<string> => {
     // Fall back to default if tsconfig can't be read
   }
 
-  const essentialFiles = ["package.json", "tsconfig.json", "webpack.config.js", "jest.config.js"];
+  // A component may have been generated with either toolchain, so include the
+  // config files from both; the exists() guard below skips any that are absent.
+  const essentialFiles = ["package.json", ...TOOLCHAIN_CONFIG_OUTPUTS];
 
   return createZip(async (zip) => {
     for (const file of essentialFiles) {
