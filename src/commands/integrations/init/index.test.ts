@@ -3,6 +3,7 @@ import { readFile } from "fs-extra";
 import path from "path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { walkDir } from "../../../fs.js";
+import { TOOLCHAIN_NAMES } from "../../../utils/toolchain/index.js";
 import InitializeIntegration from "./index.js";
 
 const GENERATION_TIMEOUT_SECONDS = 6000; // 1 minute
@@ -36,65 +37,74 @@ describe("integrations:init", () => {
     process.chdir(basePath);
   });
 
-  describe("scaffold generation", () => {
-    const integrationName = "test-integration";
+  for (const toolchain of TOOLCHAIN_NAMES) {
+    describe(`${toolchain} toolchain`, () => {
+      describe("scaffold generation", () => {
+        const integrationName = `test-integration-${toolchain}`;
 
-    afterEach(() => {
-      // Clean up generated directory
-      const integrationPath = path.join(tempPath, integrationName);
-      if (fs.existsSync(integrationPath)) {
-        fs.rmSync(integrationPath, { recursive: true, force: true });
-      }
+        afterEach(() => {
+          // Clean up generated directory
+          const integrationPath = path.join(tempPath, integrationName);
+          if (fs.existsSync(integrationPath)) {
+            fs.rmSync(integrationPath, { recursive: true, force: true });
+          }
+        });
+
+        it(
+          "should match scaffolding snapshots for default template",
+          async () => {
+            process.chdir(tempPath);
+
+            await InitializeIntegration.run([integrationName, "--toolchain", toolchain]);
+
+            // The init command chdir's into the created directory, so go back to tempPath
+            process.chdir(tempPath);
+
+            const targets = await walkDir(integrationName, [".png", "webpack.config.js"]);
+            for (const target of targets) {
+              const contents = await readFile(target, "utf-8");
+              expect(contents).toMatchSnapshot(target);
+            }
+          },
+          GENERATION_TIMEOUT_SECONDS,
+        );
+      });
+
+      describe("clean scaffold generation", () => {
+        const cleanIntegrationName = `clean-test-integration-${toolchain}`;
+
+        afterEach(() => {
+          // Clean up generated directory
+          const integrationPath = path.join(tempPath, cleanIntegrationName);
+          if (fs.existsSync(integrationPath)) {
+            fs.rmSync(integrationPath, { recursive: true, force: true });
+          }
+        });
+
+        it(
+          "should match scaffolding snapshots for clean template",
+          async () => {
+            process.chdir(tempPath);
+
+            await InitializeIntegration.run([
+              cleanIntegrationName,
+              "--clean",
+              "--toolchain",
+              toolchain,
+            ]);
+
+            // The init command chdir's into the created directory, so go back to tempPath
+            process.chdir(tempPath);
+
+            const targets = await walkDir(cleanIntegrationName, [".png", "webpack.config.js"]);
+            for (const target of targets) {
+              const contents = await readFile(target, "utf-8");
+              expect(contents).toMatchSnapshot(`clean-${target}`);
+            }
+          },
+          GENERATION_TIMEOUT_SECONDS,
+        );
+      });
     });
-
-    it(
-      "should match scaffolding snapshots for default template",
-      async () => {
-        process.chdir(tempPath);
-
-        await InitializeIntegration.run([integrationName]);
-
-        // The init command chdir's into the created directory, so go back to tempPath
-        process.chdir(tempPath);
-
-        const targets = await walkDir(integrationName, [".png", "webpack.config.js"]);
-        for (const target of targets) {
-          const contents = await readFile(target, "utf-8");
-          expect(contents).toMatchSnapshot(target);
-        }
-      },
-      GENERATION_TIMEOUT_SECONDS,
-    );
-  });
-
-  describe("clean scaffold generation", () => {
-    const cleanIntegrationName = "clean-test-integration";
-
-    afterEach(() => {
-      // Clean up generated directory
-      const integrationPath = path.join(tempPath, cleanIntegrationName);
-      if (fs.existsSync(integrationPath)) {
-        fs.rmSync(integrationPath, { recursive: true, force: true });
-      }
-    });
-
-    it(
-      "should match scaffolding snapshots for clean template",
-      async () => {
-        process.chdir(tempPath);
-
-        await InitializeIntegration.run([cleanIntegrationName, "--clean"]);
-
-        // The init command chdir's into the created directory, so go back to tempPath
-        process.chdir(tempPath);
-
-        const targets = await walkDir(cleanIntegrationName, [".png", "webpack.config.js"]);
-        for (const target of targets) {
-          const contents = await readFile(target, "utf-8");
-          expect(contents).toMatchSnapshot(`clean-${target}`);
-        }
-      },
-      GENERATION_TIMEOUT_SECONDS,
-    );
-  });
+  }
 });

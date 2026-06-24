@@ -3,6 +3,11 @@ import inquirer from "inquirer";
 import { camelCase } from "lodash-es";
 import path from "path";
 import { template, toArgv } from "../../../generate/util.js";
+import {
+  DEFAULT_TOOLCHAIN,
+  getToolchain,
+  TOOLCHAIN_NAMES,
+} from "../../../utils/toolchain/index.js";
 
 export default class GenerateComponentCommand extends Command {
   static hidden = true;
@@ -16,10 +21,16 @@ export default class GenerateComponentCommand extends Command {
       char: "d",
       description: "Description for the component",
     }),
+    toolchain: Flags.option({
+      options: TOOLCHAIN_NAMES,
+      default: DEFAULT_TOOLCHAIN,
+      hidden: true,
+    })(),
   };
 
   async run() {
     const { flags } = await this.parse(GenerateComponentCommand);
+    const toolchain = getToolchain(flags.toolchain);
     const { name, description } = await inquirer.prompt<{
       name: string;
       description: string;
@@ -42,7 +53,7 @@ export default class GenerateComponentCommand extends Command {
     );
 
     const context = { component: { name, description, key: camelCase(name) } };
-    const templateFiles = [
+    const sharedFiles = [
       path.join("assets", "icon.png"),
       path.join("src", "actions.test.ts"),
       path.join("src", "actions.ts"),
@@ -53,22 +64,18 @@ export default class GenerateComponentCommand extends Command {
       path.join("src", "index.ts"),
       path.join("src", "triggers.test.ts"),
       path.join("src", "triggers.ts"),
-      path.join(".vscode", "extensions.json"),
-      path.join(".vscode", "settings.json"),
       ".env.testing",
-      "jest.config.js",
       "package.json",
-      "tsconfig.json",
-      "webpack.config.js",
     ];
     await Promise.all([
-      ...templateFiles.map((file) =>
+      ...sharedFiles.map((file) =>
         template(
           path.join("component", file.endsWith("icon.png") ? file : `${file}.ejs`),
           file,
           context,
         ),
       ),
+      toolchain.renderTemplates(context),
     ]);
   }
 

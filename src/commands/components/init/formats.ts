@@ -5,6 +5,11 @@ import path, { extname } from "path";
 import { read } from "../../../generate/formats/readers/openapi/index.js";
 import { write } from "../../../generate/formats/writer/index.js";
 import { template, toArgv } from "../../../generate/util.js";
+import {
+  DEFAULT_TOOLCHAIN,
+  getToolchain,
+  TOOLCHAIN_NAMES,
+} from "../../../utils/toolchain/index.js";
 
 export default class GenerateFormatsCommand extends Command {
   static hidden = true;
@@ -27,25 +32,27 @@ export default class GenerateFormatsCommand extends Command {
     public: Flags.boolean({
       hidden: true,
     }),
+    toolchain: Flags.option({
+      options: TOOLCHAIN_NAMES,
+      default: DEFAULT_TOOLCHAIN,
+      hidden: true,
+    })(),
   };
 
   async run() {
     const {
-      flags: { name, icon, openapi, public: isPublic = false },
+      flags: { name, icon, openapi, public: isPublic = false, toolchain: toolchainName },
     } = await this.parse(GenerateFormatsCommand);
+    const toolchain = getToolchain(toolchainName);
     const key = camelCase(name);
 
-    const templateFiles = [
-      "tsconfig.json",
-      "webpack.config.js",
-      "jest.config.js",
-      path.join("assets", "icon.png"),
-    ];
-    await Promise.all(
-      templateFiles.map((f) =>
+    const sharedFiles = [path.join("assets", "icon.png")];
+    await Promise.all([
+      ...sharedFiles.map((f) =>
         template(path.join("formats", f.endsWith("icon.png") ? f : `${f}.ejs`), f),
       ),
-    );
+      toolchain.renderTemplates(),
+    ]);
 
     const result = await read(openapi);
     await write(key, isPublic, result);

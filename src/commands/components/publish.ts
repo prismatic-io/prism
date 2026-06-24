@@ -23,7 +23,7 @@ export default class PublishCommand extends PrismaticBaseCommand {
   static examples = [
     {
       description: "Build and publish a component:",
-      command: "npx webpack && <%= config.bin %> <%= command.id %>",
+      command: "npm run build && <%= config.bin %> <%= command.id %>",
     },
   ];
 
