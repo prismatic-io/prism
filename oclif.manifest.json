@@ -1592,7 +1592,6 @@
           "char": "o",
           "description": "Overview to describe the purpose of the integration",
           "name": "overview",
-          "required": true,
           "hasDynamicHelp": false,
           "multiple": false,
           "type": "option"

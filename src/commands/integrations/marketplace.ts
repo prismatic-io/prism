@@ -33,7 +33,6 @@ export default class MarketplaceCommand extends PrismaticBaseCommand {
     }),
     overview: Flags.string({
       char: "o",
-      required: true,
       description: "Overview to describe the purpose of the integration",
     }),
   };
@@ -79,7 +78,9 @@ export default class MarketplaceCommand extends PrismaticBaseCommand {
       variables: {
         id: integration,
         marketplaceConfiguration,
-        overview,
+        // The overview flag is optional; the mutation requires a non-null
+        // String, so send an empty string when it is omitted.
+        overview: overview ?? "",
         multipleInstances,
       },
     });
