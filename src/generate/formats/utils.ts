@@ -3,8 +3,10 @@ import type {
   ComponentDefinition,
   ConnectionDefinition,
   ConnectionInput as ConnectionInputDefinition,
+  DynamicObjectInputField,
   InputFieldChoice,
   InputFieldDefinition,
+  StructuredObjectInputField,
 } from "@prismatic-io/spectral";
 import { camelCase } from "lodash-es";
 import { toWords } from "number-to-words";
@@ -58,7 +60,11 @@ export const escapeText = (text?: unknown): string => {
 
 export type GeneratedFunction = string | WriterFunction;
 
-export type Input = Omit<InputFieldDefinition, "clean" | "model"> & {
+// Exclude container inputs the generator never emits; they lack the flat fields it sets.
+export type Input = Omit<
+  Exclude<InputFieldDefinition, StructuredObjectInputField | DynamicObjectInputField>,
+  "clean" | "model"
+> & {
   clean: GeneratedFunction;
   /** Upstream API key for this input */
   upstreamKey: string;
