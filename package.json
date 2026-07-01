@@ -1,6 +1,6 @@
 {
   "name": "@prismatic-io/prism",
-  "version": "9.5.4",
+  "version": "10.0.0",
   "description": "Build, deploy, and support integrations in Prismatic from the comfort of your command line",
   "keywords": [
     "prismatic",
