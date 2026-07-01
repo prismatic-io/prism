@@ -1,16 +1,12 @@
 import type { OpenAPI, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 import { startCase, merge } from "lodash-es";
 import { type Input, cleanIdentifier, stripUndefined } from "../../utils.js";
-import type {
-  InputFieldChoice,
-  InputFieldCollection,
-  InputFieldType,
-} from "@prismatic-io/spectral";
+import type { InputFieldChoice, InputFieldCollection } from "@prismatic-io/spectral";
 
 type ParameterObject = OpenAPIV3.ParameterObject | OpenAPIV3_1.ParameterObject;
 
 type InputType = {
-  type: InputFieldType;
+  type: Input["type"];
   cleanFn: string;
   cleanReturnType?: string;
   allowOptional?: boolean;
@@ -294,7 +290,7 @@ const formatArrayInput = (schema: OpenAPIV3.ArraySchemaObject | OpenAPIV3_1.Arra
       // TODO: Inputs that are arrays of objects with validations on the object are not in scope
       // at this time. This approach provides bare bones support.
       return {
-        type: "code" as InputFieldType,
+        type: "code" as Input["type"],
         language: "json",
         cleanFn: "toObject",
       };
