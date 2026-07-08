@@ -569,8 +569,11 @@ export const getIntegrationDefinition = async (integrationId: string): Promise<s
 };
 
 export const compareConfigVars = async (current: string, next: string): Promise<Array<string>> => {
-  const currentDef: IntegrationObjectFromYAML = await loadYaml(current);
-  const nextDef: IntegrationObjectFromYAML = await loadYaml(next);
+  const currentDef = await loadYaml<IntegrationObjectFromYAML>(current);
+  const nextDef = await loadYaml<IntegrationObjectFromYAML>(next);
+  if (!currentDef || !nextDef) {
+    throw new Error("Cannot compare config vars against an empty integration definition.");
+  }
 
   const requiredMatches: Record<string, boolean> = {};
   // The current definition contains the absolutely required config vars.
