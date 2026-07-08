@@ -63,6 +63,10 @@ const processIntegrationInstance = (instance: MarketplaceInstance | null) => {
 const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
   const definition = loadYaml<IntegrationSchema>(unparsedYamlDefinition);
 
+  if (!definition) {
+    return;
+  }
+
   const { category, description, configPages, flows, labels, requiredConfigVars } = definition;
 
   processProperties([description, category]);
