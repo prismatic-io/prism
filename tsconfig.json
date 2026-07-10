@@ -17,7 +17,6 @@
   "exclude": [
     "src/commands/components/temp",
     "src/commands/components/init/temp",
-    "src/commands/integrations/convert/temp",
     "templates",
     "**/*.test.ts"
   ]
