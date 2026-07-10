@@ -24,7 +24,7 @@
   },
   "scripts": {
     "clean": "rm -rf lib && bun run clean-test-temp",
-    "clean-test-temp": "rm -rf src/commands/components/temp src/commands/components/init/temp src/commands/integrations/convert/temp",
+    "clean-test-temp": "rm -rf src/commands/components/temp src/commands/components/init/temp",
     "build": "bun run clean && bun run format && bun run lint && tsc && bun run bundle",
     "bundle": "bun run build.ts && oclif manifest",
     "bundle:debug": "bun run build.ts --debug",

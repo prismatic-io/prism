@@ -88,7 +88,7 @@ Commands handle both types with different code paths (check for YAML vs package.
 - `vitest.setup.ts` mocks `src/auth.js` and `src/utils/http.js` and intercepts stdout/stderr; use `vi.stubEnv` to set env vars in tests
 - Test files use `.test.ts` suffix
 - Tests are excluded from TypeScript compilation (`tsconfig.json`)
-- Clean temp directories before tests: `src/commands/components/temp`, `src/commands/components/init/temp`, `src/commands/integrations/convert/temp`
+- Clean temp directories before tests: `src/commands/components/temp`, `src/commands/components/init/temp`
 - MSW (Mock Service Worker) is used for API mocking
 
 ## Global Flags

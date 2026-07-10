@@ -1,5 +1,3 @@
-import { BinaryOperator, BooleanOperator, UnaryOperator } from "@prismatic-io/spectral";
-
 export type ValidComplexYAMLValue = Array<{
   type: string;
   value: ValidYAMLValue | ValidComplexYAMLValue | ConditionObjectFromYAML;
@@ -55,16 +53,6 @@ export type ActionObjectFromYAML = {
   // Added by prism during CNI generation
   loopString?: string;
   branchString?: string;
-};
-
-export type ConfigPageObjectFromYAML = {
-  name: string;
-  tagline?: string;
-  elements: Array<{
-    type: string;
-    value: string;
-  }>;
-  userLevelConfigured?: boolean;
 };
 
 export type ConfigVarObjectFromYAML = {
@@ -137,103 +125,4 @@ export type IntegrationObjectFromYAML = {
   }>;
   requiredConfigVars: Array<ConfigVarObjectFromYAML>;
   documentation: string;
-};
-
-/* These are taken from spectral's conditionalLogic evaluate method */
-export const OPERATOR_PHRASE_TO_EXPRESSION: {
-  [clause: string]: {
-    expression: string;
-    includes?: Array<string>;
-  };
-} = {
-  [BinaryOperator.equal]: {
-    expression: "isEqual($LEFT_TERM, $RIGHT_TERM)",
-    includes: ["isEqual"],
-  },
-  [BinaryOperator.exactlyMatches]: {
-    expression: "$LEFT_TERM === $RIGHT_TERM || isDeepEqual($LEFT_TERM, $RIGHT_TERM)",
-    includes: ["isDeepEqual"],
-  },
-  [BinaryOperator.notEqual]: {
-    expression: "!(isEqual($LEFT_TERM, $RIGHT_TERM))",
-    includes: ["isEqual"],
-  },
-  [BinaryOperator.doesNotExactlyMatch]: {
-    expression: "!($LEFT_TERM === $RIGHT_TERM || isDeepEqual($LEFT_TERM, $RIGHT_TERM))",
-    includes: ["isDeepEqual"],
-  },
-  [BinaryOperator.greaterThan]: {
-    expression: "$LEFT_TERM > $RIGHT_TERM",
-  },
-  [BinaryOperator.greaterThanOrEqual]: {
-    expression: "$LEFT_TERM >= $RIGHT_TERM",
-  },
-  [BinaryOperator.lessThan]: {
-    expression: "$LEFT_TERM < $RIGHT_TERM",
-  },
-  [BinaryOperator.lessThanOrEqual]: {
-    expression: "$LEFT_TERM <= $RIGHT_TERM",
-  },
-  [BinaryOperator.in]: {
-    expression: "contains($RIGHT_TERM, $LEFT_TERM)",
-    includes: ["contains"],
-  },
-  [BinaryOperator.notIn]: {
-    expression: "!contains($RIGHT_TERM, $LEFT_TERM)",
-    includes: ["contains"],
-  },
-  [BinaryOperator.startsWith]: {
-    expression: "$RIGHT_TERM.startsWith($LEFT_TERM)",
-  },
-  [BinaryOperator.doesNotStartWith]: {
-    expression: "!$RIGHT_TERM.startsWith($LEFT_TERM)",
-  },
-  [BinaryOperator.endsWith]: {
-    expression: "$RIGHT_TERM.endsWith($LEFT_TERM)",
-  },
-  [BinaryOperator.doesNotEndWith]: {
-    expression: "!$RIGHT_TERM.endsWith($LEFT_TERM)",
-  },
-  [BinaryOperator.dateTimeAfter]: {
-    expression: "dateIsAfter($LEFT_TERM, $RIGHT_TERM)",
-    includes: ["dateIsAfter"],
-  },
-  [BinaryOperator.dateTimeBefore]: {
-    expression: "dateIsBefore($LEFT_TERM, $RIGHT_TERM)",
-    includes: ["dateIsBefore"],
-  },
-  [BinaryOperator.dateTimeSame]: {
-    expression: "dateIsEqual($LEFT_TERM, $RIGHT_TERM)",
-    includes: ["dateIsEqual"],
-  },
-  [BooleanOperator.and]: {
-    expression: "$LEFT_TERM && $RIGHT_TERM",
-  },
-  [BooleanOperator.or]: {
-    expression: "$LEFT_TERM || $RIGHT_TERM",
-  },
-  [UnaryOperator.isTrue]: {
-    expression: "evaluatesTrue($LEFT_TERM)",
-    includes: ["evaluatesTrue"],
-  },
-  [UnaryOperator.isFalse]: {
-    expression: "evaluatesFalse($LEFT_TERM)",
-    includes: ["evaluatesFalse"],
-  },
-  [UnaryOperator.doesNotExist]: {
-    expression: "evaluatesNull($LEFT_TERM)",
-    includes: ["evaluatesNull"],
-  },
-  [UnaryOperator.exists]: {
-    expression: "!evaluatesNull($LEFT_TERM)",
-    includes: ["evaluatesNull"],
-  },
-  [UnaryOperator.isEmpty]: {
-    expression: "evaluatesEmpty($LEFT_TERM)",
-    includes: ["evaluatesEmpty"],
-  },
-  [UnaryOperator.isNotEmpty]: {
-    expression: "!evaluatesNull($LEFT_TERM)",
-    includes: ["evaluatesNull"],
-  },
 };
