@@ -440,11 +440,15 @@ export const login = async (props?: { url: boolean }) => {
   return;
 };
 
-export const refresh = async (refreshToken: string, tenantId?: string) => {
+const refreshAuthentication = async (refreshToken: string, tenantId?: string) => {
   const authOptions = await getAuthOptions();
   const auth = new Authenticate(authOptions);
 
-  const response = await auth.refresh(refreshToken, tenantId);
+  return auth.refresh(refreshToken, tenantId);
+};
+
+export const refresh = async (refreshToken: string, tenantId?: string) => {
+  const response = await refreshAuthentication(refreshToken, tenantId);
   await writeConfig(response);
   return response;
 };
@@ -469,7 +473,10 @@ export const getAccessToken = async (): Promise<string | undefined> => {
   } = getEnv();
 
   if (envRefreshToken && !envAccessToken) {
-    const { accessToken: refreshedAccessToken } = await refresh(envRefreshToken, envTenantId);
+    const { accessToken: refreshedAccessToken } = await refreshAuthentication(
+      envRefreshToken,
+      envTenantId,
+    );
     return refreshedAccessToken;
   }
 
@@ -479,7 +486,8 @@ export const getAccessToken = async (): Promise<string | undefined> => {
 
   const accessToken = envAccessToken ?? configAccessToken;
   const refreshToken = envRefreshToken ?? configRefreshToken;
-  const tenantId = envTenantId ?? configTenantId;
+  const hasEnvTokenPair = envAccessToken !== undefined && envRefreshToken !== undefined;
+  const tenantId = envTenantId ?? (hasEnvTokenPair ? undefined : configTenantId);
 
   if (accessToken && refreshToken) {
     // biome-ignore lint/complexity/useDateNow: TODO
@@ -488,7 +496,8 @@ export const getAccessToken = async (): Promise<string | undefined> => {
 
     // Refresh if expired or expiring in 5 minutes or less
     if (exp - now < 5 * 60) {
-      const { accessToken: refreshedAccessToken } = await refresh(refreshToken, tenantId);
+      const refreshTokenPair = envRefreshToken ? refreshAuthentication : refresh;
+      const { accessToken: refreshedAccessToken } = await refreshTokenPair(refreshToken, tenantId);
       return refreshedAccessToken;
     }
   }

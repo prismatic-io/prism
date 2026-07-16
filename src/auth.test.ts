@@ -1,7 +1,13 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import inquirer from "inquirer";
-import { Authenticate, createRequestParams, selectTenant, type Tenant } from "./auth.js";
-import { deleteConfig } from "./config.js";
+import {
+  Authenticate,
+  createRequestParams,
+  getAccessToken,
+  selectTenant,
+  type Tenant,
+} from "./auth.js";
+import { deleteConfig, readConfig, writeConfig } from "./config.js";
 import { fetch } from "./utils/http.js";
 
 vi.unmock("./auth.js");
@@ -58,11 +64,6 @@ describe("createRequestParams", () => {
 });
 
 describe("selectTenant", () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-    vi.clearAllMocks();
-  });
-
   it("logs an error and returns undefined when every tenant is suspended", async () => {
     const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     const tenants = [
@@ -137,6 +138,76 @@ describe("selectTenant", () => {
     await selectTenant(tenants, { currentTenantId: "a" });
 
     expect(capturedDefault).toBe("a");
+  });
+});
+
+describe("getAccessToken", () => {
+  it("does not use the config tenant when both tokens are supplied via environment variables", async () => {
+    const expiredAccessToken = [
+      Buffer.from(JSON.stringify({ alg: "none" })).toString("base64url"),
+      Buffer.from(JSON.stringify({ exp: 0 })).toString("base64url"),
+      "signature",
+    ].join(".");
+    vi.stubEnv("PRISM_ACCESS_TOKEN", expiredAccessToken);
+    vi.stubEnv("PRISM_REFRESH_TOKEN", "env-refresh-token");
+    vi.stubEnv("PRISMATIC_TENANT_ID", undefined);
+    vi.mocked(readConfig).mockResolvedValue({
+      accessToken: "config-access-token",
+      expiresIn: 3600,
+      refreshToken: "config-refresh-token",
+      scopes: "openid",
+      tokenType: "Bearer",
+      tenantId: "config-tenant",
+    });
+
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        Response.json({ domain: "auth.example.com", clientId: "client", audience: "audience" }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          access_token: "refreshed-access-token",
+          expires_in: 3600,
+          token_type: "Bearer",
+        }),
+      );
+
+    await expect(getAccessToken()).resolves.toBe("refreshed-access-token");
+
+    const refreshRequest = fetchSpy.mock.calls[1];
+    expect(refreshRequest[0]).toBe("https://auth.example.com/oauth/token");
+    expect(refreshRequest[1]?.body).toBe(
+      "grant_type=refresh_token&client_id=client&refresh_token=env-refresh-token",
+    );
+    expect(writeConfig).not.toHaveBeenCalled();
+  });
+
+  it("does not persist a session obtained from an environment refresh token", async () => {
+    vi.stubEnv("PRISM_ACCESS_TOKEN", undefined);
+    vi.stubEnv("PRISM_REFRESH_TOKEN", "env-refresh-token");
+    vi.stubEnv("PRISMATIC_TENANT_ID", "env-tenant");
+
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        Response.json({ domain: "auth.example.com", clientId: "client", audience: "audience" }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          access_token: "refreshed-access-token",
+          expires_in: 3600,
+          token_type: "Bearer",
+        }),
+      );
+
+    await expect(getAccessToken()).resolves.toBe("refreshed-access-token");
+
+    expect(readConfig).not.toHaveBeenCalled();
+    expect(fetchSpy.mock.calls[1][1]?.body).toBe(
+      "grant_type=refresh_token&client_id=client&refresh_token=env-refresh-token&tenant_id=env-tenant",
+    );
+    expect(writeConfig).not.toHaveBeenCalled();
   });
 });
 
