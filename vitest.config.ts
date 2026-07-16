@@ -17,6 +17,10 @@ const graphqlPlugin = (): Plugin => ({
 export default defineConfig({
   plugins: [graphqlPlugin()],
   test: {
+    clearMocks: true,
+    restoreMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
     include: ["src/**/*.test.ts"],
     exclude: ["**/node_modules/**"],
     environment: "node",

@@ -15,10 +15,10 @@ vi.mock(import("../../fs.js"), () => ({
 
 describe("metadata utils", () => {
   const originalEnv = { ...process.env };
-  const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    vi.clearAllMocks();
+    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     process.env.PRISM_QUIET = "true";
   });
 
