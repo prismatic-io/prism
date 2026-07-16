@@ -22,11 +22,24 @@ const getStatusMessage = (status: number): string | undefined => {
     : getReasonPhrase(status);
 };
 
+const fallbackMessage = (message: unknown, fallback: string): string => {
+  if (typeof message === "string" && message.trim()) {
+    return message;
+  }
+  return fallback;
+};
+
+const errorName = (error: Error, fallback = "Error"): string =>
+  typeof error.name === "string" && error.name.trim() ? error.name : fallback;
+
 const extractResponseError = ({ response: { errors = [], status } }: ClientError): string => {
   try {
     const statusMessage = getStatusMessage(status);
     const errorMessages = errors.map(({ message }) => message);
-    return [statusMessage, ...errorMessages].filter(Boolean).join("\n");
+    return fallbackMessage(
+      [statusMessage, ...errorMessages].filter(Boolean).join("\n"),
+      `GraphQL Error (Code: ${status})`,
+    );
   } catch (_e) {
     return `GraphQL Error (Code: ${status})`;
   }
@@ -45,21 +58,24 @@ export const processError = (error: unknown): ErrorToHandle => {
   if (isClientError(error)) {
     return {
       ...error,
+      name: errorName(error, "ClientError"),
       message: extractResponseError(error),
     };
   }
 
-  // If a conventional error, only pass along the message for presentation
+  // Error.name is usually non-enumerable, so preserve it explicitly. Oclif's formatter requires
+  // both name and message and otherwise renders an empty string.
   if (isError(error)) {
     return {
       ...error,
-      message: error.message,
+      name: errorName(error),
+      message: fallbackMessage(error.message, "Unknown error"),
     };
   }
 
   // Last ditch best effort
   return {
-    name: "",
-    message: error as string,
+    name: "Error",
+    message: fallbackMessage(String(error), "Unknown error"),
   };
 };
