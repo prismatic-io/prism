@@ -39,7 +39,7 @@ describe("processError", () => {
       { query: "query { me { id } }" },
     );
     const out = processError(err);
-    expect(out.message).toMatch(/not logged/i);
+    expect(out.message).toMatch(/not authenticated/i);
   });
 
   it("preserves the message on a plain Error", () => {

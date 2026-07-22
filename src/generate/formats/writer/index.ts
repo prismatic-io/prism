@@ -18,6 +18,10 @@ const writeComponentIndex = (
   isPublic: boolean,
   { display: { label, description, iconPath } }: Component,
 ): SourceFile => {
+  const documentationUrl = new URL(
+    `/docs/components/${encodeURIComponent(key)}/`,
+    "https://prismatic.io",
+  );
   const file = project.createSourceFile(path.join("src", "index.ts"), undefined, {
     scriptKind: ScriptKind.TS,
   });
@@ -45,10 +49,7 @@ const writeComponentIndex = (
         .writeLine("component({")
         .writeLine(`key: "${key}",`)
         .conditionalWriteLine(isPublic, "public: true,")
-        .conditionalWriteLine(
-          isPublic,
-          `documentationUrl: "https://prismatic.io/docs/components/${key}/",`,
-        )
+        .conditionalWriteLine(isPublic, `documentationUrl: "${documentationUrl}",`)
         .writeLine("display: {")
         .writeLine(`label: "${label}",`)
         .writeLine(`description: "${createDescription(description)}",`)

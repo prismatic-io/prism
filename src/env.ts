@@ -2,12 +2,7 @@ import { homedir } from "os";
 import path from "path";
 import { z } from "zod";
 
-/**
- * Normalizes empty or whitespace-only strings to undefined before validation.
- * CI systems such as GitHub Actions forward unset action inputs as empty
- * strings rather than omitting the env var, and we want those to behave the
- * same as the variable being unset.
- */
+// Treat empty action inputs as unset.
 const normalizeEmpty = (val: unknown) =>
   typeof val === "string" && val.trim() === "" ? undefined : val;
 
@@ -19,11 +14,12 @@ export const getDefaultConfigFilePath = (): string =>
   path.join(homedir(), ".config", "prism", "config.yml");
 
 const envSchema = z.object({
-  PRISMATIC_URL: z.preprocess(normalizeEmpty, z.string().min(1).default(DEFAULT_PRISMATIC_URL)),
+  PRISMATIC_URL: optionalEnvString,
   PRISM_CONFIG_FILE: z.preprocess(
     normalizeEmpty,
     z.string().min(1).default(getDefaultConfigFilePath),
   ),
+  PRISM_PROFILE: optionalEnvString,
   PRISM_ACCESS_TOKEN: optionalEnvString,
   PRISM_REFRESH_TOKEN: optionalEnvString,
   PRISMATIC_TENANT_ID: optionalEnvString,

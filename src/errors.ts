@@ -18,7 +18,7 @@ const getStatusMessage = (status: number): string | undefined => {
     return;
   }
   return status === StatusCodes.UNAUTHORIZED
-    ? "You are not logged to the Prismatic platform at the specified endpoint URL. Check the value for PRISMATIC_URL."
+    ? "Not authenticated. Run 'prism login' or select another profile."
     : getReasonPhrase(status);
 };
 
@@ -47,14 +47,11 @@ const extractResponseError = ({ response: { errors = [], status } }: ClientError
 
 type ErrorToHandle = Parameters<typeof handle>[0];
 
-/** Accept arbitrary errors and convert them to something oclif handles. */
 export const processError = (error: unknown): ErrorToHandle => {
-  // Pass OclifErrors through unchanged
   if (isOclifError(error)) {
     return error;
   }
 
-  // Try to process GraphQL errors into more user-friendly forms
   if (isClientError(error)) {
     return {
       ...error,
@@ -63,8 +60,7 @@ export const processError = (error: unknown): ErrorToHandle => {
     };
   }
 
-  // Error.name is usually non-enumerable, so preserve it explicitly. Oclif's formatter requires
-  // both name and message and otherwise renders an empty string.
+  // Oclif needs the non-enumerable error name copied explicitly.
   if (isError(error)) {
     return {
       ...error,
@@ -73,7 +69,6 @@ export const processError = (error: unknown): ErrorToHandle => {
     };
   }
 
-  // Last ditch best effort
   return {
     name: "Error",
     message: fallbackMessage(String(error), "Unknown error"),

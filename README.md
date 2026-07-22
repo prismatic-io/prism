@@ -32,7 +32,37 @@ Name: John Doe
 Email: john.doe@example.com
 Organization: Example Software Company
 Endpoint URL: https://app.prismatic.io
+Profile: default
 ```
+
+### Profiles
+
+Profiles let Prism stay logged in to multiple stacks or tenants at once. Each
+profile keeps its credentials, stack, and tenant together. Commands use the
+default profile unless another is selected.
+
+Existing Prism configuration is used automatically and migrated to the profile
+format the next time Prism updates it.
+
+```bash
+# Log in to a profile on another stack.
+$ PRISMATIC_URL=https://my-stack.prismatic.io prism login --profile staging
+
+# Select a profile for one command or the current shell.
+$ prism integrations:list --profile staging
+$ export PRISM_PROFILE=staging
+
+# View, change, or delete saved profiles.
+$ prism profiles:list
+$ prism profiles:use staging
+$ prism profiles:delete staging
+```
+
+Prism selects a profile from `--profile`, then `PRISM_PROFILE`, then the saved
+default. Environment credentials take precedence over credentials stored in the
+selected profile. When environment credentials are set, they use `PRISMATIC_URL`
+and `PRISMATIC_TENANT_ID` instead of values from a profile. Login, logout, and
+tenant switching still operate on the selected profile.
 
 For help with Prism, please see our [Prism documentation page](https://prismatic.io/docs/cli/).
 There, you will find information about the various subcommands you can run, troubleshooting tips, etc.

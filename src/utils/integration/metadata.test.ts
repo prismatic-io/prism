@@ -92,7 +92,7 @@ describe("metadata utils", () => {
     it("should not warn when file already exists", async () => {
       mockExists.mockResolvedValue(true);
       mockWriteFile.mockResolvedValue(undefined);
-      process.env.PRISM_QUIET = undefined;
+      delete process.env.PRISM_QUIET;
 
       await writePrismMetadata({ integrationId: "int-123" });
 

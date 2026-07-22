@@ -1,10 +1,11 @@
-import { Args, Command, Flags } from "@oclif/core";
+import { Args, Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import fs from "fs/promises";
 import { camelCase } from "lodash-es";
 import path from "path";
 import { v4 as uuid4 } from "uuid";
-import { prismaticUrl } from "../../../auth.js";
 import { template, updatePackageJson } from "../../../generate/util.js";
+import { getPrismaticUrl } from "../../../context.js";
 import { VALID_NAME_REGEX } from "../../../utils/generate.js";
 import {
   DEFAULT_TOOLCHAIN,
@@ -19,7 +20,7 @@ const CLEANABLE_TEMPLATES = [
   "src/configPages.ts",
 ];
 
-export default class InitializeIntegration extends Command {
+export default class InitializeIntegration extends PrismaticBaseCommand {
   static description = "Initialize a new Code Native Integration";
 
   static examples = [
@@ -70,10 +71,10 @@ export default class InitializeIntegration extends Command {
     const toolchain = getToolchain(toolchainName);
 
     if (!VALID_NAME_REGEX.test(name)) {
+      const regexUrl = new URL("https://regex101.com");
+      regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
       this.error(
-        `'${name}' contains invalid characters. Please select an integration name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See https://regex101.com/?regex=${encodeURIComponent(
-          VALID_NAME_REGEX.source,
-        )}`,
+        `'${name}' contains invalid characters. Please select an integration name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
         { exit: 1 },
       );
     }
@@ -81,6 +82,7 @@ export default class InitializeIntegration extends Command {
     await fs.mkdir(name);
     process.chdir(name);
 
+    const registryUrl = new URL("/packages/npm", await getPrismaticUrl()).toString();
     const context = {
       integration: { name, description: "Prism-generated Integration", key: camelCase(name) },
       flow: {
@@ -95,7 +97,7 @@ export default class InitializeIntegration extends Command {
         },
       },
       registry: {
-        url: new URL("/packages/npm", prismaticUrl).toString(),
+        url: registryUrl,
         scope: "@component-manifests",
       },
     };

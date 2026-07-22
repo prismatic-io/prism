@@ -1,7 +1,8 @@
-import { Command, Flags } from "@oclif/core";
+import { Flags } from "@oclif/core";
 import { getAccessToken } from "../../auth.js";
-import { readConfig } from "../../config.js";
-export default class PrintTokenCommand extends Command {
+import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { getAuthContext } from "../../context.js";
+export default class PrintTokenCommand extends PrismaticBaseCommand {
   static description = "Print your authorization tokens";
 
   static flags = {
@@ -18,11 +19,8 @@ export default class PrintTokenCommand extends Command {
       flags: { type: tokenType },
     } = await this.parse(PrintTokenCommand);
 
-    //refresh before logging token
-    await getAccessToken();
-
-    const config = await readConfig();
-    const token = tokenType === "access" ? config?.accessToken : config?.refreshToken;
+    const token =
+      tokenType === "access" ? await getAccessToken() : (await getAuthContext()).refreshToken;
     this.log(token);
   }
 }

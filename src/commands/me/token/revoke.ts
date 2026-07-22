@@ -28,7 +28,12 @@ export default class RevokeTokenCommand extends PrismaticBaseCommand {
       }
     }
 
-    await revokeRefreshToken();
+    const source = await revokeRefreshToken();
     this.log("All refresh tokens for your user have been revoked.");
+    if (source === "environment") {
+      this.warn(
+        "Remove PRISM_ACCESS_TOKEN and PRISM_REFRESH_TOKEN from your environment before running more commands.",
+      );
+    }
   }
 }

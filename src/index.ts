@@ -83,6 +83,9 @@ import OrganizationUsersDeleteCommand from "./commands/organization/users/delete
 import OrganizationUsersListCommand from "./commands/organization/users/list.js";
 import OrganizationUsersRolesCommand from "./commands/organization/users/roles.js";
 import OrganizationUsersUpdateCommand from "./commands/organization/users/update.js";
+import ProfilesDeleteCommand from "./commands/profiles/delete.js";
+import ProfilesListCommand from "./commands/profiles/list.js";
+import ProfilesUseCommand from "./commands/profiles/use.js";
 import TranslationsListCommand from "./commands/translations/list.js";
 import WorkflowsExportCommand from "./commands/workflows/export.js";
 import WorkflowsImportCommand from "./commands/workflows/import.js";
@@ -120,6 +123,9 @@ export const Commands = {
   "integrations:validate-yaml": IntegrationsValidateYamlCommand,
   me: MeCommand,
   "me:token": MeTokenCommand,
+  "profiles:list": ProfilesListCommand,
+  "profiles:use": ProfilesUseCommand,
+  "profiles:delete": ProfilesDeleteCommand,
   "on-prem-resources:delete": OnPremResourcesDeleteCommand,
   "on-prem-resources:list": OnPremResourcesListCommand,
   "on-prem-resources:registration-jwt": OnPremResourcesRegistrationCommand,

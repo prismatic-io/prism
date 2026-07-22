@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_PRISMATIC_URL, getDefaultConfigFilePath, getEnv } from "./env.js";
+import { getDefaultConfigFilePath, getEnv } from "./env.js";
 
 describe("getEnv", () => {
   afterEach(() => {
@@ -7,6 +7,8 @@ describe("getEnv", () => {
   });
 
   describe.each([
+    { key: "PRISMATIC_URL" },
+    { key: "PRISM_PROFILE" },
     { key: "PRISM_ACCESS_TOKEN" },
     { key: "PRISM_REFRESH_TOKEN" },
     { key: "PRISMATIC_TENANT_ID" },
@@ -19,22 +21,6 @@ describe("getEnv", () => {
     ])("$label → $expected", ({ input, expected }) => {
       vi.stubEnv(key, input);
       expect(getEnv()[key]).toBe(expected);
-    });
-  });
-
-  describe("PRISMATIC_URL (defaulted)", () => {
-    it.each([
-      { label: "unset", input: undefined, expected: DEFAULT_PRISMATIC_URL },
-      { label: "empty string", input: "", expected: DEFAULT_PRISMATIC_URL },
-      { label: "whitespace-only", input: "   ", expected: DEFAULT_PRISMATIC_URL },
-      {
-        label: "explicit value",
-        input: "https://custom.example.com",
-        expected: "https://custom.example.com",
-      },
-    ])("$label → $expected", ({ input, expected }) => {
-      vi.stubEnv("PRISMATIC_URL", input);
-      expect(getEnv().PRISMATIC_URL).toBe(expected);
     });
   });
 
@@ -54,6 +40,7 @@ describe("getEnv", () => {
     const clearAll = () => {
       vi.stubEnv("PRISMATIC_URL", undefined);
       vi.stubEnv("PRISM_CONFIG_FILE", undefined);
+      vi.stubEnv("PRISM_PROFILE", undefined);
       vi.stubEnv("PRISM_ACCESS_TOKEN", undefined);
       vi.stubEnv("PRISM_REFRESH_TOKEN", undefined);
       vi.stubEnv("PRISMATIC_TENANT_ID", undefined);
@@ -62,8 +49,9 @@ describe("getEnv", () => {
     it("returns defaults / undefined when nothing is set", () => {
       clearAll();
       expect(getEnv()).toEqual({
-        PRISMATIC_URL: DEFAULT_PRISMATIC_URL,
+        PRISMATIC_URL: undefined,
         PRISM_CONFIG_FILE: getDefaultConfigFilePath(),
+        PRISM_PROFILE: undefined,
         PRISM_ACCESS_TOKEN: undefined,
         PRISM_REFRESH_TOKEN: undefined,
         PRISMATIC_TENANT_ID: undefined,
@@ -77,6 +65,7 @@ describe("getEnv", () => {
       expect(getEnv()).toEqual({
         PRISMATIC_URL: "https://custom.example.com",
         PRISM_CONFIG_FILE: getDefaultConfigFilePath(),
+        PRISM_PROFILE: undefined,
         PRISM_ACCESS_TOKEN: undefined,
         PRISM_REFRESH_TOKEN: "rt-123",
         PRISMATIC_TENANT_ID: undefined,
@@ -92,6 +81,7 @@ describe("getEnv", () => {
       expect(getEnv()).toEqual({
         PRISMATIC_URL: "https://custom.example.com",
         PRISM_CONFIG_FILE: getDefaultConfigFilePath(),
+        PRISM_PROFILE: undefined,
         PRISM_ACCESS_TOKEN: undefined,
         PRISM_REFRESH_TOKEN: "rt-123",
         PRISMATIC_TENANT_ID: undefined,

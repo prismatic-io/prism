@@ -70,7 +70,9 @@ const updateDependencies = async (dependencies: Record<string, string>) => {
   const promises = Object.entries(dependencies).map(async ([name, version]) => {
     try {
       if (version === "*" && !name.includes("@component-manifests")) {
-        const response = await fetch(`https://registry.npmjs.org/${name}/latest`);
+        const packageUrl = new URL("https://registry.npmjs.org");
+        packageUrl.pathname = `/${name}/latest`;
+        const response = await fetch(packageUrl.toString());
         const data = (await response.json()) as any;
         return [name, data.version];
       }

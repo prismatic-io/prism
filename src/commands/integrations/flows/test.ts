@@ -2,8 +2,9 @@ import { decode } from "@msgpack/msgpack";
 import { Flags } from "@oclif/core";
 import open from "open";
 import z from "zod";
-import { getAccessToken, prismaticUrl } from "../../../auth.js";
+import { getAccessToken } from "../../../auth.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { getPrismaticUrl } from "../../../context.js";
 import { exists, fs } from "../../../fs.js";
 import { handleError } from "../../../utils/errors.js";
 import { fetch } from "../../../utils/http.js";
@@ -649,7 +650,11 @@ async function promptIntegrationValidation(
     ...CONFIGURE_INSTANCE_PARAMS,
     ...(accessToken && { jwt: accessToken }),
   });
-  const configUrl = `${prismaticUrl}/configure-instance/${systemInstanceId}/?${params.toString()}`;
+  const configUrl = new URL(
+    `/configure-instance/${encodeURIComponent(systemInstanceId)}/`,
+    await getPrismaticUrl(),
+  );
+  configUrl.search = params.toString();
 
   if (!isConfigured) {
     if (quiet) {
@@ -660,7 +665,7 @@ async function promptIntegrationValidation(
       );
 
       if (shouldOpen) {
-        await open(configUrl);
+        await open(configUrl.toString());
       } else {
         console.log(
           `\nYou can configure the test instance later by visiting the following URL:\n${configUrl}`,

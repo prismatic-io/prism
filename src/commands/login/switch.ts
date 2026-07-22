@@ -1,17 +1,20 @@
-import { Command } from "@oclif/core";
 import { fetchUserTenants, isLoggedIn, refresh, selectTenant } from "../../auth.js";
-import { readConfig, writeConfig } from "../../config.js";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { getActiveProfileName, readProfile, writeActiveProfile } from "../../config.js";
 import { whoAmI } from "../../utils/user/query.js";
 
-export default class LoginSwitchCommand extends Command {
+export default class LoginSwitchCommand extends PrismaticBaseCommand {
   static description = "Switch between organization tenants";
+
+  protected authContext = "profile" as const;
 
   async run() {
     await this.parse(LoginSwitchCommand);
-    const config = await readConfig();
+    const profileName = this.profileName ?? (await getActiveProfileName());
+    const config = await readProfile(profileName);
     const loggedIn = (await isLoggedIn()) && config;
     if (!loggedIn) {
-      this.log("You are not logged in. Please run 'prism login' first.");
+      this.log("Not logged in. Run 'prism login'.");
       return;
     }
 
@@ -28,11 +31,11 @@ export default class LoginSwitchCommand extends Command {
     const activeTenants = tenants.filter((t) => !t.systemSuspended);
 
     if (!currentTenantSuspended && activeTenants.length <= 1) {
-      const log_msg =
+      const message =
         activeTenants.length === 1
-          ? "You are currently authenticated with the only tenant available on this stack. To switch to a tenant on another stack, update the PRISMATIC_URL value to access additional tenants."
-          : "Your user does not have access to tenants on this stack. Check the PRISMATIC_URL value.";
-      this.log(log_msg);
+          ? "This is the only tenant available to this profile."
+          : "No tenants are available to this profile.";
+      this.log(message);
       return;
     }
 
@@ -47,19 +50,22 @@ export default class LoginSwitchCommand extends Command {
 
     if (!selectedTenantId || selectedTenantId === currentTenantId) {
       if (currentTenantId && !currentTenantSuspended) {
-        await writeConfig({
-          ...config,
-          tenantId: currentTenantId,
-        });
+        await writeActiveProfile(
+          {
+            ...config,
+            tenantId: currentTenantId,
+          },
+          profileName,
+        );
         this.log(`Active tenant: ${currentTenant?.orgName} (${currentTenant?.url})`);
       }
       return;
     }
 
     this.log("\nSwitching tenant...");
-    await refresh(config.refreshToken, selectedTenantId);
+    await refresh(config.refreshToken, selectedTenantId, profileName);
 
     const selectedTenant = tenants.find((t) => t.tenantId === selectedTenantId);
-    this.log(`Successfully switched to: ${selectedTenant?.orgName} (${selectedTenant?.url})`);
+    this.log(`Switched to: ${selectedTenant?.orgName} (${selectedTenant?.url})`);
   }
 }

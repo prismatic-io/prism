@@ -1,12 +1,13 @@
-import { Command } from "@oclif/core";
-import { prismaticUrl } from "../../auth.js";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { getAuthContext } from "../../context.js";
 import { whoAmI } from "../../utils/user/query.js";
 
-export default class WhoAmICommand extends Command {
+export default class WhoAmICommand extends PrismaticBaseCommand {
   static description = "Print your user profile information";
 
   async run() {
     await this.parse(WhoAmICommand);
+    const authContext = await getAuthContext();
     const me = await whoAmI();
     const { name, email, org, customer, tenantId } = me;
     this.log("Name:", name);
@@ -20,6 +21,10 @@ export default class WhoAmICommand extends Command {
     if (tenantId) {
       this.log("Tenant ID:", tenantId);
     }
-    this.log("Endpoint URL:", prismaticUrl);
+    this.log("Endpoint URL:", authContext.url);
+    this.log("Authentication:", authContext.source === "environment" ? "Environment" : "Profile");
+    if (authContext.profileName) {
+      this.log("Profile:", authContext.profileName);
+    }
   }
 }

@@ -5,6 +5,30 @@
       "args": {},
       "description": "Log in to your Prismatic account",
       "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "force": {
           "char": "f",
           "description": "re-authenticate, even if you are already logged in",
@@ -33,7 +57,32 @@
       "aliases": [],
       "args": {},
       "description": "Switch between organization tenants",
-      "flags": {},
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
       "id": "login:switch",
@@ -48,6 +97,30 @@
       "args": {},
       "description": "Log out of your Prismatic account",
       "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "browser": {
           "char": "b",
           "description": "additionally log out of your default browser's session",
@@ -90,6 +163,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -120,6 +202,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -251,6 +342,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "comment": {
           "char": "c",
           "description": "Comment about changes in this Publish",
@@ -361,6 +461,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "name": {
           "char": "n",
           "description": "short name of the new customer",
@@ -430,6 +539,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -460,6 +578,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -580,6 +707,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "name": {
           "char": "n",
           "description": "name of the customer",
@@ -661,6 +797,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "name": {
           "char": "n",
@@ -750,6 +895,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -786,6 +940,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "force": {
           "char": "f",
@@ -829,6 +992,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -865,6 +1037,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -895,6 +1076,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "customer": {
           "char": "c",
@@ -1027,6 +1217,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "name": {
           "char": "n",
           "description": "Name of the instance",
@@ -1101,6 +1300,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "available": {
           "char": "a",
           "description": "Version is available or unavailable",
@@ -1138,6 +1346,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "name": {
           "char": "n",
@@ -1200,6 +1417,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -1236,6 +1462,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "latest-components": {
           "char": "l",
@@ -1288,6 +1523,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "name": {
           "char": "n",
           "description": "name of the forked integration",
@@ -1335,6 +1579,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "path": {
           "char": "p",
@@ -1422,6 +1675,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -1566,6 +1828,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "available": {
           "char": "a",
           "description": "Mark this Integration version available in the marketplace",
@@ -1616,7 +1887,32 @@
         }
       },
       "description": "Open the Designer for the specified Integration",
-      "flags": {},
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
       "id": "integrations:open",
@@ -1651,6 +1947,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "comment": {
           "char": "c",
@@ -1729,6 +2034,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "integration-id": {
           "char": "i",
           "description": "ID of the integration containing the flow to test.",
@@ -1772,6 +2086,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "name": {
           "char": "n",
@@ -1853,6 +2176,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -1868,7 +2200,32 @@
       "aliases": [],
       "args": {},
       "description": "Print your user profile information",
-      "flags": {},
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
       "id": "me",
@@ -1883,6 +2240,30 @@
       "args": {},
       "description": "Print your authorization tokens",
       "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "type": {
           "char": "t",
           "description": "Which token type to print",
@@ -1900,6 +2281,212 @@
       "hasDynamicHelp": false,
       "hiddenAliases": [],
       "id": "me:token",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "profiles:list": {
+      "aliases": [],
+      "args": {},
+      "description": "List profiles",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "columns": {
+          "description": "only show provided columns (comma-separated)",
+          "exclusive": [
+            "extended"
+          ],
+          "name": "columns",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "csv": {
+          "description": "output is csv format [alias: --output=csv]",
+          "exclusive": [
+            "no-truncate"
+          ],
+          "name": "csv",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "extended": {
+          "char": "x",
+          "description": "show extra columns",
+          "exclusive": [
+            "columns"
+          ],
+          "name": "extended",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "filter": {
+          "description": "filter property by regex, ex: name=^foo (prefix key with - to invert)",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "no-header": {
+          "description": "hide table header from output",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-header",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "no-truncate": {
+          "description": "do not truncate output to fit screen",
+          "exclusive": [
+            "csv"
+          ],
+          "name": "no-truncate",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "output": {
+          "description": "output in a more machine friendly format",
+          "exclusive": [
+            "no-truncate",
+            "csv"
+          ],
+          "name": "output",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "csv",
+            "json",
+            "yaml"
+          ],
+          "type": "option"
+        },
+        "sort": {
+          "description": "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "profiles:list",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "profiles:use": {
+      "aliases": [],
+      "args": {
+        "name": {
+          "description": "Profile to use by default",
+          "name": "name",
+          "required": true
+        }
+      },
+      "description": "Set the default profile",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "profiles:use",
+      "pluginAlias": "@prismatic-io/prism",
+      "pluginName": "@prismatic-io/prism",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false
+    },
+    "profiles:delete": {
+      "aliases": [],
+      "args": {
+        "name": {
+          "description": "Profile to delete",
+          "name": "name",
+          "required": true
+        }
+      },
+      "description": "Delete a profile",
+      "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "profiles:delete",
       "pluginAlias": "@prismatic-io/prism",
       "pluginName": "@prismatic-io/prism",
       "pluginType": "core",
@@ -1931,6 +2518,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -1961,6 +2557,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -2077,6 +2682,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "customerId": {
           "char": "c",
           "description": "The ID of the customer for which to create the JWT. Only valid for Organization users.",
@@ -2139,6 +2753,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "name": {
           "char": "n",
           "description": "name of the organization",
@@ -2176,6 +2799,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "organizationId": {
           "description": "ID of an organization",
@@ -2224,6 +2856,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "output-file": {
           "char": "o",
           "description": "Output the results of the action to a specified file",
@@ -2269,6 +2910,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -2383,6 +3033,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "name": {
           "char": "n",
           "description": "name of the group to be created",
@@ -2445,6 +3104,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -2481,6 +3149,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -2594,6 +3271,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -2642,6 +3328,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "name": {
           "char": "n",
@@ -2741,6 +3436,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -2771,6 +3475,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -2879,6 +3592,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "columns": {
           "description": "only show provided columns (comma-separated)",
           "exclusive": [
@@ -2986,6 +3708,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "name": {
           "char": "n",
           "description": "name of the webhook to be created",
@@ -3057,6 +3788,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -3087,6 +3827,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -3210,6 +3959,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -3343,6 +4101,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -3479,6 +4246,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "integrationId": {
           "char": "i",
           "description": "Integration ID",
@@ -3534,6 +4310,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "envPath": {
           "char": "e",
@@ -3591,6 +4376,30 @@
       "args": {},
       "description": "Initialize a new Component",
       "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "name": {
           "char": "n",
           "description": "Name of the component",
@@ -3651,6 +4460,30 @@
         }
       ],
       "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "wsdl-path": {
           "description": "Path to the WSDL definition file used to generate a Component",
           "name": "wsdl-path",
@@ -3716,6 +4549,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "skip-signature-verify": {
           "description": "This consistently returns a signature, regardless of whether the corresponding component has been published to the platform or not.",
           "name": "skip-signature-verify",
@@ -3768,6 +4610,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -3904,6 +4755,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "email": {
           "char": "e",
           "description": "email address",
@@ -3975,6 +4835,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -4011,6 +4880,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -4118,6 +4996,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -4232,6 +5119,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "name": {
           "char": "n",
           "description": "name of the user",
@@ -4308,6 +5204,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "executionId": {
           "char": "e",
           "description": "ID of an Execution",
@@ -4370,6 +5275,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -4484,6 +5398,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "columns": {
           "description": "only show provided columns (comma-separated)",
           "exclusive": [
@@ -4597,6 +5520,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "extended": {
           "char": "x",
           "description": "show extra columns",
@@ -4679,6 +5611,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "registryPrefix": {
           "char": "r",
           "description": "The registry prefix to use for the converted integration",
@@ -4740,6 +5681,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -4848,6 +5798,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "integration-id": {
           "char": "i",
           "description": "ID of the integration containing the flow to listen to.",
@@ -4946,6 +5905,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "flow-id": {
           "char": "f",
@@ -5104,6 +6072,30 @@
         }
       ],
       "flags": {
+        "print-requests": {
+          "description": "Print all GraphQL requests that are issued",
+          "helpGroup": "GLOBAL",
+          "name": "print-requests",
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "quiet": {
+          "description": "Reduce helpful notes and text",
+          "helpGroup": "GLOBAL",
+          "name": "quiet",
+          "required": false,
+          "allowNo": false,
+          "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "clean": {
           "description": "Generate clean scaffold without example code",
           "name": "clean",
@@ -5157,6 +6149,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -5272,6 +6273,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "columns": {
           "description": "only show provided columns (comma-separated)",
           "exclusive": [
@@ -5379,6 +6389,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "confirm": {
           "description": "Prompt for confirmation before revoking tokens. Use --no-confirm to skip.",
           "name": "confirm",
@@ -5414,6 +6433,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -5538,6 +6566,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -5568,6 +6605,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -5613,6 +6659,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "public-key-file": {
           "char": "p",
           "description": "public key file",
@@ -5651,6 +6706,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -5769,6 +6833,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "name": {
           "char": "n",
           "description": "name of the user",
@@ -5830,6 +6903,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         }
       },
       "hasDynamicHelp": false,
@@ -5860,6 +6942,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -5967,6 +7058,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "columns": {
           "description": "only show provided columns (comma-separated)",
@@ -6081,6 +7181,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "name": {
           "char": "n",
           "description": "name of the user",
@@ -6149,6 +7258,15 @@
           "allowNo": false,
           "type": "boolean"
         },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
         "latest-components": {
           "char": "l",
           "description": "Use the latest available version of each component upon import. Defaults to true.",
@@ -6185,6 +7303,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "path": {
           "char": "p",
@@ -6278,6 +7405,15 @@
           "required": false,
           "allowNo": false,
           "type": "boolean"
+        },
+        "profile": {
+          "description": "Use a profile",
+          "env": "PRISM_PROFILE",
+          "helpGroup": "GLOBAL",
+          "name": "profile",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
         },
         "file": {
           "char": "f",
