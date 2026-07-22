@@ -1,5 +1,6 @@
 import { URL } from "url";
-import { getAccessToken, prismaticUrl } from "./auth.js";
+import { getAccessToken } from "./auth.js";
+import { getPrismaticUrl } from "./context.js";
 import { fetch } from "./utils/http.js";
 
 interface GQLRequest<TVariables = Record<string, unknown>> {
@@ -77,7 +78,7 @@ export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>(
   variables,
 }: GQLRequest<TVariables>): Promise<T> => {
   const accessToken = await getAccessToken();
-  const url = new URL("/api", prismaticUrl).toString();
+  const url = new URL("/api", await getPrismaticUrl()).toString();
 
   const query = document;
 

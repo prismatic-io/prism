@@ -1,9 +1,8 @@
 import open from "open";
-import * as path from "path";
-import { prismaticUrl } from "../../auth.js";
+import { getPrismaticUrl } from "../../context.js";
 
 export const openIntegration = async (integrationId: string) => {
-  const url = new URL(path.join("designer", integrationId), prismaticUrl);
+  const url = new URL(`/designer/${encodeURIComponent(integrationId)}`, await getPrismaticUrl());
 
   await open(url.href);
 };

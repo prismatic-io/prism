@@ -1,11 +1,10 @@
 import crypto from "crypto";
 import http from "http";
-import url from "url";
 import { jwtDecode } from "jwt-decode";
 import inquirer from "inquirer";
 import chalk from "chalk";
-import { configFileExists, deleteConfig, readConfig, writeConfig } from "./config.js";
-import { getEnv } from "./env.js";
+import { deleteProfile, getActiveProfileName, writeActiveProfile } from "./config.js";
+import { type AuthContext, getAuthContext, getPrismaticUrl } from "./context.js";
 import { gqlRequest, gql } from "./graphql.js";
 import type { AddressInfo } from "net";
 import open from "open";
@@ -27,6 +26,13 @@ const codeChallenge = (verifier: string): string => urlEncodeBase64(sha256(verif
 
 const codeState = (): string => urlEncodeBase64(crypto.randomBytes(12));
 
+const httpsUrl = (host: string, pathname: string): URL => {
+  const result = new URL("https://localhost");
+  result.host = host;
+  result.pathname = pathname;
+  return result;
+};
+
 const randomPort = (low: number, high: number): number =>
   Math.floor(Math.random() * (high - low + 1) + low);
 
@@ -41,8 +47,6 @@ const extractRequestParams = (url: string): Record<string, string> => {
 
   return params;
 };
-
-export const prismaticUrl = getEnv().PRISMATIC_URL;
 
 export const createRequestParams = (data: Record<string, string | undefined>): string =>
   Object.entries(data).reduce((result, [key, value]) => {
@@ -168,7 +172,7 @@ export class Authenticate {
       tenant_id: tenantId,
     };
 
-    const fetchResponse = await fetch(`https://${this.options.domain}/oauth/token`, {
+    const fetchResponse = await fetch(httpsUrl(this.options.domain, "/oauth/token").toString(), {
       method: "POST",
       body: createRequestParams(data),
       headers: {
@@ -201,9 +205,9 @@ export class Authenticate {
       client_id: this.options.clientId,
       returnTo: this.options.successRedirectUri,
     };
-    const queryString = createRequestParams(params);
-    await open(`https://${this.options.domain}/logout?${queryString}`);
-    await deleteConfig();
+    const logoutUrl = httpsUrl(this.options.domain, "/logout");
+    logoutUrl.search = new URLSearchParams(params).toString();
+    await open(logoutUrl.toString());
   }
 
   private async attemptServerCreate(): Promise<http.Server> {
@@ -228,7 +232,9 @@ export class Authenticate {
         .then((server) => {
           this.redirectServer = server;
           const info = server.address() as AddressInfo;
-          resolve(`http://localhost:${info.port}`);
+          const redirectUrl = new URL("http://localhost");
+          redirectUrl.port = String(info.port);
+          resolve(redirectUrl.toString());
         })
         .catch(reject);
     });
@@ -247,7 +253,7 @@ export class Authenticate {
       redirect_uri: redirectUri,
     };
 
-    const fetchResponse = await fetch(`https://${this.options.domain}/oauth/token`, {
+    const fetchResponse = await fetch(httpsUrl(this.options.domain, "/oauth/token").toString(), {
       method: "POST",
       body: createRequestParams(data),
       headers: {
@@ -286,15 +292,16 @@ export class Authenticate {
       state,
       audience,
     };
-    const queryString = createRequestParams(params);
-
-    return `https://${this.options.domain}/authorize?${queryString}`;
+    const authorizeUrl = httpsUrl(this.options.domain, "/authorize");
+    authorizeUrl.search = new URLSearchParams(params).toString();
+    return authorizeUrl.toString();
   }
 }
 
 // TODO: Need to factor this out if we look to open source this auth logic.
-const getAuthOptions = async () => {
-  const fetchResponse = await fetch(new url.URL("/auth/meta", prismaticUrl).toString());
+const getAuthOptions = async (prismaticUrl?: string) => {
+  const resolvedUrl = prismaticUrl ?? (await getPrismaticUrl());
+  const fetchResponse = await fetch(new URL("/auth/meta", resolvedUrl).toString());
   const authConfig = (await fetchResponse.json()) as any;
 
   const { domain, clientId, audience } = authConfig;
@@ -353,11 +360,6 @@ export const selectTenant = async (
   const currentTenant = tenants.find((t) => t.tenantId === currentTenantId);
   const currentTenantSuspended = currentTenant?.systemSuspended ?? false;
 
-  // Delete config when org is suspended to avoid an active session with a suspended org.
-  if (currentTenantSuspended) {
-    await deleteConfig();
-  }
-
   const activeTenants = tenants.filter((t) => !t.systemSuspended);
   if (activeTenants.length === 0) {
     console.log(
@@ -402,12 +404,14 @@ export const selectTenant = async (
   }
 };
 
-export const login = async (props?: { url: boolean }) => {
-  const authOptions = await getAuthOptions();
+export const login = async (props?: { url: boolean; profileName?: string }) => {
+  const profileName = props?.profileName ?? (await getActiveProfileName());
+  const prismaticUrl = await getPrismaticUrl();
+  const authOptions = await getAuthOptions(prismaticUrl);
   const auth = new Authenticate(authOptions);
 
   const initialAuth = await auth.login({ url: props?.url });
-  await writeConfig(initialAuth);
+  await writeActiveProfile(initialAuth, profileName);
 
   const tenants = await fetchUserTenants();
 
@@ -417,10 +421,13 @@ export const login = async (props?: { url: boolean }) => {
   const initialTenantSuspended = initialTenant?.systemSuspended ?? false;
 
   if (!initialTenantSuspended && initialTenantId) {
-    await writeConfig({
-      ...initialAuth,
-      tenantId: initialTenantId,
-    });
+    await writeActiveProfile(
+      {
+        ...initialAuth,
+        tenantId: initialTenantId,
+      },
+      profileName,
+    );
   }
 
   const activeTenants = tenants.filter((t) => !t.systemSuspended);
@@ -434,22 +441,25 @@ export const login = async (props?: { url: boolean }) => {
 
   if (selectedTenantId) {
     const tenantAuth = await auth.refresh(initialAuth.refreshToken, selectedTenantId);
-    await writeConfig(tenantAuth);
+    await writeActiveProfile(tenantAuth, profileName);
+  } else if (initialTenantSuspended) {
+    await deleteProfile(profileName);
   }
 
   return;
 };
 
-const refreshAuthentication = async (refreshToken: string, tenantId?: string) => {
-  const authOptions = await getAuthOptions();
+const refreshAuthentication = async (refreshToken: string, tenantId?: string, url?: string) => {
+  const authOptions = await getAuthOptions(url);
   const auth = new Authenticate(authOptions);
 
   return auth.refresh(refreshToken, tenantId);
 };
 
-export const refresh = async (refreshToken: string, tenantId?: string) => {
-  const response = await refreshAuthentication(refreshToken, tenantId);
-  await writeConfig(response);
+export const refresh = async (refreshToken: string, tenantId?: string, profileName?: string) => {
+  const selectedName = profileName ?? (await getActiveProfileName());
+  const response = await refreshAuthentication(refreshToken, tenantId, await getPrismaticUrl());
+  await writeActiveProfile(response, selectedName);
   return response;
 };
 
@@ -466,39 +476,24 @@ export const logout = async () => {
  * also refresh the access token using the provided refresh token if possible.
  */
 export const getAccessToken = async (): Promise<string | undefined> => {
-  const {
-    PRISM_ACCESS_TOKEN: envAccessToken,
-    PRISM_REFRESH_TOKEN: envRefreshToken,
-    PRISMATIC_TENANT_ID: envTenantId,
-  } = getEnv();
+  const { source, profileName, accessToken, refreshToken, tenantId, url } = await getAuthContext();
 
-  if (envRefreshToken && !envAccessToken) {
-    const { accessToken: refreshedAccessToken } = await refreshAuthentication(
-      envRefreshToken,
-      envTenantId,
-    );
-    return refreshedAccessToken;
+  if (!accessToken && refreshToken) {
+    const refreshed = await refreshAuthentication(refreshToken, tenantId, url);
+    if (source === "profile") await writeActiveProfile(refreshed, profileName);
+    return refreshed.accessToken;
   }
 
-  const config = await readConfig();
-  const { accessToken: configAccessToken, refreshToken: configRefreshToken } = config ?? {};
-  const configTenantId = config?.tenantId;
-
-  const accessToken = envAccessToken ?? configAccessToken;
-  const refreshToken = envRefreshToken ?? configRefreshToken;
-  const hasEnvTokenPair = envAccessToken !== undefined && envRefreshToken !== undefined;
-  const tenantId = envTenantId ?? (hasEnvTokenPair ? undefined : configTenantId);
-
   if (accessToken && refreshToken) {
-    // biome-ignore lint/complexity/useDateNow: TODO
-    const now = Math.floor(new Date().getTime() / 1000);
+    const now = Math.floor(Date.now() / 1000);
     const { exp } = jwtDecode<{ exp: number }>(accessToken);
 
-    // Refresh if expired or expiring in 5 minutes or less
     if (exp - now < 5 * 60) {
-      const refreshTokenPair = envRefreshToken ? refreshAuthentication : refresh;
-      const { accessToken: refreshedAccessToken } = await refreshTokenPair(refreshToken, tenantId);
-      return refreshedAccessToken;
+      const refreshed =
+        source === "environment"
+          ? await refreshAuthentication(refreshToken, tenantId, url)
+          : await refresh(refreshToken, tenantId, profileName);
+      return refreshed.accessToken;
     }
   }
 
@@ -509,8 +504,8 @@ export const getAccessToken = async (): Promise<string | undefined> => {
  * Check if the user is currently logged in. Return true if so, and false otherwise.
  */
 export const isLoggedIn = async (): Promise<boolean> => {
-  const configExists = await configFileExists();
-  if (!configExists) {
+  const resolvedContext = await getAuthContext();
+  if (!resolvedContext.accessToken && !resolvedContext.refreshToken) {
     return false;
   }
 
@@ -534,22 +529,24 @@ export const isLoggedIn = async (): Promise<boolean> => {
 /**
  * Revoke ALL refresh tokens for the logged in user
  */
-export const revokeRefreshToken = async (): Promise<void> => {
+export const revokeRefreshToken = async (): Promise<AuthContext["source"]> => {
+  const authContext = await getAuthContext();
   const loggedIn = await isLoggedIn();
   if (!loggedIn) {
     throw new Error("You are not currently logged in.");
   }
 
-  const config = await readConfig();
-  const { refreshToken } = config ?? {};
-  await fetch(new url.URL("/auth/revoke", prismaticUrl).toString(), {
+  await fetch(new URL("/auth/revoke", authContext.url).toString(), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      refresh_token: refreshToken,
+      refresh_token: authContext.refreshToken,
     }),
   });
-  await logout();
+  if (authContext.source === "profile" && authContext.profileName) {
+    await deleteProfile(authContext.profileName);
+  }
+  return authContext.source;
 };

@@ -1,4 +1,5 @@
-import { Args, Command, Flags } from "@oclif/core";
+import { Args, Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { promises as fs } from "fs";
 import * as path from "path";
 import { parseAndGenerate } from "wsdl-tsclient";
@@ -14,7 +15,7 @@ import {
 import GenerateComponentCommand from "./component.js";
 import GenerateFormatsCommand from "./formats.js";
 
-export default class InitializeComponent extends Command {
+export default class InitializeComponent extends PrismaticBaseCommand {
   static description = "Initialize a new Component";
 
   static examples = [
@@ -81,10 +82,10 @@ prism components:publish`,
       const openApiPath = rawOpenApiPath ? path.resolve(rawOpenApiPath) : undefined;
 
       if (!VALID_NAME_REGEX.test(name)) {
+        const regexUrl = new URL("https://regex101.com");
+        regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
         this.error(
-          `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See https://regex101.com/?regex=${encodeURIComponent(
-            VALID_NAME_REGEX.source,
-          )}`,
+          `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
           { exit: 1 },
         );
       }

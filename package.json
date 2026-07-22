@@ -164,6 +164,9 @@
       "organization": {
         "description": "Manage your Organization"
       },
+      "profiles": {
+        "description": "Manage authentication profiles"
+      },
       "organization:users": {
         "description": "Manage Organization Users"
       },

@@ -1,4 +1,5 @@
-import { Command, type Config, Flags } from "@oclif/core";
+import { type Config, Flags } from "@oclif/core";
+import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { copy } from "fs-extra";
 import { camelCase } from "lodash-es";
 import path, { extname } from "path";
@@ -11,7 +12,7 @@ import {
   TOOLCHAIN_NAMES,
 } from "../../../utils/toolchain/index.js";
 
-export default class GenerateFormatsCommand extends Command {
+export default class GenerateFormatsCommand extends PrismaticBaseCommand {
   static hidden = true;
   static description = "Initialize a new Component from a format";
   static flags = {

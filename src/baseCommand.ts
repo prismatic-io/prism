@@ -1,5 +1,7 @@
-import { Command, Flags } from "@oclif/core";
+import { Command, Flags, type Interfaces } from "@oclif/core";
 import type { z } from "zod";
+import { selectProfile } from "./config.js";
+import { useDefaultAuthContext, useProfileAuthContext } from "./context.js";
 import { validateFlags } from "./utils/validation.js";
 
 export abstract class PrismaticBaseCommand extends Command {
@@ -22,9 +24,35 @@ export abstract class PrismaticBaseCommand extends Command {
         return input;
       },
     }),
+    profile: Flags.string({
+      description: "Use a profile",
+      env: "PRISM_PROFILE",
+      helpGroup: "GLOBAL",
+    }),
   };
 
-  // Ensure consistency across commands and allow for easier parsing in documentation generation
+  protected authContext: "default" | "profile" = "default";
+  protected profileName?: string;
+
+  protected async parse<
+    CommandFlags extends Record<string, unknown>,
+    BaseFlags extends Record<string, unknown>,
+    CommandArgs extends Record<string, unknown>,
+  >(
+    options?: Interfaces.Input<CommandFlags, BaseFlags, CommandArgs>,
+    argv?: string[],
+  ): Promise<Interfaces.ParserOutput<CommandFlags, BaseFlags, CommandArgs>> {
+    const result = await super.parse(options, argv);
+    this.profileName = result.flags.profile as string | undefined;
+    selectProfile(this.profileName);
+    if (this.authContext === "profile") {
+      useProfileAuthContext();
+    } else {
+      useDefaultAuthContext();
+    }
+    return result;
+  }
+
   static examples: Array<{ description: string; command: string }>;
 
   protected quietLog(message: string, quiet = false, type?: "warn"): void {
@@ -37,10 +65,6 @@ export abstract class PrismaticBaseCommand extends Command {
     }
   }
 
-  /**
-   * Parse command arguments and validate flags against a Zod schema.
-   * Returns parsed args and validated, typed flags.
-   */
   protected async parseWithSchema<T extends z.ZodType>(
     schema: T,
   ): Promise<{ args: Record<string, unknown>; flags: z.infer<T> }> {

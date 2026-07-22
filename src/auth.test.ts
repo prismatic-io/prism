@@ -4,19 +4,34 @@ import {
   Authenticate,
   createRequestParams,
   getAccessToken,
+  login,
   selectTenant,
   type Tenant,
 } from "./auth.js";
-import { deleteConfig, readConfig, writeConfig } from "./config.js";
+import { deleteProfile, readProfileSelection, writeActiveProfile } from "./config.js";
+import { getAuthContext } from "./context.js";
+import { gqlRequest } from "./graphql.js";
 import { fetch } from "./utils/http.js";
 
 vi.unmock("./auth.js");
 
 vi.mock(import("./config.js"), () => ({
-  configFileExists: vi.fn(),
-  deleteConfig: vi.fn(),
-  readConfig: vi.fn(),
-  writeConfig: vi.fn(),
+  deleteProfile: vi.fn(),
+  getActiveProfileName: vi.fn(),
+  readProfile: vi.fn(),
+  readProfileSelection: vi.fn(),
+  writeActiveProfile: vi.fn(),
+}));
+
+vi.mock(import("./context.js"), () => ({
+  getAuthContext: vi.fn(),
+  useProfileAuthContext: vi.fn(),
+  getPrismaticUrl: vi.fn(() => Promise.resolve("https://auth.example.com")),
+}));
+
+vi.mock(import("./graphql.js"), () => ({
+  gql: (strings: TemplateStringsArray) => strings.join(""),
+  gqlRequest: vi.fn(),
 }));
 
 vi.mock(import("inquirer"), () => ({
@@ -78,24 +93,6 @@ describe("selectTenant", () => {
     expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("no active tenants"));
   });
 
-  it("deletes the config when the current tenant is suspended", async () => {
-    vi.mocked(inquirer.prompt).mockResolvedValueOnce({ tenantId: "b" });
-    const tenants = [makeTenant("a", { systemSuspended: true }), makeTenant("b")];
-
-    await selectTenant(tenants, { currentTenantId: "a" });
-
-    expect(deleteConfig).toHaveBeenCalledOnce();
-  });
-
-  it("does not delete the config when the current tenant is active", async () => {
-    vi.mocked(inquirer.prompt).mockResolvedValueOnce({ tenantId: "a" });
-    const tenants = [makeTenant("a"), makeTenant("b")];
-
-    await selectTenant(tenants, { currentTenantId: "a" });
-
-    expect(deleteConfig).not.toHaveBeenCalled();
-  });
-
   it("filters suspended tenants out of the choice list", async () => {
     let capturedChoices: Array<{ value: string }> = [];
     vi.mocked(inquirer.prompt).mockImplementationOnce(async (questions) => {
@@ -142,22 +139,49 @@ describe("selectTenant", () => {
 });
 
 describe("getAccessToken", () => {
-  it("does not use the config tenant when both tokens are supplied via environment variables", async () => {
-    const expiredAccessToken = [
+  const tokenExpiringAt = (exp: number) =>
+    [
       Buffer.from(JSON.stringify({ alg: "none" })).toString("base64url"),
-      Buffer.from(JSON.stringify({ exp: 0 })).toString("base64url"),
+      Buffer.from(JSON.stringify({ exp })).toString("base64url"),
       "signature",
     ].join(".");
-    vi.stubEnv("PRISM_ACCESS_TOKEN", expiredAccessToken);
-    vi.stubEnv("PRISM_REFRESH_TOKEN", "env-refresh-token");
-    vi.stubEnv("PRISMATIC_TENANT_ID", undefined);
-    vi.mocked(readConfig).mockResolvedValue({
-      accessToken: "config-access-token",
-      expiresIn: 3600,
-      refreshToken: "config-refresh-token",
-      scopes: "openid",
-      tokenType: "Bearer",
-      tenantId: "config-tenant",
+
+  it("refreshes an expired environment token without persisting it", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      source: "environment",
+      url: "https://auth.example.com",
+      accessToken: tokenExpiringAt(0),
+      refreshToken: "env-refresh-token",
+    });
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        Response.json({ domain: "auth.example.com", clientId: "client", audience: "audience" }),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          access_token: "refreshed-access-token",
+          expires_in: 3600,
+          token_type: "Bearer",
+        }),
+      );
+
+    await expect(getAccessToken()).resolves.toBe("refreshed-access-token");
+
+    const refreshRequest = fetchSpy.mock.calls[1];
+    expect(refreshRequest[0].toString()).toBe("https://auth.example.com/oauth/token");
+    expect(refreshRequest[1]?.body).toBe(
+      "grant_type=refresh_token&client_id=client&refresh_token=env-refresh-token",
+    );
+    expect(writeActiveProfile).not.toHaveBeenCalled();
+  });
+
+  it("does not persist a session obtained from an environment refresh token", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      source: "environment",
+      url: "https://auth.example.com",
+      refreshToken: "env-refresh-token",
+      tenantId: "env-tenant",
     });
 
     const fetchSpy = vi
@@ -175,39 +199,146 @@ describe("getAccessToken", () => {
 
     await expect(getAccessToken()).resolves.toBe("refreshed-access-token");
 
-    const refreshRequest = fetchSpy.mock.calls[1];
-    expect(refreshRequest[0]).toBe("https://auth.example.com/oauth/token");
-    expect(refreshRequest[1]?.body).toBe(
-      "grant_type=refresh_token&client_id=client&refresh_token=env-refresh-token",
+    expect(readProfileSelection).not.toHaveBeenCalled();
+    expect(fetchSpy.mock.calls[1][1]?.body).toBe(
+      "grant_type=refresh_token&client_id=client&refresh_token=env-refresh-token&tenant_id=env-tenant",
     );
-    expect(writeConfig).not.toHaveBeenCalled();
+    expect(writeActiveProfile).not.toHaveBeenCalled();
   });
 
-  it("does not persist a session obtained from an environment refresh token", async () => {
-    vi.stubEnv("PRISM_ACCESS_TOKEN", undefined);
-    vi.stubEnv("PRISM_REFRESH_TOKEN", "env-refresh-token");
-    vi.stubEnv("PRISMATIC_TENANT_ID", "env-tenant");
+  it("returns a valid profile access token without refreshing it", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const accessToken = tokenExpiringAt(Math.floor(Date.now() / 1000) + 600);
+    vi.mocked(getAuthContext).mockResolvedValue({
+      source: "profile",
+      profileName: "staging",
+      url: "https://staging.example.com",
+      accessToken,
+      refreshToken: "profile-refresh-token",
+      tenantId: "profile-tenant",
+    });
 
-    const fetchSpy = vi
-      .spyOn(globalThis, "fetch")
+    await expect(getAccessToken()).resolves.toBe(accessToken);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(writeActiveProfile).not.toHaveBeenCalled();
+  });
+
+  it("refreshes an expired profile token into the same profile", async () => {
+    vi.mocked(getAuthContext).mockResolvedValue({
+      source: "profile",
+      profileName: "staging",
+      url: "https://staging.example.com",
+      accessToken: tokenExpiringAt(0),
+      refreshToken: "profile-refresh-token",
+      tenantId: "profile-tenant",
+    });
+    vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
         Response.json({ domain: "auth.example.com", clientId: "client", audience: "audience" }),
       )
       .mockResolvedValueOnce(
         Response.json({
-          access_token: "refreshed-access-token",
+          access_token: "refreshed-profile-token",
           expires_in: 3600,
+          scope: "openid",
           token_type: "Bearer",
         }),
       );
 
-    await expect(getAccessToken()).resolves.toBe("refreshed-access-token");
+    await expect(getAccessToken()).resolves.toBe("refreshed-profile-token");
 
-    expect(readConfig).not.toHaveBeenCalled();
-    expect(fetchSpy.mock.calls[1][1]?.body).toBe(
-      "grant_type=refresh_token&client_id=client&refresh_token=env-refresh-token&tenant_id=env-tenant",
+    expect(writeActiveProfile).toHaveBeenCalledWith(
+      {
+        accessToken: "refreshed-profile-token",
+        expiresIn: 3600,
+        refreshToken: "profile-refresh-token",
+        scope: "openid",
+        tokenType: "Bearer",
+        tenantId: "profile-tenant",
+      },
+      "staging",
     );
-    expect(writeConfig).not.toHaveBeenCalled();
+  });
+
+  it("returns an environment access token without borrowing a profile refresh token", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    vi.mocked(getAuthContext).mockResolvedValue({
+      source: "environment",
+      url: "https://ci.example.com",
+      accessToken: "opaque-ci-token",
+    });
+
+    await expect(getAccessToken()).resolves.toBe("opaque-ci-token");
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(readProfileSelection).not.toHaveBeenCalled();
+    expect(writeActiveProfile).not.toHaveBeenCalled();
+  });
+});
+
+describe("login", () => {
+  const initialAuth = {
+    accessToken: "initial-access",
+    expiresIn: 3600,
+    refreshToken: "initial-refresh",
+    scope: "openid",
+    tokenType: "Bearer",
+  };
+
+  const mockLogin = (tenants: Tenant[], tenantId: string) => {
+    vi.spyOn(Authenticate.prototype, "login").mockResolvedValue(initialAuth);
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      Response.json({ domain: "auth.example.com", clientId: "client", audience: "audience" }),
+    );
+    vi.mocked(gqlRequest)
+      .mockResolvedValueOnce({ listUserTenants: { nodes: tenants } })
+      .mockResolvedValueOnce({
+        authenticatedUser: {
+          name: "User",
+          email: "user@example.com",
+          tenantId,
+          org: { id: "org-1", name: "Org" },
+          customer: undefined,
+        },
+      });
+  };
+
+  it("writes every authentication update to the selected profile", async () => {
+    mockLogin([makeTenant("tenant-1")], "tenant-1");
+
+    await login({ url: false, profileName: "staging" });
+
+    expect(writeActiveProfile).toHaveBeenNthCalledWith(1, initialAuth, "staging");
+    expect(writeActiveProfile).toHaveBeenNthCalledWith(
+      2,
+      { ...initialAuth, tenantId: "tenant-1" },
+      "staging",
+    );
+    expect(deleteProfile).not.toHaveBeenCalled();
+  });
+
+  it("deletes the selected profile when its tenant is suspended and none are active", async () => {
+    mockLogin([makeTenant("suspended", { systemSuspended: true })], "suspended");
+
+    await login({ url: false, profileName: "staging" });
+
+    expect(deleteProfile).toHaveBeenCalledWith("staging");
+  });
+
+  it("retains the profile when a suspended tenant is replaced with an active one", async () => {
+    const refreshedAuth = { ...initialAuth, accessToken: "refreshed", tenantId: "active" };
+    mockLogin(
+      [makeTenant("suspended", { systemSuspended: true }), makeTenant("active")],
+      "suspended",
+    );
+    vi.mocked(inquirer.prompt).mockResolvedValueOnce({ tenantId: "active" });
+    vi.spyOn(Authenticate.prototype, "refresh").mockResolvedValueOnce(refreshedAuth);
+
+    await login({ url: false, profileName: "staging" });
+
+    expect(writeActiveProfile).toHaveBeenLastCalledWith(refreshedAuth, "staging");
+    expect(deleteProfile).not.toHaveBeenCalled();
   });
 });
 

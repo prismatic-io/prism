@@ -1,8 +1,10 @@
-import { Command, Flags } from "@oclif/core";
+import { Flags } from "@oclif/core";
 import { isLoggedIn, login } from "../../auth.js";
+import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { getActiveProfileName } from "../../config.js";
 import { ux } from "../../utils/ux.js";
 
-export default class LoginCommand extends Command {
+export default class LoginCommand extends PrismaticBaseCommand {
   static description = "Log in to your Prismatic account";
 
   static flags = {
@@ -18,13 +20,17 @@ export default class LoginCommand extends Command {
     }),
   };
 
+  protected authContext = "profile" as const;
+
   async run() {
     const {
       flags: { force, url },
     } = await this.parse(LoginCommand);
 
+    const profileName = await getActiveProfileName();
+
     if (!force && (await isLoggedIn())) {
-      this.log("You are already logged in and ready to go!");
+      this.log(`Already logged in to '${profileName}'.`);
       return;
     }
 
@@ -32,7 +38,7 @@ export default class LoginCommand extends Command {
       await ux.anykey("Press any key to open prismatic.io in your default browser");
     }
 
-    await login({ url });
-    this.log("Login complete!");
+    await login({ url, profileName });
+    this.log(`Logged in to '${profileName}'.`);
   }
 }
