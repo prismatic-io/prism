@@ -17,3 +17,12 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: mise exec node@${{ matrix.node-version }} -- npm install --dry-run --engine-strict
       - run: mise run validate:node${{ matrix.node-version }}
+
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7.0.0
+      - uses: jdx/mise-action@v4.2.0
+      - run: mise exec -- bun install --frozen-lockfile
+      - run: mise exec -- bun run clean-test-temp
+      - run: mise exec -- node node_modules/vitest/vitest.mjs run
