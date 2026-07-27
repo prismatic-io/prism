@@ -62,7 +62,7 @@ describe("component generation tests", () => {
           const targets = await walkDir(projectName, [".png", "webpack.config.js", "package.json"]);
           for (const target of targets) {
             const contents = await readFile(target, "utf-8");
-            expect(contents).toMatchSnapshot(target);
+            expect(contents).toMatchSnapshot(target.split(path.sep).join("/"));
           }
 
           process.chdir(basePath);

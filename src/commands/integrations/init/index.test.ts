@@ -18,7 +18,7 @@ expect.addSnapshotSerializer({
         /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
         "00000000-0000-0000-0000-000000000000",
       )
-      .replace(/"@prismatic-io\/spectral": "\d+\.\d+\.\d+"/, '"@prismatic-io/spectral": "VERSION"');
+      .replace(/"@prismatic-io\/spectral": "[^"]+"/, '"@prismatic-io/spectral": "VERSION"');
     return normalized;
   },
 });
@@ -63,7 +63,7 @@ describe("integrations:init", () => {
             const targets = await walkDir(integrationName, [".png", "webpack.config.js"]);
             for (const target of targets) {
               const contents = await readFile(target, "utf-8");
-              expect(contents).toMatchSnapshot(target);
+              expect(contents).toMatchSnapshot(target.split(path.sep).join("/"));
             }
           },
           GENERATION_TIMEOUT_SECONDS,
@@ -99,7 +99,8 @@ describe("integrations:init", () => {
             const targets = await walkDir(cleanIntegrationName, [".png", "webpack.config.js"]);
             for (const target of targets) {
               const contents = await readFile(target, "utf-8");
-              expect(contents).toMatchSnapshot(`clean-${target}`);
+              const snapshotName = `clean-${target}`.split(path.sep).join("/");
+              expect(contents).toMatchSnapshot(snapshotName);
             }
           },
           GENERATION_TIMEOUT_SECONDS,

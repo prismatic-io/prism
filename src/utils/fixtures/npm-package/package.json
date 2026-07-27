@@ -1,0 +1,8 @@
+{
+  "name": "prism-process-test-fixture",
+  "private": true,
+  "scripts": {
+    "process-smoke": "node process-smoke.mjs",
+    "process-failure": "node process-smoke.mjs --fail"
+  }
+}

@@ -1,5 +1,5 @@
 import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { devNull, tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -91,7 +91,7 @@ describe("config with PRISM_CONFIG_FILE override", () => {
   });
 });
 
-describe("config with PRISM_CONFIG_FILE=/dev/null", () => {
+describe("config with PRISM_CONFIG_FILE set to the null device", () => {
   let tmpDir: string;
 
   beforeAll(async () => {
@@ -104,7 +104,7 @@ describe("config with PRISM_CONFIG_FILE=/dev/null", () => {
 
   beforeEach(() => {
     stubFakeHome(tmpDir);
-    vi.stubEnv("PRISM_CONFIG_FILE", "/dev/null");
+    vi.stubEnv("PRISM_CONFIG_FILE", devNull);
   });
 
   afterEach(() => {
@@ -118,7 +118,7 @@ describe("config with PRISM_CONFIG_FILE=/dev/null", () => {
     await expect(Promise.all(writers)).resolves.toBeDefined();
   });
 
-  it("returns null on read since /dev/null is empty", async () => {
+  it("returns null on read since the null device is empty", async () => {
     await writeActiveProfile(makeConfig({ accessToken: "ignored" }));
     const result = await readProfile();
     expect(result).toBeNull();

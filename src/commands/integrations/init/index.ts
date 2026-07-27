@@ -107,7 +107,8 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
       if (file.endsWith("icon.png")) {
         return file;
       }
-      if (CLEANABLE_TEMPLATES.includes(file)) {
+      const normalizedFile = file.split(path.sep).join("/");
+      if (CLEANABLE_TEMPLATES.includes(normalizedFile)) {
         return `${file}${templateSuffix}.ejs`;
       }
       return `${file}.ejs`;

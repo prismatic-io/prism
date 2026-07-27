@@ -1,17 +1,33 @@
-import { spawn } from "child_process";
+import { type Output, x } from "tinyexec";
 
-export const spawnProcess = (
+export const spawnProcess = async (
   [command, ...args]: string[],
   env: Record<string, string>,
 ): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      env: { ...process.env, ...env },
+  if (!command) {
+    throw new Error("No command was provided.");
+  }
+
+  let result: Output;
+  try {
+    result = await x(command, args, {
+      nodeOptions: {
+        env: { ...process.env, ...env },
+        stdio: "inherit",
+      },
     });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to start ${JSON.stringify(command)}: ${message}`, {
+      cause: error,
+    });
+  }
 
-    child.stdout.pipe(process.stdout);
-    child.stderr.pipe(process.stderr);
-
-    child.on("close", (code) => (code === 0 ? resolve() : reject()));
-  });
+  if (result.exitCode !== 0) {
+    const status =
+      result.exitCode !== undefined
+        ? `exit code ${result.exitCode}`
+        : "termination before reporting an exit code";
+    throw new Error(`Command failed with ${status}: ${command} ${args.join(" ")}`);
+  }
 };
