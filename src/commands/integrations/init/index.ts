@@ -21,11 +21,11 @@ const CLEANABLE_TEMPLATES = [
 ];
 
 export default class InitializeIntegration extends PrismaticBaseCommand {
-  static description = "Initialize a new Code Native Integration";
+  static description = "Initialize a new Code-First Integration";
 
   static examples = [
     {
-      description: "Initialize a new directory for a Code Native Integration:",
+      description: "Initialize a new directory for a Code-First Integration:",
       command: "<%= config.bin %> <%= command.id %> acme-integration",
     },
     {
@@ -160,7 +160,7 @@ To run unit tests for the integration, run "npm run test" or "yarn test"
 To build the integration, run "npm run build" or "yarn build"
 To import the integration, run "prism integrations:import"
 
-For documentation on writing code-native integrations, visit https://prismatic.io/docs/integrations/code-native/
+For documentation on writing code-first integrations, visit https://prismatic.io/docs/integrations/code-native/
     `);
   }
 }

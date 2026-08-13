@@ -89,8 +89,8 @@ configPages:
     });
   });
 
-  describe("Code Native import", () => {
-    it("should import Code Native integration when no path is provided", async () => {
+  describe("Code-First import", () => {
+    it("should import Code-First integration when no path is provided", async () => {
       const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
       const logSpy = vi.spyOn(ImportCommand.prototype, "log").mockImplementation(() => {});
 
@@ -100,7 +100,7 @@ configPages:
       expect(logSpy).toHaveBeenCalledWith("imported-cni-id");
     });
 
-    it("should pass test API keys to Code Native import", async () => {
+    it("should pass test API keys to Code-First import", async () => {
       const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
       vi.spyOn(ImportCommand.prototype, "log").mockImplementation(() => {});
 

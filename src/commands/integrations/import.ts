@@ -14,13 +14,13 @@ import { ux } from "../../utils/ux.js";
 
 export default class ImportCommand extends PrismaticBaseCommand {
   static description =
-    "Import an Integration using a YAML definition file or a Code Native Integration";
+    "Import an Integration using a YAML definition file or a Code-First Integration";
   static flags = {
     path: Flags.string({
       char: "p",
       required: false,
       description:
-        "If supplied, the path to the YAML definition of the integration to import. Not applicable for Code Native Integrations.",
+        "If supplied, the path to the YAML definition of the integration to import. Not applicable for Code-First Integrations.",
     }),
     integrationId: Flags.string({
       char: "i",
@@ -30,7 +30,7 @@ export default class ImportCommand extends PrismaticBaseCommand {
     "icon-path": Flags.string({
       required: false,
       description:
-        "If supplied, the path to the PNG icon for the integration. Not applicable for Code Native Integrations.",
+        "If supplied, the path to the PNG icon for the integration. Not applicable for Code-First Integrations.",
     }),
     open: Flags.boolean({
       char: "o",
@@ -43,7 +43,7 @@ export default class ImportCommand extends PrismaticBaseCommand {
       required: false,
       default: false,
       description:
-        "If supplied, allows replacing an existing integration regardless of code-native status. Requires integrationId.",
+        "If supplied, allows replacing an existing integration regardless of code-first status. Requires integrationId.",
     }),
     "test-api-key": Flags.string({
       description:
@@ -129,7 +129,7 @@ There will be no way to restore the existing draft. If you wish to save it, eith
     const integrationImportId = path
       ? // A path was specified, so assume we're importing a YAML Integration.
         await importYamlIntegration(path, integrationId, iconPath, replace)
-      : // No path was specified, so assume the current directory is a Code Native Integration and import it.
+      : // No path was specified, so assume the current directory is a Code-First Integration and import it.
         await importCodeNativeIntegration(integrationId, replace, testApiKey);
 
     this.log(integrationImportId);

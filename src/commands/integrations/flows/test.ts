@@ -323,7 +323,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
 
       if (!isCodeNative && autoEndPoll) {
         console.warn(
-          "The given integration is not code-native but the --cni-auto-end flag was configured.",
+          "The given integration is not code-first but the --cni-auto-end flag was configured.",
           "\nThis process will continue but ignore the --cni-auto-end flag.",
         );
         autoEndPoll = false;

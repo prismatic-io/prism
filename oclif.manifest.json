@@ -1563,7 +1563,7 @@
     "integrations:import": {
       "aliases": [],
       "args": {},
-      "description": "Import an Integration using a YAML definition file or a Code Native Integration",
+      "description": "Import an Integration using a YAML definition file or a Code-First Integration",
       "flags": {
         "print-requests": {
           "description": "Print all GraphQL requests that are issued",
@@ -1591,7 +1591,7 @@
         },
         "path": {
           "char": "p",
-          "description": "If supplied, the path to the YAML definition of the integration to import. Not applicable for Code Native Integrations.",
+          "description": "If supplied, the path to the YAML definition of the integration to import. Not applicable for Code-First Integrations.",
           "name": "path",
           "required": false,
           "hasDynamicHelp": false,
@@ -1608,7 +1608,7 @@
           "type": "option"
         },
         "icon-path": {
-          "description": "If supplied, the path to the PNG icon for the integration. Not applicable for Code Native Integrations.",
+          "description": "If supplied, the path to the PNG icon for the integration. Not applicable for Code-First Integrations.",
           "name": "icon-path",
           "required": false,
           "hasDynamicHelp": false,
@@ -1625,7 +1625,7 @@
         },
         "replace": {
           "char": "r",
-          "description": "If supplied, allows replacing an existing integration regardless of code-native status. Requires integrationId.",
+          "description": "If supplied, allows replacing an existing integration regardless of code-first status. Requires integrationId.",
           "name": "replace",
           "required": false,
           "allowNo": false,
@@ -5594,7 +5594,7 @@
           "required": true
         }
       },
-      "description": "Convert a Low-Code Integration's YAML file into a Code Native Integration",
+      "description": "Convert a Low-Code Integration's YAML file into a Code-First Integration",
       "flags": {
         "print-requests": {
           "description": "Print all GraphQL requests that are issued",
@@ -6052,10 +6052,10 @@
           "required": true
         }
       },
-      "description": "Initialize a new Code Native Integration",
+      "description": "Initialize a new Code-First Integration",
       "examples": [
         {
-          "description": "Initialize a new directory for a Code Native Integration:",
+          "description": "Initialize a new directory for a Code-First Integration:",
           "command": "<%= config.bin %> <%= command.id %> acme-integration"
         },
         {

@@ -345,7 +345,7 @@ export type ComponentDefinitionInput = {
   display: ComponentDisplayDefinition;
   /** The URL that specifies where the Component documentation exists. */
   documentationUrl?: InputMaybe<Scalars["String"]["input"]>;
-  /** Specifies whether the Component is for a Code Native Integration. */
+  /** Specifies whether the Component is for a Code-First Integration. */
   forCodeNativeIntegration?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** A string that uniquely identifies the Component. */
   key: Scalars["String"]["input"];

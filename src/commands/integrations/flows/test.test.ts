@@ -173,7 +173,7 @@ describe("buildFlagString", () => {
   });
 });
 
-describe("--cni-auto-end flag on non-code-native integrations", () => {
+describe("--cni-auto-end flag on non-code-first integrations", () => {
   const integrationId = "SW50ZWdyYXRpb246dGVzdC1pZA==";
   const flowId = "flow-123";
   const testFlowUrl = "https://hooks.example.com/trigger/test-flow";
@@ -224,7 +224,7 @@ describe("--cni-auto-end flag on non-code-native integrations", () => {
     );
   };
 
-  it("should warn when --cni-auto-end is used with a non-code-native integration", async () => {
+  it("should warn when --cni-auto-end is used with a non-code-first integration", async () => {
     setupMocks(false);
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
@@ -238,12 +238,12 @@ describe("--cni-auto-end flag on non-code-native integrations", () => {
     ]);
 
     expect(warnSpy).toHaveBeenCalledWith(
-      "The given integration is not code-native but the --cni-auto-end flag was configured.",
+      "The given integration is not code-first but the --cni-auto-end flag was configured.",
       "\nThis process will continue but ignore the --cni-auto-end flag.",
     );
   });
 
-  it("should not warn when --cni-auto-end is used with a code-native integration", async () => {
+  it("should not warn when --cni-auto-end is used with a code-first integration", async () => {
     setupMocks(true);
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
@@ -257,7 +257,7 @@ describe("--cni-auto-end flag on non-code-native integrations", () => {
     ]);
 
     expect(warnSpy).not.toHaveBeenCalledWith(
-      "The given integration is not code-native but the --cni-auto-end flag was configured.",
+      "The given integration is not code-first but the --cni-auto-end flag was configured.",
       "\nThis process will continue but ignore the --cni-auto-end flag.",
     );
   });

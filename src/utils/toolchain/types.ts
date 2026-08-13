@@ -4,7 +4,7 @@ export type ToolchainName = "modern" | "legacy";
 
 /**
  * A scaffolding toolchain owns everything that differs between the build/test/lint
- * stacks a generated component or code-native integration can use.
+ * stacks a generated component or code-first integration can use.
  *
  * Subclasses supply the package.json contributions below as data; the toolchain's
  * template files live under `templates/<name>/` and are rendered by `renderTemplates`.

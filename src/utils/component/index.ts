@@ -105,7 +105,7 @@ export const validateDefinition = async (
   // Check for mistaken invocations, though an invoke from an actual CNI build context is valid.
   if (codeNativeIntegrationYAML && !options.forCodeNativeIntegration) {
     ux.error(
-      "You are running a component command on what appears to be a Code Native Integration. Please check the current path.",
+      "You are running a component command on what appears to be a Code-First Integration. Please check the current path.",
       {
         exit: 1,
       },

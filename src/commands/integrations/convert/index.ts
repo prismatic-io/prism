@@ -23,7 +23,7 @@ interface ConvertLowCodeIntegrationResult {
 }
 
 export default class ConvertIntegrationCommand extends PrismaticBaseCommand {
-  static description = "Convert a Low-Code Integration's YAML file into a Code Native Integration";
+  static description = "Convert a Low-Code Integration's YAML file into a Code-First Integration";
   static args = {
     integration: Args.string({
       required: true,
@@ -56,7 +56,7 @@ export default class ConvertIntegrationCommand extends PrismaticBaseCommand {
       flags: { registryPrefix, registryUrl, includeComments },
     } = await this.parse(ConvertIntegrationCommand);
 
-    ux.action.start("Converting low-code integration to code-native integration");
+    ux.action.start("Converting low-code integration to code-first integration");
 
     try {
       const result = await gqlRequest<ConvertLowCodeIntegrationResult>({
@@ -109,7 +109,7 @@ Next steps:
   3. Run: npm install && npm update --save && npm run format
 
 If installation issues occur during step 3, double check your package.json file and component registry set-up.
-For documentation on code-native integrations, visit https://prismatic.io/docs/integrations/code-native/`);
+For documentation on code-first integrations, visit https://prismatic.io/docs/integrations/code-native/`);
     } catch (error) {
       ux.action.stop("failed");
       throw error;

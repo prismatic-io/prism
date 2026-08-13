@@ -234,7 +234,7 @@ export const importCodeNativeIntegration = async (
       forCodeNativeIntegration: true,
     });
 
-  ux.action.start("Uploading package for Code Native Integration");
+  ux.action.start("Uploading package for Code-First Integration");
   await uploadFile(packagePath, packageUploadUrl);
   const uploaded = await waitForCodeNativeComponentAvailable(
     componentDefinition.key,
@@ -244,11 +244,11 @@ export const importCodeNativeIntegration = async (
     ux.action.stop();
   } else {
     ux.action.stop(
-      "Package still processing for Code Native Integration, it will likely be available in a few minutes.",
+      "Package still processing for Code-First Integration, it will likely be available in a few minutes.",
     );
   }
 
-  ux.action.start("Importing definition for Code Native Integration into Prismatic");
+  ux.action.start("Importing definition for Code-First Integration into Prismatic");
   const { integrationId: integrationImportId, systemInstance } = await importDefinition(
     integrationDefinition,
     integrationId,
@@ -474,15 +474,15 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
   componentDefinition: ComponentDefinition;
   publishingMetadata?: PublishingMetadata;
 }> => {
-  // If we don't have an index.js in cwd seek directories to find package.json of Code Native Integration
+  // If we don't have an index.js in cwd seek directories to find package.json of Code-First Integration
   if (!(await exists("index.js"))) {
-    await seekPackageDistDirectory("Code Native Integration");
+    await seekPackageDistDirectory("Code-First Integration");
   }
 
   // If we still didn't find index.js error out
   if (!(await exists("index.js"))) {
     ux.error(
-      "Failed to find 'index.js' entrypoint file. Is the current path a Code Native Integration?",
+      "Failed to find 'index.js' entrypoint file. Is the current path a Code-First Integration?",
       { exit: 1 },
     );
   }
@@ -494,7 +494,7 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
 
   if (!componentDefinition?.codeNativeIntegrationYAML) {
     ux.error(
-      "Failed to find Code Native Integration definition in 'index.js' entrypoint file. Is the current path a Code Native Integration?",
+      "Failed to find Code-First Integration definition in 'index.js' entrypoint file. Is the current path a Code-First Integration?",
       { exit: 1 },
     );
   }

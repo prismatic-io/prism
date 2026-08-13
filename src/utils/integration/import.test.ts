@@ -26,14 +26,14 @@ describe("importDefinition", () => {
 });
 
 describe("loadCodeNativeIntegrationEntryPoint", () => {
-  it("should error when the entrypoint lacks a Code Native Integration definition", async () => {
+  it("should error when the entrypoint lacks a Code-First Integration definition", async () => {
     const originalCwd = process.cwd();
     await temporaryDirectoryTask(async (tmpDir) => {
       await writeFile(path.join(tmpDir, "index.js"), "module.exports = { default: {} };");
       process.chdir(tmpDir);
       try {
         await expect(loadCodeNativeIntegrationEntryPoint()).rejects.toThrow(
-          /Failed to find Code Native Integration definition/,
+          /Failed to find Code-First Integration definition/,
         );
       } finally {
         process.chdir(originalCwd);

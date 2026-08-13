@@ -56,7 +56,7 @@ The codebase follows oclif's explicit command strategy:
 - All API requests go through GraphQL to `https://app.prismatic.io/api` (or `PRISMATIC_URL` env var)
 
 **Key Utilities**:
-- `src/utils/integration/` - Integration import/export, YAML processing, code-native integration handling
+- `src/utils/integration/` - Integration import/export, YAML processing, code-first integration handling
 - `src/utils/component/` - Component publishing and signature generation
 - `src/generate/` - Code generation for components from OpenAPI/WSDL specs
 - `src/templates/` - EJS templates for generating components, integrations, and formats (copied to lib/ during build)
@@ -78,7 +78,7 @@ Templates are processed with EJS and must be copied to `lib/templates/` during b
 ### Two Integration Types
 
 1. **YAML Integrations**: Defined in YAML files, use pre-built components
-2. **Code-Native Integrations**: Written in TypeScript, imported as npm packages
+2. **Code-First Integrations**: Written in TypeScript, imported as npm packages
 
 Commands handle both types with different code paths (check for YAML vs package.json).
 

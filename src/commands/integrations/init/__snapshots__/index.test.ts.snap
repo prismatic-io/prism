@@ -155,8 +155,8 @@ export function createApiClient(connection: Connection) {
 
 exports[`integrations:init > legacy toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-legacy/src/componentRegistry.ts 1`] = `
 /**
- * Your code-native integration can invoke existing connectors.
- * This is where you declare which connectors your code-native
+ * Your code-first integration can invoke existing connectors.
+ * This is where you declare which connectors your code-first
  * integration uses. For more information, see
  * https://prismatic.io/docs/integrations/code-native/existing-components/
  */
@@ -175,7 +175,7 @@ exports[`integrations:init > legacy toolchain > clean scaffold generation > shou
  * they will walk through a configuration wizard. Define your
  * configuration pages here.
  *
- * For more information on the code-native config wizards, see
+ * For more information on the code-first config wizards, see
  * https://prismatic.io/docs/integrations/code-native/config-wizard/
  */
 
@@ -199,11 +199,11 @@ export const configPages = {
 exports[`integrations:init > legacy toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-legacy/src/flows.test.ts 1`] = `
 /**
  * Your flows can be tested locally prior to publishing your
- * code-native integration. Add your tests here.
+ * code-first integration. Add your tests here.
  *
  * You can run this test with "npm run test"
  *
- * For more information on unit testing code-native integrations, see
+ * For more information on unit testing code-first integrations, see
  * https://prismatic.io/docs/integrations/code-native/testing/
  */
 
@@ -246,7 +246,7 @@ export default [exampleFlow];
 
 exports[`integrations:init > legacy toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-legacy/src/index.ts 1`] = `
 /**
- * This project represents a code-native integration. A customer
+ * This project represents a code-first integration. A customer
  * user will walk through a config wizard (defined in configPages.ts),
  * and flows for that customer (defined in flows.ts) will run.
  *
@@ -462,8 +462,8 @@ export function createAcmeClient(acmeConnection: Connection) {
 
 exports[`integrations:init > legacy toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-legacy/src/componentRegistry.ts 1`] = `
 /**
- * Your code-native integration can invoke existing connectors.
- * This is where you declare which connectors your code-native
+ * Your code-first integration can invoke existing connectors.
+ * This is where you declare which connectors your code-first
  * integration uses. For more information, see
  * https://prismatic.io/docs/integrations/code-native/existing-components/
  */
@@ -484,7 +484,7 @@ exports[`integrations:init > legacy toolchain > scaffold generation > should mat
  * their authentication information, and then use that
  * information to fetch data for a dropdown menu.
  *
- * For more information on the code-native config wizards, see
+ * For more information on the code-first config wizards, see
  * https://prismatic.io/docs/integrations/code-native/config-wizard/
  */
 
@@ -558,12 +558,12 @@ export const configPages = {
 exports[`integrations:init > legacy toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-legacy/src/flows.test.ts 1`] = `
 /**
  * Your flows can be tested locally prior to publishing your
- * code-native integration. In this file, we invoke our flow
+ * code-first integration. In this file, we invoke our flow
  * twice and describe the results we expect to see.
  *
  * You can run this test with "npm run test"
  *
- * For more information on unit testing code-native integrations, see
+ * For more information on unit testing code-first integrations, see
  * https://prismatic.io/docs/integrations/code-native/testing/
  */
 
@@ -656,7 +656,7 @@ export default [listItems];
 
 exports[`integrations:init > legacy toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-legacy/src/index.ts 1`] = `
 /**
- * This project represents a code-native integration. A customer
+ * This project represents a code-first integration. A customer
  * user will walk through a config wizard (defined in configPages.ts),
  * and flows for that customer (defined in flows.ts) will run.
  *
@@ -884,8 +884,8 @@ export function createApiClient(connection: Connection) {
 
 exports[`integrations:init > modern toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-modern/src/componentRegistry.ts 1`] = `
 /**
- * Your code-native integration can invoke existing connectors.
- * This is where you declare which connectors your code-native
+ * Your code-first integration can invoke existing connectors.
+ * This is where you declare which connectors your code-first
  * integration uses. For more information, see
  * https://prismatic.io/docs/integrations/code-native/existing-components/
  */
@@ -904,7 +904,7 @@ exports[`integrations:init > modern toolchain > clean scaffold generation > shou
  * they will walk through a configuration wizard. Define your
  * configuration pages here.
  *
- * For more information on the code-native config wizards, see
+ * For more information on the code-first config wizards, see
  * https://prismatic.io/docs/integrations/code-native/config-wizard/
  */
 
@@ -928,11 +928,11 @@ export const configPages = {
 exports[`integrations:init > modern toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-modern/src/flows.test.ts 1`] = `
 /**
  * Your flows can be tested locally prior to publishing your
- * code-native integration. Add your tests here.
+ * code-first integration. Add your tests here.
  *
  * You can run this test with "npm run test"
  *
- * For more information on unit testing code-native integrations, see
+ * For more information on unit testing code-first integrations, see
  * https://prismatic.io/docs/integrations/code-native/testing/
  */
 
@@ -975,7 +975,7 @@ export default [exampleFlow];
 
 exports[`integrations:init > modern toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-modern/src/index.ts 1`] = `
 /**
- * This project represents a code-native integration. A customer
+ * This project represents a code-first integration. A customer
  * user will walk through a config wizard (defined in configPages.ts),
  * and flows for that customer (defined in flows.ts) will run.
  *
@@ -1246,8 +1246,8 @@ export function createAcmeClient(acmeConnection: Connection) {
 
 exports[`integrations:init > modern toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-modern/src/componentRegistry.ts 1`] = `
 /**
- * Your code-native integration can invoke existing connectors.
- * This is where you declare which connectors your code-native
+ * Your code-first integration can invoke existing connectors.
+ * This is where you declare which connectors your code-first
  * integration uses. For more information, see
  * https://prismatic.io/docs/integrations/code-native/existing-components/
  */
@@ -1268,7 +1268,7 @@ exports[`integrations:init > modern toolchain > scaffold generation > should mat
  * their authentication information, and then use that
  * information to fetch data for a dropdown menu.
  *
- * For more information on the code-native config wizards, see
+ * For more information on the code-first config wizards, see
  * https://prismatic.io/docs/integrations/code-native/config-wizard/
  */
 
@@ -1342,12 +1342,12 @@ export const configPages = {
 exports[`integrations:init > modern toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-modern/src/flows.test.ts 1`] = `
 /**
  * Your flows can be tested locally prior to publishing your
- * code-native integration. In this file, we invoke our flow
+ * code-first integration. In this file, we invoke our flow
  * twice and describe the results we expect to see.
  *
  * You can run this test with "npm run test"
  *
- * For more information on unit testing code-native integrations, see
+ * For more information on unit testing code-first integrations, see
  * https://prismatic.io/docs/integrations/code-native/testing/
  */
 
@@ -1440,7 +1440,7 @@ export default [listItems];
 
 exports[`integrations:init > modern toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-modern/src/index.ts 1`] = `
 /**
- * This project represents a code-native integration. A customer
+ * This project represents a code-first integration. A customer
  * user will walk through a config wizard (defined in configPages.ts),
  * and flows for that customer (defined in flows.ts) will run.
  *
