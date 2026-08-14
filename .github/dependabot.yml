@@ -37,6 +37,9 @@ updates:
       # 22.22+). Pinned to 13.x for >=20 compat.
       - dependency-name: "inquirer"
         update-types: ["version-update:semver-major"]
+      # chalk 6.x requires Node 22. Pinned to 5.x for >=20 compat.
+      - dependency-name: "chalk"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
