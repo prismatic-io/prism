@@ -1,22 +1,30 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { commandInput, defineCommand, option, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List all integration-agnostic connections available to the organization";
-  static flags = {
+type AvailableConnection = {
+  connection: { component: { key: string | null } | null } | null;
+  customer: { externalId: string | null; name: string } | null;
+  description: string | null;
+  managedBy: string;
+  stableKey: string;
+};
+
+type AvailableConnectionsQuery = { scopedConfigVariables: { nodes: AvailableConnection[] } };
+
+export default defineCommand({
+  description: "List all integration-agnostic connections available to the organization",
+  options: {
     ...ux.table.flags(),
-    "managed-by": Flags.string({
+    "managed-by": option.string({
       description: "Filter connections by management type",
       options: ["org", "customer"],
     }),
-  };
+  },
+  async run(_context: CommandContext) {
+    const { flags } = commandInput();
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
-
-    const result = await gqlRequest({
+    const result = await gqlRequest<AvailableConnectionsQuery>({
       document: gql`
         query availableConnections($managedBy: String) {
           scopedConfigVariables(managedBy: $managedBy) {
@@ -44,7 +52,7 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     const connections = result.scopedConfigVariables.nodes;
 
-    ux.table(
+    return ux.table(
       connections,
       {
         stableKey: {
@@ -61,17 +69,17 @@ export default class ListCommand extends PrismaticBaseCommand {
         },
         customer: {
           header: "Customer",
-          get: (row: any) =>
+          get: (row: AvailableConnection) =>
             row.customer ? `${row.customer.name} (${row.customer.externalId})` : "N/A",
           minWidth: 25,
         },
         component: {
           header: "Component",
-          get: (row: any) => row.connection?.component?.key || "N/A",
+          get: (row: AvailableConnection) => row.connection?.component?.key || "N/A",
           minWidth: 20,
         },
       },
       { ...flags },
     );
-  }
-}
+  },
+});

@@ -1,26 +1,29 @@
-import { Flags } from "@oclif/core";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { getAccessToken } from "../../auth.js";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { getAuthContext } from "../../context.js";
-export default class PrintTokenCommand extends PrismaticBaseCommand {
-  static description = "Print your authorization tokens";
-
-  static flags = {
-    type: Flags.string({
+export default defineCommand({
+  description: "Print your authorization tokens",
+  options: {
+    type: option.string({
       char: "t",
       description: "Which token type to print",
       options: ["access", "refresh"],
       default: "access",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { type: tokenType },
-    } = await this.parse(PrintTokenCommand);
+    } = commandInput();
 
     const token =
       tokenType === "access" ? await getAccessToken() : (await getAuthContext()).refreshToken;
-    this.log(token);
-  }
-}
+    commandOutput.log(token);
+  },
+});

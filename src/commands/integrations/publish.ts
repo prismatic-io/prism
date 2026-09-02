@@ -1,46 +1,49 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class PublishCommand extends PrismaticBaseCommand {
-  static description = "Publish a version of an Integration for use in Instances";
-
-  static args = {
-    integration: Args.string({
+export default defineCommand({
+  description: "Publish a version of an Integration for use in Instances",
+  args: {
+    integration: arg.string({
       required: true,
       description: "ID of an integration to publish",
     }),
-  };
-
-  static flags = {
-    comment: Flags.string({
+  },
+  options: {
+    comment: option.string({
       char: "c",
       required: false,
       description: "comment about changes in this publication",
     }),
-    commitHash: Flags.string({
+    commitHash: option.string({
       required: false,
       description: "Commit hash corresponding to the integration version being published",
     }),
-    commitUrl: Flags.string({
+    commitUrl: option.string({
       required: false,
       description: "URL to the commit details corresponding to this integration version",
     }),
-    repoUrl: Flags.string({
+    repoUrl: option.string({
       required: false,
       description: "URL to the repository containing the definition for this integration",
     }),
-    pullRequestUrl: Flags.string({
+    pullRequestUrl: option.string({
       required: false,
       description: "URL to the pull request that modified this integration version",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { integration },
       flags: { comment, commitHash, commitUrl, repoUrl, pullRequestUrl },
-    } = await this.parse(PublishCommand);
+    } = commandInput();
 
     const didProvideAttributes =
       Boolean(commitHash) || Boolean(repoUrl) || Boolean(pullRequestUrl) || Boolean(commitUrl);
@@ -78,6 +81,6 @@ export default class PublishCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.publishIntegration.integration.id);
-  }
-}
+    commandOutput.log(result.publishIntegration.integration.id);
+  },
+});

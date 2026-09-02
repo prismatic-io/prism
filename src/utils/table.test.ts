@@ -1,5 +1,4 @@
-import { captureOutput } from "@oclif/test";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { loadYaml } from "./serialize.js";
 import { type ColumnsConfig, printTable, tableFlags } from "./table.js";
 
@@ -24,10 +23,34 @@ const columns: ColumnsConfig<Row> = {
 };
 
 const render = async (flags: Parameters<typeof printTable>[2] = {}) => {
-  const { stdout } = await captureOutput(async () => {
-    printTable(rows, columns, flags);
+  let stdout = "";
+  const write = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+    stdout += String(chunk);
+    return true;
   });
-  return stdout;
+  try {
+    printTable(rows, columns, flags);
+    return stdout;
+  } finally {
+    write.mockRestore();
+  }
+};
+
+const captureOutput = async (callback: () => void | Promise<void>) => {
+  let stdout = "";
+  let error: unknown;
+  const write = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+    stdout += String(chunk);
+    return true;
+  });
+  try {
+    await callback();
+  } catch (caught) {
+    error = caught;
+  } finally {
+    write.mockRestore();
+  }
+  return { error, stdout };
 };
 
 describe("tableFlags", () => {

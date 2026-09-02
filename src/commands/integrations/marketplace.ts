@@ -1,47 +1,50 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class MarketplaceCommand extends PrismaticBaseCommand {
-  static description = "Make a version of an Integration available in the Marketplace";
-
-  static args = {
-    integration: Args.string({
+export default defineCommand({
+  description: "Make a version of an Integration available in the Marketplace",
+  args: {
+    integration: arg.string({
       required: true,
       description: "ID of an integration version to make marketplace available",
     }),
-  };
-
-  static flags = {
-    available: Flags.boolean({
+  },
+  options: {
+    available: option.boolean({
       char: "a",
       description: "Mark this Integration version available in the marketplace",
       allowNo: true,
       required: true,
     }),
-    deployable: Flags.boolean({
+    deployable: option.boolean({
       char: "d",
       description:
         "Mark this Integration version as deployable in the marketplace; does not apply if not also marked available",
       allowNo: true,
       default: true,
     }),
-    "allow-multiple-instances": Flags.boolean({
+    "allow-multiple-instances": option.boolean({
       char: "m",
       description: "Allow a customer to deploy multiple instances of this integration",
       allowNo: true,
     }),
-    overview: Flags.string({
+    overview: option.string({
       char: "o",
       description: "Overview to describe the purpose of the integration",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { integration },
       flags: { available, deployable, overview, "allow-multiple-instances": multipleInstances },
-    } = await this.parse(MarketplaceCommand);
+    } = commandInput();
 
     const marketplaceConfiguration = available
       ? deployable
@@ -85,6 +88,6 @@ export default class MarketplaceCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateIntegrationMarketplaceConfiguration.integration.id);
-  }
-}
+    commandOutput.log(result.updateIntegrationMarketplaceConfiguration.integration.id);
+  },
+});

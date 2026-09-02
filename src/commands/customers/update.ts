@@ -1,53 +1,55 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class UpdateCommand extends PrismaticBaseCommand {
-  // TODO: Add more flags once optional updates are implemented
-  static description = "Update a Customer";
-  static args = {
-    customer: Args.string({
+export default defineCommand({
+  description: "Update a Customer",
+  args: {
+    customer: arg.string({
       required: true,
       description: "ID of a customer",
     }),
-  };
-
-  static flags = {
-    name: Flags.string({
+  },
+  options: {
+    name: option.string({
       char: "n",
       description: "name of the customer",
       required: false,
     }),
-    description: Flags.string({
+    description: option.string({
       char: "d",
       description: "description of the customer",
       required: false,
     }),
-    externalId: Flags.string({
+    externalId: option.string({
       char: "e",
       description: "external ID of the customer from your system",
     }),
-    label: Flags.string({
+    label: option.string({
       char: "l",
       description: "a label to apply to the customer",
       multiple: true,
     }),
-  };
-
-  static examples = [
+  },
+  examples: [
     {
       description:
         "Apply multiple labels to a customer (note: previously set labels will be overwritten)",
       command:
         '<%= config.bin %> <%= command.id %> Q3VzdG9tZXI6MmUzZDllOTUtMWIyMy00N2FjLTk3MjUtMzU1OTA2YzgyZWZj --label "Prod Customers" --label "Beta Testers"',
     },
-  ];
-
-  async run() {
+  ],
+  async run(_context: CommandContext) {
     const {
       args: { customer },
       flags: { name, description, externalId, label },
-    } = await this.parse(UpdateCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -86,6 +88,6 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateCustomer.customer.id);
-  }
-}
+    commandOutput.log(result.updateCustomer.customer.id);
+  },
+});

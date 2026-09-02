@@ -1,22 +1,44 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { commandInput, defineCommand, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
+import type { Scalars } from "../../../graphql/schema.generated.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Alert Monitors for Customer Instances";
-  static flags = { ...ux.table.flags() };
+interface AlertMonitorNode {
+  [key: string]: unknown;
+  id: Scalars["ID"]["output"];
+  name: Scalars["String"]["output"];
+  triggered: Scalars["Boolean"]["output"];
+  instance: {
+    id: Scalars["ID"]["output"];
+    name: Scalars["String"]["output"];
+    customer: { id: Scalars["ID"]["output"]; name: Scalars["String"]["output"] };
+  };
+}
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+interface ListAlertMonitorsQuery {
+  alertMonitors: {
+    nodes: Array<AlertMonitorNode | null>;
+    pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+  };
+}
 
-    let alertMonitors: any[] = [];
+const isAlertMonitorNode = (node: AlertMonitorNode | null): node is AlertMonitorNode =>
+  node !== null;
+
+export default defineCommand({
+  description: "List Alert Monitors for Customer Instances",
+  options: { ...ux.table.flags() },
+  async run(_context: CommandContext) {
+    const { flags } = commandInput();
+
+    let alertMonitors: AlertMonitorNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         alertMonitors: { nodes, pageInfo },
-      } = await gqlRequest({
+      }: ListAlertMonitorsQuery = await gqlRequest<ListAlertMonitorsQuery>({
         document: gql`
           query listAlertMonitors($after: String) {
             alertMonitors(after: $after) {
@@ -42,12 +64,12 @@ export default class ListCommand extends PrismaticBaseCommand {
         `,
         variables: { after: cursor },
       });
-      alertMonitors = [...alertMonitors, ...nodes];
-      cursor = pageInfo.endCursor;
+      alertMonitors = [...alertMonitors, ...nodes.filter(isAlertMonitorNode)];
+      cursor = pageInfo.endCursor ?? null;
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    ux.table(
+    return ux.table(
       alertMonitors,
       {
         id: {
@@ -68,5 +90,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

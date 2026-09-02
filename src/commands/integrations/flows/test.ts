@@ -1,9 +1,15 @@
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  parseWithSchema,
+  type CommandContext,
+} from "../../../command.js";
 import { decode } from "@msgpack/msgpack";
-import { Flags } from "@oclif/core";
 import open from "open";
 import z from "zod";
 import { getAccessToken } from "../../../auth.js";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { getPrismaticUrl } from "../../../context.js";
 import { exists, fs } from "../../../fs.js";
 import { handleError } from "../../../utils/errors.js";
@@ -116,85 +122,81 @@ export const CONFIGURE_INSTANCE_PARAMS = {
   }),
 };
 
-export default class TestFlowCommand extends PrismaticBaseCommand {
-  private startTime = 0;
-
-  static description = "Run a test execution of a flow";
-
-  static examples = [
+export default defineCommand({
+  startTime: 0,
+  description: "Run a test execution of a flow",
+  examples: [
     {
       description:
         "Test an integration flow with a payload file and tail the logs and step results:",
       command:
         "<%= config.bin %> <%= command.id %> -p=some_payload_file.xml -c=application/xml --tail-logs --tail-results",
     },
-  ];
-
-  static flags = {
-    "flow-id": Flags.string({
+  ],
+  options: {
+    "flow-id": option.string({
       char: "f",
       description: "ID of the flow to test. Base64 encoded.",
       exclusive: ["flow-url", "flow-name"],
     }),
-    "flow-name": Flags.string({
+    "flow-name": option.string({
       char: "n",
       description: "Name of the flow to test.",
       exclusive: ["flow-url", "flow-id"],
     }),
-    "flow-url": Flags.string({
+    "flow-url": option.string({
       char: "u",
       description: "URL of the flow to test. Prefer to use flow-id instead, if possible.",
       exclusive: ["flow-id"],
     }),
-    "integration-id": Flags.string({
+    "integration-id": option.string({
       // We do not require this flag because we can often detect it in the project files.
       char: "i",
       description: "ID of the integration containing the flow to test. Base64 encoded.",
     }),
-    payload: Flags.string({
+    payload: option.string({
       char: "p",
       description: "Optional file containing a payload to run the flow with.",
     }),
-    "payload-content-type": Flags.string({
+    "payload-content-type": option.string({
       char: "c",
       description: "Optional Content-Type for the test payload.",
       default: "application/json",
     }),
-    sync: Flags.boolean({
+    sync: option.boolean({
       description: "Forces the flow to run synchronously.",
     }),
-    "tail-results": Flags.boolean({
+    "tail-results": option.boolean({
       description: "Tail step results from the test execution until user interrupt or timeout.",
     }),
-    "tail-logs": Flags.boolean({
+    "tail-logs": option.boolean({
       description: "Tail logs from the test execution until user interrupt or timeout.",
     }),
-    "cni-auto-end": Flags.boolean({
+    "cni-auto-end": option.boolean({
       description:
         "Automatically stop polling activity once an CNI flow execution completes. Some logs & results may not be returned this way. DOES NOT WORK FOR LOW-CODE FLOWS.",
     }),
-    timeout: Flags.integer({
+    timeout: option.integer({
       description:
         "Optionally set a timeout (in seconds) to stop tail activity. Compatible with both low-code and CNI flows.",
     }),
-    "result-file": Flags.string({
+    "result-file": option.string({
       char: "r",
       description:
         "Optional file to append tailed execution result data to. Results are saved into JSON Lines.",
     }),
-    jsonl: Flags.boolean({
+    jsonl: option.boolean({
       description: "Optionally format the step and tail results output into JSON Lines.",
     }),
-    debug: Flags.boolean({
+    debug: option.boolean({
       description: "Enables debug mode on the test execution.",
     }),
-    apiKey: Flags.string({
+    apiKey: option.string({
       description: "Optional API key for flows with secured endpoints.",
     }),
-  };
-
-  async run() {
-    const { flags } = await this.parseWithSchema(testFlagsSchema);
+  },
+  async run(context: CommandContext) {
+    const { flags } = parseWithSchema(testFlagsSchema, context);
 
     const {
       sync,
@@ -238,10 +240,10 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
             : JSON.stringify(replayablePayload.payload);
 
         const hasExplicitContentType =
-          this.argv.includes("-c") ||
-          this.argv.some(
-            (arg) => arg.startsWith("-c=") || arg.startsWith("--payload-content-type"),
-          );
+          process.argv.slice(2).includes("-c") ||
+          process.argv
+            .slice(2)
+            .some((arg) => arg.startsWith("-c=") || arg.startsWith("--payload-content-type"));
         if (!hasExplicitContentType && replayablePayload.contentType) {
           effectiveContentType = replayablePayload.contentType;
         }
@@ -322,7 +324,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
       }
 
       if (!isCodeNative && autoEndPoll) {
-        console.warn(
+        commandOutput.warn(
           "The given integration is not code-native but the --cni-auto-end flag was configured.",
           "\nThis process will continue but ignore the --cni-auto-end flag.",
         );
@@ -346,7 +348,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
 
     if (flowUrlFlag && triggerPayload && !isPollingFromPayload) {
       // Warn when using flow-url with a non-replayable payload - we can't detect polling triggers w/o ID's
-      this.warn(
+      commandOutput.warn(
         "This command cannot detect polling triggers when using --flow-url. If this is a polling flow, use a replayable payload from `flows:listen` or use --flow-id instead.",
       );
     }
@@ -381,7 +383,10 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
         ...(triggerPayload ? { "Content-Type": effectiveContentType } : {}),
       },
     });
-    const responseData = (await response.json()) as any;
+    const responseData = z
+      .object({ executionId: z.string().optional() })
+      .passthrough()
+      .parse(await response.json());
     const executionId = response.headers.get("prismatic-executionid") || "";
 
     ux.action.stop();
@@ -401,7 +406,7 @@ export default class TestFlowCommand extends PrismaticBaseCommand {
     // Prefer flow-id for re-run hint, fall back to flow-url if that's what was provided
     const flowArg = selectedFlowId ? `-f=${selectedFlowId}` : `-u=${invokeUrl}`;
 
-    this.quietLog(
+    commandOutput.quietLog(
       `
 To re-run this flow directly:
 prism integrations:flows:test ${flowArg} ${flagString}
@@ -410,19 +415,19 @@ prism integrations:flows:test ${flowArg} ${flagString}
     );
 
     if (!responseData?.executionId) {
-      this.log(`Execution ID: ${executionId}\n`);
+      commandOutput.log(`Execution ID: ${executionId}\n`);
     }
 
-    this.log(`${JSON.stringify(responseData, null, 2)}\n`);
+    commandOutput.log(`${JSON.stringify(responseData, null, 2)}\n`);
 
     if (!(tailLogs || tailStepResults)) return;
 
-    this.quietLog(
+    commandOutput.quietLog(
       "While the timestamps are accurate, logs & step results may not arrive in chronological order.",
       quiet,
       "warn",
     );
-    this.quietLog(
+    commandOutput.quietLog(
       `\nPress CMD+C/CTRL+C to stop polling. ${
         autoEndPoll
           ? ""
@@ -441,7 +446,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
     const timeoutPromise = new Promise<void>((_resolve) => {
       timeoutTimer = setTimeout(
         () => {
-          this.quietLog("Timeout reached. Stopping polling.", quiet);
+          commandOutput.quietLog("Timeout reached. Stopping polling.", quiet);
           process.exit(0);
         },
         (timeout ?? TIMEOUT_SECONDS) * 1000,
@@ -453,12 +458,11 @@ prism integrations:flows:test ${flowArg} ${flagString}
     if (timeoutTimer) {
       clearTimeout(timeoutTimer);
     }
-  }
-
-  private async tailLogs(executionId: string) {
+  },
+  async tailLogs(executionId: string) {
     const {
       flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout, jsonl },
-    } = await this.parse(TestFlowCommand);
+    } = commandInput();
 
     let nextCursor: string | undefined;
 
@@ -473,7 +477,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
 
       if (jsonl) {
         logs.forEach((result) => {
-          this.log(JSON.stringify(result));
+          commandOutput.log(JSON.stringify(result));
         });
       } else {
         ux.table(
@@ -502,12 +506,11 @@ prism integrations:flows:test ${flowArg} ${flagString}
         return;
       }
     }
-  }
-
-  private async tailStepResults(executionId: string) {
+  },
+  async tailStepResults(executionId: string) {
     const {
       flags: { "cni-auto-end": autoEndPoll, "result-file": resultFilePath, timeout, jsonl },
-    } = await this.parse(TestFlowCommand);
+    } = commandInput();
 
     let nextCursor: string | undefined;
 
@@ -524,7 +527,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
 
       if (jsonl) {
         stepResults.forEach((result) => {
-          this.log(JSON.stringify(result));
+          commandOutput.log(JSON.stringify(result));
         });
       } else {
         ux.table(
@@ -553,12 +556,8 @@ prism integrations:flows:test ${flowArg} ${flagString}
         return;
       }
     }
-  }
-
-  private async fetchLogs(
-    executionId: string,
-    nextCursor?: string,
-  ): Promise<FetchLogsResult | undefined> {
+  },
+  async fetchLogs(executionId: string, nextCursor?: string): Promise<FetchLogsResult | undefined> {
     const results = await getExecutionLogs(executionId, nextCursor);
 
     const { edges } = results.logs;
@@ -571,9 +570,8 @@ prism integrations:flows:test ${flowArg} ${flagString}
     const lastEdge = edges[edges.length - 1];
     const cursor = lastEdge?.cursor;
     return { logs, cursor };
-  }
-
-  private async fetchStepResults(executionId: string, nextCursor?: string) {
+  },
+  async fetchStepResults(executionId: string, nextCursor?: string) {
     const results = await getExecutionStepResults(executionId, nextCursor);
 
     const { edges } = results.executionResult?.stepResults ?? { edges: [] };
@@ -601,22 +599,23 @@ prism integrations:flows:test ${flowArg} ${flagString}
         });
       } catch (err) {
         // Allow the process to keep running, just skip rendering the step result.
-        console.error(`There was an error fetching step results for step: ${stepName}:\n${err}`);
+        commandOutput.stderr(
+          `There was an error fetching step results for step: ${stepName}:\n${err}`,
+        );
       }
     }
 
     const lastEdge = edges[edges.length - 1];
     const cursor = lastEdge?.cursor;
     return { stepResults, cursor };
-  }
-
-  private async shouldEnd(executionId: string, autoEndPoll: boolean, timeout = TIMEOUT_SECONDS) {
+  },
+  async shouldEnd(executionId: string, autoEndPoll: boolean, timeout = TIMEOUT_SECONDS) {
     return (
       Date.now() - this.startTime > timeout * 1000 ||
       (autoEndPoll && (await isCniExecutionComplete(executionId)))
     );
-  }
-}
+  },
+});
 
 function parseReplayablePayload(content: string): ReplayablePayload | null {
   try {
@@ -642,7 +641,7 @@ async function promptIntegrationValidation(
   quiet?: boolean,
 ) {
   if (!isConfigured) {
-    console.warn("The integration needs to be configured before it can be tested.");
+    commandOutput.warn("The integration needs to be configured before it can be tested.");
   }
 
   const accessToken = await getAccessToken();
@@ -658,7 +657,9 @@ async function promptIntegrationValidation(
 
   if (!isConfigured) {
     if (quiet) {
-      console.warn(`Configure the test instance by visiting the following URL:\n${configUrl}`);
+      commandOutput.warn(
+        `Configure the test instance by visiting the following URL:\n${configUrl}`,
+      );
     } else {
       const shouldOpen = await ux.confirm(
         "Would you like to open the Configuration Wizard in your browser? (yes/no)",
@@ -667,7 +668,7 @@ async function promptIntegrationValidation(
       if (shouldOpen) {
         await open(configUrl.toString());
       } else {
-        console.log(
+        commandOutput.log(
           `\nYou can configure the test instance later by visiting the following URL:\n${configUrl}`,
         );
       }

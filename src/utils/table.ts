@@ -1,12 +1,11 @@
-// Minimal reimplementation of @oclif/core v3's ux.table (removed in v4), preserving the
-// flag shape, output format, and the case-insensitive key-or-header lookup that --filter,
-// --columns, and --sort used.
+// Stable Prism table rendering, preserving the historic output format and the
+// case-insensitive key-or-header lookup used by --filter, --columns, and --sort.
 
-import { Errors, Flags } from "@oclif/core";
 import chalk from "chalk";
 import { startCase } from "lodash-es";
 import { orderBy } from "natural-orderby";
 import { dumpYaml } from "./serialize.js";
+import { isAgentExecution, option, writeCommandOutput } from "../command.js";
 
 export type ColumnDef<T> = {
   header?: string;
@@ -38,38 +37,38 @@ export type TableFlags = {
   "no-truncate"?: boolean;
 };
 
-// Flag order is part of the oclif manifest contract; don't reorder.
+// Flag order is part of the public CLI contract; don't reorder.
 const allFlags = () => ({
-  columns: Flags.string({
+  columns: option.string({
     exclusive: ["extended"],
     description: "only show provided columns (comma-separated)",
   }),
-  csv: Flags.boolean({
+  csv: option.boolean({
     exclusive: ["no-truncate"],
     description: "output is csv format [alias: --output=csv]",
   }),
-  extended: Flags.boolean({
+  extended: option.boolean({
     char: "x",
     exclusive: ["columns"],
     description: "show extra columns",
   }),
-  filter: Flags.string({
+  filter: option.string({
     description: "filter property by regex, ex: name=^foo (prefix key with - to invert)",
   }),
-  "no-header": Flags.boolean({
+  "no-header": option.boolean({
     exclusive: ["csv"],
     description: "hide table header from output",
   }),
-  "no-truncate": Flags.boolean({
+  "no-truncate": option.boolean({
     exclusive: ["csv"],
     description: "do not truncate output to fit screen",
   }),
-  output: Flags.string({
+  output: option.string({
     exclusive: ["no-truncate", "csv"],
     description: "output in a more machine friendly format",
     options: ["csv", "json", "yaml"],
   }),
-  sort: Flags.string({
+  sort: option.string({
     description: "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
   }),
 });
@@ -150,7 +149,7 @@ const applyFilter = <T>(
   filter: string,
   columns: ColumnsConfig<T>,
 ): Array<Record<string, string>> => {
-  const invalid = () => new Errors.CLIError("Filter flag has an invalid value", { exit: 1 });
+  const invalid = () => new Error("Filter flag has an invalid value");
   const eq = filter.indexOf("=");
   const rawInput = eq < 0 ? "" : filter.slice(0, eq);
   const pattern = eq < 0 ? "" : filter.slice(eq + 1);
@@ -241,7 +240,7 @@ export const printTable = <T>(
   data: T[],
   columns: ColumnsConfig<T>,
   flags: TableFlags = {},
-): void => {
+): { items: T[] } => {
   // Filter and sort run against every column, then we narrow to the display set — so
   // `--filter label=X --columns id` still matches rows by the hidden `label`.
   const all = buildAllColumns(columns);
@@ -254,20 +253,22 @@ export const printTable = <T>(
     Object.fromEntries(display.map((c) => [c.key, r[c.key] ?? ""])),
   );
 
+  if (isAgentExecution()) return { items: data };
+
   switch (resolveOutput(flags)) {
     case "json":
-      process.stdout.write(`${JSON.stringify(displayRows, null, 2)}\n`);
-      return;
+      writeCommandOutput(JSON.stringify(displayRows, null, 2));
+      return { items: data };
     case "yaml":
-      process.stdout.write(dumpYaml(displayRows));
-      return;
+      writeCommandOutput(dumpYaml(displayRows));
+      return { items: data };
     case "csv":
-      process.stdout.write(`${formatCsv(display, displayRows)}\n`);
-      return;
+      writeCommandOutput(formatCsv(display, displayRows));
+      return { items: data };
     case "text": {
       const text = formatText(display, displayRows, flags);
-      if (text) process.stdout.write(`${text}\n`);
-      return;
+      if (text) writeCommandOutput(text);
+      return { items: data };
     }
   }
 };

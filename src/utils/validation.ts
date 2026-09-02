@@ -17,13 +17,13 @@ function formatIssue(issue: z.core.$ZodIssue): string {
  * Validate command flags against a Zod schema.
  * Throws an error with a formatted message if validation fails.
  *
- * Use oclif's built-in flag options for simple cases:
+ * Use the command schema's built-in options for simple cases:
  * - `required: true` for required flags
  * - `exclusive: ["other-flag"]` for mutual exclusivity
  * - `dependsOn: ["other-flag"]` for dependencies
  *
  * Use Zod's `.refine()` or `.superRefine()` for complex conditional logic
- * that oclif can't express.
+ * that field relationships cannot express.
  */
 export function validateFlags<T extends z.ZodType>(schema: T, flags: unknown): z.infer<T> {
   const result = schema.safeParse(flags);

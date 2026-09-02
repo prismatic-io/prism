@@ -1,15 +1,35 @@
+import chalk from "chalk";
 import crypto from "crypto";
 import http from "http";
-import { jwtDecode } from "jwt-decode";
 import inquirer from "inquirer";
-import chalk from "chalk";
+import { jwtDecode } from "jwt-decode";
+import open from "open";
+import { z } from "zod";
+import { writeCommandOutput } from "./command.js";
 import { deleteProfile, getActiveProfileName, writeActiveProfile } from "./config.js";
 import { type AuthContext, getAuthContext, getPrismaticUrl } from "./context.js";
-import { gqlRequest, gql } from "./graphql.js";
-import type { AddressInfo } from "net";
-import open from "open";
-import { whoAmI } from "./utils/user/query.js";
+import { gql, gqlRequest } from "./graphql.js";
 import { fetch } from "./utils/http.js";
+import { whoAmI } from "./utils/user/query.js";
+
+const tokenResponseSchema = z.object({
+  access_token: z.string(),
+  expires_in: z.number(),
+  refresh_token: z.string().optional(),
+  scope: z.string().default(""),
+  token_type: z.string(),
+});
+
+const tokenErrorResponseSchema = z.object({
+  error: z.string(),
+  error_description: z.string().optional(),
+});
+
+const authConfigSchema = z.object({
+  domain: z.string(),
+  clientId: z.string(),
+  audience: z.string(),
+});
 
 const urlEncodeBase64 = (value: Buffer | string): string => {
   const buffer = typeof value === "string" ? Buffer.from(value) : value;
@@ -135,7 +155,7 @@ export class Authenticate {
 
     if (props?.url) {
       const challengeUrl = await this.getChallengeUrl(challenge, state, redirectUri);
-      console.log(challengeUrl);
+      writeCommandOutput(challengeUrl);
     } else {
       await this.openChallengeBrowser(challenge, state, redirectUri);
     }
@@ -180,15 +200,18 @@ export class Authenticate {
       },
     });
 
-    const response = (await fetchResponse.json()) as any;
+    const responseBody = await fetchResponse.json();
+    const errorResponse = tokenErrorResponseSchema.safeParse(responseBody);
 
-    if (response.error === "access_denied") {
+    if (errorResponse.success && errorResponse.data.error === "access_denied") {
       const description =
-        response.error_description || "You do not have access to the specified tenant.";
+        errorResponse.data.error_description || "You do not have access to the specified tenant.";
       throw new Error(
         `Access denied${tenantId ? ` for tenant ID '${tenantId}'` : ""}. ${description}`,
       );
     }
+
+    const response = tokenResponseSchema.parse(responseBody);
 
     return {
       accessToken: response.access_token,
@@ -231,7 +254,11 @@ export class Authenticate {
       this.retry(5, this.attemptServerCreate)
         .then((server) => {
           this.redirectServer = server;
-          const info = server.address() as AddressInfo;
+          const info = server.address();
+          if (info === null || typeof info === "string") {
+            reject(new Error("Redirect server did not provide a TCP address."));
+            return;
+          }
           const redirectUrl = new URL("http://localhost");
           redirectUrl.port = String(info.port);
           resolve(redirectUrl.toString());
@@ -260,7 +287,9 @@ export class Authenticate {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
-    const response = (await fetchResponse.json()) as any;
+    const response = tokenResponseSchema
+      .extend({ refresh_token: z.string() })
+      .parse(await fetchResponse.json());
     return {
       accessToken: response.access_token,
       expiresIn: response.expires_in,
@@ -302,7 +331,7 @@ export class Authenticate {
 const getAuthOptions = async (prismaticUrl?: string) => {
   const resolvedUrl = prismaticUrl ?? (await getPrismaticUrl());
   const fetchResponse = await fetch(new URL("/auth/meta", resolvedUrl).toString());
-  const authConfig = (await fetchResponse.json()) as any;
+  const authConfig = authConfigSchema.parse(await fetchResponse.json());
 
   const { domain, clientId, audience } = authConfig;
   return {
@@ -362,7 +391,7 @@ export const selectTenant = async (
 
   const activeTenants = tenants.filter((t) => !t.systemSuspended);
   if (activeTenants.length === 0) {
-    console.log(
+    writeCommandOutput(
       chalk.red(
         "You have no active tenants on this stack. Please contact Prismatic support for assistance.",
       ),

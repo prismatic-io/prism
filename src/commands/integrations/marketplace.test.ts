@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { commandOutput } from "../../command.js";
 import MarketplaceCommand from "./marketplace.js";
 
 const mockGqlRequest = vi.fn();
@@ -27,7 +28,7 @@ describe("MarketplaceCommand", () => {
   describe("overview flag", () => {
     it("passes the provided overview through to the mutation", async () => {
       mockSuccess();
-      vi.spyOn(MarketplaceCommand.prototype, "log").mockImplementation(() => {});
+      vi.spyOn(commandOutput, "log").mockImplementation(() => {});
 
       await MarketplaceCommand.run(["int_1", "--available", "--overview", "A useful integration"]);
 
@@ -36,7 +37,7 @@ describe("MarketplaceCommand", () => {
 
     it("defaults overview to an empty string when the flag is omitted", async () => {
       mockSuccess();
-      vi.spyOn(MarketplaceCommand.prototype, "log").mockImplementation(() => {});
+      vi.spyOn(commandOutput, "log").mockImplementation(() => {});
 
       await MarketplaceCommand.run(["int_1", "--available"]);
 
@@ -46,7 +47,7 @@ describe("MarketplaceCommand", () => {
 
   it("logs the returned integration id", async () => {
     mockSuccess();
-    const logSpy = vi.spyOn(MarketplaceCommand.prototype, "log").mockImplementation(() => {});
+    const logSpy = vi.spyOn(commandOutput, "log").mockImplementation(() => {});
 
     await MarketplaceCommand.run(["int_1", "--available"]);
 

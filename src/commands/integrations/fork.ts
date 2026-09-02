@@ -1,35 +1,38 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class ForkCommand extends PrismaticBaseCommand {
-  static description = "Fork an Integration";
-
-  static flags = {
-    name: Flags.string({
+export default defineCommand({
+  description: "Fork an Integration",
+  options: {
+    name: option.string({
       char: "n",
       required: true,
       description: "name of the forked integration",
     }),
-    description: Flags.string({
+    description: option.string({
       char: "d",
       required: true,
       description: "longer description of the forked integration",
     }),
-  };
-
-  static args = {
-    parent: Args.string({
+  },
+  args: {
+    parent: arg.string({
       required: true,
       description: "ID of the Integration to fork",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { name, description },
       args: { parent },
-    } = await this.parse(ForkCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -58,6 +61,6 @@ export default class ForkCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.forkIntegration.integration.id);
-  }
-}
+    commandOutput.log(result.forkIntegration.integration.id);
+  },
+});

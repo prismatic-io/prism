@@ -1,5 +1,11 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
@@ -11,10 +17,9 @@ interface TriggerNode {
   description: string;
 }
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Triggers that Components implement";
-
-  static examples = [
+export default defineCommand({
+  description: "List Triggers that Components implement",
+  examples: [
     {
       description: "Get the ID of the Webhook trigger of the Webhook Triggers component by key:",
       command:
@@ -24,34 +29,32 @@ export default class ListCommand extends PrismaticBaseCommand {
       description: "Get triggers related to the Management Triggers component:",
       command: "<%= config.bin %> <%= command.id %> management-triggers",
     },
-  ];
-
-  static flags = {
+  ],
+  options: {
     ...ux.table.flags(),
-    public: Flags.boolean({
+    public: option.boolean({
       required: false,
       description:
         "Show actions for the public component with the given key. Use this flag when you have a private component with the same key as a public component.",
     }),
-    private: Flags.boolean({
+    private: option.boolean({
       required: false,
       description:
         "Show actions for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
     }),
-  };
-  static args = {
-    componentKey: Args.string({
+  },
+  args: {
+    componentKey: arg.string({
       name: "Component Key",
       required: true,
       description: "The key of the component to show triggers for (e.g. 'salesforce')",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags,
       args: { componentKey },
-    } = await this.parse(ListCommand);
+    } = commandInput();
 
     let triggers: TriggerNode[] = [];
     let componentId: string;
@@ -97,10 +100,10 @@ export default class ListCommand extends PrismaticBaseCommand {
         },
       });
       if (!component) {
-        console.log(
+        commandOutput.log(
           "The key you provided is not valid. Please run 'prism components:list -x' and identify a valid component key.",
         );
-        this.exit(1);
+        commandOutput.exit(1);
       }
       triggers = [...triggers, ...component.actions.nodes];
       componentId = component.id;
@@ -108,7 +111,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       hasNextPage = component.actions.pageInfo.hasNextPage;
     }
 
-    ux.table(
+    return ux.table(
       triggers,
       {
         id: {
@@ -132,5 +135,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

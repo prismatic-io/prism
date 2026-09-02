@@ -1,5 +1,10 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
 import { fs } from "../../../fs.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 import {
@@ -9,11 +14,10 @@ import {
 } from "../../../utils/execution/stepResults.js";
 import { fetch } from "../../../utils/http.js";
 
-export default class GetCommand extends PrismaticBaseCommand {
-  static description =
-    "Gets the Result of a specified Step in an Instance Execution.\nThis command can be used to pull down step results for both integration tests and instance executions.";
-
-  static examples = [
+export default defineCommand({
+  description:
+    "Gets the Result of a specified Step in an Instance Execution.\nThis command can be used to pull down step results for both integration tests and instance executions.",
+  examples: [
     {
       description: "Run a test of a flow to get an execution ID:",
       // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
@@ -24,28 +28,26 @@ export default class GetCommand extends PrismaticBaseCommand {
       command:
         '<%= config.bin %> <%= command.id %> --executionId SW5zdGFuY2VFeGVjdXRpb25SZXN1bHQ6MWFkZTYwMGQtMjg2Ni00ZTljLWI2N2EtYmUxNzgwOWY4ODI4 --stepName "Fetch Invoice Info"',
     },
-  ];
-
-  static flags = {
-    executionId: Flags.string({
+  ],
+  options: {
+    executionId: option.string({
       char: "e",
       required: true,
       description: "ID of an Execution",
     }),
-    stepName: Flags.string({
+    stepName: option.string({
       char: "s",
       required: true,
       description: "Name of an Integration Step",
     }),
-    outputPath: Flags.string({
+    outputPath: option.string({
       char: "p",
       required: false,
       description: "Output result to a file. Output will be printed to stdout if this is omitted",
     }),
-  };
-
-  async run() {
-    const { flags } = await this.parse(GetCommand);
+  },
+  async run(_context: CommandContext) {
+    const { flags } = commandInput();
     const { executionId, stepName, outputPath } = flags;
 
     const result = await gqlRequest({
@@ -85,10 +87,10 @@ export default class GetCommand extends PrismaticBaseCommand {
       if (outputPath) {
         await fs.writeFile(outputPath, outputStr);
       } else {
-        console.log(outputStr);
+        commandOutput.log(outputStr);
       }
     } else {
-      console.error("No step results found. Did you enter the correct step name?");
+      commandOutput.stderr("No step results found. Did you enter the correct step name?");
     }
-  }
-}
+  },
+});

@@ -1,5 +1,4 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { arg, commandInput, defineCommand, option, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
@@ -16,39 +15,37 @@ interface FetchLogsResult {
   executionComplete: boolean | undefined;
 }
 
-export default class TestCommand extends PrismaticBaseCommand {
-  static description = "Test a Flow Config of an Instance";
-  static args = {
-    flowConfig: Args.string({
+export default defineCommand({
+  description: "Test a Flow Config of an Instance",
+  args: {
+    flowConfig: arg.string({
       description: "ID of a Flow Config to test",
       required: true,
     }),
-  };
-
-  static flags = {
+  },
+  options: {
     ...ux.table.flags({ only: ["extended", "columns"] }),
-    tail: Flags.boolean({
+    tail: option.boolean({
       required: false,
       char: "t",
       description: "Tail logs of the flow config test run",
     }),
-    payload: Flags.string({
+    payload: option.string({
       required: false,
       char: "p",
       description: "Optional JSON-formatted data payload to submit with the test",
     }),
-    contentType: Flags.string({
+    contentType: option.string({
       required: false,
       char: "c",
       description: "Optional content-type for the test payload",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { flowConfig },
       flags: { tail, payload, contentType },
-    } = await this.parse(TestCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -88,10 +85,9 @@ export default class TestCommand extends PrismaticBaseCommand {
 
     const executionId = result.testInstanceFlowConfig.testInstanceFlowConfigResult.execution.id;
     await this.tailLogs(executionId);
-  }
-
-  private async tailLogs(executionId: string) {
-    const { flags } = await this.parse(TestCommand);
+  },
+  async tailLogs(executionId: string) {
+    const { flags } = commandInput();
 
     let nextCursor: string | undefined;
     while (true) {
@@ -118,12 +114,8 @@ export default class TestCommand extends PrismaticBaseCommand {
 
       if (executionComplete) return;
     }
-  }
-
-  private async fetchLogs(
-    executionId: string,
-    nextCursor?: string,
-  ): Promise<FetchLogsResult | undefined> {
+  },
+  async fetchLogs(executionId: string, nextCursor?: string): Promise<FetchLogsResult | undefined> {
     const results = await gqlRequest({
       document: gql`
         query listInstanceTestLogs($executionId: ID!, $nextCursor: String) {
@@ -166,5 +158,5 @@ export default class TestCommand extends PrismaticBaseCommand {
 
     const { cursor } = edges[edges.length - 1];
     return { logs, cursor, executionComplete };
-  }
-}
+  },
+});

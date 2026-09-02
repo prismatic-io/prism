@@ -1,33 +1,52 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { arg, commandInput, defineCommand, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
+import type { Scalars } from "../../../graphql/schema.generated.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Instance Flow Configs";
-  static args = {
-    instance: Args.string({ description: "ID of an Instance", required: true }),
-  };
-  static flags = {
-    ...ux.table.flags(),
-  };
+interface InstanceFlowConfigNode {
+  [key: string]: unknown;
+  id: Scalars["ID"]["output"];
+  flow: { name: Scalars["String"]["output"] };
+  webhookUrl: Scalars["String"]["output"];
+}
 
-  async run() {
+interface ListInstanceFlowConfigsQuery {
+  instance: {
+    flowConfigs: {
+      nodes: Array<InstanceFlowConfigNode | null>;
+      pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+    };
+  };
+}
+
+const isInstanceFlowConfigNode = (
+  node: InstanceFlowConfigNode | null,
+): node is InstanceFlowConfigNode => node !== null;
+
+export default defineCommand({
+  description: "List Instance Flow Configs",
+  args: {
+    instance: arg.string({ description: "ID of an Instance", required: true }),
+  },
+  options: {
+    ...ux.table.flags(),
+  },
+  async run(_context: CommandContext) {
     const {
       args: { instance },
       flags,
-    } = await this.parse(ListCommand);
+    } = commandInput();
 
-    let flowConfigs: any[] = [];
+    let flowConfigs: InstanceFlowConfigNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         instance: {
           flowConfigs: { nodes, pageInfo },
         },
-      } = await gqlRequest({
+      }: ListInstanceFlowConfigsQuery = await gqlRequest<ListInstanceFlowConfigsQuery>({
         document: gql`
           query listInstanceFlowConfigs($id: ID!, $after: String) {
             instance(id: $id) {
@@ -52,12 +71,12 @@ export default class ListCommand extends PrismaticBaseCommand {
           after: cursor,
         },
       });
-      flowConfigs = [...flowConfigs, ...nodes];
-      cursor = pageInfo.endCursor;
+      flowConfigs = [...flowConfigs, ...nodes.filter(isInstanceFlowConfigNode)];
+      cursor = pageInfo.endCursor ?? null;
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    ux.table(
+    return ux.table(
       flowConfigs,
       {
         id: {
@@ -65,7 +84,7 @@ export default class ListCommand extends PrismaticBaseCommand {
           extended: true,
         },
         name: {
-          get: (row: any) => row.flow.name,
+          get: (row) => row.flow.name,
         },
         webhookUrl: {
           extended: true,
@@ -73,5 +92,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

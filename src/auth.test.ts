@@ -80,7 +80,7 @@ describe("createRequestParams", () => {
 
 describe("selectTenant", () => {
   it("logs an error and returns undefined when every tenant is suspended", async () => {
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const outputSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
     const tenants = [
       makeTenant("a", { systemSuspended: true }),
       makeTenant("b", { systemSuspended: true }),
@@ -90,7 +90,7 @@ describe("selectTenant", () => {
 
     expect(result).toBeUndefined();
     expect(inquirer.prompt).not.toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("no active tenants"));
+    expect(outputSpy).toHaveBeenCalledWith(expect.stringContaining("no active tenants"));
   });
 
   it("filters suspended tenants out of the choice list", async () => {

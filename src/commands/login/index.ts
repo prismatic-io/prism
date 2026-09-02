@@ -1,36 +1,38 @@
-import { Flags } from "@oclif/core";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { isLoggedIn, login } from "../../auth.js";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { getActiveProfileName } from "../../config.js";
 import { ux } from "../../utils/ux.js";
 
-export default class LoginCommand extends PrismaticBaseCommand {
-  static description = "Log in to your Prismatic account";
-
-  static flags = {
-    force: Flags.boolean({
+export default defineCommand({
+  description: "Log in to your Prismatic account",
+  options: {
+    force: option.boolean({
       char: "f",
       default: false,
       description: "re-authenticate, even if you are already logged in",
     }),
-    url: Flags.boolean({
+    url: option.boolean({
       char: "u",
       default: false,
       description: "returns a challenge url without automatically opening a browser",
     }),
-  };
-
-  protected authContext = "profile" as const;
-
-  async run() {
+  },
+  authContext: "profile" as const,
+  async run(_context: CommandContext) {
     const {
       flags: { force, url },
-    } = await this.parse(LoginCommand);
+    } = commandInput();
 
     const profileName = await getActiveProfileName();
 
     if (!force && (await isLoggedIn())) {
-      this.log(`Already logged in to '${profileName}'.`);
+      commandOutput.log(`Already logged in to '${profileName}'.`);
       return;
     }
 
@@ -39,6 +41,6 @@ export default class LoginCommand extends PrismaticBaseCommand {
     }
 
     await login({ url, profileName });
-    this.log(`Logged in to '${profileName}'.`);
-  }
-}
+    commandOutput.log(`Logged in to '${profileName}'.`);
+  },
+});

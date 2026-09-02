@@ -1,28 +1,30 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class UpdateAvatarUrlCommand extends PrismaticBaseCommand {
-  // TODO: Add more flags once optional updates are implemented
-  static description = "Update your Organization Avatar URL";
-
-  static flags = {
-    organizationId: Flags.string({
+export default defineCommand({
+  description: "Update your Organization Avatar URL",
+  options: {
+    organizationId: option.string({
       name: "organization",
       required: true,
       description: "ID of an organization",
     }),
-    avatarUrl: Flags.string({
+    avatarUrl: option.string({
       char: "n",
       required: false,
       description: "Url of the organization avatar",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { organizationId, avatarUrl },
-    } = await this.parse(UpdateAvatarUrlCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -47,6 +49,6 @@ export default class UpdateAvatarUrlCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateOrganization.organization.id);
-  }
-}
+    commandOutput.log(result.updateOrganization.organization.id);
+  },
+});

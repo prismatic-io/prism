@@ -1,5 +1,11 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
 import fs from "fs/promises";
 import { camelCase } from "lodash-es";
 import path from "path";
@@ -20,10 +26,9 @@ const CLEANABLE_TEMPLATES = [
   "src/configPages.ts",
 ];
 
-export default class InitializeIntegration extends PrismaticBaseCommand {
-  static description = "Initialize a new Code Native Integration";
-
-  static examples = [
+export default defineCommand({
+  description: "Initialize a new Code Native Integration",
+  examples: [
     {
       description: "Initialize a new directory for a Code Native Integration:",
       command: "<%= config.bin %> <%= command.id %> acme-integration",
@@ -40,40 +45,38 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
       description: "Import the integration into Prismatic:",
       command: "prism integrations:import",
     },
-  ];
-
-  static args = {
-    name: Args.string({
+  ],
+  args: {
+    name: arg.string({
       required: true,
       description:
         "Name of the new integration to create (alphanumeric characters, hyphens, and underscores)",
     }),
-  };
-  static flags = {
-    clean: Flags.boolean({
+  },
+  options: {
+    clean: option.boolean({
       description: "Generate clean scaffold without example code",
       default: false,
     }),
-    toolchain: Flags.option({
+    toolchain: option.custom({
       options: TOOLCHAIN_NAMES,
       default: DEFAULT_TOOLCHAIN,
       description:
         "Toolchain to scaffold: 'modern' (tsdown + vitest + Biome) or 'legacy' (webpack + jest + eslint)",
     })(),
-  };
-
-  async run() {
+  },
+  async run(_commandContext: CommandContext) {
     const {
       args: { name },
       flags: { clean, toolchain: toolchainName },
-    } = await this.parse(InitializeIntegration);
+    } = commandInput();
 
     const toolchain = getToolchain(toolchainName);
 
     if (!VALID_NAME_REGEX.test(name)) {
       const regexUrl = new URL("https://regex101.com");
       regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
-      this.error(
+      commandOutput.error(
         `'${name}' contains invalid characters. Please select an integration name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
         { exit: 1 },
       );
@@ -153,7 +156,7 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
       devDependencies: toolchain.devDependencies,
     });
 
-    this.log(`
+    commandOutput.log(`
 "${name}" is ready for development.
 To install dependencies, run either "npm install" or "yarn install"
 To run unit tests for the integration, run "npm run test" or "yarn test"
@@ -162,5 +165,5 @@ To import the integration, run "prism integrations:import"
 
 For documentation on writing code-native integrations, visit https://prismatic.io/docs/integrations/code-native/
     `);
-  }
-}
+  },
+});

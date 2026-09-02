@@ -1,7 +1,9 @@
 import readline from "node:readline";
 import inquirer from "inquirer";
+import { isAgentExecution, writeCommandOutput } from "../command.js";
 
 export const confirm = async (message: string): Promise<boolean> => {
+  if (isAgentExecution()) return true;
   const { value } = await inquirer.prompt<{ value: boolean }>([
     { type: "confirm", name: "value", message, default: false },
   ]);
@@ -9,7 +11,8 @@ export const confirm = async (message: string): Promise<boolean> => {
 };
 
 export const pressAnyKey = async (message: string): Promise<void> => {
-  process.stdout.write(`${message}\n`);
+  writeCommandOutput(message);
+  if (isAgentExecution()) return;
   await new Promise<void>((resolve) => {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const input = process.stdin;

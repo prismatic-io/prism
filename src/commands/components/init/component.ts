@@ -1,37 +1,46 @@
-import { type Config, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import {
+  commandInput,
+  defineCommand,
+  option,
+  requireInteractiveInput,
+  type CommandContext,
+} from "../../../command.js";
 import inquirer from "inquirer";
 import { camelCase } from "lodash-es";
 import path from "path";
-import { template, toArgv } from "../../../generate/util.js";
+import { template } from "../../../generate/util.js";
 import {
   DEFAULT_TOOLCHAIN,
   getToolchain,
   TOOLCHAIN_NAMES,
 } from "../../../utils/toolchain/index.js";
 
-export default class GenerateComponentCommand extends PrismaticBaseCommand {
-  static hidden = true;
-  static description = "Initialize a new Component";
-  static flags = {
-    name: Flags.string({
+export default defineCommand({
+  hidden: true,
+  description: "Initialize a new Component",
+  options: {
+    name: option.string({
       char: "n",
       description: "Name of the component",
     }),
-    description: Flags.string({
+    description: option.string({
       char: "d",
       description: "Description for the component",
     }),
-    toolchain: Flags.option({
+    toolchain: option.custom({
       options: TOOLCHAIN_NAMES,
       default: DEFAULT_TOOLCHAIN,
       hidden: true,
     })(),
-  };
-
-  async run() {
-    const { flags } = await this.parse(GenerateComponentCommand);
+  },
+  async run(_commandContext: CommandContext) {
+    const { flags } = commandInput();
     const toolchain = getToolchain(flags.toolchain);
+    if (!flags.name || !flags.description) {
+      requireInteractiveInput(
+        "Agent mode requires both --name and --description for components:init:component",
+      );
+    }
     const { name, description } = await inquirer.prompt<{
       name: string;
       description: string;
@@ -78,9 +87,5 @@ export default class GenerateComponentCommand extends PrismaticBaseCommand {
       ),
       toolchain.renderTemplates(context),
     ]);
-  }
-
-  static async invoke(args: { [K in keyof typeof this.flags]+?: unknown }, config: Config) {
-    await GenerateComponentCommand.run(toArgv(args), config);
-  }
-}
+  },
+});

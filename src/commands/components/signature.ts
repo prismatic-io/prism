@@ -1,6 +1,11 @@
-import { Flags } from "@oclif/core";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import crypto from "crypto";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { fs } from "../../fs.js";
 import {
   createComponentPackage,
@@ -9,21 +14,19 @@ import {
 } from "../../utils/component/index.js";
 import { getPackageSignatureFromApi } from "../../utils/component/signature.js";
 
-export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
-  static description = "Generate a Component signature";
-
-  static flags = {
-    "skip-signature-verify": Flags.boolean({
+export default defineCommand({
+  description: "Generate a Component signature",
+  options: {
+    "skip-signature-verify": option.boolean({
       required: false,
       description:
         "This consistently returns a signature, regardless of whether the corresponding component has been published to the platform or not.",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { "skip-signature-verify": skipSignatureVerify },
-    } = await this.parse(ComponentsSignatureCommand);
+    } = commandInput();
 
     const componentDefinition = await loadEntrypoint();
     await validateDefinition(componentDefinition);
@@ -35,7 +38,7 @@ export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
       .digest("hex");
 
     if (skipSignatureVerify) {
-      return this.log(packageSignature);
+      return commandOutput.log(packageSignature);
     }
 
     const packageSignatureFromApi = await getPackageSignatureFromApi({
@@ -43,6 +46,6 @@ export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
       packageSignature,
     });
 
-    return this.log(packageSignatureFromApi ?? "");
-  }
-}
+    return commandOutput.log(packageSignatureFromApi ?? "");
+  },
+});

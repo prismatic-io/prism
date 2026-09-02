@@ -1,37 +1,41 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create an Alert Webhook";
-  static flags = {
-    name: Flags.string({
+export default defineCommand({
+  description: "Create an Alert Webhook",
+  options: {
+    name: option.string({
       char: "n",
       required: true,
       description: "name of the webhook to be created",
     }),
-    url: Flags.string({
+    url: option.string({
       char: "u",
       required: true,
       description: "URL that will receive a POST request for an alert",
     }),
-    headers: Flags.string({
+    headers: option.string({
       required: false,
       char: "h",
       description: "JSON-formatted object of key/value pairs to include in the request header",
     }),
-    payloadTemplate: Flags.string({
+    payloadTemplate: option.string({
       char: "p",
       required: true,
       description:
         "template string that will be used as the request body, see documentation for details",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { name, url, headers, payloadTemplate },
-    } = await this.parse(CreateCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -67,6 +71,6 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createAlertWebhook.alertWebhook.id);
-  }
-}
+    commandOutput.log(result.createAlertWebhook.alertWebhook.id);
+  },
+});

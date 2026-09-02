@@ -1,8 +1,16 @@
-import { Flags, ux } from "@oclif/core";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  decodePassthroughArgument,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
 import { isEmpty } from "lodash-es";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 import { spawnProcess } from "../../../utils/process.js";
+import { ux } from "../../../utils/ux.js";
 
 interface ConfigVariable {
   requiredConfigVariable: {
@@ -15,11 +23,11 @@ interface ConfigVariable {
   meta: string;
 }
 
-export default class RunCommand extends PrismaticBaseCommand {
-  static description =
-    "Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.\nAfter specifying an integration ID and connection config variable name, this command executes a CLI command with that connection's fields saved as a config variable named PRISMATIC_CONNECTION_VALUE.";
-  static usage = "components:dev:run -i <value> -c <value> -- /command/to/run";
-  static examples = [
+export default defineCommand({
+  description:
+    "Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.\nAfter specifying an integration ID and connection config variable name, this command executes a CLI command with that connection's fields saved as a config variable named PRISMATIC_CONNECTION_VALUE.",
+  hint: "Pass the local command after -- (for example: -- yarn run test).",
+  examples: [
     {
       description: `To simply print an integration's basic auth config variable named "My Connection" and pipe the resulting JSON to jq, run:`,
       command: `<%= config.bin %> <%= command.id %> --integrationId SW50ZWexample --connectionKey "My Connection" -- printenv PRISMATIC_CONNECTION_VALUE | jq`,
@@ -33,35 +41,37 @@ export default class RunCommand extends PrismaticBaseCommand {
         "If you would like to fetch a connection from an instance deployed to one of your customers, specify the --instanceId flag instead",
       command: `<%= config.bin %> <%= command.id %> --instanceId SW50ZWexample -c "Slack Connection" -- yarn run test`,
     },
-  ];
-
-  static strict = false; // Manual capture of argv so we can get the wrapped command
-  static "--" = true; // Stop parsing flags if -- is encountered as an arg
-
-  static flags = {
-    integrationId: Flags.string({
+  ],
+  args: {
+    command: arg.string({
+      description: "Local command and arguments to run",
+      multiple: true,
+      required: false,
+    }),
+  },
+  options: {
+    integrationId: option.string({
       char: "i",
       description: "Integration ID",
       exactlyOne: ["instanceId", "integrationId"],
     }),
-    instanceId: Flags.string({
+    instanceId: option.string({
       description: "Instance ID. ",
     }),
-    connectionKey: Flags.string({
+    connectionKey: option.string({
       required: true,
       char: "c",
       description: "Key of the connection config variable to fetch meta/state for",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
-      argv,
+      args: { command: argv },
       flags: { integrationId, instanceId, connectionKey },
-    } = await this.parse(RunCommand);
+    } = commandInput();
 
     if (isEmpty(argv)) {
-      this.error(
+      commandOutput.error(
         "A command to run must be supplied after a double dash (--) delimiter. See examples in this command's help for details.",
       );
     }
@@ -174,6 +184,6 @@ export default class RunCommand extends PrismaticBaseCommand {
       fields,
     });
 
-    await spawnProcess(argv as string[], { PRISMATIC_CONNECTION_VALUE: value });
-  }
-}
+    await spawnProcess(argv.map(decodePassthroughArgument), { PRISMATIC_CONNECTION_VALUE: value });
+  },
+});

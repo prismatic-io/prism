@@ -3,6 +3,7 @@ import { extension } from "mime-types";
 import { fs } from "../../fs.js";
 import { gql, gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
+import { writeCommandOutput } from "../../command.js";
 
 export interface DeserializeResult {
   data: unknown;
@@ -95,7 +96,7 @@ export const writeFinalStepResults = async (
 
 export const printFinalStepResults = async (executionId: string): Promise<void> => {
   const result = await getFinalStepResult(executionId);
-  console.log(`
+  writeCommandOutput(`
 ======== Step Results ========
 
 ${result.data}

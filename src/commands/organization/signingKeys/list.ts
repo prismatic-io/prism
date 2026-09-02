@@ -1,13 +1,12 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { commandInput, defineCommand, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List embedded signing keys for embedded marketplace";
-  static flags = { ...ux.table.flags() };
-
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+export default defineCommand({
+  description: "List embedded signing keys for embedded marketplace",
+  options: { ...ux.table.flags() },
+  async run(_context: CommandContext) {
+    const { flags } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -27,7 +26,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       `,
     });
 
-    ux.table(
+    return ux.table(
       result.organization.signingKeys.nodes,
       {
         id: { minWidth: 8, extended: true },
@@ -38,5 +37,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

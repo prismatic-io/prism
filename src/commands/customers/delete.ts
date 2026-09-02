@@ -1,20 +1,18 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { arg, commandInput, defineCommand, type CommandContext } from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class DeleteCommand extends PrismaticBaseCommand {
-  static description = "Delete a Customer";
-  static args = {
-    customer: Args.string({
+export default defineCommand({
+  description: "Delete a Customer",
+  args: {
+    customer: arg.string({
       required: true,
       description: "ID of the customer to delete",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { customer },
-    } = await this.parse(DeleteCommand);
+    } = commandInput();
 
     await gqlRequest({
       document: gql`
@@ -34,5 +32,5 @@ export default class DeleteCommand extends PrismaticBaseCommand {
         id: customer,
       },
     });
-  }
-}
+  },
+});

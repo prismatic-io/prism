@@ -1,26 +1,30 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { fs } from "../../fs.js";
 import { gqlRequest } from "../../graphql.js";
 import { GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS } from "../../queries.graphql.js";
 import type { MarketplaceTranslations } from "../../types.js";
 import { processIntegrationsForTranslations } from "../../utils/translations/processDataForTranslations.js";
 
-export default class TranslationsCommand extends PrismaticBaseCommand {
-  static description = "Generate Dynamic Phrases for Embedded Marketplace";
-  static flags = {
-    "output-file": Flags.string({
+export default defineCommand({
+  description: "Generate Dynamic Phrases for Embedded Marketplace",
+  options: {
+    "output-file": option.string({
       required: false,
       char: "o",
       description: "Output the results of the action to a specified file",
       default: "translations_output.json",
     }),
-  };
-
-  async run(): Promise<void> {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { "output-file": output },
-    } = await this.parse(TranslationsCommand);
+    } = commandInput();
 
     const cwd = process.cwd();
 
@@ -32,10 +36,10 @@ export default class TranslationsCommand extends PrismaticBaseCommand {
 
     if (output) {
       process.chdir(cwd);
-      this.log(`Writing translations to ${output}`);
+      commandOutput.log(`Writing translations to ${output}`);
       fs.writeFile(output, JSON.stringify(processedIntegrations, null, 2));
     } else {
-      this.logJson(processedIntegrations);
+      commandOutput.logJson(processedIntegrations);
     }
-  }
-}
+  },
+});

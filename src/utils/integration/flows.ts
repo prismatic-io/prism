@@ -9,6 +9,7 @@ import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getInt
 import GET_INTEGRATION_FLOWS from "../../graphql/integrations/getIntegrationFlows.graphql";
 import { gqlRequest } from "../../graphql.js";
 import { handleError } from "../errors.js";
+import { requireInteractiveInput } from "../../command.js";
 
 type IntegrationFlowNode = NonNullable<
   NonNullable<GetIntegrationFlowsQuery["integration"]>["flows"]["nodes"][number]
@@ -125,6 +126,7 @@ export async function resolveFlow(options: ResolveFlowOptions): Promise<Integrat
   const hasFlowIdentifier = flowId || flowName;
 
   if (!hasFlowIdentifier) {
+    requireInteractiveInput("Agent mode requires --flow-id or --flow-name");
     return selectFlowPrompt(integrationId, { message: promptMessage });
   }
 

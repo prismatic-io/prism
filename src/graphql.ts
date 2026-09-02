@@ -1,5 +1,7 @@
 import { URL } from "url";
+import { z } from "zod";
 import { getAccessToken } from "./auth.js";
+import { writeCommandOutput } from "./command.js";
 import { getPrismaticUrl } from "./context.js";
 import { fetch } from "./utils/http.js";
 
@@ -57,13 +59,29 @@ export const gql = (strings: TemplateStringsArray, ...values: unknown[]): string
 };
 
 const isErrored = (result: unknown): result is ErroredResult => {
-  if (!(Boolean(result) && typeof result === "object" && result !== null && "errors" in result)) {
-    return false;
-  }
-
-  const assumed = result as ErroredResult;
-  return Boolean(assumed.errors) && assumed.errors.length > 0;
+  return erroredResultSchema.safeParse(result).success;
 };
+
+const erroredResultSchema = z.looseObject({
+  errors: z.array(
+    z.object({
+      field: z.string(),
+      messages: z.array(z.string()),
+    }),
+  ),
+});
+
+const graphQLErrorSchema = z.object({
+  message: z.string(),
+  locations: z.array(z.object({ line: z.number(), column: z.number() })).optional(),
+  path: z.array(z.union([z.string(), z.number()])).optional(),
+});
+
+const graphQLResponseSchema = <T>(dataSchema: z.ZodType<T>) =>
+  z.object({
+    data: dataSchema.optional(),
+    errors: z.array(graphQLErrorSchema).optional(),
+  });
 
 const formatError = (field: string, messages: string[]) => {
   const message = messages.join("\n");
@@ -83,15 +101,15 @@ export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>(
   const query = document;
 
   if (process.env.PRISMATIC_PRINT_REQUESTS) {
-    console.log("=================================");
-    console.log(`GraphQL Request: ${query}`);
-    console.log(`Variables: ${JSON.stringify(variables)}`);
-    console.log("=================================");
+    writeCommandOutput("=================================");
+    writeCommandOutput(`GraphQL Request: ${query}`);
+    writeCommandOutput(`Variables: ${JSON.stringify(variables)}`);
+    writeCommandOutput("=================================");
   }
 
-  let response: Response;
+  let response: Awaited<ReturnType<typeof fetch>>;
   try {
-    response = (await fetch(url, {
+    response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -102,7 +120,7 @@ export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>(
         query,
         variables: variables || {},
       }),
-    })) as unknown as Response;
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Network request to ${url} failed: ${errorMessage}`);
@@ -112,7 +130,7 @@ export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>(
 
   let responseBody: GraphQLResponse<T>;
   try {
-    responseBody = await response.json();
+    responseBody = graphQLResponseSchema(z.custom<T>()).parse(await response.json());
   } catch (_error) {
     throw new ClientError(
       {
@@ -135,9 +153,9 @@ export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>(
     );
   }
 
-  const result = responseBody.data as T;
+  const result = responseBody.data;
 
-  const errors = Object.values(result as any)
+  const errors = Object.values(result)
     .filter(isErrored)
     .flatMap(({ errors }) => errors)
     .map(({ field, messages }) => formatError(field, messages));

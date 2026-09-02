@@ -1,7 +1,13 @@
-import { Args, type Config, Flags, ux } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { toArgv } from "../../../generate/util.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
+import { ux } from "../../../utils/ux.js";
 
 interface ConversionError {
   path: string;
@@ -22,39 +28,37 @@ interface ConvertLowCodeIntegrationResult {
   };
 }
 
-export default class ConvertIntegrationCommand extends PrismaticBaseCommand {
-  static description = "Convert a Low-Code Integration's YAML file into a Code Native Integration";
-  static args = {
-    integration: Args.string({
+export default defineCommand({
+  description: "Convert a Low-Code Integration's YAML file into a Code Native Integration",
+  args: {
+    integration: arg.string({
       required: true,
       description: "ID of the low-code integration to convert",
     }),
-  };
-
-  static flags = {
-    registryPrefix: Flags.string({
+  },
+  options: {
+    registryPrefix: option.string({
       required: false,
       char: "r",
       description: "The registry prefix to use for the converted integration",
     }),
-    registryUrl: Flags.string({
+    registryUrl: option.string({
       required: false,
       char: "u",
       description: "The registry URL to use for the converted integration",
     }),
-    includeComments: Flags.boolean({
+    includeComments: option.boolean({
       required: false,
       char: "c",
       description: "Whether to include inline comments in the generated code",
       default: false,
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { integration },
       flags: { registryPrefix, registryUrl, includeComments },
-    } = await this.parse(ConvertIntegrationCommand);
+    } = commandInput();
 
     ux.action.start("Converting low-code integration to code-native integration");
 
@@ -92,13 +96,13 @@ export default class ConvertIntegrationCommand extends PrismaticBaseCommand {
         result.convertLowCodeIntegration.convertLowCodeIntegrationFormResult;
 
       if (conversionErrors && conversionErrors.length > 0) {
-        this.warn("Conversion completed with warnings:");
+        commandOutput.warn("Conversion completed with warnings:");
         for (const error of conversionErrors) {
-          this.warn(`  ${error.path}: ${error.error} (${error.errorType})`);
+          commandOutput.warn(`  ${error.path}: ${error.error} (${error.errorType})`);
         }
       }
 
-      this.log(`
+      commandOutput.log(`
 Conversion completed successfully!
 
 Download URL:\n${url}
@@ -114,9 +118,5 @@ For documentation on code-native integrations, visit https://prismatic.io/docs/i
       ux.action.stop("failed");
       throw error;
     }
-  }
-
-  static async invoke(args: { [K in keyof typeof this.flags]+?: unknown }, config: Config) {
-    await ConvertIntegrationCommand.run(toArgv(args), config);
-  }
-}
+  },
+});

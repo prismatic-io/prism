@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { commandOutput } from "../../command.js";
 import type { ComponentDefinition } from "../../utils/component/index.js";
 import { ux } from "../../utils/ux.js";
 import ImportCommand from "./import.js";
@@ -75,9 +76,7 @@ configPages:
       - value: "existingVar"
 `);
 
-      const warnSpy = vi
-        .spyOn(ImportCommand.prototype, "warn")
-        .mockImplementation((input: string | Error) => input);
+      const warnSpy = vi.spyOn(commandOutput, "warn").mockImplementation(() => {});
       const confirmSpy = vi.spyOn(ux, "confirm").mockResolvedValue(false);
 
       await expect(
@@ -92,7 +91,7 @@ configPages:
   describe("Code Native import", () => {
     it("should import Code Native integration when no path is provided", async () => {
       const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
-      const logSpy = vi.spyOn(ImportCommand.prototype, "log").mockImplementation(() => {});
+      const logSpy = vi.spyOn(commandOutput, "log").mockImplementation(() => {});
 
       await ImportCommand.run([]);
 
@@ -102,7 +101,7 @@ configPages:
 
     it("should pass test API keys to Code Native import", async () => {
       const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
-      vi.spyOn(ImportCommand.prototype, "log").mockImplementation(() => {});
+      vi.spyOn(commandOutput, "log").mockImplementation(() => {});
 
       await ImportCommand.run(["--test-api-key", 'myFlow="key123"']);
 
@@ -118,7 +117,7 @@ configPages:
       vi.mocked(exists).mockResolvedValue(true);
 
       const { openIntegration } = await import("../../utils/integration/open.js");
-      vi.spyOn(ImportCommand.prototype, "log").mockImplementation(() => {});
+      vi.spyOn(commandOutput, "log").mockImplementation(() => {});
 
       await ImportCommand.run(["--path", "/valid/path.yaml", "--open"]);
 

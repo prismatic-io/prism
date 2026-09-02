@@ -1,4 +1,4 @@
-import { ux } from "@oclif/core";
+import { ux } from "./ux.js";
 import { resolve } from "path";
 import { exists } from "../fs.js";
 

@@ -1,30 +1,34 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create an Integration";
-  static flags = {
-    name: Flags.string({
+export default defineCommand({
+  description: "Create an Integration",
+  options: {
+    name: option.string({
       char: "n",
       required: true,
       description: "name of the integration to create",
     }),
-    description: Flags.string({
+    description: option.string({
       char: "d",
       required: true,
       description: "longer description of the integration",
     }),
-    customer: Flags.string({
+    customer: option.string({
       char: "c",
       description: "ID of customer with which to associate the integration",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { name, description, customer },
-    } = await this.parse(CreateCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -57,6 +61,6 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createIntegration.integration.id);
-  }
-}
+    commandOutput.log(result.createIntegration.integration.id);
+  },
+});

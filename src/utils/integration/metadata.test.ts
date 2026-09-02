@@ -15,10 +15,10 @@ vi.mock(import("../../fs.js"), () => ({
 
 describe("metadata utils", () => {
   const originalEnv = { ...process.env };
-  let consoleWarnSpy: ReturnType<typeof vi.spyOn>;
+  let stderrSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     process.env.PRISM_QUIET = "true";
   });
 
@@ -60,7 +60,7 @@ describe("metadata utils", () => {
       const result = await getPrismMetadata();
 
       expect(result).toEqual({});
-      expect(consoleWarnSpy).toHaveBeenCalled();
+      expect(stderrSpy).toHaveBeenCalled();
     });
   });
 
@@ -96,7 +96,7 @@ describe("metadata utils", () => {
 
       await writePrismMetadata({ integrationId: "int-123" });
 
-      expect(consoleWarnSpy).not.toHaveBeenCalledWith(
+      expect(stderrSpy).not.toHaveBeenCalledWith(
         expect.stringContaining("metadata file has been added"),
       );
     });

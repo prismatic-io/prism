@@ -1,43 +1,46 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create a new Customer";
-  static flags = {
-    name: Flags.string({
+export default defineCommand({
+  description: "Create a new Customer",
+  options: {
+    name: option.string({
       char: "n",
       required: true,
       description: "short name of the new customer",
     }),
-    description: Flags.string({
+    description: option.string({
       char: "d",
       description: "longer description of the customer",
       required: false,
     }),
-    externalId: Flags.string({
+    externalId: option.string({
       char: "e",
       description: "external ID of the customer from your system",
     }),
-    label: Flags.string({
+    label: option.string({
       char: "l",
       description: "a label to apply to the customer",
       multiple: true,
     }),
-  };
-
-  static examples = [
+  },
+  examples: [
     {
       description: "Apply multiple labels to a customer",
       command:
         '<%= config.bin %> <%= command.id %> --name "Widgets Inc" --externalId "abc-123" --label "Prod Customers" --label "Beta Testers"',
     },
-  ];
-
-  async run() {
+  ],
+  async run(_context: CommandContext) {
     const {
       flags: { name, description, externalId, label },
-    } = await this.parse(CreateCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -73,6 +76,6 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createCustomer.customer.id);
-  }
-}
+    commandOutput.log(result.createCustomer.customer.id);
+  },
+});

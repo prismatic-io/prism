@@ -1,21 +1,24 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class UpdateCommand extends PrismaticBaseCommand {
-  // TODO: Add more flags once optional updates are implemented
-  static description = "Update your Organization";
-  static flags = {
-    name: Flags.string({
+export default defineCommand({
+  description: "Update your Organization",
+  options: {
+    name: option.string({
       char: "n",
       description: "name of the organization",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { name },
-    } = await this.parse(UpdateCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -36,6 +39,6 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateOrganization.organization.id);
-  }
-}
+    commandOutput.log(result.updateOrganization.organization.id);
+  },
+});

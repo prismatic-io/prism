@@ -1,13 +1,12 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { commandInput, defineCommand, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Alert Triggers";
-  static flags = { ...ux.table.flags() };
-
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+export default defineCommand({
+  description: "List Alert Triggers",
+  options: { ...ux.table.flags() },
+  async run(_context: CommandContext) {
+    const { flags } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -22,7 +21,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       `,
     });
 
-    ux.table(
+    return ux.table(
       result.alertTriggers.nodes,
       {
         id: {
@@ -33,5 +32,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

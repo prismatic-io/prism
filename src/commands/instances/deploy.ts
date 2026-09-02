@@ -1,28 +1,33 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class DeployCommand extends PrismaticBaseCommand {
-  static description = "Deploy an Instance";
-  static args = {
-    instance: Args.string({
+export default defineCommand({
+  description: "Deploy an Instance",
+  args: {
+    instance: arg.string({
       required: true,
       description: "ID of an instance",
     }),
-  };
-  static flags = {
-    force: Flags.boolean({
+  },
+  options: {
+    force: option.boolean({
       char: "f",
       description:
         "Force deployment even when there are certain conditions that would normally prevent it",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { instance },
       flags: { force },
-    } = await this.parse(DeployCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -44,6 +49,6 @@ export default class DeployCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.deployInstance.instance.id);
-  }
-}
+    commandOutput.log(result.deployInstance.instance.id);
+  },
+});

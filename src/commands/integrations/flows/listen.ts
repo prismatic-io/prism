@@ -1,8 +1,14 @@
+import {
+  commandOutput,
+  defineCommand,
+  option,
+  parseWithSchema,
+  requireInteractiveInput,
+  type CommandContext,
+} from "../../../command.js";
 import { decode } from "@msgpack/msgpack";
-import { Flags } from "@oclif/core";
 import inquirer from "inquirer";
 import z from "zod";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { exists, fs } from "../../../fs.js";
 import type { GetExecutionsQuery } from "../../../graphql/executions/getExecutions.generated.js";
 import GET_EXECUTIONS from "../../../graphql/executions/getExecutions.graphql";
@@ -42,49 +48,47 @@ type PolledExecutionResult = GetPolledExecutionQuery;
 
 type TriggerType = "WEBHOOK" | "POLLING";
 
-export default class ListenCommand extends PrismaticBaseCommand {
-  private startTime = 0;
-  static description = "Listen for webhook executions on a flow and save the payload to a file";
-
-  static flags = {
-    "integration-id": Flags.string({
+export default defineCommand({
+  startTime: 0,
+  description: "Listen for webhook executions on a flow and save the payload to a file",
+  options: {
+    "integration-id": option.string({
       char: "i",
       description: "ID of the integration containing the flow to listen to.",
       required: true,
     }),
-    "flow-id": Flags.string({
+    "flow-id": option.string({
       char: "f",
       description: "ID of the flow to listen to. If not provided, you will be prompted to select.",
       exclusive: ["flow-name"],
     }),
-    "flow-name": Flags.string({
+    "flow-name": option.string({
       char: "n",
       description: "Name of the flow to listen to.",
       exclusive: ["flow-id"],
     }),
-    output: Flags.string({
+    output: option.string({
       char: "o",
       description: `Output directory for the payload file. Defaults to ${DEFAULT_OUTPUT_DIR}`,
       default: DEFAULT_OUTPUT_DIR,
     }),
-    timeout: Flags.integer({
+    timeout: option.integer({
       char: "t",
       description: "Timeout in seconds to stop listening.",
       default: DEFAULT_TIMEOUT_SECONDS,
     }),
-    "no-prompt": Flags.boolean({
+    "no-prompt": option.boolean({
       char: "n",
       description:
         "For flows using polling triggers, automatically poll without a confirmation prompt.",
     }),
-    reset: Flags.boolean({
+    reset: option.boolean({
       char: "r",
       description: "Manually turn off listening mode for a given integration.",
     }),
-  };
-
-  async run() {
-    const { flags } = await this.parseWithSchema(listenFlagsSchema);
+  },
+  async run(context: CommandContext) {
+    const { flags } = parseWithSchema(listenFlagsSchema, context);
 
     const {
       "integration-id": integrationId,
@@ -113,14 +117,17 @@ export default class ListenCommand extends PrismaticBaseCommand {
     await safeSetListeningMode(integrationId, true);
     this.startTime = Date.now();
 
-    this.quietLog(
+    commandOutput.quietLog(
       `To enable listening for this flow directly, you can run:\nprism integrations:flows:listen -i ${integrationId} -f ${flowId}\n`,
       quiet,
     );
 
     if (triggerType === "WEBHOOK") {
-      this.quietLog("\nListening for webhook executions. Press CMD+C/CTRL+C to stop.\n", quiet);
-      this.quietLog(`This process will timeout after ${timeout / 60} minutes.\n`, quiet);
+      commandOutput.quietLog(
+        "\nListening for webhook executions. Press CMD+C/CTRL+C to stop.\n",
+        quiet,
+      );
+      commandOutput.quietLog(`This process will timeout after ${timeout / 60} minutes.\n`, quiet);
 
       await withCleanup(integrationId, async () => {
         const execution = await pollForWebhookExecutions(flowId, this.startTime, timeout);
@@ -137,7 +144,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
               triggerType,
             },
           );
-          this.quietLog(
+          commandOutput.quietLog(
             `\nTo replay this payload, you can run:\nprism integrations:flows:test -i ${integrationId} -f ${flowId} -p ${filepath}\n`,
             quiet,
           );
@@ -145,10 +152,14 @@ export default class ListenCommand extends PrismaticBaseCommand {
         }
       });
     } else if (triggerType === "POLLING") {
-      this.quietLog("\nListening for poll executions. Press CMD+C/CTRL+C to stop.\n", quiet);
+      commandOutput.quietLog(
+        "\nListening for poll executions. Press CMD+C/CTRL+C to stop.\n",
+        quiet,
+      );
 
       if (!noPrompt) {
-        this.quietLog(
+        requireInteractiveInput("Agent mode requires --no-prompt for polling flows");
+        commandOutput.quietLog(
           "When you are ready to initiate a test poll for your flow, please confirm below.\n",
           quiet,
         );
@@ -164,7 +175,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
           return;
         }
 
-        this.quietLog(`This process will timeout after ${timeout / 60} minutes.\n`, quiet);
+        commandOutput.quietLog(`This process will timeout after ${timeout / 60} minutes.\n`, quiet);
       }
 
       await withCleanup(integrationId, async () => {
@@ -181,7 +192,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
 
         while (true) {
           if (hasTimedOut(this.startTime, timeout)) {
-            this.warn("Timeout reached. Stopping listener.");
+            commandOutput.warn("Timeout reached. Stopping listener.");
             return;
           }
 
@@ -207,7 +218,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
                 useMsgpack: true,
                 triggerType,
               });
-              this.quietLog(
+              commandOutput.quietLog(
                 `\nTo replay this payload, you can run:\nprism integrations:flows:test -i ${integrationId} -f ${flowId} -p ${filepath}\n`,
                 quiet,
               );
@@ -218,8 +229,8 @@ export default class ListenCommand extends PrismaticBaseCommand {
         }
       });
     }
-  }
-}
+  },
+});
 
 async function safeSetListeningMode(
   integrationId: string,
@@ -229,7 +240,7 @@ async function safeSetListeningMode(
   try {
     await setListeningMode(integrationId, isListening);
   } catch (err) {
-    console.warn(
+    commandOutput.warn(
       `Failed to ${isListening ? "enable" : "disable"} listening mode: ${
         err instanceof Error ? err.message : String(err)
       }`,
@@ -244,7 +255,7 @@ async function safeSetListeningMode(
 // Execute a function with cleanup handling for SIGINT and listening mode
 async function withCleanup(integrationId: string, fn: () => Promise<void>): Promise<void> {
   const cleanup = async () => {
-    console.log("\nStopping listener...");
+    commandOutput.log("\nStopping listener...");
     await safeSetListeningMode(integrationId, false, true);
   };
   process.on("SIGINT", cleanup);
@@ -262,7 +273,7 @@ async function setListeningMode(integrationId: string, isListening: boolean): Pr
     document: UPDATE_INTEGRATION_FLOW_LISTENING_MODE,
     variables: { integrationId, isListening },
   });
-  console.log(`Set listening mode to ${isListening} for integration ${integrationId}`);
+  commandOutput.log(`Set listening mode to ${isListening} for integration ${integrationId}`);
 }
 
 async function pollForWebhookExecutions(
@@ -286,7 +297,7 @@ async function pollForWebhookExecutions(
     });
 
     if (hasTimedOut(startTime, timeout)) {
-      console.warn("Timeout reached. Stopping listener.");
+      commandOutput.warn("Timeout reached. Stopping listener.");
       return null;
     }
 
@@ -294,11 +305,11 @@ async function pollForWebhookExecutions(
       const execution = result.executionResults.nodes[0];
 
       if (!execution?.endedAt) {
-        console.log(`\nExecution ${execution?.id} started, waiting for completion...`);
+        commandOutput.log(`\nExecution ${execution?.id} started, waiting for completion...`);
         continue;
       }
 
-      console.log("\nExecution complete.");
+      commandOutput.log("\nExecution complete.");
       return execution;
     }
   }
@@ -363,7 +374,7 @@ async function downloadAndSavePayload(
     const fileName = `${outputDir}/${options.filePrefix}-${flowId}-${timestamp}.json`;
     await fs.writeFile(fileName, JSON.stringify(replayPayload, null, 2));
 
-    console.log(`\nPayload saved to: ${fileName}`);
+    commandOutput.log(`\nPayload saved to: ${fileName}`);
     return fileName;
   } catch (err) {
     handleError({

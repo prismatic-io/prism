@@ -1,20 +1,24 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class DisableCommand extends PrismaticBaseCommand {
-  static description = "Disable an Instance";
-  static args = {
-    instance: Args.string({
+export default defineCommand({
+  description: "Disable an Instance",
+  args: {
+    instance: arg.string({
       required: true,
       description: "ID of an instance",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { instance },
-    } = await this.parse(DisableCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -35,6 +39,6 @@ export default class DisableCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateInstance.instance.id);
-  }
-}
+    commandOutput.log(result.updateInstance.instance.id);
+  },
+});

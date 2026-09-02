@@ -1,40 +1,44 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { parseJsonOrUndefined } from "../../fields.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class UpdateCommand extends PrismaticBaseCommand {
-  static description = "Update an Integration's name or description";
-  static args = {
-    integration: Args.string({
+export default defineCommand({
+  description: "Update an Integration's name or description",
+  args: {
+    integration: arg.string({
       required: true,
       description: "ID of an integration",
     }),
-  };
-
-  static flags = {
-    name: Flags.string({
+  },
+  options: {
+    name: option.string({
       char: "n",
       description: "new name to give the integration",
     }),
-    description: Flags.string({
+    description: option.string({
       char: "d",
       description: "new description to give the integration",
     }),
-    customer: Flags.string({
+    customer: option.string({
       char: "c",
       description: "ID of customer with which to associate the integration",
     }),
-    "test-config-vars": Flags.string({
+    "test-config-vars": option.string({
       description: "JSON-formatted config variables to be used for testing",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { integration },
       flags: { name, description, customer, "test-config-vars": testConfigVars },
-    } = await this.parse(UpdateCommand);
+    } = commandInput();
     const result = await gqlRequest({
       document: gql`
         mutation updateIntegration(
@@ -72,6 +76,6 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateIntegration.integration.id);
-  }
-}
+    commandOutput.log(result.updateIntegration.integration.id);
+  },
+});

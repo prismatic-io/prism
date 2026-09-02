@@ -1,13 +1,17 @@
-import { Flags } from "@oclif/core";
-import { readFileSync } from "fs";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
+import { readFile } from "node:fs/promises";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class ImportCommand extends PrismaticBaseCommand {
-  static description =
-    "Import a RSA public key for use with embedded marketplace.\nYou can use openssl to generate a new RSA key pair and import the public key.";
-
-  static examples = [
+export default defineCommand({
+  description:
+    "Import a RSA public key for use with embedded marketplace.\nYou can use openssl to generate a new RSA key pair and import the public key.",
+  examples: [
     {
       description: "Generate an RSA private key using openssl:",
       command: "openssl genrsa -out my-private-key.pem 4096",
@@ -20,22 +24,20 @@ export default class ImportCommand extends PrismaticBaseCommand {
       description: "Import the public key:",
       command: "<%= config.bin %> <%= command.id %> -p my-public-key.pub",
     },
-  ];
-
-  static flags = {
-    "public-key-file": Flags.string({
+  ],
+  options: {
+    "public-key-file": option.string({
       char: "p",
       required: true,
       description: "public key file",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { "public-key-file": publicKeyFile },
-    } = await this.parse(ImportCommand);
+    } = commandInput();
 
-    const publicKey = await readFileSync(publicKeyFile, {
+    const publicKey = await readFile(publicKeyFile, {
       encoding: "utf-8",
       flag: "r",
     });
@@ -57,6 +59,6 @@ export default class ImportCommand extends PrismaticBaseCommand {
       variables: { publicKey },
     });
 
-    this.log(result.importOrganizationSigningKey.organizationSigningKey.id);
-  }
-}
+    commandOutput.log(result.importOrganizationSigningKey.organizationSigningKey.id);
+  },
+});

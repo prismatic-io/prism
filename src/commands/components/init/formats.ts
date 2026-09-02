@@ -1,49 +1,53 @@
-import { type Config, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
 import { copy } from "fs-extra";
 import { camelCase } from "lodash-es";
 import path, { extname } from "path";
 import { read } from "../../../generate/formats/readers/openapi/index.js";
 import { write } from "../../../generate/formats/writer/index.js";
-import { template, toArgv } from "../../../generate/util.js";
+import { template } from "../../../generate/util.js";
 import {
   DEFAULT_TOOLCHAIN,
   getToolchain,
   TOOLCHAIN_NAMES,
 } from "../../../utils/toolchain/index.js";
 
-export default class GenerateFormatsCommand extends PrismaticBaseCommand {
-  static hidden = true;
-  static description = "Initialize a new Component from a format";
-  static flags = {
-    name: Flags.string({
+export default defineCommand({
+  hidden: true,
+  description: "Initialize a new Component from a format",
+  options: {
+    name: option.string({
       char: "n",
       description: "Name of the component",
       required: true,
     }),
-    icon: Flags.string({
+    icon: option.string({
       char: "i",
       description: "Path to png icon for the component",
     }),
-    openapi: Flags.string({
+    openapi: option.string({
       char: "o",
       description: "Path to OpenAPI file for the component",
       required: true,
     }),
-    public: Flags.boolean({
+    public: option.boolean({
       hidden: true,
     }),
-    toolchain: Flags.option({
+    toolchain: option.custom({
       options: TOOLCHAIN_NAMES,
       default: DEFAULT_TOOLCHAIN,
       hidden: true,
     })(),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { name, icon, openapi, public: isPublic = false, toolchain: toolchainName },
-    } = await this.parse(GenerateFormatsCommand);
+    } = commandInput();
     const toolchain = getToolchain(toolchainName);
     const key = camelCase(name);
 
@@ -63,7 +67,7 @@ export default class GenerateFormatsCommand extends PrismaticBaseCommand {
       await copy(icon, path.join("assets", "icon.png"));
     }
 
-    this.log(`
+    commandOutput.log(`
 "${name}" is ready for development.
 To install dependencies, run either "npm install" or "yarn install"
 To test the component, run "npm run test" or "yarn test"
@@ -72,9 +76,5 @@ To publish the component, run "prism components:publish"
 
 For documentation on writing custom components, visit https://prismatic.io/docs/custom-connectors/
     `);
-  }
-
-  static async invoke(args: { [K in keyof typeof this.flags]+?: unknown }, config: Config) {
-    await GenerateFormatsCommand.run(toArgv(args), config);
-  }
-}
+  },
+});

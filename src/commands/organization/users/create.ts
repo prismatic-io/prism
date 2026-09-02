@@ -1,11 +1,15 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create a User for your Organization";
-
-  static examples = [
+export default defineCommand({
+  description: "Create a User for your Organization",
+  examples: [
     {
       description: "Get the ID of the 'Integrator' role:",
       command:
@@ -17,26 +21,24 @@ export default class CreateCommand extends PrismaticBaseCommand {
         // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
         "<%= config.bin %> <%= command.id %> --email 'foo@email.com' --name 'Susan Foo' --role ${ROLE_ID}",
     },
-  ];
-
-  static flags = {
-    name: Flags.string({ char: "n", description: "name of the user" }),
-    email: Flags.string({
+  ],
+  options: {
+    name: option.string({ char: "n", description: "name of the user" }),
+    email: option.string({
       char: "e",
       required: true,
       description: "email address of the user",
     }),
-    role: Flags.string({
+    role: option.string({
       char: "r",
       required: true,
       description: "role the user should assume",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { name, email, role },
-    } = await this.parse(CreateCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -65,6 +67,6 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createOrganizationUser.user.id);
-  }
-}
+    commandOutput.log(result.createOrganizationUser.user.id);
+  },
+});

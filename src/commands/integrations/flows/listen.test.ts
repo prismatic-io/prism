@@ -4,6 +4,7 @@ import { graphql, HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
+import { commandOutput } from "../../../command.js";
 import { fs } from "../../../fs.js";
 import type { GetExecutionsQuery } from "../../../graphql/executions/getExecutions.generated.js";
 import type { GetPolledExecutionQuery } from "../../../graphql/executions/getPolledExecution.generated.js";
@@ -153,7 +154,7 @@ const server = setupServer(
   ),
 );
 
-describe("oclif defaults and Zod validation integration", () => {
+describe("command defaults and Zod validation integration", () => {
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "error" });
   });
@@ -167,7 +168,7 @@ describe("oclif defaults and Zod validation integration", () => {
     vi.restoreAllMocks();
   });
 
-  it("applies oclif defaults for output and timeout when flags are omitted", async () => {
+  it("applies defaults for output and timeout when flags are omitted", async () => {
     const webhookFlow = createWebhookFlow("flow-defaults-test", "Defaults Test Flow");
 
     server.use(
@@ -195,7 +196,7 @@ describe("oclif defaults and Zod validation integration", () => {
     );
 
     // Run command WITHOUT --output or --timeout flags
-    // If oclif defaults aren't applied before Zod validation, this would throw
+    // Defaults must be applied before Zod validation.
     await ListenCommand.run([
       "--integration-id",
       "test-integration",
@@ -499,7 +500,7 @@ describe("ListenCommand", () => {
         return originalDateNow();
       });
 
-      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const warnSpy = vi.spyOn(commandOutput, "warn").mockImplementation(() => {});
 
       try {
         await ListenCommand.run([

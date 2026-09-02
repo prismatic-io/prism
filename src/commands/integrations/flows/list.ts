@@ -1,29 +1,27 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { arg, commandInput, defineCommand, type CommandContext } from "../../../command.js";
 import { getIntegrationFlows } from "../../../utils/integration/flows.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Integration Flows";
-  static args = {
-    integration: Args.string({
+export default defineCommand({
+  description: "List Integration Flows",
+  args: {
+    integration: arg.string({
       description: "ID of an Integration",
       required: true,
     }),
-  };
-  static flags = {
+  },
+  options: {
     ...ux.table.flags(),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { integration },
       flags,
-    } = await this.parse(ListCommand);
+    } = commandInput();
 
     const flows = await getIntegrationFlows(integration);
 
-    ux.table(
+    return ux.table(
       flows,
       {
         id: {
@@ -36,5 +34,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

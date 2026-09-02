@@ -49,7 +49,7 @@ describe("logout", () => {
     expect(config?.defaultProfile).toBe("staging");
   });
 
-  it("uses oclif's inherited profile flag without changing the default", async () => {
+  it("uses the global profile flag without changing the default", async () => {
     await writeProfile("default", profile);
     await writeProfile("staging", { ...profile, prismaticUrl: "https://staging.example.io" });
 

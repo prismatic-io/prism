@@ -1,20 +1,18 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { arg, commandInput, defineCommand, type CommandContext } from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class DeleteCommand extends PrismaticBaseCommand {
-  static description = "Delete an Integration";
-  static args = {
-    integration: Args.string({
+export default defineCommand({
+  description: "Delete an Integration",
+  args: {
+    integration: arg.string({
       required: true,
       description: "ID of the integration to delete",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { integration },
-    } = await this.parse(DeleteCommand);
+    } = commandInput();
 
     await gqlRequest({
       document: gql`
@@ -34,5 +32,5 @@ export default class DeleteCommand extends PrismaticBaseCommand {
         id: integration,
       },
     });
-  }
-}
+  },
+});

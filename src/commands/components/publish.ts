@@ -1,6 +1,10 @@
-import { Flags } from "@oclif/core";
-
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { ux } from "../../utils/ux.js";
 import {
   createComponentPackage,
@@ -17,63 +21,60 @@ import {
 } from "../../utils/component/publish.js";
 import { whoAmI } from "../../utils/user/query.js";
 
-export default class PublishCommand extends PrismaticBaseCommand {
-  static description = "Publish a Component to Prismatic";
-
-  static examples = [
+export default defineCommand({
+  description: "Publish a Component to Prismatic",
+  examples: [
     {
       description: "Build and publish a component:",
       command: "npm run build && <%= config.bin %> <%= command.id %>",
     },
-  ];
-
-  static flags = {
-    comment: Flags.string({
+  ],
+  options: {
+    comment: option.string({
       required: false,
       char: "c",
       description: "Comment about changes in this Publish",
     }),
-    confirm: Flags.boolean({
+    confirm: option.boolean({
       allowNo: true,
       default: true,
       description: "Interactively confirm publish",
     }),
-    "check-signature": Flags.boolean({
+    "check-signature": option.boolean({
       allowNo: true,
       default: true,
       description: "Check signature of existing component and confirm publish if matched",
     }),
-    "skip-on-signature-match": Flags.boolean({
+    "skip-on-signature-match": option.boolean({
       required: false,
       description: "Skips component publish if the new signature matches the existing signature",
     }),
-    customer: Flags.string({
+    customer: option.string({
       description: "ID of customer with which to associate the component",
     }),
-    commitHash: Flags.string({
+    commitHash: option.string({
       required: false,
       description: "Commit hash corresponding to the component version being published",
     }),
-    commitUrl: Flags.string({
+    commitUrl: option.string({
       required: false,
       description: "URL to the commit details for this component version",
     }),
-    repoUrl: Flags.string({
+    repoUrl: option.string({
       required: false,
       description: "URL to the repository containing the component definition",
     }),
-    pullRequestUrl: Flags.string({
+    pullRequestUrl: option.string({
       required: false,
       description: "URL to the pull request that modified this component version",
     }),
-    "include-source": Flags.boolean({
+    "include-source": option.boolean({
       required: false,
       default: false,
       description: "Include source code in the component publish",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: {
         comment,
@@ -87,7 +88,7 @@ export default class PublishCommand extends PrismaticBaseCommand {
         pullRequestUrl,
         "include-source": includeSource,
       },
-    } = await this.parse(PublishCommand);
+    } = commandInput();
 
     const me = await whoAmI();
     const customer = flagCustomer ?? me.customer?.id;
@@ -164,8 +165,8 @@ export default class PublishCommand extends PrismaticBaseCommand {
       display: { label },
     } = definition;
     // Tell user that their publish was successful and can use components list to view status
-    this.log(
+    commandOutput.log(
       `Successfully submitted ${label} (v${versionNumber})! The publish should finish processing shortly.`,
     );
-  }
-}
+  },
+});

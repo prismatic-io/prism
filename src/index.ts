@@ -1,3 +1,5 @@
+import AutocompleteCommand from "./commands/autocomplete/index.js";
+import AutocompleteScriptCommand from "./commands/autocomplete/script.js";
 import AlertsEventsListCommand from "./commands/alerts/events/list.js";
 import AlertsGroupsCreateCommand from "./commands/alerts/groups/create.js";
 import AlertsGroupsDeleteCommand from "./commands/alerts/groups/delete.js";
@@ -91,6 +93,8 @@ import WorkflowsExportCommand from "./commands/workflows/export.js";
 import WorkflowsImportCommand from "./commands/workflows/import.js";
 
 export const Commands = {
+  autocomplete: AutocompleteCommand,
+  "autocomplete:script": AutocompleteScriptCommand,
   login: LoginCommand,
   "login:switch": LoginSwitchCommand,
   logout: LogoutCommand,
@@ -183,3 +187,5 @@ export const Commands = {
   "workflows:import": WorkflowsImportCommand,
   "graphql:query": GraphqlQueryCommand,
 };
+
+export type CommandName = keyof typeof Commands;

@@ -1,37 +1,56 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { arg, commandInput, defineCommand, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
+import type { Scalars } from "../../../graphql/schema.generated.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Customer Users";
-  static args = {
-    customer: Args.string({
+interface CustomerUserNode {
+  [key: string]: unknown;
+  id: Scalars["ID"]["output"];
+  name: Scalars["String"]["output"];
+  email: Scalars["String"]["output"];
+  externalId?: Scalars["String"]["output"] | null;
+  role: { name: Scalars["String"]["output"] };
+}
+
+interface ListCustomerUsersQuery {
+  customer: {
+    users: {
+      nodes: Array<CustomerUserNode | null>;
+      pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+    };
+  };
+}
+
+const isCustomerUserNode = (node: CustomerUserNode | null): node is CustomerUserNode =>
+  node !== null;
+
+export default defineCommand({
+  description: "List Customer Users",
+  args: {
+    customer: arg.string({
       description: "ID of the customer",
       required: true,
     }),
-  };
-
-  static flags = {
+  },
+  options: {
     ...ux.table.flags(),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { customer },
       flags,
-    } = await this.parse(ListCommand);
+    } = commandInput();
 
-    let customerUsers: any[] = [];
+    let customerUsers: CustomerUserNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         customer: {
           users: { nodes, pageInfo },
         },
-      } = await gqlRequest({
+      }: ListCustomerUsersQuery = await gqlRequest<ListCustomerUsersQuery>({
         document: gql`
           query listCustomerUsers($id: ID!, $after: String) {
             customer(id: $id) {
@@ -55,12 +74,12 @@ export default class ListCommand extends PrismaticBaseCommand {
         `,
         variables: { id: customer, after: cursor },
       });
-      customerUsers = [...customerUsers, ...nodes];
-      cursor = pageInfo.endCursor;
+      customerUsers = [...customerUsers, ...nodes.filter(isCustomerUserNode)];
+      cursor = pageInfo.endCursor ?? null;
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    ux.table(
+    return ux.table(
       customerUsers,
       {
         id: {
@@ -77,5 +96,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

@@ -1,5 +1,10 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 import { extractYAMLFromPath } from "../../utils/integration/import.js";
 
@@ -15,33 +20,31 @@ interface ImportWorkflowResult {
   };
 }
 
-export default class ImportCommand extends PrismaticBaseCommand {
-  static description = "Import an embedded workflow or workflow template YAML definition";
-
-  static flags = {
-    path: Flags.string({
+export default defineCommand({
+  description: "Import an embedded workflow or workflow template YAML definition",
+  options: {
+    path: option.string({
       char: "p",
       required: true,
       description: "The path to the YAML definition of the workflow to import",
     }),
-    workflow: Flags.string({
+    workflow: option.string({
       char: "w",
       required: false,
       description:
         "The ID of the workflow being imported. If omitted, a new workflow will be created.",
     }),
-    customer: Flags.string({
+    customer: option.string({
       char: "c",
       required: false,
       description:
         "The ID of the customer to associate with the imported workflow. This will overwrite the existing workflow. If omitted, the workflow will be imported as a template.",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { path, workflow, customer },
-    } = await this.parse(ImportCommand);
+    } = commandInput();
     const definition = await extractYAMLFromPath(path);
 
     const result = await gqlRequest<ImportWorkflowResult>({
@@ -62,6 +65,6 @@ export default class ImportCommand extends PrismaticBaseCommand {
       variables: { definition, customer, workflow },
     });
 
-    this.log(result.importWorkflow.workflow?.id);
-  }
-}
+    commandOutput.log(result.importWorkflow.workflow?.id);
+  },
+});

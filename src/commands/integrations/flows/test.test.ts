@@ -2,6 +2,7 @@ import { graphql, HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
+import { commandOutput } from "../../../command.js";
 import type { GetExecutionLogsQuery } from "../../../graphql/executions/getExecutionLogs.generated.js";
 import type { IsCniExecutionCompleteQuery } from "../../../graphql/executions/isCniExecutionComplete.generated.js";
 import type { GetIntegrationFlowsQuery } from "../../../graphql/integrations/getIntegrationFlows.generated.js";
@@ -88,8 +89,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("oclif defaults and Zod validation integration", () => {
-  it("applies oclif default for payload-content-type when flag is omitted", async () => {
+describe("command defaults and Zod validation integration", () => {
+  it("applies the default payload-content-type when the flag is omitted", async () => {
     const testFlowUrl = "https://hooks.example.com/trigger/test-flow";
     let requestReceived = false;
 
@@ -104,7 +105,7 @@ describe("oclif defaults and Zod validation integration", () => {
     );
 
     // Run command WITHOUT --payload-content-type flag
-    // If oclif defaults aren't applied before Zod validation, this would throw
+    // Defaults must be applied before Zod validation.
     await TestFlowCommand.run(["--flow-url", testFlowUrl]);
 
     // Verify the command executed past Zod validation and made the HTTP request
@@ -226,7 +227,7 @@ describe("--cni-auto-end flag on non-code-native integrations", () => {
 
   it("should warn when --cni-auto-end is used with a non-code-native integration", async () => {
     setupMocks(false);
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(commandOutput, "warn").mockImplementation(() => {});
 
     await TestFlowCommand.run([
       "--integration-id",
@@ -245,7 +246,7 @@ describe("--cni-auto-end flag on non-code-native integrations", () => {
 
   it("should not warn when --cni-auto-end is used with a code-native integration", async () => {
     setupMocks(true);
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(commandOutput, "warn").mockImplementation(() => {});
 
     await TestFlowCommand.run([
       "--integration-id",

@@ -1,29 +1,34 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class AvailableCommand extends PrismaticBaseCommand {
-  static description = "Mark an Integration version as available or unavailable";
-  static args = {
-    integration: Args.string({
+export default defineCommand({
+  description: "Mark an Integration version as available or unavailable",
+  args: {
+    integration: arg.string({
       required: true,
       description: "ID of an integration version",
     }),
-  };
-  static flags = {
-    available: Flags.boolean({
+  },
+  options: {
+    available: option.boolean({
       required: true,
       char: "a",
       description: "Version is available or unavailable",
       allowNo: true,
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { integration },
       flags: { available },
-    } = await this.parse(AvailableCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -47,6 +52,6 @@ export default class AvailableCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateIntegrationVersionAvailability.integration.id);
-  }
-}
+    commandOutput.log(result.updateIntegrationVersionAvailability.integration.id);
+  },
+});

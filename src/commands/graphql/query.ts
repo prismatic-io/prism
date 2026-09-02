@@ -1,14 +1,30 @@
-import { Args, Flags } from "@oclif/core";
-import { readFileSync } from "fs";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
+import { readFile } from "node:fs/promises";
+import z from "zod";
 import { gqlRequest } from "../../graphql.js";
 import { dumpYaml } from "../../utils/serialize.js";
 import { ux } from "../../utils/ux.js";
 
-export default class QueryCommand extends PrismaticBaseCommand {
-  static description = "Execute an arbitrary GraphQL query against the Prismatic API";
+const variablesSchema = z.record(z.string(), z.unknown());
 
-  static examples = [
+const readObjectProperty = (value: unknown, key: string): unknown => {
+  if ((typeof value !== "object" && typeof value !== "function") || value === null) {
+    return undefined;
+  }
+
+  return Reflect.get(value, key);
+};
+
+export default defineCommand({
+  description: "Execute an arbitrary GraphQL query against the Prismatic API",
+  examples: [
     {
       description: "Direct query string",
       command: "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }'",
@@ -41,47 +57,44 @@ export default class QueryCommand extends PrismaticBaseCommand {
       command:
         "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }' --output table --data-path customers.nodes --columns id,name",
     },
-  ];
-
-  static args = {
-    query: Args.string({
+  ],
+  args: {
+    query: arg.string({
       description: "GraphQL query string (omit to read from stdin)",
       required: false,
     }),
-  };
-
-  static flags = {
-    file: Flags.boolean({
+  },
+  options: {
+    file: option.boolean({
       char: "f",
       description: "Treat query argument as file path",
       default: false,
     }),
-    variables: Flags.string({
+    variables: option.string({
       char: "v",
       description: "JSON string or @file.json containing query variables",
     }),
-    output: Flags.string({
+    output: option.string({
       char: "o",
       description: "Output format",
       options: ["json", "yaml", "table"],
       default: "json",
     }),
-    columns: Flags.string({
+    columns: option.string({
       char: "c",
       description: "Comma-separated field paths for table columns (required for table output)",
     }),
-    "data-path": Flags.string({
+    "data-path": option.string({
       char: "d",
       description: "Dot-notation path to array data in result (e.g., 'customers.nodes')",
     }),
-    raw: Flags.boolean({
+    raw: option.boolean({
       char: "r",
       description: "Output raw JSON without pretty-printing",
       default: false,
     }),
-  };
-
-  private async readStdin(): Promise<string> {
+  },
+  async readStdin(): Promise<string> {
     return new Promise((resolve, reject) => {
       let data = "";
       process.stdin.setEncoding("utf8");
@@ -93,30 +106,30 @@ export default class QueryCommand extends PrismaticBaseCommand {
       });
       process.stdin.on("error", reject);
     });
-  }
-
-  private readVariables(variablesInput: string): Record<string, any> {
+  },
+  async readVariables(variablesInput: string): Promise<Record<string, unknown>> {
+    let parsed: unknown;
     if (variablesInput.startsWith("@")) {
       const filePath = variablesInput.slice(1);
-      const fileContent = readFileSync(filePath, { encoding: "utf-8" });
-      return JSON.parse(fileContent);
+      const fileContent = await readFile(filePath, { encoding: "utf-8" });
+      parsed = JSON.parse(fileContent);
+    } else {
+      parsed = JSON.parse(variablesInput);
     }
 
-    return JSON.parse(variablesInput);
-  }
+    return variablesSchema.parse(parsed);
+  },
+  getNestedValue(obj: unknown, path: string): unknown {
+    return path.split(".").reduce<unknown>(readObjectProperty, obj);
+  },
+  formatTableOutput(data: unknown, columns: string[]): void {
+    const items: unknown[] = Array.isArray(data) ? data : [data];
 
-  private getNestedValue(obj: any, path: string): any {
-    return path.split(".").reduce((current, key) => current?.[key], obj);
-  }
-
-  private formatTableOutput(data: any, columns: string[]): void {
-    const items = Array.isArray(data) ? data : [data];
-
-    const columnDefs: Record<string, any> = {};
+    const columnDefs: Record<string, { header: string; get: (row: unknown) => string }> = {};
     for (const col of columns) {
       columnDefs[col] = {
         header: col.toUpperCase(),
-        get: (row: any) => {
+        get: (row: unknown) => {
           const value = this.getNestedValue(row, col);
           return value !== undefined && value !== null ? String(value) : "";
         },
@@ -124,20 +137,19 @@ export default class QueryCommand extends PrismaticBaseCommand {
     }
 
     ux.table(items, columnDefs);
-  }
-
-  async run() {
-    const { args, flags } = await this.parse(QueryCommand);
+  },
+  async run(_context: CommandContext) {
+    const { args, flags } = commandInput();
 
     let queryString: string;
 
     if (flags.file && args.query) {
-      queryString = readFileSync(args.query, { encoding: "utf-8" });
+      queryString = await readFile(args.query, { encoding: "utf-8" });
     } else if (args.query) {
       queryString = args.query;
     } else {
       if (process.stdin.isTTY) {
-        this.error(
+        commandOutput.error(
           "No query provided. Please provide a query as an argument, use --file, or pipe via stdin.",
         );
       }
@@ -145,51 +157,55 @@ export default class QueryCommand extends PrismaticBaseCommand {
     }
 
     if (!queryString.trim()) {
-      this.error("Query string is empty");
+      commandOutput.error("Query string is empty");
     }
 
-    let variables: Record<string, any> | undefined;
+    let variables: Record<string, unknown> | undefined;
     if (flags.variables) {
       try {
-        variables = this.readVariables(flags.variables);
+        variables = await this.readVariables(flags.variables);
       } catch (error) {
-        this.error(
+        commandOutput.error(
           `Failed to parse variables: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
 
-    let result: any;
+    let result: unknown;
     try {
-      result = await gqlRequest({
+      result = await gqlRequest<unknown>({
         document: queryString,
         variables,
       });
     } catch (error) {
-      this.error(`GraphQL query failed: ${error instanceof Error ? error.message : String(error)}`);
+      commandOutput.error(
+        `GraphQL query failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
 
     switch (flags.output) {
       case "yaml":
-        this.log(dumpYaml(result));
+        commandOutput.log(dumpYaml(result));
         break;
 
       case "table": {
         if (!flags.columns) {
-          this.error("Table output requires --columns flag. Specify comma-separated field paths.");
+          commandOutput.error(
+            "Table output requires --columns flag. Specify comma-separated field paths.",
+          );
         }
-        const columns = flags.columns.split(",").map((c) => c.trim());
+        const columns = flags.columns.split(",").map((c: string) => c.trim());
         const data = flags["data-path"] ? this.getNestedValue(result, flags["data-path"]) : result;
         this.formatTableOutput(data, columns);
         break;
       }
       default:
         if (flags.raw) {
-          this.log(JSON.stringify(result));
+          commandOutput.log(JSON.stringify(result));
         } else {
-          this.log(JSON.stringify(result, null, 2));
+          commandOutput.log(JSON.stringify(result, null, 2));
         }
         break;
     }
-  }
-}
+  },
+});

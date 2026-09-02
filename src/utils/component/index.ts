@@ -1,4 +1,4 @@
-import { ux } from "@oclif/core";
+import { ux } from "../ux.js";
 import type { Component as ComponentDefinitionTemplate } from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import { createRequire } from "node:module";
 import { extname, resolve } from "node:path";

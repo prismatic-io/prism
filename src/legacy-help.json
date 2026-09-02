@@ -1,0 +1,617 @@
+{
+  "": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Build, deploy, and support integrations in Prismatic from the comfort of your command line\n\nVERSION\n  @prismatic-io/prism/10.2.0 darwin-arm64 node-v24.3.0\n\nUSAGE\n  $ prism [COMMAND]\n\nTOPICS\n  alerts             Manage Alerting resources\n  components         Manage, create, and publish Components\n  customers          Manage Customers\n  executions         Fetch results of Instance executions or Integration test\n                     runs\n  graphql            Execute an arbitrary GraphQL query against the Prismatic\n                     API\n  instances          Manage Instances\n  integrations       Manage and import Integrations\n  login              Log in to your Prismatic account\n  logs               List Log Severities for use by Alert Triggers\n  me                 Print your user profile information\n  on-prem-resources  Delete an On-Premise Resource\n  organization       Manage your Organization\n  profiles           Manage authentication profiles\n  translations       Generate Dynamic Phrases for Embedded Marketplace\n  workflows          Manage embedded workflow builder workflows and templates\n\nCOMMANDS\n  autocomplete  Display autocomplete installation instructions.\n  help          Display help for prism.\n  login         Log in to your Prismatic account\n  logout        Log out of your Prismatic account\n  me            Print your user profile information\n\n"
+  },
+  "alerts": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage Alerting resources\n\nUSAGE\n  $ prism alerts:COMMAND\n\nTOPICS\n  alerts:events    List Alert Events for an Alert Monitor\n  alerts:groups    Manage Alert Groups\n  alerts:monitors  Manage Alert Monitors\n  alerts:triggers  List Alert Triggers\n  alerts:webhooks  Manage Alert Webhooks\n\n"
+  },
+  "alerts:events": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Alert Events for an Alert Monitor\n\nUSAGE\n  $ prism alerts:events:COMMAND\n\nCOMMANDS\n  alerts:events:list  List Alert Events for an Alert Monitor\n\n"
+  },
+  "alerts:events:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Alert Events for an Alert Monitor\n\nUSAGE\n  $ prism alerts:events:list ALERTMONITORID [--print-requests] [--quiet]\n    [--profile <value>] [--columns <value> | -x] [--filter <value>] [--no-header\n    | [--csv | --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nARGUMENTS\n  ALERTMONITORID  ID of an alert monitor\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Alert Events for an Alert Monitor\n\n"
+  },
+  "alerts:groups": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage Alert Groups\n\nUSAGE\n  $ prism alerts:groups:COMMAND\n\nCOMMANDS\n  alerts:groups:create  Create an Alert Group\n  alerts:groups:delete  Delete an Alert Group\n  alerts:groups:list    List Alert Groups in your Organization\n\n"
+  },
+  "alerts:groups:create": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Create an Alert Group\n\nUSAGE\n  $ prism alerts:groups:create -n <value> [--print-requests] [--quiet] [--profile\n    <value>] [-u <value>] [-w <value>]\n\nFLAGS\n  -n, --name=<value>      (required) name of the group to be created\n  -u, --users=<value>     JSON-formatted list of Prismatic user IDs to alert\n  -w, --webhooks=<value>  JSON-formatted list of Alert Webhook IDs to alert\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Create an Alert Group\n\nEXAMPLES\n  Create a group for 'DevOps':\n\n    $ prism alerts:groups:create --name DevOps --users \"[\\\"$(prism \\\n      organization:users:list --columns id --filter 'Name=John Doe' \\\n      --no-header)\\\"]\"\n\n"
+  },
+  "alerts:groups:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete an Alert Group\n\nUSAGE\n  $ prism alerts:groups:delete GROUP [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  GROUP  ID of the group to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete an Alert Group\n\n"
+  },
+  "alerts:groups:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Alert Groups in your Organization\n\nUSAGE\n  $ prism alerts:groups:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Alert Groups in your Organization\n\nEXAMPLES\n  Fetch the ID and Name of all alert groups in JSON format, sorted descending\n  by name:\n\n    $ prism alerts:groups:list --columns \"id,name\" --output json --sort name\n\n"
+  },
+  "alerts:monitors": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage Alert Monitors\n\nUSAGE\n  $ prism alerts:monitors:COMMAND\n\nCOMMANDS\n  alerts:monitors:clear   Clear an Alert Monitor\n  alerts:monitors:create  Create an Alert Monitor by attaching an Alert Trigger\n                          and a set of users and webhooks to an Instance.\n  alerts:monitors:delete  Delete an Alert Monitor\n  alerts:monitors:list    List Alert Monitors for Customer Instances\n\n"
+  },
+  "alerts:monitors:clear": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Clear an Alert Monitor\n\nUSAGE\n  $ prism alerts:monitors:clear MONITOR [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  MONITOR  ID of the monitor to clear\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Clear an Alert Monitor\n\n"
+  },
+  "alerts:monitors:create": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Create an Alert Monitor by attaching an Alert Trigger and a set of users and webhooks to an Instance.\n\nUSAGE\n  $ prism alerts:monitors:create -n <value> -i <value> -t <value> [--print-requests]\n    [--quiet] [--profile <value>] [-d <value>] [-s <value>] [-g <value>] [-u\n    <value>]\n\nFLAGS\n  -d, --duration=<value>      greatest time allowed (in seconds) for time-based\n                              triggers\n  -g, --groups=<value>        JSON-formatted list of group IDs to alert\n  -i, --instance=<value>      (required) ID of the instance to monitor\n  -n, --name=<value>          (required) name of the alert monitor to be created\n  -s, --log-severity=<value>  greatest log level {debug, info, warn, error}\n                              allowed for log-based triggers\n  -t, --triggers=<value>      (required) JSON-formatted list of trigger IDs that\n                              should trigger this monitor\n  -u, --users=<value>         JSON-formatted list of Prismatic user IDs alert\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Create an Alert Monitor by attaching an Alert Trigger and a set of users and\n  webhooks to an Instance.\n  While individual users and webhooks can be tied to alert monitors, it is\n  recommended that you create alert groups and attach alert groups to alert\n  monitors. This helps in the case that you need to add a user to a set of\n  monitors: it's simpler to edit a single alert group than to edit dozens of\n  alert monitors.\n\nEXAMPLES\n  Get the ID of an alert group named 'DevOps':\n\n    ALERT_GROUP_ID=$(prism alerts:groups:list --columns id --filter \\\n      'name=^DevOps$' --no-header)\n\n  Get the ID of an instance named 'My Instance':\n\n    INSTANCE_ID=$(prism instances:list --columns id --filter 'name=^My \\\n      Instance$' --no-header)\n\n  Get the ID of an execution duration trigger:\n\n    TRIGGER_ID=$(prism alerts:triggers:list --columns id --filter \\\n      'name=^Execution Duration Matched or Exceeded$' --no-header)\n\n  Create an alert monitor that alerts the DevOps group when an instance\n  execution takes longer than 10 seconds:\n\n    $ prism alerts:monitors:create --name \"Alert Devops of slow execution\" \\\n      --instance ${INSTANCE_ID} --triggers \"[\\\"${TRIGGER_ID}\\\"]\" --duration 10 \\\n      --groups \"[\\\"${ALERT_GROUP_ID}\\\"]\"\n\n"
+  },
+  "alerts:monitors:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete an Alert Monitor\n\nUSAGE\n  $ prism alerts:monitors:delete MONITOR [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  MONITOR  ID of the monitor to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete an Alert Monitor\n\n"
+  },
+  "alerts:monitors:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Alert Monitors for Customer Instances\n\nUSAGE\n  $ prism alerts:monitors:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Alert Monitors for Customer Instances\n\n"
+  },
+  "alerts:triggers": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Alert Triggers\n\nUSAGE\n  $ prism alerts:triggers:COMMAND\n\nCOMMANDS\n  alerts:triggers:list  List Alert Triggers\n\n"
+  },
+  "alerts:triggers:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Alert Triggers\n\nUSAGE\n  $ prism alerts:triggers:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Alert Triggers\n\n"
+  },
+  "alerts:webhooks": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage Alert Webhooks\n\nUSAGE\n  $ prism alerts:webhooks:COMMAND\n\nCOMMANDS\n  alerts:webhooks:create  Create an Alert Webhook\n  alerts:webhooks:delete  Delete an Alert Webhook\n  alerts:webhooks:list    List Alert Webhooks\n\n"
+  },
+  "alerts:webhooks:create": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Create an Alert Webhook\n\nUSAGE\n  $ prism alerts:webhooks:create -n <value> -u <value> -p <value> [--print-requests]\n    [--quiet] [--profile <value>] [-h <value>]\n\nFLAGS\n  -h, --headers=<value>          JSON-formatted object of key/value pairs to\n                                 include in the request header\n  -n, --name=<value>             (required) name of the webhook to be created\n  -p, --payloadTemplate=<value>  (required) template string that will be used as\n                                 the request body, see documentation for details\n  -u, --url=<value>              (required) URL that will receive a POST request\n                                 for an alert\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Create an Alert Webhook\n\n"
+  },
+  "alerts:webhooks:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete an Alert Webhook\n\nUSAGE\n  $ prism alerts:webhooks:delete WEBHOOK [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  WEBHOOK  ID of the webhook to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete an Alert Webhook\n\n"
+  },
+  "alerts:webhooks:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Alert Webhooks\n\nUSAGE\n  $ prism alerts:webhooks:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Alert Webhooks\n\n"
+  },
+  "components": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage, create, and publish Components\n\nUSAGE\n  $ prism components:COMMAND\n\nTOPICS\n  components:actions       List Actions that Components implement\n  components:data-sources  List Data Sources that Components implement\n  components:dev           Component development utilities\n  components:triggers      List Triggers that Components implement\n\nCOMMANDS\n  components:delete     Delete a Component\n  components:init       Initialize a new Component\n  components:list       List available Components\n  components:publish    Publish a Component to Prismatic\n  components:signature  Generate a Component signature\n\n"
+  },
+  "components:actions": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Actions that Components implement\n\nUSAGE\n  $ prism components:actions:COMMAND\n\nCOMMANDS\n  components:actions:list  List Actions that Components implement\n\n"
+  },
+  "components:actions:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Actions that Components implement\n\nUSAGE\n  $ prism components:actions:list COMPONENTKEY [--print-requests] [--quiet]\n    [--profile <value>] [--columns <value> | -x] [--filter <value>] [--no-header\n    | [--csv | --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n    [--public] [--private]\n\nARGUMENTS\n  COMPONENTKEY  The key of the component to show actions for (e.g. 'salesforce')\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --private          Show actions for the private component with the given\n                         key. Use this flag when you have a private component\n                         with the same key as a public component.\n      --public           Show actions for the public component with the given\n                         key. Use this flag when you have a private component\n                         with the same key as a public component.\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Actions that Components implement\n\nEXAMPLES\n  Get the ID of the GET action of the HTTP component by action key:\n\n    $ prism components:actions:list --columns id --filter 'key=^httpGet$' \\\n      --no-header http\n\n  Get actions related to the SFTP component:\n\n    $ prism components:actions:list sftp\n\n"
+  },
+  "components:data-sources": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Data Sources that Components implement\n\nUSAGE\n  $ prism components:data-sources:COMMAND\n\nCOMMANDS\n  components:data-sources:list  List Data Sources that Components implement\n\n"
+  },
+  "components:data-sources:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Data Sources that Components implement\n\nUSAGE\n  $ prism components:data-sources:list COMPONENTKEY [--print-requests] [--quiet]\n    [--profile <value>] [--columns <value> | -x] [--filter <value>] [--no-header\n    | [--csv | --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n    [--public] [--private]\n\nARGUMENTS\n  COMPONENTKEY  The key of the component to show data sources for (e.g.\n                'salesforce')\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --private          Show data sources for the private component with the\n                         given key. Use this flag when you have a private\n                         component with the same key as a public component.\n      --public           Show data sources for the public component with the\n                         given key. Use this flag when you have a private\n                         component with the same key as a public component.\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Data Sources that Components implement\n\nEXAMPLES\n  Get data sources related to the Salesforce component:\n\n    $ prism components:data-sources:list salesforce\n\n"
+  },
+  "components:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete a Component\n\nUSAGE\n  $ prism components:delete COMPONENT [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  COMPONENT  ID of the component to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete a Component\n\n"
+  },
+  "components:dev": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Component development utilities\n\nUSAGE\n  $ prism components:dev:COMMAND\n\nCOMMANDS\n  components:dev:run   Fetch an integration's active connection and execute a\n                       CLI command with that connection's fields as an\n                       environment variable.\n  components:dev:test  Run an action of a component within a test integration in\n                       the integration runner\n\n"
+  },
+  "components:dev:run": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.\n\nUSAGE\n  $ prism components:dev:run -i <value> -c <value> -- /command/to/run\n\nFLAGS\n  -c, --connectionKey=<value>  (required) Key of the connection config variable\n                               to fetch meta/state for\n  -i, --integrationId=<value>  Integration ID\n      --instanceId=<value>     Instance ID.\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Fetch an integration's active connection and execute a CLI command with that\n  connection's fields as an environment variable.\n  After specifying an integration ID and connection config variable name, this\n  command executes a CLI command with that connection's fields saved as a config\n  variable named PRISMATIC_CONNECTION_VALUE.\n\nEXAMPLES\n  To simply print an integration's basic auth config variable named \"My\n  Connection\" and pipe the resulting JSON to jq, run:\n\n    $ prism components:dev:run --integrationId SW50ZWexample --connectionKey \\\n      \"My Connection\" -- printenv PRISMATIC_CONNECTION_VALUE | jq\n\n  If one of your integrations has an authenticated OAuth 2.0 config variable\n  \"Slack Connection\", you could run your component's unit tests with that\n  environment variable:\n\n    $ prism components:dev:run -i SW50ZWexample -c \"Slack Connection\" -- \\\n      yarn run test\n\n  If you would like to fetch a connection from an instance deployed to one of\n  your customers, specify the --instanceId flag instead\n\n    $ prism components:dev:run --instanceId SW50ZWexample -c \"Slack \\\n      Connection\" -- yarn run test\n\n"
+  },
+  "components:dev:test": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Run an action of a component within a test integration in the integration runner\n\nUSAGE\n  $ prism components:dev:test [--print-requests] [--quiet] [--profile <value>]\n    [-e <value>] [-b] [-o <value>] [--print-results] [--clean-up]\n\nFLAGS\n  -b, --[no-]build           Build the component prior to testing\n  -e, --envPath=<value>      [default: .env] Path to dotenv file to load for\n                             supplying testing values\n  -o, --output-file=<value>  Output the results of the action to a specified\n                             file\n      --clean-up             Clean up the integration and temporary component\n                             after running the action\n      --print-results        Print the results of the action to stdout\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Run an action of a component within a test integration in the integration\n  runner\n\n"
+  },
+  "components:init": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Initialize a new Component\n\nUSAGE\n  $ prism components:init NAME [--print-requests] [--quiet] [--profile\n    <value>] [--wsdl-path <value>] [--open-api-path <value>] [--verbose]\n    [--toolchain modern|legacy]\n\nARGUMENTS\n  NAME  Name of the new component to create (alphanumeric characters, hyphens,\n        and underscores)\n\nFLAGS\n  --open-api-path=<value>  The path to an OpenAPI Specification file (JSON or\n                           YAML) used to generate a Component\n  --toolchain=<option>     [default: modern] Toolchain to scaffold: 'modern'\n                           (tsdown + vitest + Biome) or 'legacy' (webpack + jest\n                           + eslint)\n                           <options: modern|legacy>\n  --verbose                Output more verbose logging from Component generation\n  --wsdl-path=<value>      Path to the WSDL definition file used to generate a\n                           Component\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Initialize a new Component\n\nEXAMPLES\n  Initialize a new component directory for a component named\n  'send-customer-invoices':\n\n    $ prism components:init send-customer-invoices\n\n  Initialize a component from a WSDL definition file, then install\n  dependencies, build, and publish it:\n\n    $ prism components:init --wsdl-path ./example.wsdl \"Example WSDL\" \\\n      cd \"Example WSDL\" && yarn install && yarn build \\\n      prism components:publish\n\n"
+  },
+  "components:init:component": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Initialize a new Component\n\nUSAGE\n  $ prism components:init:component [--print-requests] [--quiet] [--profile <value>]\n    [-n <value>] [-d <value>]\n\nFLAGS\n  -d, --description=<value>  Description for the component\n  -n, --name=<value>         Name of the component\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Initialize a new Component\n\n"
+  },
+  "components:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List available Components\n\nUSAGE\n  $ prism components:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>] [-a] [-s\n    <value>]\n\nFLAGS\n  -a, --showAllVersions  If specified this command returns all versions of all\n                         components rather than only the latest version\n  -s, --search=<value>   Search components by label first, then by key (case\n                         insensitive)\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List available Components\n\n"
+  },
+  "components:publish": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Publish a Component to Prismatic\n\nUSAGE\n  $ prism components:publish [--print-requests] [--quiet] [--profile <value>]\n    [-c <value>] [--confirm] [--check-signature] [--skip-on-signature-match]\n    [--customer <value>] [--commitHash <value>] [--commitUrl <value>] [--repoUrl\n    <value>] [--pullRequestUrl <value>] [--include-source]\n\nFLAGS\n  -c, --comment=<value>          Comment about changes in this Publish\n      --[no-]check-signature     Check signature of existing component and\n                                 confirm publish if matched\n      --commitHash=<value>       Commit hash corresponding to the component\n                                 version being published\n      --commitUrl=<value>        URL to the commit details for this component\n                                 version\n      --[no-]confirm             Interactively confirm publish\n      --customer=<value>         ID of customer with which to associate the\n                                 component\n      --include-source           Include source code in the component publish\n      --pullRequestUrl=<value>   URL to the pull request that modified this\n                                 component version\n      --repoUrl=<value>          URL to the repository containing the component\n                                 definition\n      --skip-on-signature-match  Skips component publish if the new signature\n                                 matches the existing signature\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Publish a Component to Prismatic\n\nEXAMPLES\n  Build and publish a component:\n\n    npm run build && prism components:publish\n\n"
+  },
+  "components:signature": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Generate a Component signature\n\nUSAGE\n  $ prism components:signature [--print-requests] [--quiet] [--profile <value>]\n    [--skip-signature-verify]\n\nFLAGS\n  --skip-signature-verify  This consistently returns a signature, regardless of\n                           whether the corresponding component has been\n                           published to the platform or not.\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Generate a Component signature\n\n"
+  },
+  "components:triggers": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Triggers that Components implement\n\nUSAGE\n  $ prism components:triggers:COMMAND\n\nCOMMANDS\n  components:triggers:list  List Triggers that Components implement\n\n"
+  },
+  "components:triggers:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Triggers that Components implement\n\nUSAGE\n  $ prism components:triggers:list COMPONENTKEY [--print-requests] [--quiet]\n    [--profile <value>] [--columns <value> | -x] [--filter <value>] [--no-header\n    | [--csv | --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n    [--public] [--private]\n\nARGUMENTS\n  COMPONENTKEY  The key of the component to show triggers for (e.g.\n                'salesforce')\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --private          Show actions for the private component with the given\n                         key. Use this flag when you have a private component\n                         with the same key as a public component.\n      --public           Show actions for the public component with the given\n                         key. Use this flag when you have a private component\n                         with the same key as a public component.\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Triggers that Components implement\n\nEXAMPLES\n  Get the ID of the Webhook trigger of the Webhook Triggers component by key:\n\n    $ prism components:triggers:list --columns id --filter 'key=^webhook$' \\\n      --no-header webhook-triggers\n\n  Get triggers related to the Management Triggers component:\n\n    $ prism components:triggers:list management-triggers\n\n"
+  },
+  "customers": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage Customers\n\nUSAGE\n  $ prism customers:COMMAND\n\nTOPICS\n  customers:users  Manage Customer Users\n\nCOMMANDS\n  customers:create  Create a new Customer\n  customers:delete  Delete a Customer\n  customers:list    List your Customers\n  customers:update  Update a Customer\n\n"
+  },
+  "customers:create": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Create a new Customer\n\nUSAGE\n  $ prism customers:create -n <value> [--print-requests] [--quiet] [--profile\n    <value>] [-d <value>] [-e <value>] [-l <value>...]\n\nFLAGS\n  -d, --description=<value>  longer description of the customer\n  -e, --externalId=<value>   external ID of the customer from your system\n  -l, --label=<value>...     a label to apply to the customer\n  -n, --name=<value>         (required) short name of the new customer\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Create a new Customer\n\nEXAMPLES\n  Apply multiple labels to a customer\n\n    $ prism customers:create --name \"Widgets Inc\" --externalId \"abc-123\" \\\n      --label \"Prod Customers\" --label \"Beta Testers\"\n\n"
+  },
+  "customers:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete a Customer\n\nUSAGE\n  $ prism customers:delete CUSTOMER [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  CUSTOMER  ID of the customer to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete a Customer\n\n"
+  },
+  "customers:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List your Customers\n\nUSAGE\n  $ prism customers:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List your Customers\n\n"
+  },
+  "customers:update": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Update a Customer\n\nUSAGE\n  $ prism customers:update CUSTOMER [--print-requests] [--quiet] [--profile\n    <value>] [-n <value>] [-d <value>] [-e <value>] [-l <value>...]\n\nARGUMENTS\n  CUSTOMER  ID of a customer\n\nFLAGS\n  -d, --description=<value>  description of the customer\n  -e, --externalId=<value>   external ID of the customer from your system\n  -l, --label=<value>...     a label to apply to the customer\n  -n, --name=<value>         name of the customer\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Update a Customer\n\nEXAMPLES\n  Apply multiple labels to a customer (note: previously set labels will be\n  overwritten)\n\n    $ prism customers:update \\\n      Q3VzdG9tZXI6MmUzZDllOTUtMWIyMy00N2FjLTk3MjUtMzU1OTA2YzgyZWZj --label \\\n      \"Prod Customers\" --label \"Beta Testers\"\n\n"
+  },
+  "customers:users": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage Customer Users\n\nUSAGE\n  $ prism customers:users:COMMAND\n\nCOMMANDS\n  customers:users:create  Create a User for the specified Customer\n  customers:users:delete  Delete a Customer User\n  customers:users:list    List Customer Users\n  customers:users:roles   List Roles you can grant to Customer Users\n  customers:users:update  Update a User\n\n"
+  },
+  "customers:users:create": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Create a User for the specified Customer\n\nUSAGE\n  $ prism customers:users:create -e <value> -r <value> -c <value> [--print-requests]\n    [--quiet] [--profile <value>] [-n <value>]\n\nFLAGS\n  -c, --customer=<value>  (required) ID of the customer this user is associated\n                          with\n  -e, --email=<value>     (required) email address\n  -n, --name=<value>      name of the new user\n  -r, --role=<value>      (required) ID of the role to assign the user\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Create a User for the specified Customer\n\nEXAMPLES\n  Get the ID of a customer named 'My First Customer':\n\n    CUSTOMER_ID=$(prism customers:list --columns id --no-header --filter \\\n      'name=^My First Customer$')\n\n  Get the ID of the 'Member' role:\n\n    ROLE_ID=$(prism customers:users:roles --columns id --no-header --filter \\\n      'name=^Member$')\n\n  Add a new 'Member' user for the customer:\n\n    $ prism customers:users:create --email 'bar@email.com' --name 'Thomas \\\n      Bar' --customer ${CUSTOMER_ID} --role ${ROLE_ID}\n\n"
+  },
+  "customers:users:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete a Customer User\n\nUSAGE\n  $ prism customers:users:delete USER [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  USER  ID of the user to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete a Customer User\n\n"
+  },
+  "customers:users:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Customer Users\n\nUSAGE\n  $ prism customers:users:list CUSTOMER [--print-requests] [--quiet] [--profile\n    <value>] [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nARGUMENTS\n  CUSTOMER  ID of the customer\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Customer Users\n\n"
+  },
+  "customers:users:roles": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Roles you can grant to Customer Users\n\nUSAGE\n  $ prism customers:users:roles [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Roles you can grant to Customer Users\n\n"
+  },
+  "customers:users:update": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Update a User\n\nUSAGE\n  $ prism customers:users:update USER [--print-requests] [--quiet] [--profile\n    <value>] [-n <value>] [-p <value>] [-d <value>] [-o <value>]\n\nARGUMENTS\n  USER  ID of a user\n\nFLAGS\n  -d, --dark-mode=<value>          whether the user should have dark mode\n                                   enabled\n  -n, --name=<value>               name of the user\n  -o, --dark-mode-os-sync=<value>  whether dark mode should sync with OS\n                                   settings\n  -p, --phone=<value>              phone number of the user\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Update a User\n\n"
+  },
+  "executions": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Fetch results of Instance executions or Integration test runs\n\nUSAGE\n  $ prism executions:COMMAND\n\nTOPICS\n  executions:step-result  Gets the Result of a specified Step in an Instance\n                          Execution.\n\n"
+  },
+  "executions:step-result": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Gets the Result of a specified Step in an Instance Execution.\n\nUSAGE\n  $ prism executions:step-result:COMMAND\n\nDESCRIPTION\n  This command can be used to pull down step results for both integration tests\n  and instance executions.\n\nCOMMANDS\n  executions:step-result:get  Gets the Result of a specified Step in an Instance\n                              Execution.\n\n"
+  },
+  "executions:step-result:get": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Gets the Result of a specified Step in an Instance Execution.\n\nUSAGE\n  $ prism executions:step-result:get -e <value> -s <value> [--print-requests] [--quiet]\n    [--profile <value>] [-p <value>]\n\nFLAGS\n  -e, --executionId=<value>  (required) ID of an Execution\n  -p, --outputPath=<value>   Output result to a file. Output will be printed to\n                             stdout if this is omitted\n  -s, --stepName=<value>     (required) Name of an Integration Step\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Gets the Result of a specified Step in an Instance Execution.\n  This command can be used to pull down step results for both integration tests\n  and instance executions.\n\nEXAMPLES\n  Run a test of a flow to get an execution ID:\n\n    $ prism integrations:flows:test ${FLOW_ID}\n\n  Get step results from a specific execution:\n\n    $ prism executions:step-result:get --executionId SW5zdGFuY2VFeGVjdXRpb25 \\\n      SZXN1bHQ6MWFkZTYwMGQtMjg2Ni00ZTljLWI2N2EtYmUxNzgwOWY4ODI4 --stepName \\\n      \"Fetch Invoice Info\"\n\n"
+  },
+  "graphql": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Execute an arbitrary GraphQL query against the Prismatic API\n\nUSAGE\n  $ prism graphql:COMMAND\n\nCOMMANDS\n  graphql:query  Execute an arbitrary GraphQL query against the Prismatic API\n\n"
+  },
+  "graphql:query": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Execute an arbitrary GraphQL query against the Prismatic API\n\nUSAGE\n  $ prism graphql:query [QUERY] [--print-requests] [--quiet] [--profile\n    <value>] [-f] [-v <value>] [-o json|yaml|table] [-c <value>] [-d <value>]\n    [-r]\n\nARGUMENTS\n  [QUERY]  GraphQL query string (omit to read from stdin)\n\nFLAGS\n  -c, --columns=<value>    Comma-separated field paths for table columns\n                           (required for table output)\n  -d, --data-path=<value>  Dot-notation path to array data in result (e.g.,\n                           'customers.nodes')\n  -f, --file               Treat query argument as file path\n  -o, --output=<option>    [default: json] Output format\n                           <options: json|yaml|table>\n  -r, --raw                Output raw JSON without pretty-printing\n  -v, --variables=<value>  JSON string or @file.json containing query variables\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Execute an arbitrary GraphQL query against the Prismatic API\n\nEXAMPLES\n  Direct query string\n\n    $ prism graphql:query 'query { customers { nodes { id name } } }'\n\n  From file\n\n    $ prism graphql:query --file query.graphql\n\n  From stdin\n\n    cat query.graphql | prism graphql:query\n\n  With variables\n\n    $ prism graphql:query --file query.graphql --variables \\\n      '{\"id\":\"Q3VzdG9tZXI6...\"}'\n\n  Variables from file\n\n    $ prism graphql:query 'query($id: ID!) { customer(id: $id) { name } }' \\\n      --variables @vars.json\n\n  YAML output\n\n    $ prism graphql:query 'query { customers { nodes { id name } } }' \\\n      --output yaml\n\n  Table output with nested data\n\n    $ prism graphql:query 'query { customers { nodes { id name } } }' \\\n      --output table --data-path customers.nodes --columns id,name\n\n"
+  },
+  "instances": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage Instances\n\nUSAGE\n  $ prism instances:COMMAND\n\nTOPICS\n  instances:config-vars   List Config Variables used on an Instance\n  instances:flow-configs  List Instance Flow Configs\n\nCOMMANDS\n  instances:create   Create an Instance\n  instances:delete   Delete an Instance\n  instances:deploy   Deploy an Instance\n  instances:disable  Disable an Instance\n  instances:enable   Enable an Instance\n  instances:list     List Instances\n  instances:update   Update an Instance\n\n"
+  },
+  "instances:config-vars": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Config Variables used on an Instance\n\nUSAGE\n  $ prism instances:config-vars:COMMAND\n\nCOMMANDS\n  instances:config-vars:list  List Config Variables used on an Instance\n\n"
+  },
+  "instances:config-vars:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Config Variables used on an Instance\n\nUSAGE\n  $ prism instances:config-vars:list INSTANCE [--print-requests] [--quiet] [--profile\n    <value>] [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nARGUMENTS\n  INSTANCE  ID of an instance\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Config Variables used on an Instance\n\n"
+  },
+  "instances:create": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Create an Instance\n\nUSAGE\n  $ prism instances:create -n <value> -i <value> -c <value> [--print-requests]\n    [--quiet] [--profile <value>] [-d <value>] [-v <value>] [-l <value>...]\n\nFLAGS\n  -c, --customer=<value>     (required) ID of customer to deploy to\n  -d, --description=<value>  longer description of the instance\n  -i, --integration=<value>  (required) ID of the integration or a specific\n                             integration version ID this is an instance of\n  -l, --label=<value>...     a label or set of labels to apply to the instance\n  -n, --name=<value>         (required) name of your new instance.\n  -v, --config-vars=<value>  config variables to bind to steps of your instance\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Create an Instance\n\nEXAMPLES\n  Get the ID of the integration you want to deploy:\n\n    INTEGRATION_ID=$(prism integrations:list --columns id --no-header \\\n      --filter 'name=Acme Inc')\n\n  Get the version ID of the latest available published version:\n\n    VERSION_ID=$(prism integrations:versions ${INTEGRATION_ID} \\\n      --latest-available --columns id --no-header)\n\n  Set up connection credentials (must be escaped):\n\n    CREDENTIALS='[{\"name\":\"username\",\"type\":\"value\",\"value\":\"my.username\"},{ \\\n      \"name\":\"password\",\"type\":\"value\",\"value\":\"Pa$$W0Rd\"}]'\n\n  Create an instance with config variables and labels:\n\n    $ prism instances:create --name 'Acme Inc' --description 'Acme Inc \\\n      instance for Smith Rocket Co' --integration ${VERSION_ID} --customer \\\n      ${CUSTOMER_ID} --config-vars '[{\"key\":\"My \\\n      Endpoint\",\"value\":\"https://example.com/api\"},{\"key\":\"Do \\\n      Thing?\",\"value\":\"true\"},{\"key\":\"Acme Basic \\\n      Auth\",\"values\":\"${CREDENTIALS}\"}]' --label 'Production' --label 'Paid'\n\n"
+  },
+  "instances:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete an Instance\n\nUSAGE\n  $ prism instances:delete INSTANCE [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  INSTANCE  ID of the instance to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete an Instance\n\n"
+  },
+  "instances:deploy": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Deploy an Instance\n\nUSAGE\n  $ prism instances:deploy INSTANCE [--print-requests] [--quiet] [--profile\n    <value>] [-f]\n\nARGUMENTS\n  INSTANCE  ID of an instance\n\nFLAGS\n  -f, --force  Force deployment even when there are certain conditions that\n               would normally prevent it\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Deploy an Instance\n\n"
+  },
+  "instances:disable": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Disable an Instance\n\nUSAGE\n  $ prism instances:disable INSTANCE [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  INSTANCE  ID of an instance\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Disable an Instance\n\n"
+  },
+  "instances:enable": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Enable an Instance\n\nUSAGE\n  $ prism instances:enable INSTANCE [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  INSTANCE  ID of an instance\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Enable an Instance\n\n"
+  },
+  "instances:flow-configs": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Instance Flow Configs\n\nUSAGE\n  $ prism instances:flow-configs:COMMAND\n\nCOMMANDS\n  instances:flow-configs:list  List Instance Flow Configs\n  instances:flow-configs:test  Test a Flow Config of an Instance\n\n"
+  },
+  "instances:flow-configs:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Instance Flow Configs\n\nUSAGE\n  $ prism instances:flow-configs:list INSTANCE [--print-requests] [--quiet] [--profile\n    <value>] [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nARGUMENTS\n  INSTANCE  ID of an Instance\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Instance Flow Configs\n\n"
+  },
+  "instances:flow-configs:test": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Test a Flow Config of an Instance\n\nUSAGE\n  $ prism instances:flow-configs:test FLOWCONFIG [--print-requests] [--quiet] [--profile\n    <value>] [-x | --columns <value>] [-t] [-p <value>] [-c <value>]\n\nARGUMENTS\n  FLOWCONFIG  ID of a Flow Config to test\n\nFLAGS\n  -c, --contentType=<value>  Optional content-type for the test payload\n  -p, --payload=<value>      Optional JSON-formatted data payload to submit with\n                             the test\n  -t, --tail                 Tail logs of the flow config test run\n  -x, --extended             show extra columns\n      --columns=<value>      only show provided columns (comma-separated)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Test a Flow Config of an Instance\n\n"
+  },
+  "instances:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Instances\n\nUSAGE\n  $ prism instances:list [--print-requests] [--quiet] [--profile <value>]\n    [-c <value>] [-i <value>] [--columns <value> | -x] [--filter <value>]\n    [--no-header | [--csv | --no-truncate]] [--output csv|json|yaml |  | ]\n    [--sort <value>]\n\nFLAGS\n  -c, --customer=<value>     ID of a customer\n  -i, --integration=<value>  ID of an integration\n  -x, --extended             show extra columns\n      --columns=<value>      only show provided columns (comma-separated)\n      --csv                  output is csv format [alias: --output=csv]\n      --filter=<value>       filter property by regex, ex: name=^foo (prefix key\n                             with - to invert)\n      --no-header            hide table header from output\n      --no-truncate          do not truncate output to fit screen\n      --output=<option>      output in a more machine friendly format\n                             <options: csv|json|yaml>\n      --sort=<value>         property to sort by, comma-separated for multi-key\n                             (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Instances\n\n"
+  },
+  "instances:update": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Update an Instance\n\nUSAGE\n  $ prism instances:update INSTANCE [--print-requests] [--quiet] [--profile\n    <value>] [-n <value>] [-d <value>] [-v <value>] [--deploy] [-l <value>...]\n\nARGUMENTS\n  INSTANCE  ID of an instance\n\nFLAGS\n  -d, --description=<value>  Description for the instance\n  -l, --label=<value>...     a label or set of labels to apply to the instance\n  -n, --name=<value>         Name of the instance\n  -v, --version=<value>      ID of integration version\n      --deploy               Deploy the instance after updating\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Update an Instance\n\n"
+  },
+  "integrations": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage and import Integrations\n\nUSAGE\n  $ prism integrations:COMMAND\n\nTOPICS\n  integrations:flows  List Integration Flows\n\nCOMMANDS\n  integrations:available      Mark an Integration version as available or\n                              unavailable\n  integrations:convert        Convert a Low-Code Integration's YAML file into a\n                              Code Native Integration\n  integrations:create         Create an Integration\n  integrations:delete         Delete an Integration\n  integrations:export         Export an integration to YAML definition\n  integrations:fork           Fork an Integration\n  integrations:import         Import an Integration using a YAML definition file\n                              or a Code Native Integration\n  integrations:init           Initialize a new Code Native Integration\n  integrations:list           List Integrations\n  integrations:marketplace    Make a version of an Integration available in the\n                              Marketplace\n  integrations:open           Open the Designer for the specified Integration\n  integrations:publish        Publish a version of an Integration for use in\n                              Instances\n  integrations:set-debug      Set debug mode on or off for an integration's test\n                              instance.\n  integrations:update         Update an Integration's name or description\n  integrations:validate-yaml  Validate a YAML integration definition without\n                              importing it\n  integrations:versions       List Integration versions\n\n"
+  },
+  "integrations:available": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Mark an Integration version as available or unavailable\n\nUSAGE\n  $ prism integrations:available INTEGRATION -a [--print-requests] [--quiet]\n    [--profile <value>]\n\nARGUMENTS\n  INTEGRATION  ID of an integration version\n\nFLAGS\n  -a, --[no-]available  (required) Version is available or unavailable\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Mark an Integration version as available or unavailable\n\n"
+  },
+  "integrations:convert": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Convert a Low-Code Integration's YAML file into a Code Native Integration\n\nUSAGE\n  $ prism integrations:convert INTEGRATION [--print-requests] [--quiet] [--profile\n    <value>] [-r <value>] [-u <value>] [-c]\n\nARGUMENTS\n  INTEGRATION  ID of the low-code integration to convert\n\nFLAGS\n  -c, --includeComments         Whether to include inline comments in the\n                                generated code\n  -r, --registryPrefix=<value>  The registry prefix to use for the converted\n                                integration\n  -u, --registryUrl=<value>     The registry URL to use for the converted\n                                integration\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Convert a Low-Code Integration's YAML file into a Code Native Integration\n\n"
+  },
+  "integrations:create": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Create an Integration\n\nUSAGE\n  $ prism integrations:create -n <value> -d <value> [--print-requests] [--quiet]\n    [--profile <value>] [-c <value>]\n\nFLAGS\n  -c, --customer=<value>     ID of customer with which to associate the\n                             integration\n  -d, --description=<value>  (required) longer description of the integration\n  -n, --name=<value>         (required) name of the integration to create\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Create an Integration\n\n"
+  },
+  "integrations:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete an Integration\n\nUSAGE\n  $ prism integrations:delete INTEGRATION [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  INTEGRATION  ID of the integration to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete an Integration\n\n"
+  },
+  "integrations:export": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Export an integration to YAML definition\n\nUSAGE\n  $ prism integrations:export INTEGRATION [--print-requests] [--quiet] [--profile\n    <value>] [-l] [-v <value>]\n\nARGUMENTS\n  INTEGRATION  ID of an integration to export\n\nFLAGS\n  -l, --latest-components  Use the latest available version of each Component\n                           upon import\n  -v, --version=<value>    Define the definition version to export.\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Export an integration to YAML definition\n\n"
+  },
+  "integrations:flows": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Integration Flows\n\nUSAGE\n  $ prism integrations:flows:COMMAND\n\nCOMMANDS\n  integrations:flows:list    List Integration Flows\n  integrations:flows:listen  Listen for webhook executions on a flow and save\n                             the payload to a file\n  integrations:flows:test    Run a test execution of a flow\n\n"
+  },
+  "integrations:flows:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Integration Flows\n\nUSAGE\n  $ prism integrations:flows:list INTEGRATION [--print-requests] [--quiet] [--profile\n    <value>] [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nARGUMENTS\n  INTEGRATION  ID of an Integration\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Integration Flows\n\n"
+  },
+  "integrations:flows:listen": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Listen for webhook executions on a flow and save the payload to a file\n\nUSAGE\n  $ prism integrations:flows:listen -i <value> [--print-requests] [--quiet] [--profile\n    <value>] [-f <value> | -n <value>] [-o <value>] [-t <value>] [-n] [-r]\n\nFLAGS\n  -f, --flow-id=<value>         ID of the flow to listen to. If not provided,\n                                you will be prompted to select.\n  -i, --integration-id=<value>  (required) ID of the integration containing the\n                                flow to listen to.\n  -n, --flow-name=<value>       Name of the flow to listen to.\n  -n, --no-prompt               For flows using polling triggers, automatically\n                                poll without a confirmation prompt.\n  -o, --output=<value>          [default: ./payloads] Output directory for the\n                                payload file. Defaults to ./payloads\n  -r, --reset                   Manually turn off listening mode for a given\n                                integration.\n  -t, --timeout=<value>         [default: 1200] Timeout in seconds to stop\n                                listening.\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Listen for webhook executions on a flow and save the payload to a file\n\n"
+  },
+  "integrations:flows:test": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Run a test execution of a flow\n\nUSAGE\n  $ prism integrations:flows:test [--print-requests] [--quiet] [--profile <value>]\n    [-f <value> | -u <value> | -n <value>] [-i <value>] [-p <value>] [-c\n    <value>] [--sync] [--tail-results] [--tail-logs] [--cni-auto-end] [--timeout\n    <value>] [-r <value>] [--jsonl] [--debug] [--apiKey <value>]\n\nFLAGS\n  -c, --payload-content-type=<value>  [default: application/json] Optional\n                                      Content-Type for the test payload.\n  -f, --flow-id=<value>               ID of the flow to test. Base64 encoded.\n  -i, --integration-id=<value>        ID of the integration containing the flow\n                                      to test. Base64 encoded.\n  -n, --flow-name=<value>             Name of the flow to test.\n  -p, --payload=<value>               Optional file containing a payload to run\n                                      the flow with.\n  -r, --result-file=<value>           Optional file to append tailed execution\n                                      result data to. Results are saved into\n                                      JSON Lines.\n  -u, --flow-url=<value>              URL of the flow to test. Prefer to use\n                                      flow-id instead, if possible.\n      --apiKey=<value>                Optional API key for flows with secured\n                                      endpoints.\n      --cni-auto-end                  Automatically stop polling activity once\n                                      an CNI flow execution completes. Some logs\n                                      & results may not be returned this way.\n                                      DOES NOT WORK FOR LOW-CODE FLOWS.\n      --debug                         Enables debug mode on the test execution.\n      --jsonl                         Optionally format the step and tail\n                                      results output into JSON Lines.\n      --sync                          Forces the flow to run synchronously.\n      --tail-logs                     Tail logs from the test execution until\n                                      user interrupt or timeout.\n      --tail-results                  Tail step results from the test execution\n                                      until user interrupt or timeout.\n      --timeout=<value>               Optionally set a timeout (in seconds) to\n                                      stop tail activity. Compatible with both\n                                      low-code and CNI flows.\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Run a test execution of a flow\n\nEXAMPLES\n  Test an integration flow with a payload file and tail the logs and step\n  results:\n\n    $ prism integrations:flows:test -p=some_payload_file.xml \\\n      -c=application/xml --tail-logs --tail-results\n\n"
+  },
+  "integrations:fork": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Fork an Integration\n\nUSAGE\n  $ prism integrations:fork PARENT -n <value> -d <value> [--print-requests]\n    [--quiet] [--profile <value>]\n\nARGUMENTS\n  PARENT  ID of the Integration to fork\n\nFLAGS\n  -d, --description=<value>  (required) longer description of the forked\n                             integration\n  -n, --name=<value>         (required) name of the forked integration\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Fork an Integration\n\n"
+  },
+  "integrations:import": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Import an Integration using a YAML definition file or a Code Native Integration\n\nUSAGE\n  $ prism integrations:import [--print-requests] [--quiet] [--profile <value>]\n    [-p <value>] [-i <value>] [--icon-path <value>] [-o] [-r] [--test-api-key\n    <value>...] [--confirm]\n\nFLAGS\n  -i, --integrationId=<value>  The ID of the integration being imported\n  -o, --open                   If supplied, open the Designer for the imported\n                               integration\n  -p, --path=<value>           If supplied, the path to the YAML definition of\n                               the integration to import. Not applicable for\n                               Code Native Integrations.\n  -r, --replace                If supplied, allows replacing an existing\n                               integration regardless of code-native status.\n                               Requires integrationId.\n      --[no-]confirm           Interactively confirm the import when using\n                               --replace\n      --icon-path=<value>      If supplied, the path to the PNG icon for the\n                               integration. Not applicable for Code Native\n                               Integrations.\n\nGLOBAL FLAGS\n  --print-requests           Print all GraphQL requests that are issued\n  --profile=<value>          [env: PRISM_PROFILE] Use a profile\n  --quiet                    Reduce helpful notes and text\n  --test-api-key=<value>...  Provide test API keys for flows in the format\n                             flowName=\"API_KEY\". Can be specified multiple\n                             times.\n\nDESCRIPTION\n  Import an Integration using a YAML definition file or a Code Native\n  Integration\n\n"
+  },
+  "integrations:init": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Initialize a new Code Native Integration\n\nUSAGE\n  $ prism integrations:init NAME [--print-requests] [--quiet] [--profile\n    <value>] [--clean] [--toolchain modern|legacy]\n\nARGUMENTS\n  NAME  Name of the new integration to create (alphanumeric characters, hyphens,\n        and underscores)\n\nFLAGS\n  --clean               Generate clean scaffold without example code\n  --toolchain=<option>  [default: modern] Toolchain to scaffold: 'modern'\n                        (tsdown + vitest + Biome) or 'legacy' (webpack + jest +\n                        eslint)\n                        <options: modern|legacy>\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Initialize a new Code Native Integration\n\nEXAMPLES\n  Initialize a new directory for a Code Native Integration:\n\n    $ prism integrations:init acme-integration\n\n  Install dependencies:\n\n    npm install\n\n  Build the integration:\n\n    npm run build\n\n  Import the integration into Prismatic:\n\n    $ prism integrations:import\n\n"
+  },
+  "integrations:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Integrations\n\nUSAGE\n  $ prism integrations:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>] [-a] [-c\n    <value>] [-o] [-s <value>]\n\nFLAGS\n  -a, --showAllVersions   If specified this command returns all versions of all\n                          integrations rather than only the latest version\n  -c, --customer=<value>  If specified this command returns only integrations\n                          that are available to the specified customer ID\n  -o, --org-only          If specified this command returns only org\n                          integrations\n  -s, --search=<value>    If specified, search for integrations by name (case\n                          insensitive).\n  -x, --extended          show extra columns\n      --columns=<value>   only show provided columns (comma-separated)\n      --csv               output is csv format [alias: --output=csv]\n      --filter=<value>    filter property by regex, ex: name=^foo (prefix key\n                          with - to invert)\n      --no-header         hide table header from output\n      --no-truncate       do not truncate output to fit screen\n      --output=<option>   output in a more machine friendly format\n                          <options: csv|json|yaml>\n      --sort=<value>      property to sort by, comma-separated for multi-key\n                          (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Integrations\n\n"
+  },
+  "integrations:marketplace": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Make a version of an Integration available in the Marketplace\n\nUSAGE\n  $ prism integrations:marketplace INTEGRATION -a [--print-requests] [--quiet]\n    [--profile <value>] [-d] [-m] [-o <value>]\n\nARGUMENTS\n  INTEGRATION  ID of an integration version to make marketplace available\n\nFLAGS\n  -a, --[no-]available                 (required) Mark this Integration version\n                                       available in the marketplace\n  -d, --[no-]deployable                Mark this Integration version as\n                                       deployable in the marketplace; does not\n                                       apply if not also marked available\n  -m, --[no-]allow-multiple-instances  Allow a customer to deploy multiple\n                                       instances of this integration\n  -o, --overview=<value>               Overview to describe the purpose of the\n                                       integration\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Make a version of an Integration available in the Marketplace\n\n"
+  },
+  "integrations:open": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Open the Designer for the specified Integration\n\nUSAGE\n  $ prism integrations:open INTEGRATIONID [--print-requests] [--quiet]\n    [--profile <value>]\n\nARGUMENTS\n  INTEGRATIONID  ID of the integration to open\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Open the Designer for the specified Integration\n\n"
+  },
+  "integrations:publish": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Publish a version of an Integration for use in Instances\n\nUSAGE\n  $ prism integrations:publish INTEGRATION [--print-requests] [--quiet] [--profile\n    <value>] [-c <value>] [--commitHash <value>] [--commitUrl <value>]\n    [--repoUrl <value>] [--pullRequestUrl <value>]\n\nARGUMENTS\n  INTEGRATION  ID of an integration to publish\n\nFLAGS\n  -c, --comment=<value>         comment about changes in this publication\n      --commitHash=<value>      Commit hash corresponding to the integration\n                                version being published\n      --commitUrl=<value>       URL to the commit details corresponding to this\n                                integration version\n      --pullRequestUrl=<value>  URL to the pull request that modified this\n                                integration version\n      --repoUrl=<value>         URL to the repository containing the definition\n                                for this integration\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Publish a version of an Integration for use in Instances\n\n"
+  },
+  "integrations:set-debug": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Set debug mode on or off for an integration's test instance.\n\nUSAGE\n  $ prism integrations:set-debug DEBUG [--print-requests] [--quiet] [--profile\n    <value>] [-i <value>]\n\nARGUMENTS\n  DEBUG  Boolean value to set whether globalDebug should be enabled for the\n         given integration\n\nFLAGS\n  -i, --integration-id=<value>  ID of the integration containing the flow to\n                                test.\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Set debug mode on or off for an integration's test instance.\n\n"
+  },
+  "integrations:update": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Update an Integration's name or description\n\nUSAGE\n  $ prism integrations:update INTEGRATION [--print-requests] [--quiet] [--profile\n    <value>] [-n <value>] [-d <value>] [-c <value>] [--test-config-vars <value>]\n\nARGUMENTS\n  INTEGRATION  ID of an integration\n\nFLAGS\n  -c, --customer=<value>          ID of customer with which to associate the\n                                  integration\n  -d, --description=<value>       new description to give the integration\n  -n, --name=<value>              new name to give the integration\n      --test-config-vars=<value>  JSON-formatted config variables to be used for\n                                  testing\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Update an Integration's name or description\n\n"
+  },
+  "integrations:validate-yaml": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Validate a YAML integration definition without importing it\n\nUSAGE\n  $ prism integrations:validate-yaml PATH [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  PATH  Path to YAML file (use '-' for stdin)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Validate a YAML integration definition without importing it\n\nEXAMPLES\n  Validate a YAML file\n\n    $ prism integrations:validate-yaml path/to/integration.yml\n\n  Validate from stdin\n\n    cat integration.yml | prism integrations:validate-yaml -\n\n  Validate from stdin (alternative)\n\n    $ prism integrations:validate-yaml - < integration.yml\n\n"
+  },
+  "integrations:versions": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Integration versions\n\nUSAGE\n  $ prism integrations:versions INTEGRATION [--print-requests] [--quiet] [--profile\n    <value>] [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>] [-l]\n\nARGUMENTS\n  INTEGRATION  ID of an integration\n\nFLAGS\n  -l, --latest-available  Show only the latest available version\n  -x, --extended          show extra columns\n      --columns=<value>   only show provided columns (comma-separated)\n      --csv               output is csv format [alias: --output=csv]\n      --filter=<value>    filter property by regex, ex: name=^foo (prefix key\n                          with - to invert)\n      --no-header         hide table header from output\n      --no-truncate       do not truncate output to fit screen\n      --output=<option>   output in a more machine friendly format\n                          <options: csv|json|yaml>\n      --sort=<value>      property to sort by, comma-separated for multi-key\n                          (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Integration versions\n\n"
+  },
+  "login": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Log in to your Prismatic account\n\nUSAGE\n  $ prism login [--print-requests] [--quiet] [--profile <value>]\n    [-f] [-u]\n\nFLAGS\n  -f, --force  re-authenticate, even if you are already logged in\n  -u, --url    returns a challenge url without automatically opening a browser\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Log in to your Prismatic account\n\nCOMMANDS\n  login:switch  Switch between organization tenants\n\n"
+  },
+  "login:switch": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Switch between organization tenants\n\nUSAGE\n  $ prism login:switch [--print-requests] [--quiet] [--profile <value>]\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Switch between organization tenants\n\n"
+  },
+  "logout": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Log out of your Prismatic account\n\nUSAGE\n  $ prism logout [--print-requests] [--quiet] [--profile <value>]\n    [-b]\n\nFLAGS\n  -b, --browser  additionally log out of your default browser's session\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Log out of your Prismatic account\n\n"
+  },
+  "logs": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Log Severities for use by Alert Triggers\n\nUSAGE\n  $ prism logs:COMMAND\n\nTOPICS\n  logs:severities  List Log Severities for use by Alert Triggers\n\n"
+  },
+  "logs:severities": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Log Severities for use by Alert Triggers\n\nUSAGE\n  $ prism logs:severities:COMMAND\n\nCOMMANDS\n  logs:severities:list  List Log Severities for use by Alert Triggers\n\n"
+  },
+  "logs:severities:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Log Severities for use by Alert Triggers\n\nUSAGE\n  $ prism logs:severities:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Log Severities for use by Alert Triggers\n\n"
+  },
+  "me": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Print your user profile information\n\nUSAGE\n  $ prism me [--print-requests] [--quiet] [--profile <value>]\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Print your user profile information\n\nTOPICS\n  me:token  Print your authorization tokens\n\nCOMMANDS\n  me:token  Print your authorization tokens\n\n"
+  },
+  "me:token": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Print your authorization tokens\n\nUSAGE\n  $ prism me:token [--print-requests] [--quiet] [--profile <value>]\n    [-t access|refresh]\n\nFLAGS\n  -t, --type=<option>  [default: access] Which token type to print\n                       <options: access|refresh>\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Print your authorization tokens\n\nCOMMANDS\n  me:token:revoke  Revoke all refresh tokens for your user\n\n"
+  },
+  "me:token:revoke": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Revoke all refresh tokens for your user\n\nUSAGE\n  $ prism me:token:revoke [--print-requests] [--quiet] [--profile <value>]\n    [--confirm]\n\nFLAGS\n  --[no-]confirm  Prompt for confirmation before revoking tokens. Use\n                  --no-confirm to skip.\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Revoke all refresh tokens for your user\n\n"
+  },
+  "on-prem-resources": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete an On-Premise Resource\n\nUSAGE\n  $ prism on-prem-resources:COMMAND\n\nCOMMANDS\n  on-prem-resources:delete            Delete an On-Premise Resource\n  on-prem-resources:list              List On-Premise Resources\n  on-prem-resources:registration-jwt  Create a JWT that may be used to register\n                                      an On-Premise Resource.\n\n"
+  },
+  "on-prem-resources:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete an On-Premise Resource\n\nUSAGE\n  $ prism on-prem-resources:delete RESOURCE [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  RESOURCE  ID of the On-Premise Resource to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete an On-Premise Resource\n\n"
+  },
+  "on-prem-resources:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List On-Premise Resources\n\nUSAGE\n  $ prism on-prem-resources:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>] [-c <value>]\n\nFLAGS\n  -c, --customer=<value>  If specified this command returns only On-Premise\n                          Resources that are available to the specified customer\n                          ID\n  -x, --extended          show extra columns\n      --columns=<value>   only show provided columns (comma-separated)\n      --csv               output is csv format [alias: --output=csv]\n      --filter=<value>    filter property by regex, ex: name=^foo (prefix key\n                          with - to invert)\n      --no-header         hide table header from output\n      --no-truncate       do not truncate output to fit screen\n      --output=<option>   output in a more machine friendly format\n                          <options: csv|json|yaml>\n      --sort=<value>      property to sort by, comma-separated for multi-key\n                          (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List On-Premise Resources\n\n"
+  },
+  "on-prem-resources:registration-jwt": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Create a JWT that may be used to register an On-Premise Resource.\n\nUSAGE\n  $ prism on-prem-resources:registration-jwt [--print-requests] [--quiet] [--profile <value>]\n    [-c <value>] [--orgOnly] [-r <value>] [--rotate]\n\nFLAGS\n  -c, --customerId=<value>  The ID of the customer for which to create the JWT.\n                            Only valid for Organization users.\n  -r, --resourceId=<value>  An optional ID of an existing On-Premise Resource\n                            for which to generate a new JWT.\n      --orgOnly             Register a Resource available to Organization users\n                            only. Only valid for Organization users.\n      --rotate              Invalidate all JWTs for the On-Premise Resource and\n                            get a new JWT.\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Create a JWT that may be used to register an On-Premise Resource.\n\n"
+  },
+  "organization": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage your Organization\n\nUSAGE\n  $ prism organization:COMMAND\n\nTOPICS\n  organization:connections   List all integration-agnostic connections available\n                             to the organization\n  organization:signing-keys  Delete an embedded marketplace signing key\n  organization:users         Manage Organization Users\n\nCOMMANDS\n  organization:update           Update your Organization\n  organization:updateAvatarUrl  Update your Organization Avatar URL\n\n"
+  },
+  "organization:connections": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List all integration-agnostic connections available to the organization\n\nUSAGE\n  $ prism organization:connections:COMMAND\n\nCOMMANDS\n  organization:connections:list  List all integration-agnostic connections\n                                 available to the organization\n\n"
+  },
+  "organization:connections:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List all integration-agnostic connections available to the organization\n\nUSAGE\n  $ prism organization:connections:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n    [--managed-by org|customer]\n\nFLAGS\n  -x, --extended             show extra columns\n      --columns=<value>      only show provided columns (comma-separated)\n      --csv                  output is csv format [alias: --output=csv]\n      --filter=<value>       filter property by regex, ex: name=^foo (prefix key\n                             with - to invert)\n      --managed-by=<option>  Filter connections by management type\n                             <options: org|customer>\n      --no-header            hide table header from output\n      --no-truncate          do not truncate output to fit screen\n      --output=<option>      output in a more machine friendly format\n                             <options: csv|json|yaml>\n      --sort=<value>         property to sort by, comma-separated for multi-key\n                             (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List all integration-agnostic connections available to the organization\n\n"
+  },
+  "organization:signing-keys": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete an embedded marketplace signing key\n\nUSAGE\n  $ prism organization:signing-keys:COMMAND\n\nCOMMANDS\n  organization:signing-keys:delete    Delete an embedded marketplace signing key\n  organization:signing-keys:generate  Generate an embedded marketplace signing\n                                      key.\n  organization:signing-keys:import    Import a RSA public key for use with\n                                      embedded marketplace.\n  organization:signing-keys:list      List embedded signing keys for embedded\n                                      marketplace\n\n"
+  },
+  "organization:signing-keys:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete an embedded marketplace signing key\n\nUSAGE\n  $ prism organization:signing-keys:delete SIGNINGKEYID [--print-requests] [--quiet]\n    [--profile <value>]\n\nARGUMENTS\n  SIGNINGKEYID  ID of the signing key to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete an embedded marketplace signing key\n\n"
+  },
+  "organization:signing-keys:generate": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Generate an embedded marketplace signing key.\n\nUSAGE\n  $ prism organization:signing-keys:generate [--print-requests] [--quiet]\n  [--profile <value>]\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Generate an embedded marketplace signing key.\n  The RSA public key is saved in Prismatic, and the private key is returned and\n  immediately removed from Prismatic. Once the private key is returned, it\n  cannot be retrieved again.\n\n"
+  },
+  "organization:signing-keys:import": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Import a RSA public key for use with embedded marketplace.\n\nUSAGE\n  $ prism organization:signing-keys:import -p <value> [--print-requests] [--quiet] [--profile\n    <value>]\n\nFLAGS\n  -p, --public-key-file=<value>  (required) public key file\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Import a RSA public key for use with embedded marketplace.\n  You can use openssl to generate a new RSA key pair and import the public key.\n\nEXAMPLES\n  Generate an RSA private key using openssl:\n\n    openssl genrsa -out my-private-key.pem 4096\n\n  Generate the associated RSA public key:\n\n    openssl rsa -in my-private-key.pem -pubout > my-public-key.pub\n\n  Import the public key:\n\n    $ prism organization:signing-keys:import -p my-public-key.pub\n\n"
+  },
+  "organization:signing-keys:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List embedded signing keys for embedded marketplace\n\nUSAGE\n  $ prism organization:signing-keys:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List embedded signing keys for embedded marketplace\n\n"
+  },
+  "organization:update": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Update your Organization\n\nUSAGE\n  $ prism organization:update [--print-requests] [--quiet] [--profile <value>]\n    [-n <value>]\n\nFLAGS\n  -n, --name=<value>  name of the organization\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Update your Organization\n\n"
+  },
+  "organization:updateAvatarUrl": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Update your Organization Avatar URL\n\nUSAGE\n  $ prism organization:updateAvatarUrl --organizationId <value> [--print-requests]\n    [--quiet] [--profile <value>] [-n <value>]\n\nFLAGS\n  -n, --avatarUrl=<value>       Url of the organization avatar\n      --organizationId=<value>  (required) ID of an organization\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Update your Organization Avatar URL\n\n"
+  },
+  "organization:users": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage Organization Users\n\nUSAGE\n  $ prism organization:users:COMMAND\n\nCOMMANDS\n  organization:users:create  Create a User for your Organization\n  organization:users:delete  Delete an Organization User\n  organization:users:list    List Users of your Organization\n  organization:users:roles   List Roles you can grant to other users in your\n                             Organization\n  organization:users:update  Update a User\n\n"
+  },
+  "organization:users:create": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Create a User for your Organization\n\nUSAGE\n  $ prism organization:users:create -e <value> -r <value> [--print-requests] [--quiet]\n    [--profile <value>] [-n <value>]\n\nFLAGS\n  -e, --email=<value>  (required) email address of the user\n  -n, --name=<value>   name of the user\n  -r, --role=<value>   (required) role the user should assume\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Create a User for your Organization\n\nEXAMPLES\n  Get the ID of the 'Integrator' role:\n\n    ROLE_ID=$(prism organization:users:roles --columns id --no-header \\\n      --filter 'name=^Integrator$')\n\n  Create an organization user and assign the role:\n\n    $ prism organization:users:create --email 'foo@email.com' --name 'Susan \\\n      Foo' --role ${ROLE_ID}\n\n"
+  },
+  "organization:users:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete an Organization User\n\nUSAGE\n  $ prism organization:users:delete USER [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  USER  ID of the user to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete an Organization User\n\n"
+  },
+  "organization:users:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Users of your Organization\n\nUSAGE\n  $ prism organization:users:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Users of your Organization\n\n"
+  },
+  "organization:users:roles": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List Roles you can grant to other users in your Organization\n\nUSAGE\n  $ prism organization:users:roles [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List Roles you can grant to other users in your Organization\n\n"
+  },
+  "organization:users:update": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Update a User\n\nUSAGE\n  $ prism organization:users:update USER [--print-requests] [--quiet] [--profile\n    <value>] [-n <value>] [-p <value>] [-d <value>] [-o <value>]\n\nARGUMENTS\n  USER  ID of a user\n\nFLAGS\n  -d, --dark-mode=<value>          whether the user should have dark mode\n                                   enabled\n  -n, --name=<value>               name of the user\n  -o, --dark-mode-os-sync=<value>  whether dark mode should sync with OS\n                                   settings\n  -p, --phone=<value>              phone number of the user\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Update a User\n\n"
+  },
+  "profiles": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage authentication profiles\n\nUSAGE\n  $ prism profiles:COMMAND\n\nCOMMANDS\n  profiles:delete  Delete a profile\n  profiles:list    List profiles\n  profiles:use     Set the default profile\n\n"
+  },
+  "profiles:delete": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Delete a profile\n\nUSAGE\n  $ prism profiles:delete NAME [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  NAME  Profile to delete\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Delete a profile\n\n"
+  },
+  "profiles:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "List profiles\n\nUSAGE\n  $ prism profiles:list [--print-requests] [--quiet] [--profile <value>]\n    [--columns <value> | -x] [--filter <value>] [--no-header | [--csv |\n    --no-truncate]] [--output csv|json|yaml |  | ] [--sort <value>]\n\nFLAGS\n  -x, --extended         show extra columns\n      --columns=<value>  only show provided columns (comma-separated)\n      --csv              output is csv format [alias: --output=csv]\n      --filter=<value>   filter property by regex, ex: name=^foo (prefix key\n                         with - to invert)\n      --no-header        hide table header from output\n      --no-truncate      do not truncate output to fit screen\n      --output=<option>  output in a more machine friendly format\n                         <options: csv|json|yaml>\n      --sort=<value>     property to sort by, comma-separated for multi-key\n                         (prepend '-' for descending)\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  List profiles\n\n"
+  },
+  "profiles:use": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Set the default profile\n\nUSAGE\n  $ prism profiles:use NAME [--print-requests] [--quiet] [--profile\n    <value>]\n\nARGUMENTS\n  NAME  Profile to use by default\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Set the default profile\n\n"
+  },
+  "translations": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Generate Dynamic Phrases for Embedded Marketplace\n\nUSAGE\n  $ prism translations:COMMAND\n\nCOMMANDS\n  translations:list  Generate Dynamic Phrases for Embedded Marketplace\n\n"
+  },
+  "translations:list": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Generate Dynamic Phrases for Embedded Marketplace\n\nUSAGE\n  $ prism translations:list [--print-requests] [--quiet] [--profile <value>]\n    [-o <value>]\n\nFLAGS\n  -o, --output-file=<value>  [default: translations_output.json] Output the\n                             results of the action to a specified file\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Generate Dynamic Phrases for Embedded Marketplace\n\n"
+  },
+  "workflows": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Manage embedded workflow builder workflows and templates\n\nUSAGE\n  $ prism workflows:COMMAND\n\nCOMMANDS\n  workflows:export  Export an embedded workflow or workflow template YAML\n                    definition\n  workflows:import  Import an embedded workflow or workflow template YAML\n                    definition\n\n"
+  },
+  "workflows:export": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Export an embedded workflow or workflow template YAML definition\n\nUSAGE\n  $ prism workflows:export WORKFLOW [--print-requests] [--quiet] [--profile\n    <value>] [-l]\n\nARGUMENTS\n  WORKFLOW  ID of the workflow to export\n\nFLAGS\n  -l, --[no-]latest-components  Use the latest available version of each\n                                component upon import. Defaults to true.\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Export an embedded workflow or workflow template YAML definition\n\n"
+  },
+  "workflows:import": {
+    "status": 0,
+    "stderr": "",
+    "stdout": "Import an embedded workflow or workflow template YAML definition\n\nUSAGE\n  $ prism workflows:import -p <value> [--print-requests] [--quiet] [--profile\n    <value>] [-w <value>] [-c <value>]\n\nFLAGS\n  -c, --customer=<value>  The ID of the customer to associate with the imported\n                          workflow. This will overwrite the existing workflow.\n                          If omitted, the workflow will be imported as a\n                          template.\n  -p, --path=<value>      (required) The path to the YAML definition of the\n                          workflow to import\n  -w, --workflow=<value>  The ID of the workflow being imported. If omitted, a\n                          new workflow will be created.\n\nGLOBAL FLAGS\n  --print-requests   Print all GraphQL requests that are issued\n  --profile=<value>  [env: PRISM_PROFILE] Use a profile\n  --quiet            Reduce helpful notes and text\n\nDESCRIPTION\n  Import an embedded workflow or workflow template YAML definition\n\n"
+  }
+}

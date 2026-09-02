@@ -1,37 +1,41 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
 const onlyWhenOrgUser = "Only valid for Organization users.";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create a JWT that may be used to register an On-Premise Resource.";
-  static flags = {
-    customerId: Flags.string({
+export default defineCommand({
+  description: "Create a JWT that may be used to register an On-Premise Resource.",
+  options: {
+    customerId: option.string({
       char: "c",
       required: false,
       description: `The ID of the customer for which to create the JWT. ${onlyWhenOrgUser}`,
     }),
-    orgOnly: Flags.boolean({
+    orgOnly: option.boolean({
       required: false,
       description: `Register a Resource available to Organization users only. ${onlyWhenOrgUser}`,
     }),
-    resourceId: Flags.string({
+    resourceId: option.string({
       char: "r",
       required: false,
       description:
         "An optional ID of an existing On-Premise Resource for which to generate a new JWT.",
     }),
-    rotate: Flags.boolean({
+    rotate: option.boolean({
       required: false,
       description: "Invalidate all JWTs for the On-Premise Resource and get a new JWT.",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { customerId, orgOnly, resourceId, rotate },
-    } = await this.parse(CreateCommand);
+    } = commandInput();
 
     if (rotate) {
       const result = await gqlRequest({
@@ -61,7 +65,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
         },
       });
 
-      this.log(result.rotateOnPremiseResourceJWT.result.jwt);
+      commandOutput.log(result.rotateOnPremiseResourceJWT.result.jwt);
     } else {
       const result = await gqlRequest({
         document: gql`
@@ -90,7 +94,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
         },
       });
 
-      this.log(result.createOnPremiseResourceJWT.result.jwt);
+      commandOutput.log(result.createOnPremiseResourceJWT.result.jwt);
     }
-  }
-}
+  },
+});

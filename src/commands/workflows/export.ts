@@ -1,33 +1,36 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 import { dumpYaml, loadYaml } from "../../utils/serialize.js";
 
-export default class ExportCommand extends PrismaticBaseCommand {
-  static description = "Export an embedded workflow or workflow template YAML definition";
-
-  static args = {
-    workflow: Args.string({
+export default defineCommand({
+  description: "Export an embedded workflow or workflow template YAML definition",
+  args: {
+    workflow: arg.string({
       required: true,
       description: "ID of the workflow to export",
     }),
-  };
-
-  static flags = {
-    "latest-components": Flags.boolean({
+  },
+  options: {
+    "latest-components": option.boolean({
       char: "l",
       description:
         "Use the latest available version of each component upon import. Defaults to true.",
       default: true,
       allowNo: true,
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { workflow },
       flags: { "latest-components": latest },
-    } = await this.parse(ExportCommand);
+    } = commandInput();
 
     const result = await gqlRequest<{ workflow: { definition: string } }>({
       document: gql`
@@ -41,6 +44,6 @@ export default class ExportCommand extends PrismaticBaseCommand {
         }`,
       variables: { workflow, useLatestComponentVersions: latest },
     });
-    this.log(dumpYaml(loadYaml(result.workflow.definition)));
-  }
-}
+    commandOutput.log(dumpYaml(loadYaml(result.workflow.definition)));
+  },
+});

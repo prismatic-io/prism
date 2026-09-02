@@ -1,31 +1,44 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { commandInput, defineCommand, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
+import type { Scalars } from "../../../graphql/schema.generated.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Alert Groups in your Organization";
+interface AlertGroupNode {
+  [key: string]: unknown;
+  id: Scalars["ID"]["output"];
+  name: Scalars["String"]["output"];
+}
 
-  static examples = [
+interface ListAlertGroupsQuery {
+  alertGroups: {
+    nodes: Array<AlertGroupNode | null>;
+    pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+  };
+}
+
+const isAlertGroupNode = (node: AlertGroupNode | null): node is AlertGroupNode => node !== null;
+
+export default defineCommand({
+  description: "List Alert Groups in your Organization",
+  examples: [
     {
       description:
         "Fetch the ID and Name of all alert groups in JSON format, sorted descending by name:",
       command: '<%= config.bin %> <%= command.id %> --columns "id,name" --output json --sort name',
     },
-  ];
+  ],
+  options: { ...ux.table.flags() },
+  async run(_context: CommandContext) {
+    const { flags } = commandInput();
 
-  static flags = { ...ux.table.flags() };
-
-  async run() {
-    const { flags } = await this.parse(ListCommand);
-
-    let alertGroups: any[] = [];
+    let alertGroups: AlertGroupNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         alertGroups: { nodes, pageInfo },
-      } = await gqlRequest({
+      }: ListAlertGroupsQuery = await gqlRequest<ListAlertGroupsQuery>({
         document: gql`
           query listAlertGroups($after: String) {
             alertGroups(after: $after) {
@@ -42,12 +55,12 @@ export default class ListCommand extends PrismaticBaseCommand {
         `,
         variables: { after: cursor },
       });
-      alertGroups = [...alertGroups, ...nodes];
-      cursor = pageInfo.endCursor;
+      alertGroups = [...alertGroups, ...nodes.filter(isAlertGroupNode)];
+      cursor = pageInfo.endCursor ?? null;
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    ux.table(
+    return ux.table(
       alertGroups,
       {
         id: {
@@ -58,5 +71,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

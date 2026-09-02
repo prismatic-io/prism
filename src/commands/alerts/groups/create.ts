@@ -1,40 +1,42 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
 import { parseJsonOrUndefined } from "../../../fields.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create an Alert Group";
-
-  static examples = [
+export default defineCommand({
+  description: "Create an Alert Group",
+  examples: [
     {
       description: "Create a group for 'DevOps':",
       command: `<%= config.bin %> <%= command.id %> --name DevOps --users "[\\"$(prism organization:users:list --columns id --filter 'Name=John Doe' --no-header)\\"]"`,
     },
-  ];
-
-  static flags = {
-    name: Flags.string({
+  ],
+  options: {
+    name: option.string({
       char: "n",
       required: true,
       description: "name of the group to be created",
     }),
-    users: Flags.string({
+    users: option.string({
       required: false,
       char: "u",
       description: "JSON-formatted list of Prismatic user IDs to alert",
     }),
-    webhooks: Flags.string({
+    webhooks: option.string({
       required: false,
       char: "w",
       description: "JSON-formatted list of Alert Webhook IDs to alert",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { name, users: userJson, webhooks: webhookJson },
-    } = await this.parse(CreateCommand);
+    } = commandInput();
 
     const users = parseJsonOrUndefined(userJson);
     const webhooks = parseJsonOrUndefined(webhookJson);
@@ -66,6 +68,6 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createAlertGroup.alertGroup.id);
-  }
-}
+    commandOutput.log(result.createAlertGroup.alertGroup.id);
+  },
+});

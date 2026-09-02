@@ -1,5 +1,5 @@
 import chardet from "chardet";
-import { ux } from "@oclif/core";
+import { ux } from "../ux.js";
 import { createRequire } from "node:module";
 import { gqlRequest, gql } from "../../graphql.js";
 import { uploadAvatar } from "../../utils/avatar.js";
@@ -18,6 +18,7 @@ import {
 } from "../component/index.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
 import { loadYaml } from "../serialize.js";
+import { writeCommandOutput } from "../../command.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
 
 const require = createRequire(import.meta.url);
@@ -165,7 +166,7 @@ const setIntegrationAvatar = async (integrationId: string, iconPath: string): Pr
       },
     });
   } catch (err) {
-    console.warn(`Error setting integration icon: ${err}`);
+    writeCommandOutput(`Error setting integration icon: ${err}`, "stderr");
   }
 };
 
@@ -271,7 +272,10 @@ export const importCodeNativeIntegration = async (
       { fromDist: true },
     );
   } catch (e) {
-    console.error("Import was successful but there was an error formatting local metadata:", e);
+    writeCommandOutput(
+      `Import was successful but there was an error formatting local metadata: ${e}`,
+      "stderr",
+    );
   }
 
   // Set test API keys, if they are present.
@@ -290,7 +294,7 @@ export const importCodeNativeIntegration = async (
       ux.action.stop();
     } catch (error) {
       ux.action.stop("Failed to set test API keys");
-      console.warn("Warning: Could not set test API keys:", error);
+      writeCommandOutput(`Warning: Could not set test API keys: ${error}`, "stderr");
     }
   }
 
@@ -367,7 +371,10 @@ const setTestApiKeysForFlows = async ({
       (flowConfig) => flowConfig.flow.name === metadataFlow.name,
     );
     if (!importedFlowConfig) {
-      console.warn(`Could not find imported flow "${metadataFlow.name}" to set API keys`);
+      writeCommandOutput(
+        `Could not find imported flow "${metadataFlow.name}" to set API keys`,
+        "stderr",
+      );
       continue;
     }
 

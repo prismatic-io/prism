@@ -1,12 +1,11 @@
-import { readFileSync } from "node:fs";
-import { cp } from "node:fs/promises";
+import { cp, readFile } from "node:fs/promises";
 import type { BunPlugin } from "bun";
 
 const graphqlLoader: BunPlugin = {
   name: "graphql-loader",
   setup: (build) => {
-    build.onLoad({ filter: /\.graphql$/ }, (args) => {
-      const content = readFileSync(args.path, "utf-8");
+    build.onLoad({ filter: /\.graphql$/ }, async (args) => {
+      const content = await readFile(args.path, "utf-8");
       return {
         contents: `export default ${JSON.stringify(content)};`,
         loader: "js",

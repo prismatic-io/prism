@@ -1,11 +1,17 @@
-import { Flags } from "@oclif/core";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  requireInteractiveInput,
+  type CommandContext,
+} from "../../../command.js";
 import type serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import dotenv from "dotenv";
 import inquirer, { type Answers, type Question } from "inquirer";
 import { kebabCase, snakeCase, upperCase } from "lodash-es";
 import open from "open";
 import { promisify } from "util";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { exists } from "../../../fs.js";
 import { ux } from "../../../utils/ux.js";
 import { deleteComponentByKey } from "../../../utils/component/deleteByKey.js";
@@ -164,41 +170,39 @@ const valuesFromAnswers = ({
   };
 };
 
-export default class TestCommand extends PrismaticBaseCommand {
-  static description =
-    "Run an action of a component within a test integration in the integration runner";
-  static flags = {
-    envPath: Flags.string({
+export default defineCommand({
+  description: "Run an action of a component within a test integration in the integration runner",
+  options: {
+    envPath: option.string({
       required: false,
       default: ".env",
       char: "e",
       description: "Path to dotenv file to load for supplying testing values",
     }),
-    build: Flags.boolean({
+    build: option.boolean({
       required: false,
       default: true,
       allowNo: true,
       char: "b",
       description: "Build the component prior to testing",
     }),
-    "output-file": Flags.string({
+    "output-file": option.string({
       required: false,
       char: "o",
       description: "Output the results of the action to a specified file",
     }),
-    "print-results": Flags.boolean({
+    "print-results": option.boolean({
       required: false,
       default: false,
       description: "Print the results of the action to stdout",
     }),
-    "clean-up": Flags.boolean({
+    "clean-up": option.boolean({
       required: false,
       default: false,
       description: "Clean up the integration and temporary component after running the action",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: {
         envPath,
@@ -207,13 +211,13 @@ export default class TestCommand extends PrismaticBaseCommand {
         "print-results": printResults,
         "clean-up": cleanUp,
       },
-    } = await this.parse(TestCommand);
+    } = commandInput();
 
     // Save the current working directory, so we can return later after moving to dist/
     const cwd = process.cwd();
 
     if (build) {
-      console.log("Building component...");
+      commandOutput.log("Building component...");
       await spawnProcess(["npm", "run", "build"], {});
     }
 
@@ -270,6 +274,10 @@ export default class TestCommand extends PrismaticBaseCommand {
     const publishedTimestamp = Date.now();
 
     const actions = definition.actions || {};
+
+    requireInteractiveInput(
+      "components:dev:test requires interactive action input and is unavailable in agent mode",
+    );
 
     const { action } = await inquirer.prompt<{ action: serverTypes.Action }>({
       type: "select",
@@ -401,7 +409,7 @@ export default class TestCommand extends PrismaticBaseCommand {
 
     if (outputFile) {
       process.chdir(cwd);
-      console.log(`Writing step results to ${outputFile}`);
+      commandOutput.log(`Writing step results to ${outputFile}`);
       await writeFinalStepResults(executionId, outputFile);
     }
 
@@ -418,7 +426,5 @@ export default class TestCommand extends PrismaticBaseCommand {
       await deleteComponentByKey(definition.key);
       ux.action.stop();
     }
-
-    ux.action.stop();
-  }
-}
+  },
+});

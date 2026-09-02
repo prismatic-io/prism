@@ -1,31 +1,27 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { arg, commandInput, defineCommand, option, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Integration versions";
-
-  static flags = {
+export default defineCommand({
+  description: "List Integration versions",
+  options: {
     ...ux.table.flags(),
-    "latest-available": Flags.boolean({
+    "latest-available": option.boolean({
       char: "l",
       description: "Show only the latest available version",
     }),
-  };
-
-  static args = {
-    integration: Args.string({
+  },
+  args: {
+    integration: arg.string({
       required: true,
       description: "ID of an integration",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags,
       args: { integration },
-    } = await this.parse(ListCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -61,7 +57,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
-    ux.table(
+    return ux.table(
       result.integration.versionSequence.nodes,
       {
         versionNumber: {
@@ -91,5 +87,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

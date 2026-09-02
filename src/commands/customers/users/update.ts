@@ -1,44 +1,48 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class UpdateCommand extends PrismaticBaseCommand {
-  static description = "Update a User";
-  static args = {
-    user: Args.string({
+export default defineCommand({
+  description: "Update a User",
+  args: {
+    user: arg.string({
       required: true,
       description: "ID of a user",
     }),
-  };
-
-  static flags = {
-    name: Flags.string({
+  },
+  options: {
+    name: option.string({
       char: "n",
       description: "name of the user",
       required: false,
     }),
-    phone: Flags.string({
+    phone: option.string({
       char: "p",
       description: "phone number of the user",
       required: false,
     }),
-    "dark-mode": Flags.string({
+    "dark-mode": option.string({
       char: "d",
       description: "whether the user should have dark mode enabled",
       required: false,
     }),
-    "dark-mode-os-sync": Flags.string({
+    "dark-mode-os-sync": option.string({
       char: "o",
       description: "whether dark mode should sync with OS settings",
       required: false,
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { user },
       flags: { name, phone, "dark-mode": darkMode, "dark-mode-os-sync": darkModeOsSync },
-    } = await this.parse(UpdateCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -77,6 +81,6 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateUser.user.id);
-  }
-}
+    commandOutput.log(result.updateUser.user.id);
+  },
+});

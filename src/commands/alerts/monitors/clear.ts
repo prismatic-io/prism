@@ -1,20 +1,18 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { arg, commandInput, defineCommand, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class ClearCommand extends PrismaticBaseCommand {
-  static description = "Clear an Alert Monitor";
-  static args = {
-    monitor: Args.string({
+export default defineCommand({
+  description: "Clear an Alert Monitor",
+  args: {
+    monitor: arg.string({
       required: true,
       description: "ID of the monitor to clear",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { monitor },
-    } = await this.parse(ClearCommand);
+    } = commandInput();
 
     await gqlRequest({
       document: gql`
@@ -34,5 +32,5 @@ export default class ClearCommand extends PrismaticBaseCommand {
         id: monitor,
       },
     });
-  }
-}
+  },
+});

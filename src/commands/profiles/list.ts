@@ -1,24 +1,22 @@
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { commandInput, commandOutput, defineCommand, type CommandContext } from "../../command.js";
 import { listProfiles } from "../../config.js";
 import { ux } from "../../utils/ux.js";
 
-export default class ProfilesListCommand extends PrismaticBaseCommand {
-  static description = "List profiles";
-
-  static flags = {
+export default defineCommand({
+  description: "List profiles",
+  options: {
     ...ux.table.flags(),
-  };
-
-  async run() {
-    const { flags } = await this.parse(ProfilesListCommand);
+  },
+  async run(_context: CommandContext) {
+    const { flags } = commandInput();
 
     const profiles = await listProfiles();
     if (profiles.length === 0) {
-      this.log("No profiles found.");
+      commandOutput.log("No profiles found.");
       return;
     }
 
-    ux.table(
+    return ux.table(
       profiles,
       {
         name: { header: "Profile", get: (p) => (p.isDefault ? `${p.name} (default)` : p.name) },
@@ -27,5 +25,5 @@ export default class ProfilesListCommand extends PrismaticBaseCommand {
       },
       flags,
     );
-  }
-}
+  },
+});

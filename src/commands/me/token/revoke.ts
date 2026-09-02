@@ -1,39 +1,42 @@
-import { Flags } from "@oclif/core";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../../command.js";
 import { revokeRefreshToken } from "../../../auth.js";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class RevokeTokenCommand extends PrismaticBaseCommand {
-  static description = "Revoke all refresh tokens for your user";
-
-  static flags = {
-    confirm: Flags.boolean({
+export default defineCommand({
+  description: "Revoke all refresh tokens for your user",
+  options: {
+    confirm: option.boolean({
       allowNo: true,
       default: true,
       description: "Prompt for confirmation before revoking tokens. Use --no-confirm to skip.",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { confirm },
-    } = await this.parse(RevokeTokenCommand);
+    } = commandInput();
 
     if (confirm) {
       const shouldContinue = await ux.confirm(
         "This will revoke all refresh tokens for the current user. Continue? (yes/no)",
       );
       if (!shouldContinue) {
-        this.error("Operation canceled", { exit: 1 });
+        commandOutput.error("Operation canceled", { exit: 1 });
       }
     }
 
     const source = await revokeRefreshToken();
-    this.log("All refresh tokens for your user have been revoked.");
+    commandOutput.log("All refresh tokens for your user have been revoked.");
     if (source === "environment") {
-      this.warn(
+      commandOutput.warn(
         "Remove PRISM_ACCESS_TOKEN and PRISM_REFRESH_TOKEN from your environment before running more commands.",
       );
     }
-  }
-}
+  },
+});

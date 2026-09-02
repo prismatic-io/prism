@@ -1,45 +1,48 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  arg,
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class UpdateCommand extends PrismaticBaseCommand {
-  // TODO: Add more flags once optional updates are implemented
-  static description = "Update an Instance";
-  static args = {
-    instance: Args.string({
+export default defineCommand({
+  description: "Update an Instance",
+  args: {
+    instance: arg.string({
       required: true,
       description: "ID of an instance",
     }),
-  };
-
-  static flags = {
-    name: Flags.string({
+  },
+  options: {
+    name: option.string({
       char: "n",
       description: "Name of the instance",
     }),
-    description: Flags.string({
+    description: option.string({
       char: "d",
       description: "Description for the instance",
     }),
-    version: Flags.string({
+    version: option.string({
       char: "v",
       description: "ID of integration version",
     }),
-    deploy: Flags.boolean({
+    deploy: option.boolean({
       description: "Deploy the instance after updating",
     }),
-    label: Flags.string({
+    label: option.string({
       char: "l",
       description: "a label or set of labels to apply to the instance",
       multiple: true,
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { instance },
       flags: { name, description, version, deploy, label },
-    } = await this.parse(UpdateCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -79,7 +82,7 @@ export default class UpdateCommand extends PrismaticBaseCommand {
     });
 
     if (!deploy) {
-      this.log(result.updateInstance.instance.id);
+      commandOutput.log(result.updateInstance.instance.id);
       return;
     }
 
@@ -102,6 +105,6 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(deployResult.deployInstance.instance.id);
-  }
-}
+    commandOutput.log(deployResult.deployInstance.instance.id);
+  },
+});

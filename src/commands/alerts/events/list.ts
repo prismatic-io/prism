@@ -1,27 +1,34 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { arg, commandInput, defineCommand, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Alert Events for an Alert Monitor";
-  static args = {
-    alertMonitorId: Args.string({
+type AlertEvent = {
+  createdAt: unknown;
+  details: unknown;
+  id: unknown;
+  monitor: { name: unknown };
+};
+
+type AlertEventsQuery = { alertEvents: { nodes: AlertEvent[] } };
+
+export default defineCommand({
+  description: "List Alert Events for an Alert Monitor",
+  args: {
+    alertMonitorId: arg.string({
       description: "ID of an alert monitor",
       required: true,
     }),
-  };
-  static flags = {
+  },
+  options: {
     ...ux.table.flags(),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags,
       args: { alertMonitorId },
-    } = await this.parse(ListCommand);
+    } = commandInput();
 
-    const result = await gqlRequest({
+    const result = await gqlRequest<AlertEventsQuery>({
       document: gql`
         query listAlertEvents($alertMonitorId: ID) {
           alertEvents(
@@ -44,7 +51,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
-    ux.table(
+    return ux.table(
       result.alertEvents.nodes,
       {
         id: {
@@ -52,7 +59,7 @@ export default class ListCommand extends PrismaticBaseCommand {
           extended: true,
         },
         name: {
-          get: (row: any) => row.monitor.name,
+          get: (row: AlertEvent) => row.monitor.name,
           header: "Name",
         },
         createdAt: {
@@ -62,5 +69,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

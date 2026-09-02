@@ -1,24 +1,46 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { commandInput, defineCommand, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
+import type { Scalars } from "../../../graphql/schema.generated.js";
 import { ux } from "../../../utils/ux.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Users of your Organization";
-  static flags = { ...ux.table.flags() };
+interface OrganizationUserNode {
+  [key: string]: unknown;
+  id: Scalars["ID"]["output"];
+  name: Scalars["String"]["output"];
+  email: Scalars["String"]["output"];
+  externalId?: Scalars["String"]["output"] | null;
+  phone?: Scalars["String"]["output"] | null;
+  role: { name: Scalars["String"]["output"] };
+}
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+interface ListUsersQuery {
+  organization: {
+    users: {
+      nodes: Array<OrganizationUserNode | null>;
+      pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+    };
+  };
+}
 
-    let customerUsers: any[] = [];
+const isOrganizationUserNode = (node: OrganizationUserNode | null): node is OrganizationUserNode =>
+  node !== null;
+
+export default defineCommand({
+  description: "List Users of your Organization",
+  options: { ...ux.table.flags() },
+  async run(_context: CommandContext) {
+    const { flags } = commandInput();
+
+    let customerUsers: OrganizationUserNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         organization: {
           users: { nodes, pageInfo },
         },
-      } = await gqlRequest({
+      }: ListUsersQuery = await gqlRequest<ListUsersQuery>({
         document: gql`
           query listUsers($after: String) {
             organization {
@@ -43,12 +65,12 @@ export default class ListCommand extends PrismaticBaseCommand {
         `,
         variables: { after: cursor },
       });
-      customerUsers = [...customerUsers, ...nodes];
-      cursor = pageInfo.endCursor;
+      customerUsers = [...customerUsers, ...nodes.filter(isOrganizationUserNode)];
+      cursor = pageInfo.endCursor ?? null;
       hasNextPage = pageInfo.hasNextPage;
     }
 
-    ux.table(
+    return ux.table(
       customerUsers,
       {
         id: {
@@ -67,5 +89,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

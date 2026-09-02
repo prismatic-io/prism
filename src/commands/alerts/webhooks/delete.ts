@@ -1,20 +1,18 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { arg, commandInput, defineCommand, type CommandContext } from "../../../command.js";
 import { gql, gqlRequest } from "../../../graphql.js";
 
-export default class DeleteCommand extends PrismaticBaseCommand {
-  static description = "Delete an Alert Webhook";
-  static args = {
-    webhook: Args.string({
+export default defineCommand({
+  description: "Delete an Alert Webhook",
+  args: {
+    webhook: arg.string({
       required: true,
       description: "ID of the webhook to delete",
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       args: { webhook },
-    } = await this.parse(DeleteCommand);
+    } = commandInput();
 
     await gqlRequest({
       document: gql`
@@ -34,5 +32,5 @@ export default class DeleteCommand extends PrismaticBaseCommand {
         id: webhook,
       },
     });
-  }
-}
+  },
+});

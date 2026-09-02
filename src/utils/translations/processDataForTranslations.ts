@@ -108,7 +108,7 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
           }
         });
       } catch (error) {
-        console.error(`JSON Parsing Error: ${error}`);
+        writeCommandOutput(`JSON Parsing Error: ${error}`, "stderr");
       }
     }
 
@@ -175,3 +175,4 @@ export const processIntegrationsForTranslations = (
 
   return result;
 };
+import { writeCommandOutput } from "../../command.js";

@@ -1,12 +1,16 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import {
+  commandInput,
+  commandOutput,
+  defineCommand,
+  option,
+  type CommandContext,
+} from "../../command.js";
 import { parseJsonOrUndefined } from "../../fields.js";
 import { gql, gqlRequest } from "../../graphql.js";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create an Instance";
-
-  static examples = [
+export default defineCommand({
+  description: "Create an Instance",
+  examples: [
     {
       description: "Get the ID of the integration you want to deploy:",
       command:
@@ -29,46 +33,44 @@ export default class CreateCommand extends PrismaticBaseCommand {
         // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
         '<%= config.bin %> <%= command.id %> --name \'Acme Inc\' --description \'Acme Inc instance for Smith Rocket Co\' --integration ${VERSION_ID} --customer ${CUSTOMER_ID} --config-vars \'[{"key":"My Endpoint","value":"https://example.com/api"},{"key":"Do Thing?","value":"true"},{"key":"Acme Basic Auth","values":"${CREDENTIALS}"}]\' --label \'Production\' --label \'Paid\'',
     },
-  ];
-
-  static flags = {
-    name: Flags.string({
+  ],
+  options: {
+    name: option.string({
       char: "n",
       required: true,
       description: "name of your new instance.",
     }),
-    integration: Flags.string({
+    integration: option.string({
       char: "i",
       required: true,
       description:
         "ID of the integration or a specific integration version ID this is an instance of",
     }),
-    customer: Flags.string({
+    customer: option.string({
       char: "c",
       required: true,
       description: "ID of customer to deploy to",
     }),
-    description: Flags.string({
+    description: option.string({
       required: false,
       char: "d",
       description: "longer description of the instance",
     }),
-    "config-vars": Flags.string({
+    "config-vars": option.string({
       required: false,
       char: "v",
       description: "config variables to bind to steps of your instance",
     }),
-    label: Flags.string({
+    label: option.string({
       char: "l",
       description: "a label or set of labels to apply to the instance",
       multiple: true,
     }),
-  };
-
-  async run() {
+  },
+  async run(_context: CommandContext) {
     const {
       flags: { name, description, integration, customer, "config-vars": configVars, label },
-    } = await this.parse(CreateCommand);
+    } = commandInput();
 
     const result = await gqlRequest({
       document: gql`
@@ -110,6 +112,6 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createInstance.instance.id);
-  }
-}
+    commandOutput.log(result.createInstance.instance.id);
+  },
+});

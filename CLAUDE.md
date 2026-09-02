@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-Prism is Prismatic's CLI tool for building, deploying, and supporting integrations from the command line. It's a Node.js package built with TypeScript and the oclif CLI framework. The binary is distributed as `@prismatic-io/prism` on npm and provides the `prism` command.
+Prism is Prismatic's CLI tool for building, deploying, and supporting integrations from the command line. It's a Node.js package built with TypeScript and the incur CLI framework. The binary is distributed as `@prismatic-io/prism` on npm and provides the `prism` command.
 
 ## Build System & Development Commands
 
@@ -15,7 +15,7 @@ Prism is Prismatic's CLI tool for building, deploying, and supporting integratio
 # Clean build artifacts
 bun run clean
 
-# Full build (clean, format, lint, compile, bundle, manifest, copy templates)
+# Full build (clean, format, lint, compile, bundle, copy templates)
 bun run build
 
 # Build with source maps for debugging
@@ -41,11 +41,11 @@ bun run test:snapshots            # Update test snapshots
 
 ### Command Structure
 
-The codebase follows oclif's explicit command strategy:
-- All commands are registered in `src/index.ts` in the `Commands` export object
-- Commands use colon-separated topics (e.g., `components:init`, `integrations:import`)
-- All commands extend `PrismaticBaseCommand` from `src/baseCommand.ts`
-- Command files are in `src/commands/` organized by topic (alerts, components, customers, instances, integrations, etc.)
+The codebase uses incur with an explicit command catalog:
+- Commands are registered in `src/index.ts` and assembled into topic groups in `src/cli.ts`
+- Existing colon-separated topics remain supported (for example, `components:init`)
+- Commands define Zod-backed arguments and options through `defineCommand`
+- Command files and their tests are organized by domain under `src/commands/`
 
 ### Core Modules
 
