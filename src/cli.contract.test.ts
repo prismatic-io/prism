@@ -36,13 +36,6 @@ const legacyManifest = z
     ),
   );
 
-const legacyHelp = z
-  .record(
-    z.string(),
-    z.object({ status: z.number().nullable(), stderr: z.string(), stdout: z.string() }),
-  )
-  .parse(JSON.parse(await readFile(new URL("./legacy-help.json", import.meta.url), "utf8")));
-
 const globalNames = new Set(["print-requests", "profile", "quiet"]);
 const sample = (field: Field): unknown => {
   if (field.default !== undefined) return field.default;
@@ -204,23 +197,14 @@ describe("legacy command contract", () => {
 });
 
 describe("command separators and agent mode", () => {
-  it("preserves every original root, topic, and leaf help page byte-for-byte", () => {
-    for (const [commandPath, expected] of Object.entries(legacyHelp)) {
-      const argv = normalizeCommandArguments([...(commandPath ? [commandPath] : []), "--help"]);
-      const actual = renderHumanHelp("incompatible incur help", argv);
-      if (commandPath) expect(actual, commandPath).toBe(expected.stdout);
-      else {
-        expect(actual, "root").toBe(
-          expected.stdout.replace(
-            /^ {2}@prismatic-io\/prism\/\S+ \S+ node-\S+$/m,
-            `  @prismatic-io/prism/11.0.0 ${process.platform}-${process.arch} node-${process.version}`,
-          ),
-        );
-      }
-    }
-    expect(renderHumanHelp("incompatible incur help", [])).toContain(
-      `${process.platform}-${process.arch} node-${process.version}`,
-    );
+  it("keeps legacy command and flag spellings in Incur-rendered help", () => {
+    expect(
+      renderHumanHelp("Usage: prism on-prem-resources registration-jwt --customer-id <value>", [
+        "on-prem-resources",
+        "registration-jwt",
+        "--help",
+      ]),
+    ).toBe("Usage: prism on-prem-resources:registration-jwt --customerId <value>");
   });
   it("normalizes every legacy colon route without changing its arguments", () => {
     for (const id of Object.keys(Commands)) {

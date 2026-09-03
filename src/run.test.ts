@@ -28,8 +28,8 @@ describe("CLI error output", () => {
     const result = await runCli(["not-a-command", "--no-agent"]);
 
     expect(result.status).toBe(2);
-    expect(result.stdout).toBe("");
-    expect(result.stderr.trim()).toMatch(/command .* not found/i);
+    expect(result.stdout).toContain("prism --help");
+    expect(result.stderr.trim()).toMatch(/not-a-command.*not a command/i);
   }, 15_000);
 
   it("keeps runtime errors structured in agent mode", async () => {
@@ -46,7 +46,7 @@ describe("CLI error output", () => {
   });
 });
 
-describe("legacy human help", () => {
+describe("Incur human help", () => {
   it.each([
     ["customers"],
     ["help", "customers"],
@@ -54,9 +54,9 @@ describe("legacy human help", () => {
     const result = await runCli([...argv, "--no-agent"]);
 
     expect(result.status).toBe(0);
-    expect(result.stdout).toContain("USAGE\n  $ prism customers:COMMAND");
-    expect(result.stdout).toContain("TOPICS\n  customers:users");
-    expect(result.stdout).toContain("COMMANDS\n  customers:create");
-    expect(result.stdout).not.toContain("Custom Global Options");
+    expect(result.stdout).toContain("Usage: prism customers <command>");
+    expect(result.stdout).toContain("users   Manage Customer Users");
+    expect(result.stdout).toContain("create  Create a new Customer");
+    expect(result.stdout).toContain("Custom Global Options");
   });
 });
