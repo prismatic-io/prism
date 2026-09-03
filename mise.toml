@@ -35,6 +35,10 @@ run = "MISE_NODE_VERSION=22 mise run validate"
 description = "Run all validation checks against Node 24"
 run = "MISE_NODE_VERSION=24 mise run validate"
 
+[tasks."validate:node26"]
+description = "Run all validation checks against Node 26"
+run = "MISE_NODE_VERSION=26 mise run validate"
+
 [tasks.version-bump]
 description = "Bump package.json version (set BUMP_TYPE=patch|minor|major|preview)"
 run = """
