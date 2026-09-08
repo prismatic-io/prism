@@ -4,11 +4,11 @@
     "includes": [
       "**",
       "!**/lib",
+      "!**/oclif.manifest.json",
       "!**/node_modules",
       "!**/fixtures",
       "!**/__snapshots__",
-      "!**/temp",
-      "!**/oclif.manifest.json"
+      "!**/temp"
     ]
   },
   "formatter": {
