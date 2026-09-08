@@ -1,42 +1,47 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
-import { CreateAlertGroupDocument as CREATE_ALERT_GROUP } from "../../../graphql/operations/createAlertGroup.generated.js";
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { commandOutput, defineCommand, optionsSchema } from "../../../command.js";
 import { parseJsonOrUndefined } from "../../../fields.js";
+import { CreateAlertGroupDocument as CREATE_ALERT_GROUP } from "../../../graphql/operations/createAlertGroup.generated.js";
 import { gqlRequest } from "../../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create an Alert Group";
-
-  static examples = [
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("alertGroupId"),
+  description: "Create an Alert Group",
+  examples: [
     {
       description: "Create a group for 'DevOps':",
-      command: `<%= config.bin %> <%= command.id %> --name DevOps --users "[\\"$(prism organization:users:list --columns id --filter 'Name=John Doe' --no-header)\\"]"`,
+      options: {
+        name: "DevOps",
+        users:
+          "[\\\"$(prism organization:users:list --columns id --filter 'Name=John Doe' --no-header)\\\"]",
+      },
     },
-  ];
-
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      required: true,
-      description: "name of the group to be created",
+  ],
+  options: optionsSchema(
+    z.object({
+      name: z
+        .string()
+        .describe("name of the group to be created")
+        .meta({ cli: { char: "n" } }),
+      users: z
+        .string()
+        .optional()
+        .describe("JSON-formatted list of Prismatic user IDs to alert")
+        .meta({ cli: { char: "u" } }),
+      webhooks: z
+        .string()
+        .optional()
+        .describe("JSON-formatted list of Alert Webhook IDs to alert")
+        .meta({ cli: { char: "w" } }),
     }),
-    users: Flags.string({
-      required: false,
-      char: "u",
-      description: "JSON-formatted list of Prismatic user IDs to alert",
-    }),
-    webhooks: Flags.string({
-      required: false,
-      char: "w",
-      description: "JSON-formatted list of Alert Webhook IDs to alert",
-    }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
-      flags: { name, users: userJson, webhooks: webhookJson },
-    } = await this.parse(CreateCommand);
+      options: { name, users: userJson, webhooks: webhookJson },
+    } = context;
 
     const users = parseJsonOrUndefined(userJson);
     const webhooks = parseJsonOrUndefined(webhookJson);
@@ -50,6 +55,10 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createAlertGroup?.alertGroup?.id ?? this.error("Alert group was not created"));
-  }
-}
+    return resourceOutput(
+      context,
+      "alertGroupId",
+      result.createAlertGroup?.alertGroup?.id ?? commandOutput.error("Alert group was not created"),
+    );
+  },
+});

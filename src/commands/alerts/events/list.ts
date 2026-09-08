@@ -1,27 +1,37 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
-import { Args } from "@oclif/core";
+import { tableOutputSchema } from "../../../utils/table.js";
 import { ListAlertEventsDocument as LIST_ALERT_EVENTS } from "../../../graphql/operations/listAlertEvents.generated.js";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { defineCommand, argsSchema, optionsSchema } from "../../../command.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/legacy-ux.js";
+import { ux } from "../../../utils/ux.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Alert Events for an Alert Monitor";
-  static args = {
-    alertMonitorId: Args.string({
-      description: "ID of an alert monitor",
-      required: true,
+type AlertEvent = {
+  createdAt: unknown;
+  details: unknown;
+  id: unknown;
+  monitor: { name: unknown };
+};
+
+export default defineCommand({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["id", "name", "createdAt", "details"]),
+  description: "List Alert Events for an Alert Monitor",
+  args: argsSchema(
+    z.object({
+      alertMonitorId: z.string().describe("ID of an alert monitor"),
     }),
-  };
-  static flags = {
-    ...ux.table.flags(),
-  };
-
-  async run() {
+  ),
+  options: optionsSchema(
+    z.object({
+      ...ux.table.flags(),
+    }),
+  ),
+  async run(context) {
     const {
-      flags,
+      options: flags,
       args: { alertMonitorId },
-    } = await this.parse(ListCommand);
+    } = context;
 
     const result: ResultOf<typeof LIST_ALERT_EVENTS> = await gqlRequest({
       document: LIST_ALERT_EVENTS,
@@ -30,7 +40,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
-    ux.table(
+    return ux.table(
       result.alertEvents.nodes,
       {
         id: {
@@ -38,7 +48,7 @@ export default class ListCommand extends PrismaticBaseCommand {
           extended: true,
         },
         name: {
-          get: (row: any) => row.monitor.name,
+          get: (row: AlertEvent) => row.monitor.name,
           header: "Name",
         },
         createdAt: {
@@ -48,5 +58,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

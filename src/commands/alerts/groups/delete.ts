@@ -1,21 +1,22 @@
+import { z } from "incur";
+import { defineCommand, argsSchema } from "../../../command.js";
 import { DeleteAlertGroupDocument as DELETE_ALERT_GROUP } from "../../../graphql/operations/deleteAlertGroup.generated.js";
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest } from "../../../graphql.js";
+import { resourceOutputSchema, resultOutput } from "../../../output.js";
 
-export default class DeleteCommand extends PrismaticBaseCommand {
-  static description = "Delete an Alert Group";
-  static args = {
-    group: Args.string({
-      required: true,
-      description: "ID of the group to delete",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("alertGroupId").extend({ deleted: z.literal(true) }),
+  description: "Delete an Alert Group",
+  args: argsSchema(
+    z.object({
+      group: z.string().describe("ID of the group to delete"),
     }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
       args: { group },
-    } = await this.parse(DeleteCommand);
+    } = context;
 
     await gqlRequest({
       document: DELETE_ALERT_GROUP,
@@ -23,5 +24,6 @@ export default class DeleteCommand extends PrismaticBaseCommand {
         id: group,
       },
     });
-  }
-}
+    return resultOutput(context, { alertGroupId: group, deleted: true });
+  },
+});
