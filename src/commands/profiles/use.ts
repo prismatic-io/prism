@@ -1,23 +1,24 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { commandOutput, defineCommand, argsSchema } from "../../command.js";
 import { useProfile } from "../../config.js";
+import { resourceOutputSchema, resultOutput } from "../../output.js";
+import { z } from "incur";
 
-export default class ProfilesUseCommand extends PrismaticBaseCommand {
-  static description = "Set the default profile";
-
-  static args = {
-    name: Args.string({
-      required: true,
-      description: "Profile to use by default",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("profile"),
+  description: "Set the default profile",
+  args: argsSchema(
+    z.object({
+      name: z.string().describe("Profile to use by default"),
     }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
       args: { name },
-    } = await this.parse(ProfilesUseCommand);
+    } = context;
 
     await useProfile(name);
-    this.log(`Using '${name}' by default.`);
-  }
-}
+    commandOutput.log(`Using '${name}' by default.`);
+    return resultOutput(context, { profile: name });
+  },
+});

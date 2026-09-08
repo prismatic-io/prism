@@ -1,8 +1,9 @@
+import { runCommand } from "../../test-command.js";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { getStdout } from "../../../vitest.setup.js";
+import { getStdout, getStderr } from "../../../vitest.setup.js";
 import { type Profile, readConfigFile, writeProfile } from "../../config.js";
 import ProfilesDeleteCommand from "./delete.js";
 import ProfilesListCommand from "./list.js";
@@ -48,7 +49,7 @@ describe("profiles commands", () => {
       await writeProfile("default", makeProfile({ tenantId: "t-1" }));
       await writeProfile("staging", makeProfile({ prismaticUrl: "https://staging.example.io" }));
 
-      await ProfilesListCommand.run([]);
+      await runCommand(ProfilesListCommand, []);
 
       const out = getStdout();
       expect(out).toContain("default (default)");
@@ -58,8 +59,9 @@ describe("profiles commands", () => {
     });
 
     it("prints a hint when there are no profiles", async () => {
-      await ProfilesListCommand.run([]);
-      expect(getStdout()).toContain("No profiles found.");
+      const result = await runCommand(ProfilesListCommand, []);
+      expect(result).toEqual({ items: [] });
+      expect(getStderr()).toContain("No profiles found.");
     });
   });
 
@@ -68,12 +70,13 @@ describe("profiles commands", () => {
       await writeProfile("default", makeProfile());
       await writeProfile("staging", makeProfile());
 
-      await ProfilesUseCommand.run(["staging"]);
+      const result = await runCommand(ProfilesUseCommand, ["staging"]);
+      expect(result).toEqual({ profile: "staging" });
 
       const file = await readConfigFile();
       expect(file?.defaultProfile).toBe("staging");
       expect(Object.keys(file?.profiles ?? {})).toEqual(["default", "staging"]);
-      expect(getStdout()).toContain("Using 'staging' by default.");
+      expect(getStderr()).toContain("Using 'staging' by default.");
     });
   });
 
@@ -82,25 +85,29 @@ describe("profiles commands", () => {
       await writeProfile("default", makeProfile());
       await writeProfile("staging", makeProfile());
 
-      await ProfilesDeleteCommand.run(["staging"]);
+      const result = await runCommand(ProfilesDeleteCommand, ["staging"]);
+      expect(result).toEqual({ profile: "staging", deleted: true, defaultProfile: "default" });
 
       const file = await readConfigFile();
       expect(Object.keys(file?.profiles ?? {})).toEqual(["default"]);
-      expect(getStdout()).toContain("Deleted 'staging'.");
+      expect(getStderr()).toContain("Deleted 'staging'.");
     });
 
     it("removes the config file when the last profile is deleted", async () => {
       await writeProfile("default", makeProfile());
 
-      await ProfilesDeleteCommand.run(["default"]);
+      const result = await runCommand(ProfilesDeleteCommand, ["default"]);
+      expect(result).toEqual({ profile: "default", deleted: true, defaultProfile: null });
 
       expect(await readConfigFile()).toBeNull();
-      expect(getStdout()).toContain("No profiles remain.");
+      expect(getStderr()).toContain("No profiles remain.");
     });
 
     it("errors when the profile does not exist", async () => {
       await writeProfile("default", makeProfile());
-      await expect(ProfilesDeleteCommand.run(["missing"])).rejects.toThrow(/does not exist/);
+      await expect(runCommand(ProfilesDeleteCommand, ["missing"])).rejects.toThrow(
+        /does not exist/,
+      );
     });
   });
 });
