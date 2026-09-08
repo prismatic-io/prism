@@ -93,15 +93,18 @@ import { asOclifCommand } from "./migration-bridge.js";
 
 // During the stack, native commands run through incur while remaining commands keep oclif.
 export const NativeCommands = {
-  "profiles:list": ProfilesListCommand,
-  "profiles:use": ProfilesUseCommand,
-  "profiles:delete": ProfilesDeleteCommand,
-};
-
-export const Commands = {
   login: LoginCommand,
   "login:switch": LoginSwitchCommand,
   logout: LogoutCommand,
+  me: MeCommand,
+  "me:token": MeTokenCommand,
+  "profiles:list": ProfilesListCommand,
+  "profiles:use": ProfilesUseCommand,
+  "profiles:delete": ProfilesDeleteCommand,
+  "me:token:revoke": MeTokenRevokeCommand,
+};
+
+export const Commands = {
   "components:delete": ComponentsDeleteCommand,
   "components:list": ComponentsListCommand,
   "components:publish": ComponentsPublishCommand,
@@ -129,8 +132,6 @@ export const Commands = {
   "integrations:set-debug": IntegrationsSetDebugCommand,
   "integrations:update": IntegrationsUpdateCommand,
   "integrations:validate-yaml": IntegrationsValidateYamlCommand,
-  me: MeCommand,
-  "me:token": MeTokenCommand,
   "on-prem-resources:delete": OnPremResourcesDeleteCommand,
   "on-prem-resources:list": OnPremResourcesListCommand,
   "on-prem-resources:registration-jwt": OnPremResourcesRegistrationCommand,
@@ -173,7 +174,6 @@ export const Commands = {
   "integrations:init": IntegrationsInitCommand,
   "integrations:versions": IntegrationsVersionsCommand,
   "logs:severities:list": LogsSeveritiesListCommand,
-  "me:token:revoke": MeTokenRevokeCommand,
   "organization:connections:list": OrganizationConnectionsListCommand,
   "organization:signing-keys:delete": OrganizationSigningKeysDeleteCommand,
   "organization:signing-keys:generate": OrganizationSigningKeysGenerateCommand,

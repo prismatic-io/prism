@@ -1,26 +1,32 @@
-import { Flags } from "@oclif/core";
+import { z } from "incur";
 import { getAccessToken } from "../../auth.js";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { commandOutput, defineCommand, optionsSchema } from "../../command.js";
 import { getAuthContext } from "../../context.js";
-export default class PrintTokenCommand extends PrismaticBaseCommand {
-  static description = "Print your authorization tokens";
-
-  static flags = {
-    type: Flags.string({
-      char: "t",
-      description: "Which token type to print",
-      options: ["access", "refresh"],
-      default: "access",
+import { resultOutput, warningsOutput } from "../../output.js";
+export default defineCommand({
+  output: z.object({
+    ...warningsOutput,
+    token: z.string().nullable(),
+    type: z.enum(["access", "refresh"]),
+  }),
+  description: "Print your authorization tokens",
+  options: optionsSchema(
+    z.object({
+      type: z
+        .enum(["access", "refresh"])
+        .default("access")
+        .describe("Which token type to print")
+        .meta({ cli: { char: "t" } }),
     }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
-      flags: { type: tokenType },
-    } = await this.parse(PrintTokenCommand);
+      options: { type: tokenType },
+    } = context;
 
     const token =
       tokenType === "access" ? await getAccessToken() : (await getAuthContext()).refreshToken;
-    this.log(token);
-  }
-}
+    commandOutput.log(token);
+    return resultOutput(context, { token: token ?? null, type: tokenType });
+  },
+});
