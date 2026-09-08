@@ -1,22 +1,23 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { commandOutput, defineCommand, argsSchema } from "../../command.js";
 import { DisableInstanceDocument as DISABLE_INSTANCE } from "../../graphql/operations/disableInstance.generated.js";
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class DisableCommand extends PrismaticBaseCommand {
-  static description = "Disable an Instance";
-  static args = {
-    instance: Args.string({
-      required: true,
-      description: "ID of an instance",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("instanceId"),
+  description: "Disable an Instance",
+  args: argsSchema(
+    z.object({
+      instance: z.string().describe("ID of an instance"),
     }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
       args: { instance },
-    } = await this.parse(DisableCommand);
+    } = context;
 
     const result: ResultOf<typeof DISABLE_INSTANCE> = await gqlRequest({
       document: DISABLE_INSTANCE,
@@ -25,6 +26,10 @@ export default class DisableCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateInstance?.instance?.id ?? this.error("Instance was not disabled"));
-  }
-}
+    return resourceOutput(
+      context,
+      "instanceId",
+      result.updateInstance?.instance?.id ?? commandOutput.error("Instance was not disabled"),
+    );
+  },
+});

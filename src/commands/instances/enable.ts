@@ -1,22 +1,23 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { commandOutput, defineCommand, argsSchema } from "../../command.js";
 import { EnableInstanceDocument as ENABLE_INSTANCE } from "../../graphql/operations/enableInstance.generated.js";
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class EnableCommand extends PrismaticBaseCommand {
-  static description = "Enable an Instance";
-  static args = {
-    instance: Args.string({
-      required: true,
-      description: "ID of an instance",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("instanceId"),
+  description: "Enable an Instance",
+  args: argsSchema(
+    z.object({
+      instance: z.string().describe("ID of an instance"),
     }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
       args: { instance },
-    } = await this.parse(EnableCommand);
+    } = context;
 
     const result: ResultOf<typeof ENABLE_INSTANCE> = await gqlRequest({
       document: ENABLE_INSTANCE,
@@ -25,6 +26,10 @@ export default class EnableCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateInstance?.instance?.id ?? this.error("Instance was not enabled"));
-  }
-}
+    return resourceOutput(
+      context,
+      "instanceId",
+      result.updateInstance?.instance?.id ?? commandOutput.error("Instance was not enabled"),
+    );
+  },
+});

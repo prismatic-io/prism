@@ -1,30 +1,35 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { commandOutput, defineCommand, argsSchema, optionsSchema } from "../../command.js";
 import { DeployInstanceDocument as DEPLOY_INSTANCE } from "../../graphql/operations/deployInstance.generated.js";
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class DeployCommand extends PrismaticBaseCommand {
-  static description = "Deploy an Instance";
-  static args = {
-    instance: Args.string({
-      required: true,
-      description: "ID of an instance",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("instanceId"),
+  description: "Deploy an Instance",
+  args: argsSchema(
+    z.object({
+      instance: z.string().describe("ID of an instance"),
     }),
-  };
-  static flags = {
-    force: Flags.boolean({
-      char: "f",
-      description:
-        "Force deployment even when there are certain conditions that would normally prevent it",
+  ),
+  options: optionsSchema(
+    z.object({
+      force: z
+        .boolean()
+        .optional()
+        .describe(
+          "Force deployment even when there are certain conditions that would normally prevent it",
+        )
+        .meta({ cli: { char: "f" } }),
     }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
       args: { instance },
-      flags: { force },
-    } = await this.parse(DeployCommand);
+      options: { force },
+    } = context;
 
     const result: ResultOf<typeof DEPLOY_INSTANCE> = await gqlRequest({
       document: DEPLOY_INSTANCE,
@@ -34,6 +39,10 @@ export default class DeployCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.deployInstance?.instance?.id ?? this.error("Instance was not deployed"));
-  }
-}
+    return resourceOutput(
+      context,
+      "instanceId",
+      result.deployInstance?.instance?.id ?? commandOutput.error("Instance was not deployed"),
+    );
+  },
+});
