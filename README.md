@@ -7,7 +7,7 @@
 
 ## Using Prism
 
-Prism is a NodeJS package, so it requires NodeJS and NPM to be installed.
+Prism requires Node.js 22 or newer and npm.
 You can download both from the [NodeJS Website](https://nodejs.org/).
 Prism works on MacOS, Linux, Windows and [WSL](https://docs.microsoft.com/en-us/windows/wsl/).
 
@@ -66,6 +66,50 @@ tenant switching still operate on the selected profile.
 
 For help with Prism, please see our [Prism documentation page](https://prismatic.io/docs/cli/).
 There, you will find information about the various subcommands you can run, troubleshooting tips, etc.
+
+### Automation and agents
+
+Prism automatically emits structured output when it detects a supported coding agent. You can also
+select the behavior explicitly with `--agent` or `--no-agent`. Use `--llms`, `--schema`, and
+`--format json` to discover commands and consume their results programmatically.
+
+Commands that can modify remote or local state require `--yes` in agent mode. Use `--read-only`, or
+set `PRISM_READ_ONLY=true` when starting an MCP server, to reject every state-changing command even
+when approval was supplied. MCP tool calls supply approval and profile controls through
+`context`, for example `{ "name": "Acme", "context": { "yes": true, "profile": "staging" } }`.
+Server launch defaults such as `prism --profile staging --mcp` are inherited by calls.
+A server started read-only cannot be made writable by a tool call.
+
+Authenticate a profile before starting an MCP server or using buffered agent output (`--json`,
+`--format json`, YAML, or explicit TOON). Run `prism login --url` in a terminal. Agent CLI login
+supports the default streaming format or `prism login --agent --yes --format jsonl`; it emits the
+browser challenge immediately and waits up to three minutes for authentication. MCP and buffered
+login calls return `AUTHENTICATION_REQUIRED` when authentication is needed. Already-authenticated
+profiles can still be checked in those modes.
+
+Paginated list commands return one page and a resumable `pageInfo.endCursor` in agent mode. Pass
+`--after <cursor>` to resume, `--first <count>` to bound the request, or `--all` to fetch every page.
+Human-readable invocations continue to fetch all pages by default.
+
+Agent list results include IDs and all available columns by default, with numbers, booleans,
+arrays, and objects preserved. Use `--columns` or incur's `--filter-output` to select fields.
+Resource commands return named fields such as `customerId`, `integrationId`, `executionId`,
+`path`, or `definition`. Follow-up suggestions retain the explicitly selected profile.
+
+Prism 11 uses incur's named command results by default, including human invocations.
+Use `--format json` in scripts and read fields such as `token` or `customerId` rather than
+assuming stdout contains a bare scalar. `FORCE_HUMAN_MODE=true` and `--no-agent` select human
+behavior; they do not restore Prism 10 result formatting. The public `--output json|csv|yaml`
+table formats remain available. Incur's `--format json|jsonl|yaml|toon|md` selects structured
+command results.
+Execution, listening, authentication, and development subprocess commands emit typed events.
+Use the default agent format or `--format jsonl` for incremental logs and payloads;
+explicit JSON, YAML, and TOON output is buffered until the command completes.
+
+Use `prism skills add --agent --yes` to install generated command skills, `prism mcp add --agent --yes`
+to register the MCP server, or `prism --mcp` to run it directly. `prism completions bash` and
+`prism completions zsh` print shell hooks; existing `autocomplete` entry points remain available.
+
 
 ## What is Prismatic?
 
