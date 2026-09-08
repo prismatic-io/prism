@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListComponentActionsDocument as LIST_COMPONENT_ACTIONS } from "../../../graphql/operations/listComponentActions.generated.js";
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 interface ActionNode {
@@ -56,40 +58,15 @@ export default class ListCommand extends PrismaticBaseCommand {
     let actions: ActionNode[] = [];
     let componentId: string;
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         components: {
           nodes: [component],
         },
-      } = await gqlRequest({
-        document: gql`
-          query listComponentActions(
-            $componentKey: String
-            $after: String
-            $public: Boolean
-          ) {
-            components(key: $componentKey, public: $public) {
-              nodes {
-                id
-                key
-                actions(isTrigger: false, isDataSource: false, after: $after) {
-                  nodes {
-                    id
-                    key
-                    label
-                    description
-                  }
-                  pageInfo {
-                    hasNextPage
-                    endCursor
-                  }
-                }
-              }
-            }
-          }
-        `,
+      }: ResultOf<typeof LIST_COMPONENT_ACTIONS> = await gqlRequest({
+        document: LIST_COMPONENT_ACTIONS,
         variables: {
           after: cursor,
           componentKey,

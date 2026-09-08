@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { CreateCustomerDocument as CREATE_CUSTOMER } from "../../graphql/operations/createCustomer.generated.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create a new Customer";
@@ -39,32 +41,8 @@ export default class CreateCommand extends PrismaticBaseCommand {
       flags: { name, description, externalId, label },
     } = await this.parse(CreateCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation createCustomer(
-          $name: String!
-          $description: String
-          $externalId: String
-          $labels: [String]
-        ) {
-          createCustomer(
-            input: {
-              name: $name
-              description: $description
-              externalId: $externalId
-              labels: $labels
-            }
-          ) {
-            customer {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof CREATE_CUSTOMER> = await gqlRequest({
+      document: CREATE_CUSTOMER,
       variables: {
         name,
         description,
@@ -73,6 +51,6 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createCustomer.customer.id);
+    this.log(result.createCustomer?.customer?.id ?? this.error("Customer was not created"));
   }
 }

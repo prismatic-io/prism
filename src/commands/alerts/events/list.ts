@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
 import { Args } from "@oclif/core";
+import { ListAlertEventsDocument as LIST_ALERT_EVENTS } from "../../../graphql/operations/listAlertEvents.generated.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -21,24 +23,8 @@ export default class ListCommand extends PrismaticBaseCommand {
       args: { alertMonitorId },
     } = await this.parse(ListCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        query listAlertEvents($alertMonitorId: ID) {
-          alertEvents(
-            monitor: $alertMonitorId
-            sortBy: [{ field: CREATED_AT, direction: DESC }]
-          ) {
-            nodes {
-              id
-              monitor {
-                name
-              }
-              createdAt
-              details
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof LIST_ALERT_EVENTS> = await gqlRequest({
+      document: LIST_ALERT_EVENTS,
       variables: {
         alertMonitorId,
       },

@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { UpdateMarketplaceConfigurationDocument as UPDATE_MARKETPLACE_CONFIGURATION } from "../../graphql/operations/updateMarketplaceConfiguration.generated.js";
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class MarketplaceCommand extends PrismaticBaseCommand {
   static description = "Make a version of an Integration available in the Marketplace";
@@ -49,32 +51,8 @@ export default class MarketplaceCommand extends PrismaticBaseCommand {
         : "AVAILABLE_NOT_DEPLOYABLE"
       : "NOT_AVAILABLE_IN_MARKETPLACE";
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation updateMarketplaceConfiguration(
-          $id: ID
-          $marketplaceConfiguration: String!
-          $overview: String!
-          $multipleInstances: Boolean
-        ) {
-          updateIntegrationMarketplaceConfiguration(
-            input: {
-              id: $id
-              marketplaceConfiguration: $marketplaceConfiguration
-              overview: $overview
-              allowMultipleMarketplaceInstances: $multipleInstances
-            }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof UPDATE_MARKETPLACE_CONFIGURATION> = await gqlRequest({
+      document: UPDATE_MARKETPLACE_CONFIGURATION,
       variables: {
         id: integration,
         marketplaceConfiguration,
@@ -85,6 +63,9 @@ export default class MarketplaceCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateIntegrationMarketplaceConfiguration.integration.id);
+    this.log(
+      result.updateIntegrationMarketplaceConfiguration?.integration?.id ??
+        this.error("Integration marketplace configuration was not updated"),
+    );
   }
 }

@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { MarkAvailabilityDocument as MARK_AVAILABILITY } from "../../graphql/operations/markAvailability.generated.js";
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class AvailableCommand extends PrismaticBaseCommand {
   static description = "Mark an Integration version as available or unavailable";
@@ -25,28 +27,17 @@ export default class AvailableCommand extends PrismaticBaseCommand {
       flags: { available },
     } = await this.parse(AvailableCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation markAvailability($id: ID!, $available: Boolean!) {
-          updateIntegrationVersionAvailability(
-            input: { id: $id, available: $available }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof MARK_AVAILABILITY> = await gqlRequest({
+      document: MARK_AVAILABILITY,
       variables: {
         id: integration,
         available,
       },
     });
 
-    this.log(result.updateIntegrationVersionAvailability.integration.id);
+    this.log(
+      result.updateIntegrationVersionAvailability?.integration?.id ??
+        this.error("Integration availability was not updated"),
+    );
   }
 }

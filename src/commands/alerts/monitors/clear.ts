@@ -1,6 +1,7 @@
+import { ClearAlertMonitorDocument as CLEAR_ALERT_MONITOR } from "../../../graphql/operations/clearAlertMonitor.generated.js";
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class ClearCommand extends PrismaticBaseCommand {
   static description = "Clear an Alert Monitor";
@@ -17,19 +18,7 @@ export default class ClearCommand extends PrismaticBaseCommand {
     } = await this.parse(ClearCommand);
 
     await gqlRequest({
-      document: gql`
-        mutation clearAlertMonitor($id: ID!) {
-          clearAlertMonitor(input: { id: $id }) {
-            alertMonitor {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: CLEAR_ALERT_MONITOR,
       variables: {
         id: monitor,
       },

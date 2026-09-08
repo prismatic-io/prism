@@ -1,7 +1,9 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { CreateInstanceDocument as CREATE_INSTANCE } from "../../graphql/operations/createInstance.generated.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { parseJsonOrUndefined } from "../../fields.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create an Instance";
@@ -70,36 +72,8 @@ export default class CreateCommand extends PrismaticBaseCommand {
       flags: { name, description, integration, customer, "config-vars": configVars, label },
     } = await this.parse(CreateCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation createInstance(
-          $name: String!
-          $description: String
-          $integration: ID!
-          $customer: ID!
-          $configVariables: [InputInstanceConfigVariable]
-          $labels: [String]
-        ) {
-          createInstance(
-            input: {
-              name: $name
-              description: $description
-              integration: $integration
-              customer: $customer
-              configVariables: $configVariables
-              labels: $labels
-            }
-          ) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof CREATE_INSTANCE> = await gqlRequest({
+      document: CREATE_INSTANCE,
       variables: {
         name,
         description,
@@ -110,6 +84,6 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createInstance.instance.id);
+    this.log(result.createInstance?.instance?.id ?? this.error("Instance was not created"));
   }
 }

@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListInstanceConfigVariablesDocument as LIST_INSTANCE_CONFIG_VARIABLES } from "../../../graphql/instances/listInstanceConfigVariables.generated.js";
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -21,48 +23,19 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     let configVariables: any[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
-      const {
-        instance: {
-          configVariables: { nodes, pageInfo },
-        },
-      } = await gqlRequest({
-        document: gql`
-          query listInstanceConfigVariables($id: ID!) {
-            instance(id: $id) {
-              configVariables {
-                nodes {
-                  id
-                  value
-                  status
-                  inputs {
-                    nodes {
-                      name
-                      value
-                    }
-                  }
-                  requiredConfigVariable {
-                    id
-                    key
-                    defaultValue
-                    dataType
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        `,
+      const result: ResultOf<typeof LIST_INSTANCE_CONFIG_VARIABLES> = await gqlRequest({
+        document: LIST_INSTANCE_CONFIG_VARIABLES,
         variables: {
           id: instance,
           after: cursor,
         },
       });
+      const {
+        configVariables: { nodes, pageInfo },
+      } = requireResource(result.instance, "Instance");
       configVariables = [...configVariables, ...nodes];
       cursor = pageInfo.endCursor;
       hasNextPage = pageInfo.hasNextPage;

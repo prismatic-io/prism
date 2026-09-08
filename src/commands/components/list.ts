@@ -1,7 +1,9 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListComponentsDocument as LIST_COMPONENTS } from "../../graphql/operations/listComponents.generated.js";
 import { Flags } from "@oclif/core";
 import dayjs from "dayjs";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 import { ux } from "../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -69,37 +71,13 @@ export default class ListCommand extends PrismaticBaseCommand {
 const fetchComponents = async (showAllVersions: boolean, search?: string): Promise<any[]> => {
   let components: any[] = [];
   let hasNextPage = true;
-  let cursor = "";
+  let cursor: string | null = "";
 
   while (hasNextPage) {
     const {
       components: { nodes, pageInfo },
-    } = await gqlRequest({
-      document: gql`
-        query listComponents($showAllVersions: Boolean, $after: String, $filterQuery: JSONString) {
-              components(allVersions: $showAllVersions, after: $after, filterQuery: $filterQuery) {
-                nodes {
-                  id
-                  key
-                  public
-                  label
-                  description
-                  versionNumber
-                  category
-                  versionCreatedAt
-                  customer {
-                    id
-                    externalId
-                    name
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          `,
+    }: ResultOf<typeof LIST_COMPONENTS> = await gqlRequest({
+      document: LIST_COMPONENTS,
       variables: {
         showAllVersions,
         after: cursor,

@@ -82,8 +82,7 @@ export const requireResource = <T>(value: T | null | undefined, name: string): T
   return value;
 };
 
-// Raw command queries keep their existing typing until the next PR migrates them.
-export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>({
+export const gqlRequest = async <T = unknown, TVariables = Record<string, unknown>>({
   document,
   variables,
 }: GQLRequest<T, TVariables>): Promise<T> => {

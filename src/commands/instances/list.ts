@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListInstancesDocument as LIST_INSTANCES } from "../../graphql/instances/listInstances.generated.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 import { ux } from "../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -25,38 +27,13 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     let instances: any[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         instances: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listInstances($customer: ID, $integration: ID, $after: String) {
-            instances(
-              customer: $customer
-              integration: $integration
-              isSystem: false
-              after: $after
-            ) {
-              nodes {
-                id
-                name
-                description
-                enabled
-                customer {
-                  id
-                  name
-                  externalId
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
+      }: ResultOf<typeof LIST_INSTANCES> = await gqlRequest({
+        document: LIST_INSTANCES,
         variables: {
           customer,
           integration,

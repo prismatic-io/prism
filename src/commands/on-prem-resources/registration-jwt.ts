@@ -1,6 +1,9 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { CreateOnPremiseResourceJwtDocument as CREATE_ON_PREMISE_RESOURCE_JWT } from "../../graphql/operations/createOnPremiseResourceJWT.generated.js";
+import { RotateOnPremiseResourceJwtDocument as ROTATE_ON_PREMISE_RESOURCE_JWT } from "../../graphql/operations/rotateOnPremiseResourceJWT.generated.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 const onlyWhenOrgUser = "Only valid for Organization users.";
 
@@ -34,63 +37,33 @@ export default class CreateCommand extends PrismaticBaseCommand {
     } = await this.parse(CreateCommand);
 
     if (rotate) {
-      const result = await gqlRequest({
-        document: gql`
-          mutation rotateOnPremiseResourceJWT(
-            $customerId: ID
-            $resourceId: ID!
-            $orgOnly: Boolean
-          ) {
-            rotateOnPremiseResourceJWT(
-              input: { customerId: $customerId, orgOnly: $orgOnly, resourceId: $resourceId }
-            ) {
-              result {
-                jwt
-              }
-              errors {
-                field
-                messages
-              }
-            }
-          }
-        `,
+      const result: ResultOf<typeof ROTATE_ON_PREMISE_RESOURCE_JWT> = await gqlRequest({
+        document: ROTATE_ON_PREMISE_RESOURCE_JWT,
         variables: {
           customerId,
-          resourceId,
+          resourceId: resourceId ?? this.error("Resource ID is required"),
           orgOnly,
         },
       });
 
-      this.log(result.rotateOnPremiseResourceJWT.result.jwt);
+      this.log(
+        result.rotateOnPremiseResourceJWT?.result?.jwt ??
+          this.error("On-premise resource JWT was not rotated"),
+      );
     } else {
-      const result = await gqlRequest({
-        document: gql`
-          mutation createOnPremiseResourceJWT(
-            $customerId: ID
-            $resourceId: ID
-            $orgOnly: Boolean
-          ) {
-            createOnPremiseResourceJWT(
-              input: { customerId: $customerId, orgOnly: $orgOnly, resourceId: $resourceId }
-            ) {
-              result {
-                jwt
-              }
-              errors {
-                field
-                messages
-              }
-            }
-          }
-        `,
+      const result: ResultOf<typeof CREATE_ON_PREMISE_RESOURCE_JWT> = await gqlRequest({
+        document: CREATE_ON_PREMISE_RESOURCE_JWT,
         variables: {
           customerId,
-          resourceId,
+          resourceId: resourceId ?? this.error("Resource ID is required"),
           orgOnly,
         },
       });
 
-      this.log(result.createOnPremiseResourceJWT.result.jwt);
+      this.log(
+        result.createOnPremiseResourceJWT?.result?.jwt ??
+          this.error("On-premise resource JWT was not created"),
+      );
     }
   }
 }

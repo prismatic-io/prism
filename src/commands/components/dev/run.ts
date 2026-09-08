@@ -1,18 +1,21 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { InstanceDocument as INSTANCE } from "../../../graphql/operations/instance.generated.js";
+import { IntegrationDocument as INTEGRATION } from "../../../graphql/operations/integration.generated.js";
 import { Flags, ux } from "@oclif/core";
 import { isEmpty } from "lodash-es";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 import { spawnProcess } from "../../../utils/process.js";
 
 interface ConfigVariable {
   requiredConfigVariable: {
     key: string;
     connectionTemplate?: {
-      inputFieldTemplates: { nodes: { inputField: { key: string }; value: string }[] };
-    };
+      inputFieldTemplates: { nodes: { inputField: { key: string }; value: string | null }[] };
+    } | null;
   };
-  inputs: { nodes: { name: string; value: string }[] };
-  meta: string;
+  inputs: { nodes: { name: string; value: string }[] } | null;
+  meta: unknown;
 }
 
 export default class RunCommand extends PrismaticBaseCommand {
@@ -70,82 +73,26 @@ export default class RunCommand extends PrismaticBaseCommand {
 
     // Get connection from the integration's test instance
     if (integrationId) {
-      const result = await gqlRequest({
-        document: gql`
-          query integration($id: ID!) {
-            integration(id: $id) {
-              testConfigVariables {
-                nodes {
-                  requiredConfigVariable {
-                    key
-                    connectionTemplate {
-                      inputFieldTemplates {
-                        nodes {
-                          inputField {
-                            key
-                          }
-                          value
-                        }
-                      }
-                    }
-                  }
-                  inputs {
-                    nodes {
-                      name
-                      value
-                    }
-                  }
-                  meta
-                }
-              }
-            }
-          }
-        `,
+      const result: ResultOf<typeof INTEGRATION> = await gqlRequest({
+        document: INTEGRATION,
         variables: {
           id: integrationId,
         },
       });
 
-      configVariables = result.integration.testConfigVariables.nodes;
+      configVariables =
+        result.integration?.testConfigVariables.nodes ?? this.error("Integration was not found");
     } else {
       // Get the config variable from an instance
-      const result = await gqlRequest({
-        document: gql`
-          query instance($id: ID!) {
-            instance(id: $id) {
-              configVariables {
-                nodes {
-                  requiredConfigVariable {
-                    key
-                    connectionTemplate {
-                      inputFieldTemplates {
-                        nodes {
-                          inputField {
-                            key
-                          }
-                          value
-                        }
-                      }
-                    }
-                  }
-                  inputs {
-                    nodes {
-                      name
-                      value
-                    }
-                  }
-                  meta
-                }
-              }
-            }
-          }
-        `,
+      const result: ResultOf<typeof INSTANCE> = await gqlRequest({
+        document: INSTANCE,
         variables: {
-          id: instanceId,
+          id: instanceId ?? this.error("Instance ID is required"),
         },
       });
 
-      configVariables = result.instance.configVariables.nodes;
+      configVariables =
+        result.instance?.configVariables.nodes ?? this.error("Instance was not found");
     }
 
     const [connection] = configVariables.filter(
@@ -163,14 +110,14 @@ export default class RunCommand extends PrismaticBaseCommand {
       ...requiredConfigVariable.connectionTemplate?.inputFieldTemplates.nodes.reduce<
         Record<string, unknown>
       >((result, { inputField, value }) => ({ ...result, [inputField.key]: value }), {}),
-      ...inputs.nodes.reduce<Record<string, unknown>>(
+      ...inputs?.nodes.reduce<Record<string, unknown>>(
         (result, { name, value }) => ({ ...result, [name]: value }),
         {},
       ),
     };
 
     const value = JSON.stringify({
-      ...JSON.parse(meta),
+      ...(typeof meta === "string" ? JSON.parse(meta) : {}),
       fields,
     });
 

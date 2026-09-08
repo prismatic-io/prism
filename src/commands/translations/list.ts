@@ -1,9 +1,9 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { fs } from "../../fs.js";
 import { gqlRequest } from "../../graphql.js";
-import { GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS } from "../../queries.graphql.js";
-import type { MarketplaceTranslations } from "../../types.js";
+import { MarketplaceTranslationsDocument as MARKETPLACE_TRANSLATIONS } from "../../graphql/translations/marketplaceTranslations.generated.js";
 import { processIntegrationsForTranslations } from "../../utils/translations/processDataForTranslations.js";
 
 export default class TranslationsCommand extends PrismaticBaseCommand {
@@ -24,8 +24,8 @@ export default class TranslationsCommand extends PrismaticBaseCommand {
 
     const cwd = process.cwd();
 
-    const result = await gqlRequest<MarketplaceTranslations>({
-      document: GET_MARKETPLACE_INTEGRATIONS_TRANSLATIONS,
+    const result: ResultOf<typeof MARKETPLACE_TRANSLATIONS> = await gqlRequest({
+      document: MARKETPLACE_TRANSLATIONS,
     });
 
     const processedIntegrations = processIntegrationsForTranslations(result);

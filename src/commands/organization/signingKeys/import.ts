@@ -1,7 +1,9 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ImportPublicKeyDocument as IMPORT_PUBLIC_KEY } from "../../../graphql/operations/importPublicKey.generated.js";
 import { Flags } from "@oclif/core";
 import { readFileSync } from "fs";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class ImportCommand extends PrismaticBaseCommand {
   static description =
@@ -40,23 +42,14 @@ export default class ImportCommand extends PrismaticBaseCommand {
       flag: "r",
     });
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation importPublicKey($publicKey: String!) {
-          importOrganizationSigningKey(input: { publicKey: $publicKey }) {
-            organizationSigningKey {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof IMPORT_PUBLIC_KEY> = await gqlRequest({
+      document: IMPORT_PUBLIC_KEY,
       variables: { publicKey },
     });
 
-    this.log(result.importOrganizationSigningKey.organizationSigningKey.id);
+    this.log(
+      result.importOrganizationSigningKey?.organizationSigningKey?.id ??
+        this.error("Signing key was not imported"),
+    );
   }
 }

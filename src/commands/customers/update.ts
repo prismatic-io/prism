@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { UpdateCustomerDocument as UPDATE_CUSTOMER } from "../../graphql/operations/updateCustomer.generated.js";
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class UpdateCommand extends PrismaticBaseCommand {
   // TODO: Add more flags once optional updates are implemented
@@ -49,34 +51,8 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       flags: { name, description, externalId, label },
     } = await this.parse(UpdateCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation updateCustomer(
-          $id: ID!
-          $name: String
-          $description: String
-          $externalId: String
-          $labels: [String]
-        ) {
-          updateCustomer(
-            input: {
-              id: $id
-              name: $name
-              description: $description
-              externalId: $externalId
-              labels: $labels
-            }
-          ) {
-            customer {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof UPDATE_CUSTOMER> = await gqlRequest({
+      document: UPDATE_CUSTOMER,
       variables: {
         id: customer,
         name,
@@ -86,6 +62,6 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateCustomer.customer.id);
+    this.log(result.updateCustomer?.customer?.id ?? this.error("Customer was not updated"));
   }
 }

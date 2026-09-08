@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ForkIntegrationDocument as FORK_INTEGRATION } from "../../graphql/operations/forkIntegration.generated.js";
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class ForkCommand extends PrismaticBaseCommand {
   static description = "Fork an Integration";
@@ -31,26 +33,8 @@ export default class ForkCommand extends PrismaticBaseCommand {
       args: { parent },
     } = await this.parse(ForkCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation forkIntegration(
-          $parentID: ID!
-          $name: String!
-          $description: String!
-        ) {
-          forkIntegration(
-            input: { parent: $parentID, name: $name, description: $description }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof FORK_INTEGRATION> = await gqlRequest({
+      document: FORK_INTEGRATION,
       variables: {
         parentID: parent,
         name,
@@ -58,6 +42,6 @@ export default class ForkCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.forkIntegration.integration.id);
+    this.log(result.forkIntegration?.integration?.id ?? this.error("Integration was not forked"));
   }
 }

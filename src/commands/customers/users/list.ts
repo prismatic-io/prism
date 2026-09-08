@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListCustomerUsersDocument as LIST_CUSTOMER_USERS } from "../../../graphql/customers/listCustomerUsers.generated.js";
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -24,37 +26,16 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     let customerUsers: any[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
-      const {
-        customer: {
-          users: { nodes, pageInfo },
-        },
-      } = await gqlRequest({
-        document: gql`
-          query listCustomerUsers($id: ID!, $after: String) {
-            customer(id: $id) {
-              users(after: $after) {
-                nodes {
-                  id
-                  name
-                  email
-                  externalId
-                  role {
-                    name
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        `,
+      const result: ResultOf<typeof LIST_CUSTOMER_USERS> = await gqlRequest({
+        document: LIST_CUSTOMER_USERS,
         variables: { id: customer, after: cursor },
       });
+      const {
+        users: { nodes, pageInfo },
+      } = requireResource(result.customer, "Customer");
       customerUsers = [...customerUsers, ...nodes];
       cursor = pageInfo.endCursor;
       hasNextPage = pageInfo.hasNextPage;

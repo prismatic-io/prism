@@ -1,7 +1,9 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { CreateAlertGroupDocument as CREATE_ALERT_GROUP } from "../../../graphql/operations/createAlertGroup.generated.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { parseJsonOrUndefined } from "../../../fields.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create an Alert Group";
@@ -39,26 +41,8 @@ export default class CreateCommand extends PrismaticBaseCommand {
     const users = parseJsonOrUndefined(userJson);
     const webhooks = parseJsonOrUndefined(webhookJson);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation createAlertGroup(
-          $name: String!
-          $users: [ID]
-          $webhooks: [ID]
-        ) {
-          createAlertGroup(
-            input: { name: $name, users: $users, webhooks: $webhooks }
-          ) {
-            alertGroup {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof CREATE_ALERT_GROUP> = await gqlRequest({
+      document: CREATE_ALERT_GROUP,
       variables: {
         name,
         users,
@@ -66,6 +50,6 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createAlertGroup.alertGroup.id);
+    this.log(result.createAlertGroup?.alertGroup?.id ?? this.error("Alert group was not created"));
   }
 }

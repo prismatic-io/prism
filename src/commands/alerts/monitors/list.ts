@@ -1,5 +1,7 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListAlertMonitorsDocument as LIST_ALERT_MONITORS } from "../../../graphql/alerts/listAlertMonitors.generated.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -11,35 +13,13 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     let alertMonitors: any[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         alertMonitors: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listAlertMonitors($after: String) {
-            alertMonitors(after: $after) {
-              nodes {
-                id
-                name
-                triggered
-                instance {
-                  id
-                  name
-                  customer {
-                    id
-                    name
-                  }
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
+      }: ResultOf<typeof LIST_ALERT_MONITORS> = await gqlRequest({
+        document: LIST_ALERT_MONITORS,
         variables: { after: cursor },
       });
       alertMonitors = [...alertMonitors, ...nodes];
@@ -57,14 +37,14 @@ export default class ListCommand extends PrismaticBaseCommand {
         name: {},
         triggered: {},
         customer: {
-          get: ({ instance: { customer } }) => customer.name,
+          get: ({ instance }) => instance?.customer.name ?? "",
         },
         customerId: {
           extended: true,
-          get: ({ instance: { customer } }) => customer.id,
+          get: ({ instance }) => instance?.customer.id ?? "",
         },
-        instance: { get: ({ instance }) => instance.name },
-        instanceId: { extended: true, get: ({ instance }) => instance.id },
+        instance: { get: ({ instance }) => instance?.name ?? "" },
+        instanceId: { extended: true, get: ({ instance }) => instance?.id ?? "" },
       },
       { ...flags },
     );

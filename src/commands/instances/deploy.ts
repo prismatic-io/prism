@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { DeployInstanceDocument as DEPLOY_INSTANCE } from "../../graphql/operations/deployInstance.generated.js";
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class DeployCommand extends PrismaticBaseCommand {
   static description = "Deploy an Instance";
@@ -24,26 +26,14 @@ export default class DeployCommand extends PrismaticBaseCommand {
       flags: { force },
     } = await this.parse(DeployCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation deployInstance($id: ID!, $force: Boolean) {
-          deployInstance(input: { id: $id, force: $force }) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof DEPLOY_INSTANCE> = await gqlRequest({
+      document: DEPLOY_INSTANCE,
       variables: {
         id: instance,
         force,
       },
     });
 
-    this.log(result.deployInstance.instance.id);
+    this.log(result.deployInstance?.instance?.id ?? this.error("Instance was not deployed"));
   }
 }

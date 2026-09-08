@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { UpdateOrganizationDocument as UPDATE_ORGANIZATION } from "../../graphql/operations/updateOrganization.generated.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class UpdateCommand extends PrismaticBaseCommand {
   // TODO: Add more flags once optional updates are implemented
@@ -17,25 +19,15 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       flags: { name },
     } = await this.parse(UpdateCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation updateOrganization($name: String) {
-          updateOrganization(input: { name: $name }) {
-            organization {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof UPDATE_ORGANIZATION> = await gqlRequest({
+      document: UPDATE_ORGANIZATION,
       variables: {
         name,
       },
     });
 
-    this.log(result.updateOrganization.organization.id);
+    this.log(
+      result.updateOrganization?.organization?.id ?? this.error("Organization was not updated"),
+    );
   }
 }

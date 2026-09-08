@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { CreateIntegrationDocument as CREATE_INTEGRATION } from "../../graphql/operations/createIntegration.generated.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create an Integration";
@@ -26,30 +28,8 @@ export default class CreateCommand extends PrismaticBaseCommand {
       flags: { name, description, customer },
     } = await this.parse(CreateCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation createIntegration(
-          $name: String!
-          $description: String!
-          $customer: ID
-        ) {
-          createIntegration(
-            input: {
-              name: $name
-              description: $description
-              customer: $customer
-            }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof CREATE_INTEGRATION> = await gqlRequest({
+      document: CREATE_INTEGRATION,
       variables: {
         name,
         description,
@@ -57,6 +37,8 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createIntegration.integration.id);
+    this.log(
+      result.createIntegration?.integration?.id ?? this.error("Integration was not created"),
+    );
   }
 }

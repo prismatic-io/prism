@@ -1,6 +1,7 @@
+import { DeleteOnPremiseResourceDocument as DELETE_ON_PREMISE_RESOURCE } from "../../graphql/operations/deleteOnPremiseResource.generated.js";
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class DeleteCommand extends PrismaticBaseCommand {
   static description = "Delete an On-Premise Resource";
@@ -17,19 +18,7 @@ export default class DeleteCommand extends PrismaticBaseCommand {
     } = await this.parse(DeleteCommand);
 
     await gqlRequest({
-      document: gql`
-        mutation deleteOnPremiseResource($id: ID!) {
-          deleteOnPremiseResource(input: { id: $id }) {
-            onPremiseResource {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DELETE_ON_PREMISE_RESOURCE,
       variables: {
         id: resource,
       },

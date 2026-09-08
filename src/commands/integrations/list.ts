@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListIntegrationsDocument as LIST_INTEGRATIONS } from "../../graphql/integrations/listIntegrations.generated.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 import { ux } from "../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -33,47 +35,13 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     let integrations: any[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         integrations: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listIntegrations(
-            $showAllVersions: Boolean
-            $after: String
-            $customer: ID
-            $customerIsnull: Boolean
-            $search: String
-          ) {
-            integrations(
-              allVersions: $showAllVersions
-              after: $after
-              customer: $customer
-              customer_Isnull: $customerIsnull
-              name_Icontains: $search
-            ) {
-              nodes {
-                id
-                name
-                description
-                versionNumber
-                labels
-                category
-                customer {
-                  id
-                  name
-                  externalId
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
+      }: ResultOf<typeof LIST_INTEGRATIONS> = await gqlRequest({
+        document: LIST_INTEGRATIONS,
         variables: {
           showAllVersions,
           after: cursor,

@@ -1,18 +1,15 @@
-import type {
-  MarketplaceTranslations,
-  MarketplaceTranslations_marketplaceIntegrations_nodes_instances_nodes as MarketplaceInstance,
-  MarketplaceTranslations_marketplaceIntegrations_nodes as MarketplaceIntegration,
-  Step,
-  Flow,
-  IntegrationSchema,
-  Branch,
-} from "../../types.js";
+import type { MarketplaceTranslationsQuery } from "../../graphql/translations/marketplaceTranslations.generated.js";
+import type { Step, Flow, IntegrationSchema, Branch } from "../../types.js";
 
 import { loadYaml } from "../serialize.js";
 
 type ProcessedData = {
   [key: string]: string;
 };
+
+type MarketplaceIntegration =
+  MarketplaceTranslationsQuery["marketplaceIntegrations"]["nodes"][number];
+type MarketplaceInstance = MarketplaceIntegration["instances"]["nodes"][number];
 
 const processedProperties = new Set<string>();
 
@@ -161,7 +158,7 @@ const isStep = (object: Flow | Step): object is Step => {
 };
 
 export const processIntegrationsForTranslations = (
-  data: MarketplaceTranslations,
+  data: MarketplaceTranslationsQuery,
 ): ProcessedData => {
   data.marketplaceIntegrations.nodes.forEach((integration) => {
     if (!integration) {

@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
 import { Flags } from "@oclif/core";
+import { AvailableConnectionsDocument as AVAILABLE_CONNECTIONS } from "../../../graphql/operations/availableConnections.generated.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -16,27 +18,8 @@ export default class ListCommand extends PrismaticBaseCommand {
   async run() {
     const { flags } = await this.parse(ListCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        query availableConnections($managedBy: String) {
-          scopedConfigVariables(managedBy: $managedBy) {
-            nodes {
-              stableKey
-              description
-              managedBy
-              customer {
-                externalId
-                name
-              }
-              connection {
-                component {
-                  key
-                }
-              }
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof AVAILABLE_CONNECTIONS> = await gqlRequest({
+      document: AVAILABLE_CONNECTIONS,
       variables: {
         managedBy: flags["managed-by"] || null,
       },

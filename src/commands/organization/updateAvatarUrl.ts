@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { CommitAvatarUploadDocument as COMMIT_AVATAR_UPLOAD } from "../../graphql/operations/commitAvatarUpload.generated.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class UpdateAvatarUrlCommand extends PrismaticBaseCommand {
   // TODO: Add more flags once optional updates are implemented
@@ -24,29 +26,17 @@ export default class UpdateAvatarUrlCommand extends PrismaticBaseCommand {
       flags: { organizationId, avatarUrl },
     } = await this.parse(UpdateAvatarUrlCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation commitAvatarUpload($organizationId: ID!, $avatarUrl: String!) {
-          updateOrganization(
-            input: { id: $organizationId, avatarUrl: $avatarUrl }
-          ) {
-            organization {
-              id
-              avatarUrl
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof COMMIT_AVATAR_UPLOAD> = await gqlRequest({
+      document: COMMIT_AVATAR_UPLOAD,
       variables: {
         organizationId,
-        avatarUrl,
+        avatarUrl: avatarUrl ?? this.error("Avatar URL is required"),
       },
     });
 
-    this.log(result.updateOrganization.organization.id);
+    this.log(
+      result.updateOrganization?.organization?.id ??
+        this.error("Organization avatar was not updated"),
+    );
   }
 }

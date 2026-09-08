@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListInstanceFlowConfigsDocument as LIST_INSTANCE_FLOW_CONFIGS } from "../../../graphql/instances/listInstanceFlowConfigs.generated.js";
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -20,38 +22,19 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     let flowConfigs: any[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
-      const {
-        instance: {
-          flowConfigs: { nodes, pageInfo },
-        },
-      } = await gqlRequest({
-        document: gql`
-          query listInstanceFlowConfigs($id: ID!, $after: String) {
-            instance(id: $id) {
-              flowConfigs(after: $after) {
-                nodes {
-                  id
-                  flow {
-                    name
-                  }
-                  webhookUrl
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        `,
+      const result: ResultOf<typeof LIST_INSTANCE_FLOW_CONFIGS> = await gqlRequest({
+        document: LIST_INSTANCE_FLOW_CONFIGS,
         variables: {
           id: instance,
           after: cursor,
         },
       });
+      const {
+        flowConfigs: { nodes, pageInfo },
+      } = requireResource(result.instance, "Instance");
       flowConfigs = [...flowConfigs, ...nodes];
       cursor = pageInfo.endCursor;
       hasNextPage = pageInfo.hasNextPage;

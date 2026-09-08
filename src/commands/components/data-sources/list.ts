@@ -1,15 +1,18 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListComponentActions2Document as LIST_COMPONENT_ACTIONS } from "../../../graphql/operations/listComponentActions2.generated.js";
+import type { ListComponentActions2Query } from "../../../graphql/operations/listComponentActions2.generated.js";
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
-interface DataSourceNode {
+type ComponentDataSourceNode = NonNullable<
+  ListComponentActions2Query["components"]["nodes"][number]
+>["actions"]["nodes"][number];
+
+interface DataSourceNode extends Omit<ComponentDataSourceNode, "detailDataSource"> {
   [index: string]: unknown;
-  id: string;
-  key: string;
-  label: string;
-  description: string;
-  dataSourceType: string;
+
   detailDataSource?: string;
 }
 
@@ -53,44 +56,15 @@ export default class ListCommand extends PrismaticBaseCommand {
     let dataSources: DataSourceNode[] = [];
     let componentId: string;
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         components: {
           nodes: [component],
         },
-      } = await gqlRequest({
-        document: gql`
-          query listComponentActions(
-            $componentKey: String
-            $after: String
-            $public: Boolean
-          ) {
-            components(key: $componentKey, public: $public) {
-              nodes {
-                id
-                key
-                actions(isTrigger: false, isDataSource: true, after: $after) {
-                  nodes {
-                    id
-                    key
-                    label
-                    description
-                    dataSourceType
-                    detailDataSource {
-                      label
-                    }
-                  }
-                  pageInfo {
-                    hasNextPage
-                    endCursor
-                  }
-                }
-              }
-            }
-          }
-        `,
+      }: ResultOf<typeof LIST_COMPONENT_ACTIONS> = await gqlRequest({
+        document: LIST_COMPONENT_ACTIONS,
         variables: {
           after: cursor,
           componentKey,
@@ -105,7 +79,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       }
       dataSources = [
         ...dataSources,
-        ...component.actions.nodes.map((action: { detailDataSource: { label: string } }) => ({
+        ...component.actions.nodes.map((action) => ({
           ...action,
           detailDataSource: action.detailDataSource?.label || "",
         })),

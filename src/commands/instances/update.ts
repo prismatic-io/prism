@@ -1,6 +1,9 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { DeployInstance2Document as DEPLOY_INSTANCE2 } from "../../graphql/operations/deployInstance2.generated.js";
+import { UpdateInstanceDocument as UPDATE_INSTANCE } from "../../graphql/operations/updateInstance.generated.js";
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class UpdateCommand extends PrismaticBaseCommand {
   // TODO: Add more flags once optional updates are implemented
@@ -41,34 +44,8 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       flags: { name, description, version, deploy, label },
     } = await this.parse(UpdateCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation updateInstance(
-          $id: ID!
-          $name: String
-          $description: String
-          $version: ID
-          $labels: [String]
-        ) {
-          updateInstance(
-            input: {
-              id: $id
-              name: $name
-              description: $description
-              integration: $version
-              labels: $labels
-            }
-          ) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof UPDATE_INSTANCE> = await gqlRequest({
+      document: UPDATE_INSTANCE,
       variables: {
         id: instance,
         name,
@@ -79,29 +56,17 @@ export default class UpdateCommand extends PrismaticBaseCommand {
     });
 
     if (!deploy) {
-      this.log(result.updateInstance.instance.id);
+      this.log(result.updateInstance?.instance?.id ?? this.error("Instance was not updated"));
       return;
     }
 
-    const deployResult = await gqlRequest({
-      document: gql`
-        mutation deployInstance($id: ID!) {
-          deployInstance(input: { id: $id }) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const deployResult: ResultOf<typeof DEPLOY_INSTANCE2> = await gqlRequest({
+      document: DEPLOY_INSTANCE2,
       variables: {
         id: instance,
       },
     });
 
-    this.log(deployResult.deployInstance.instance.id);
+    this.log(deployResult.deployInstance?.instance?.id ?? this.error("Instance was not deployed"));
   }
 }

@@ -12,6 +12,20 @@ const readFiles = async (patterns: string[], ignore: string[] = []) =>
   );
 
 describe("GraphQL document generation", () => {
+  it("keeps every static production operation in a separate document", async () => {
+    const sources = await readFiles(
+      ["src/**/*.ts"],
+      ["src/**/*.test.ts", "src/**/*.generated.ts", "src/graphql.ts"],
+    );
+
+    for (const { path, source } of sources) {
+      expect(source, `${path} contains an inline GraphQL document`).not.toContain("gql`");
+      expect(source, `${path} imports a raw GraphQL document`).not.toMatch(
+        /from ["'][^"']+\.graphql["']/,
+      );
+    }
+  });
+
   it("gives every document one uniquely named operation and generated typed node", async () => {
     const documents = await readFiles(["src/graphql/**/*.graphql"]);
     const names = new Map<string, string>();
@@ -31,6 +45,13 @@ describe("GraphQL document generation", () => {
       const generated = await readFile(path.replace(/\.graphql$/, ".generated.ts"), "utf8");
       expect(generated, `${path} has no typed document node`).toContain("TypedDocumentNode");
       expect(generated, `${path} leaks the legacy Scalars lookup`).not.toContain("Scalars[");
+    }
+  });
+
+  it("does not expose generated scalar lookup types to application code", async () => {
+    const sources = await readFiles(["src/**/*.ts"], ["src/**/*.test.ts", "src/**/*.generated.ts"]);
+    for (const { path, source } of sources) {
+      expect(source, path).not.toContain("Scalars[");
     }
   });
 });

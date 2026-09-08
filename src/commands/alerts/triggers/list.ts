@@ -1,5 +1,7 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListAlertTriggersDocument as LIST_ALERT_TRIGGERS } from "../../../graphql/operations/listAlertTriggers.generated.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -9,17 +11,8 @@ export default class ListCommand extends PrismaticBaseCommand {
   async run() {
     const { flags } = await this.parse(ListCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        query listAlertTriggers {
-          alertTriggers {
-            nodes {
-              id
-              name
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof LIST_ALERT_TRIGGERS> = await gqlRequest({
+      document: LIST_ALERT_TRIGGERS,
     });
 
     ux.table(

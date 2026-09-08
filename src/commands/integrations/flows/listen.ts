@@ -1,3 +1,4 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
 import { decode } from "@msgpack/msgpack";
 import { Flags } from "@oclif/core";
 import inquirer from "inquirer";
@@ -5,10 +6,10 @@ import z from "zod";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { exists, fs } from "../../../fs.js";
 import type { GetExecutionsQuery } from "../../../graphql/executions/getExecutions.generated.js";
-import GET_EXECUTIONS from "../../../graphql/executions/getExecutions.graphql";
+import { GetExecutionsDocument as GET_EXECUTIONS } from "../../../graphql/executions/getExecutions.generated.js";
 import type { GetPolledExecutionQuery } from "../../../graphql/executions/getPolledExecution.generated.js";
-import GET_POLLED_EXECUTION from "../../../graphql/executions/getPolledExecution.graphql";
-import UPDATE_INTEGRATION_FLOW_LISTENING_MODE from "../../../graphql/integrations/updateIntegrationFlowListeningMode.graphql";
+import { GetPolledExecutionDocument as GET_POLLED_EXECUTION } from "../../../graphql/executions/getPolledExecution.generated.js";
+import { UpdateIntegrationFlowListeningModeDocument as UPDATE_INTEGRATION_FLOW_LISTENING_MODE } from "../../../graphql/integrations/updateIntegrationFlowListeningMode.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import { handleError } from "../../../utils/errors.js";
 import { fetch } from "../../../utils/http.js";
@@ -275,7 +276,7 @@ async function pollForWebhookExecutions(
   while (true) {
     await ux.wait(getAdaptivePollIntervalMs(startTime));
 
-    const result = await gqlRequest<GetExecutionsQuery>({
+    const result: ResultOf<typeof GET_EXECUTIONS> = await gqlRequest({
       document: GET_EXECUTIONS,
       variables: {
         limit: 1,
@@ -378,7 +379,7 @@ function hasTimedOut(startTime: number, timeout: number): boolean {
 }
 
 async function getPolledExecution(executionId: string): Promise<PolledExecutionResult> {
-  return gqlRequest<GetPolledExecutionQuery>({
+  return gqlRequest({
     document: GET_POLLED_EXECUTION,
     variables: { executionId },
   });

@@ -1,5 +1,7 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListOrganizationSigningKeysDocument as LIST_ORGANIZATION_SIGNING_KEYS } from "../../../graphql/operations/listOrganizationSigningKeys.generated.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -9,26 +11,12 @@ export default class ListCommand extends PrismaticBaseCommand {
   async run() {
     const { flags } = await this.parse(ListCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        query listOrganizationSigningKeys {
-          organization {
-            signingKeys {
-              nodes {
-                id
-                publicKey
-                privateKeyPreview
-                issuedAt
-                imported
-              }
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof LIST_ORGANIZATION_SIGNING_KEYS> = await gqlRequest({
+      document: LIST_ORGANIZATION_SIGNING_KEYS,
     });
 
     ux.table(
-      result.organization.signingKeys.nodes,
+      requireResource(result.organization, "Organization").signingKeys.nodes,
       {
         id: { minWidth: 8, extended: true },
         privateKeyPreview: { header: "Private Key Preview" },

@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { UpdateUserDocument as UPDATE_USER } from "../../../graphql/operations/updateUser.generated.js";
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class UpdateCommand extends PrismaticBaseCommand {
   static description = "Update a User";
@@ -30,43 +32,17 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       flags: { name, phone, "dark-mode": darkMode, "dark-mode-os-sync": darkModeOsSync },
     } = await this.parse(UpdateCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation updateUser(
-          $user: ID!
-          $name: String
-          $phone: String
-          $darkMode: Boolean
-          $darkModeOsSync: Boolean
-        ) {
-          updateUser(
-            input: {
-              id: $user
-              name: $name
-              phone: $phone
-              darkMode: $darkMode
-              darkModeSyncWithOs: $darkModeOsSync
-            }
-          ) {
-            user {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof UPDATE_USER> = await gqlRequest({
+      document: UPDATE_USER,
       variables: {
         user,
         name,
         phone,
-        darkMode,
-        darkModeOsSync,
+        darkMode: darkMode === undefined ? undefined : darkMode === "true",
+        darkModeOsSync: darkModeOsSync === undefined ? undefined : darkModeOsSync === "true",
       },
     });
 
-    this.log(result.updateUser.user.id);
+    this.log(result.updateUser?.user?.id ?? this.error("Organization user was not updated"));
   }
 }

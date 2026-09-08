@@ -1,5 +1,7 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListOrganizationUsersDocument as LIST_USERS } from "../../../graphql/organization/listOrganizationUsers.generated.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -11,38 +13,16 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     let customerUsers: any[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
-      const {
-        organization: {
-          users: { nodes, pageInfo },
-        },
-      } = await gqlRequest({
-        document: gql`
-          query listUsers($after: String) {
-            organization {
-              users(after: $after) {
-                nodes {
-                  id
-                  name
-                  email
-                  externalId
-                  phone
-                  role {
-                    name
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        `,
+      const result: ResultOf<typeof LIST_USERS> = await gqlRequest({
+        document: LIST_USERS,
         variables: { after: cursor },
       });
+      const {
+        users: { nodes, pageInfo },
+      } = requireResource(result.organization, "Organization");
       customerUsers = [...customerUsers, ...nodes];
       cursor = pageInfo.endCursor;
       hasNextPage = pageInfo.hasNextPage;

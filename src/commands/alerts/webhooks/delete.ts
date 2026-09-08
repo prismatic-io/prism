@@ -1,6 +1,7 @@
+import { DeleteAlertWebhookDocument as DELETE_ALERT_WEBHOOK } from "../../../graphql/operations/deleteAlertWebhook.generated.js";
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class DeleteCommand extends PrismaticBaseCommand {
   static description = "Delete an Alert Webhook";
@@ -17,19 +18,7 @@ export default class DeleteCommand extends PrismaticBaseCommand {
     } = await this.parse(DeleteCommand);
 
     await gqlRequest({
-      document: gql`
-        mutation deleteAlertWebhook($id: ID!) {
-          deleteAlertWebhook(input: { id: $id }) {
-            alertWebhook {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DELETE_ALERT_WEBHOOK,
       variables: {
         id: webhook,
       },

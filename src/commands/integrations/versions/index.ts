@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
 import { Args, Flags } from "@oclif/core";
+import { ListIntegrationVersionsDocument as LIST_INTEGRATION_VERSIONS } from "../../../graphql/operations/listIntegrationVersions.generated.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -27,33 +29,8 @@ export default class ListCommand extends PrismaticBaseCommand {
       args: { integration },
     } = await this.parse(ListCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        query listIntegrationVersions(
-          $integrationId: ID!
-          $onlyAvailable: Boolean
-          $onlyShowOne: Int
-        ) {
-          integration(id: $integrationId) {
-            versionSequence(
-              versionIsAvailable: $onlyAvailable
-              sortBy: [{ field: VERSION_NUMBER, direction: DESC }]
-              first: $onlyShowOne
-            ) {
-              nodes {
-                id
-                versionNumber
-                versionCreatedAt
-                versionCreatedBy {
-                  email
-                }
-                versionComment
-                versionIsAvailable
-              }
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof LIST_INTEGRATION_VERSIONS> = await gqlRequest({
+      document: LIST_INTEGRATION_VERSIONS,
       variables: {
         integrationId: integration,
         onlyAvailable: flags["latest-available"] ? true : null,
@@ -62,7 +39,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     });
 
     ux.table(
-      result.integration.versionSequence.nodes,
+      requireResource(result.integration, "Integration").versionSequence.nodes,
       {
         versionNumber: {
           header: "Version",

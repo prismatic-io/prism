@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListOnPremiseResourcesDocument as LIST_ON_PREMISE_RESOURCES } from "../../graphql/onPremResources/listOnPremiseResources.generated.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 import { ux } from "../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -20,32 +22,13 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     let onPremiseResources: any[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         onPremiseResources: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listOnPremiseResources($after: String, $customer: ID) {
-            onPremiseResources(after: $after, customer: $customer) {
-              nodes {
-                id
-                name
-                status
-                customer {
-                  id
-                  name
-                  externalId
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
+      }: ResultOf<typeof LIST_ON_PREMISE_RESOURCES> = await gqlRequest({
+        document: LIST_ON_PREMISE_RESOURCES,
         variables: {
           after: cursor,
           customer,

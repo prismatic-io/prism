@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ExportWorkflowDocument as EXPORT_WORKFLOW } from "../../graphql/operations/exportWorkflow.generated.js";
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { gqlRequest } from "../../graphql.js";
 import { dumpYaml, loadYaml } from "../../utils/serialize.js";
 
 export default class ExportCommand extends PrismaticBaseCommand {
@@ -29,18 +31,12 @@ export default class ExportCommand extends PrismaticBaseCommand {
       flags: { "latest-components": latest },
     } = await this.parse(ExportCommand);
 
-    const result = await gqlRequest<{ workflow: { definition: string } }>({
-      document: gql`
-        query exportWorkflow($workflow: ID!, $useLatestComponentVersions: Boolean) {
-          workflow(id: $workflow) {
-            definition(
-              definitionType: WORKFLOW
-              useLatestComponentVersions: $useLatestComponentVersions
-            )
-          }
-        }`,
+    const result: ResultOf<typeof EXPORT_WORKFLOW> = await gqlRequest({
+      document: EXPORT_WORKFLOW,
       variables: { workflow, useLatestComponentVersions: latest },
     });
-    this.log(dumpYaml(loadYaml(result.workflow.definition)));
+    const definition =
+      result.workflow?.definition ?? this.error("Workflow was not found or has no definition");
+    this.log(dumpYaml(loadYaml(definition)));
   }
 }

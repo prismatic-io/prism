@@ -1,5 +1,7 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { ListAlertWebhooksDocument as LIST_ALERT_WEBHOOKS } from "../../../graphql/alerts/listAlertWebhooks.generated.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -11,29 +13,13 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     let alertWebhooks: any[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         alertWebhooks: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listAlertWebhooks($after: String) {
-            alertWebhooks(after: $after) {
-              nodes {
-                id
-                name
-                payloadTemplate
-                url
-                headers
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
+      }: ResultOf<typeof LIST_ALERT_WEBHOOKS> = await gqlRequest({
+        document: LIST_ALERT_WEBHOOKS,
         variables: { after: cursor },
       });
       alertWebhooks = [...alertWebhooks, ...nodes];

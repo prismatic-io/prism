@@ -1,6 +1,8 @@
+import type { ResultOf } from "@graphql-typed-document-node/core";
+import { CreateOrganizationUserDocument as CREATE_ORGANIZATION_USER } from "../../../graphql/operations/createOrganizationUser.generated.js";
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create a User for your Organization";
@@ -38,26 +40,8 @@ export default class CreateCommand extends PrismaticBaseCommand {
       flags: { name, email, role },
     } = await this.parse(CreateCommand);
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation createOrganizationUser(
-          $name: String
-          $email: String!
-          $role: ID!
-        ) {
-          createOrganizationUser(
-            input: { name: $name, email: $email, role: $role }
-          ) {
-            user {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+    const result: ResultOf<typeof CREATE_ORGANIZATION_USER> = await gqlRequest({
+      document: CREATE_ORGANIZATION_USER,
       variables: {
         name,
         email,
@@ -65,6 +49,8 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createOrganizationUser.user.id);
+    this.log(
+      result.createOrganizationUser?.user?.id ?? this.error("Organization user was not created"),
+    );
   }
 }
