@@ -1,43 +1,51 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { z } from "incur";
+import { commandOutput, defineCommand, argsSchema, optionsSchema } from "../../../command.js";
 import { ConvertToCniDocument as CONVERT_TO_CNI } from "../../../graphql/operations/ConvertToCNI.generated.js";
-import { Args, type Config, Flags, ux } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { toArgv } from "../../../generate/util.js";
 import { gqlRequest } from "../../../graphql.js";
+import { resultOutput, warningsOutput } from "../../../output.js";
+import { ux } from "../../../utils/ux.js";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class ConvertIntegrationCommand extends PrismaticBaseCommand {
-  static description = "Convert a Low-Code Integration's YAML file into a Code Native Integration";
-  static args = {
-    integration: Args.string({
-      required: true,
-      description: "ID of the low-code integration to convert",
+export default defineCommand({
+  mutates: true,
+  output: z.object({
+    integrationId: z.string(),
+    downloadUrl: z.string().nullable(),
+    conversionErrors: z.array(
+      z.object({ path: z.string().nullable(), error: z.string(), errorType: z.string() }),
+    ),
+    ...warningsOutput,
+  }),
+  description: "Convert a Low-Code Integration's YAML file into a Code Native Integration",
+  args: argsSchema(
+    z.object({
+      integration: z.string().describe("ID of the low-code integration to convert"),
     }),
-  };
-
-  static flags = {
-    registryPrefix: Flags.string({
-      required: false,
-      char: "r",
-      description: "The registry prefix to use for the converted integration",
+  ),
+  options: optionsSchema(
+    z.object({
+      registryPrefix: z
+        .string()
+        .optional()
+        .describe("The registry prefix to use for the converted integration")
+        .meta({ cli: { char: "r" } }),
+      registryUrl: z
+        .string()
+        .optional()
+        .describe("The registry URL to use for the converted integration")
+        .meta({ cli: { char: "u" } }),
+      includeComments: z
+        .boolean()
+        .default(false)
+        .describe("Whether to include inline comments in the generated code")
+        .meta({ cli: { char: "c" } }),
     }),
-    registryUrl: Flags.string({
-      required: false,
-      char: "u",
-      description: "The registry URL to use for the converted integration",
-    }),
-    includeComments: Flags.boolean({
-      required: false,
-      char: "c",
-      description: "Whether to include inline comments in the generated code",
-      default: false,
-    }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
       args: { integration },
-      flags: { registryPrefix, registryUrl, includeComments },
-    } = await this.parse(ConvertIntegrationCommand);
+      options: { registryPrefix, registryUrl, includeComments },
+    } = context;
 
     ux.action.start("Converting low-code integration to code-native integration");
 
@@ -56,17 +64,17 @@ export default class ConvertIntegrationCommand extends PrismaticBaseCommand {
 
       const conversionResult =
         result.convertLowCodeIntegration?.convertLowCodeIntegrationFormResult ??
-        this.error("Integration conversion returned no result");
+        commandOutput.error("Integration conversion returned no result");
       const { url, conversionErrors } = conversionResult;
 
       if (conversionErrors && conversionErrors.length > 0) {
-        this.warn("Conversion completed with warnings:");
+        commandOutput.warn("Conversion completed with warnings:");
         for (const error of conversionErrors.filter((value) => value !== null)) {
-          this.warn(`  ${error.path}: ${error.error} (${error.errorType})`);
+          commandOutput.warn(`  ${error.path}: ${error.error} (${error.errorType})`);
         }
       }
 
-      this.log(`
+      commandOutput.log(`
 Conversion completed successfully!
 
 Download URL:\n${url}
@@ -78,13 +86,14 @@ Next steps:
 
 If installation issues occur during step 3, double check your package.json file and component registry set-up.
 For documentation on code-native integrations, visit https://prismatic.io/docs/integrations/code-native/`);
+      return resultOutput(context, {
+        integrationId: integration,
+        downloadUrl: url,
+        conversionErrors: (conversionErrors ?? []).filter((value) => value !== null),
+      });
     } catch (error) {
       ux.action.stop("failed");
       throw error;
     }
-  }
-
-  static async invoke(args: { [K in keyof typeof this.flags]+?: unknown }, config: Config) {
-    await ConvertIntegrationCommand.run(toArgv(args), config);
-  }
-}
+  },
+});

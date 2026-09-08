@@ -1,39 +1,27 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
 import { ValidateIntegrationSchemaDocument as VALIDATE_INTEGRATION_SCHEMA } from "../../graphql/operations/validateIntegrationSchema.generated.js";
-import { Args } from "@oclif/core";
+import { commandOutput, defineCommand, argsSchema } from "../../command.js";
 import chalk from "chalk";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { exists, readStdin } from "../../fs.js";
 import { gqlRequest } from "../../graphql.js";
 import { extractYAMLFromPath } from "../../utils/integration/import.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class ValidateYamlCommand extends PrismaticBaseCommand {
-  static description = "Validate a YAML integration definition without importing it";
-
-  static examples = [
-    {
-      description: "Validate a YAML file",
-      command: "<%= config.bin %> <%= command.id %> path/to/integration.yml",
-    },
-    {
-      description: "Validate from stdin",
-      command: "cat integration.yml | <%= config.bin %> <%= command.id %> -",
-    },
-    {
-      description: "Validate from stdin (alternative)",
-      command: "<%= config.bin %> <%= command.id %> - < integration.yml",
-    },
-  ];
-
-  static args = {
-    path: Args.string({
-      description: "Path to YAML file (use '-' for stdin)",
-      required: true,
+export default defineCommand({
+  output: z.object({ valid: z.literal(true), path: z.string() }),
+  description: "Validate a YAML integration definition without importing it",
+  examples: [
+    { description: "Validate a YAML file", args: { path: "path/to/integration.yml" } },
+    { description: "Validate from stdin", args: { path: "cat" } },
+    { description: "Validate from stdin (alternative)", args: { path: "<" } },
+  ],
+  args: argsSchema(
+    z.object({
+      path: z.string().describe("Path to YAML file (use '-' for stdin)"),
     }),
-  };
-
-  async run() {
-    const { args } = await this.parse(ValidateYamlCommand);
+  ),
+  async run(context) {
+    const { args } = context;
 
     let definition: string;
 
@@ -41,7 +29,7 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
       definition = await readStdin();
     } else {
       if (!(await exists(args.path))) {
-        this.error(`Cannot find definition file at specified path "${args.path}"`, {
+        commandOutput.error(`Cannot find definition file at specified path "${args.path}"`, {
           exit: 2,
         });
       }
@@ -49,7 +37,7 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
     }
 
     if (!definition.trim()) {
-      this.error("YAML definition is empty", { exit: 2 });
+      commandOutput.error("YAML definition is empty", { exit: 2 });
     }
 
     try {
@@ -61,14 +49,18 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
       });
 
       if (result.validateIntegrationSchema?.result?.isValid) {
-        this.log(`${chalk.green("✓ ")}Integration YAML is valid`);
+        commandOutput.log(`${chalk.green("✓ ")}Integration YAML is valid`);
+        return { valid: true as const, path: args.path };
       } else {
-        this.error("Validation failed", { exit: 1 });
+        commandOutput.error("Validation failed", { exit: 1 });
       }
     } catch (error) {
-      this.error(`Validation failed: ${error instanceof Error ? error.message : String(error)}`, {
-        exit: 1,
-      });
+      commandOutput.error(
+        `Validation failed: ${error instanceof Error ? error.message : String(error)}`,
+        {
+          exit: 1,
+        },
+      );
     }
-  }
-}
+  },
+});
