@@ -1,44 +1,42 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { commandOutput, defineCommand, optionsSchema } from "../../../command.js";
 import { CreateOrganizationUserDocument as CREATE_ORGANIZATION_USER } from "../../../graphql/operations/createOrganizationUser.generated.js";
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest } from "../../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create a User for your Organization";
-
-  static examples = [
-    {
-      description: "Get the ID of the 'Integrator' role:",
-      command:
-        "ROLE_ID=$(prism organization:users:roles --columns id --no-header --filter 'name=^Integrator$')",
-    },
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("userId"),
+  description: "Create a User for your Organization",
+  examples: [
+    { description: "Get the ID of the 'Integrator' role:" },
     {
       description: "Create an organization user and assign the role:",
-      command:
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-        "<%= config.bin %> <%= command.id %> --email 'foo@email.com' --name 'Susan Foo' --role ${ROLE_ID}",
+      options: { email: "foo@email.com", name: "Susan Foo", role: `\${ROLE_ID}` },
     },
-  ];
-
-  static flags = {
-    name: Flags.string({ char: "n", description: "name of the user" }),
-    email: Flags.string({
-      char: "e",
-      required: true,
-      description: "email address of the user",
+  ],
+  options: optionsSchema(
+    z.object({
+      name: z
+        .string()
+        .optional()
+        .describe("name of the user")
+        .meta({ cli: { char: "n" } }),
+      email: z
+        .string()
+        .describe("email address of the user")
+        .meta({ cli: { char: "e" } }),
+      role: z
+        .string()
+        .describe("role the user should assume")
+        .meta({ cli: { char: "r" } }),
     }),
-    role: Flags.string({
-      char: "r",
-      required: true,
-      description: "role the user should assume",
-    }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
-      flags: { name, email, role },
-    } = await this.parse(CreateCommand);
+      options: { name, email, role },
+    } = context;
 
     const result: ResultOf<typeof CREATE_ORGANIZATION_USER> = await gqlRequest({
       document: CREATE_ORGANIZATION_USER,
@@ -49,8 +47,11 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.createOrganizationUser?.user?.id ?? this.error("Organization user was not created"),
+    return resourceOutput(
+      context,
+      "userId",
+      result.createOrganizationUser?.user?.id ??
+        commandOutput.error("Organization user was not created"),
     );
-  }
-}
+  },
+});

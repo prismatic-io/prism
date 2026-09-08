@@ -1,43 +1,35 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { readFile } from "node:fs/promises";
+import { commandOutput, defineCommand, optionsSchema } from "../../../command.js";
 import { ImportPublicKeyDocument as IMPORT_PUBLIC_KEY } from "../../../graphql/operations/importPublicKey.generated.js";
-import { Flags } from "@oclif/core";
-import { readFileSync } from "fs";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest } from "../../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class ImportCommand extends PrismaticBaseCommand {
-  static description =
-    "Import a RSA public key for use with embedded marketplace.\nYou can use openssl to generate a new RSA key pair and import the public key.";
-
-  static examples = [
-    {
-      description: "Generate an RSA private key using openssl:",
-      command: "openssl genrsa -out my-private-key.pem 4096",
-    },
-    {
-      description: "Generate the associated RSA public key:",
-      command: "openssl rsa -in my-private-key.pem -pubout > my-public-key.pub",
-    },
-    {
-      description: "Import the public key:",
-      command: "<%= config.bin %> <%= command.id %> -p my-public-key.pub",
-    },
-  ];
-
-  static flags = {
-    "public-key-file": Flags.string({
-      char: "p",
-      required: true,
-      description: "public key file",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("signingKeyId"),
+  description:
+    "Import a RSA public key for use with embedded marketplace.\nYou can use openssl to generate a new RSA key pair and import the public key.",
+  examples: [
+    { description: "Generate an RSA private key using openssl:" },
+    { description: "Generate the associated RSA public key:" },
+    { description: "Import the public key:", options: { "public-key-file": "my-public-key.pub" } },
+  ],
+  options: optionsSchema(
+    z.object({
+      "public-key-file": z
+        .string()
+        .describe("public key file")
+        .meta({ cli: { char: "p" } }),
     }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
-      flags: { "public-key-file": publicKeyFile },
-    } = await this.parse(ImportCommand);
+      options: { "public-key-file": publicKeyFile },
+    } = context;
 
-    const publicKey = await readFileSync(publicKeyFile, {
+    const publicKey = await readFile(publicKeyFile, {
       encoding: "utf-8",
       flag: "r",
     });
@@ -47,9 +39,11 @@ export default class ImportCommand extends PrismaticBaseCommand {
       variables: { publicKey },
     });
 
-    this.log(
+    return resourceOutput(
+      context,
+      "signingKeyId",
       result.importOrganizationSigningKey?.organizationSigningKey?.id ??
-        this.error("Signing key was not imported"),
+        commandOutput.error("Signing key was not imported"),
     );
-  }
-}
+  },
+});

@@ -1,34 +1,49 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
-import { ListOrganizationUsersDocument as LIST_USERS } from "../../../graphql/organization/listOrganizationUsers.generated.js";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { defineCommand, optionsSchema } from "../../../command.js";
+import type { ListOrganizationUsersQuery } from "../../../graphql/organization/listOrganizationUsers.generated.js";
+import { ListOrganizationUsersDocument as LIST_ORGANIZATION_USERS } from "../../../graphql/organization/listOrganizationUsers.generated.js";
 import { gqlRequest, requireResource } from "../../../graphql.js";
-import { ux } from "../../../utils/legacy-ux.js";
+import { ux } from "../../../utils/ux.js";
+import { paginationFlags, tableOutputSchema } from "../../../utils/table.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Users of your Organization";
-  static flags = { ...ux.table.flags() };
+type OrganizationUserNode = NonNullable<
+  NonNullable<ListOrganizationUsersQuery["organization"]>["users"]["nodes"][number]
+>;
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+const isOrganizationUserNode = (node: OrganizationUserNode | null): node is OrganizationUserNode =>
+  node !== null;
 
-    let customerUsers: any[] = [];
+export default defineCommand({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["id", "name", "email", "phone", "role", "externalId"], true),
+  description: "List Users of your Organization",
+  options: optionsSchema(z.object({ ...ux.table.flags(), ...paginationFlags() })),
+  async run(context) {
+    const { options: flags } = context;
+
+    let customerUsers: OrganizationUserNode[] = [];
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let finalPageInfo: { hasNextPage: boolean; endCursor?: string | null } = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
-      const result: ResultOf<typeof LIST_USERS> = await gqlRequest({
-        document: LIST_USERS,
-        variables: { after: cursor },
+      const response: ResultOf<typeof LIST_ORGANIZATION_USERS> = await gqlRequest({
+        document: LIST_ORGANIZATION_USERS,
+        variables: { after: cursor, first: flags.first },
       });
-      const {
-        users: { nodes, pageInfo },
-      } = requireResource(result.organization, "Organization");
-      customerUsers = [...customerUsers, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      const resource = requireResource(response.organization, "Organization");
+      const { nodes, pageInfo } = resource.users;
+      customerUsers = [...customerUsers, ...nodes.filter(isOrganizationUserNode)];
+      cursor = pageInfo.endCursor ?? null;
+      finalPageInfo = pageInfo;
+      hasNextPage = pageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = ux.table(
       customerUsers,
       {
         id: {
@@ -47,5 +62,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+    return { ...result, pageInfo: finalPageInfo };
+  },
+});

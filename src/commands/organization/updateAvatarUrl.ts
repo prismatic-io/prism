@@ -1,42 +1,45 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { commandOutput, defineCommand, optionsSchema } from "../../command.js";
 import { CommitAvatarUploadDocument as COMMIT_AVATAR_UPLOAD } from "../../graphql/operations/commitAvatarUpload.generated.js";
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class UpdateAvatarUrlCommand extends PrismaticBaseCommand {
-  // TODO: Add more flags once optional updates are implemented
-  static description = "Update your Organization Avatar URL";
-
-  static flags = {
-    organizationId: Flags.string({
-      name: "organization",
-      required: true,
-      description: "ID of an organization",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("organizationId"),
+  description: "Update your Organization Avatar URL",
+  options: optionsSchema(
+    z.object({
+      organizationId: z
+        .string()
+        .describe("ID of an organization")
+        .meta({ cli: { name: "organization" } }),
+      avatarUrl: z
+        .string()
+        .optional()
+        .describe("Url of the organization avatar")
+        .meta({ cli: { char: "n" } }),
     }),
-    avatarUrl: Flags.string({
-      char: "n",
-      required: false,
-      description: "Url of the organization avatar",
-    }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
-      flags: { organizationId, avatarUrl },
-    } = await this.parse(UpdateAvatarUrlCommand);
+      options: { organizationId, avatarUrl },
+    } = context;
 
     const result: ResultOf<typeof COMMIT_AVATAR_UPLOAD> = await gqlRequest({
       document: COMMIT_AVATAR_UPLOAD,
       variables: {
         organizationId,
-        avatarUrl: avatarUrl ?? this.error("Avatar URL is required"),
+        avatarUrl: avatarUrl ?? commandOutput.error("--avatarUrl is required to update the avatar"),
       },
     });
 
-    this.log(
+    return resourceOutput(
+      context,
+      "organizationId",
       result.updateOrganization?.organization?.id ??
-        this.error("Organization avatar was not updated"),
+        commandOutput.error("Organization avatar was not updated"),
     );
-  }
-}
+  },
+});
