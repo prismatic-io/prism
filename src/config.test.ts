@@ -1,3 +1,4 @@
+import { runWithEnvironment } from "./runtime.js";
 import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { devNull, tmpdir } from "node:os";
 import path from "node:path";
@@ -452,4 +453,26 @@ describe("unversioned config support", () => {
     expect(contents).toContain("defaultProfile: default");
     expect(contents).toContain("accessToken: fresh-token");
   });
+});
+
+it("retains concurrent profile updates without changing request environment", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "prism-concurrent-profiles-"));
+  const configPath = path.join(directory, "config.yml");
+  const environment = { ...process.env, PRISM_CONFIG_FILE: configPath };
+  try {
+    await Promise.all(
+      Array.from({ length: 12 }, (_, index) =>
+        runWithEnvironment({ ...environment, PRISM_PROFILE: `profile-${index}` }, async () => {
+          await writeActiveProfile(makeConfig({ accessToken: `token-${index}` }));
+          expect(await getActiveProfileName()).toBe(`profile-${index}`);
+        }),
+      ),
+    );
+    const file = await runWithEnvironment(environment, readConfigFile);
+    expect(Object.keys(file?.profiles ?? {})).toHaveLength(12);
+    for (let index = 0; index < 12; index++)
+      expect(file?.profiles[`profile-${index}`].accessToken).toBe(`token-${index}`);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });

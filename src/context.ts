@@ -1,5 +1,6 @@
 import { readProfileSelection } from "./config.js";
 import { DEFAULT_PRISMATIC_URL, getEnv } from "./env.js";
+import { getRuntimeState } from "./runtime.js";
 
 export type AuthContext = {
   source: "environment" | "profile";
@@ -27,8 +28,9 @@ export const useProfileAuthContext = (): void => {
 
 export const getAuthContext = async (): Promise<AuthContext> => {
   const env = getEnv();
-  if (profileOnly) return resolveProfileAuthContext();
-  if (!profileOnly && (env.PRISM_ACCESS_TOKEN || env.PRISM_REFRESH_TOKEN)) {
+  const useProfileOnly = getRuntimeState()?.profileOnly ?? profileOnly;
+  if (useProfileOnly) return resolveProfileAuthContext();
+  if (!useProfileOnly && (env.PRISM_ACCESS_TOKEN || env.PRISM_REFRESH_TOKEN)) {
     return {
       source: "environment",
       url: env.PRISMATIC_URL ?? DEFAULT_PRISMATIC_URL,
