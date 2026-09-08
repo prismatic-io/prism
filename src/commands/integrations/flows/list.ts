@@ -1,29 +1,37 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { getIntegrationFlows } from "../../../utils/integration/flows.js";
-import { ux } from "../../../utils/legacy-ux.js";
+import { defineCommand, argsSchema, optionsSchema } from "../../../command.js";
+import { getIntegrationFlowsPage } from "../../../utils/integration/flows.js";
+import { paginationFlags, tableOutputSchema } from "../../../utils/table.js";
+import { ux } from "../../../utils/ux.js";
+import { z } from "incur";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Integration Flows";
-  static args = {
-    integration: Args.string({
-      description: "ID of an Integration",
-      required: true,
+export default defineCommand({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["id", "name", "description", "testUrl"], true),
+  description: "List Integration Flows",
+  args: argsSchema(
+    z.object({
+      integration: z.string().describe("ID of an Integration"),
     }),
-  };
-  static flags = {
-    ...ux.table.flags(),
-  };
-
-  async run() {
+  ),
+  options: optionsSchema(
+    z.object({
+      ...ux.table.flags(),
+      ...paginationFlags(),
+    }),
+  ),
+  async run(context) {
     const {
       args: { integration },
-      flags,
-    } = await this.parse(ListCommand);
+      options: flags,
+    } = context;
 
-    const flows = await getIntegrationFlows(integration);
+    const { flows, pageInfo } = await getIntegrationFlowsPage(integration, {
+      after: flags.after,
+      all: flags.all === true || !context.agent,
+      first: flags.first,
+    });
 
-    ux.table(
+    const result = ux.table(
       flows,
       {
         id: {
@@ -36,5 +44,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+    return { ...result, pageInfo };
+  },
+});

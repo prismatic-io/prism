@@ -1,31 +1,32 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { commandOutput, defineCommand, argsSchema, optionsSchema } from "../../command.js";
 import { MarkAvailabilityDocument as MARK_AVAILABILITY } from "../../graphql/operations/markAvailability.generated.js";
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class AvailableCommand extends PrismaticBaseCommand {
-  static description = "Mark an Integration version as available or unavailable";
-  static args = {
-    integration: Args.string({
-      required: true,
-      description: "ID of an integration version",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("integrationId"),
+  description: "Mark an Integration version as available or unavailable",
+  args: argsSchema(
+    z.object({
+      integration: z.string().describe("ID of an integration version"),
     }),
-  };
-  static flags = {
-    available: Flags.boolean({
-      required: true,
-      char: "a",
-      description: "Version is available or unavailable",
-      allowNo: true,
+  ),
+  options: optionsSchema(
+    z.object({
+      available: z
+        .boolean()
+        .describe("Version is available or unavailable")
+        .meta({ cli: { char: "a", allowNo: true } }),
     }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
       args: { integration },
-      flags: { available },
-    } = await this.parse(AvailableCommand);
+      options: { available },
+    } = context;
 
     const result: ResultOf<typeof MARK_AVAILABILITY> = await gqlRequest({
       document: MARK_AVAILABILITY,
@@ -35,9 +36,11 @@ export default class AvailableCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
+    return resourceOutput(
+      context,
+      "integrationId",
       result.updateIntegrationVersionAvailability?.integration?.id ??
-        this.error("Integration availability was not updated"),
+        commandOutput.error("Integration availability was not updated"),
     );
-  }
-}
+  },
+});

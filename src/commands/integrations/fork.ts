@@ -1,37 +1,36 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { commandOutput, defineCommand, argsSchema, optionsSchema } from "../../command.js";
 import { ForkIntegrationDocument as FORK_INTEGRATION } from "../../graphql/operations/forkIntegration.generated.js";
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class ForkCommand extends PrismaticBaseCommand {
-  static description = "Fork an Integration";
-
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      required: true,
-      description: "name of the forked integration",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("integrationId"),
+  description: "Fork an Integration",
+  options: optionsSchema(
+    z.object({
+      name: z
+        .string()
+        .describe("name of the forked integration")
+        .meta({ cli: { char: "n" } }),
+      description: z
+        .string()
+        .describe("longer description of the forked integration")
+        .meta({ cli: { char: "d" } }),
     }),
-    description: Flags.string({
-      char: "d",
-      required: true,
-      description: "longer description of the forked integration",
+  ),
+  args: argsSchema(
+    z.object({
+      parent: z.string().describe("ID of the Integration to fork"),
     }),
-  };
-
-  static args = {
-    parent: Args.string({
-      required: true,
-      description: "ID of the Integration to fork",
-    }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
-      flags: { name, description },
+      options: { name, description },
       args: { parent },
-    } = await this.parse(ForkCommand);
+    } = context;
 
     const result: ResultOf<typeof FORK_INTEGRATION> = await gqlRequest({
       document: FORK_INTEGRATION,
@@ -42,6 +41,10 @@ export default class ForkCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.forkIntegration?.integration?.id ?? this.error("Integration was not forked"));
-  }
-}
+    return resourceOutput(
+      context,
+      "integrationId",
+      result.forkIntegration?.integration?.id ?? commandOutput.error("Integration was not forked"),
+    );
+  },
+});

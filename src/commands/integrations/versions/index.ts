@@ -1,33 +1,42 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
-import { Args, Flags } from "@oclif/core";
+import { tableOutputSchema } from "../../../utils/table.js";
 import { ListIntegrationVersionsDocument as LIST_INTEGRATION_VERSIONS } from "../../../graphql/operations/listIntegrationVersions.generated.js";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { defineCommand, argsSchema, optionsSchema } from "../../../command.js";
 import { gqlRequest, requireResource } from "../../../graphql.js";
-import { ux } from "../../../utils/legacy-ux.js";
+import { ux } from "../../../utils/ux.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Integration versions";
-
-  static flags = {
-    ...ux.table.flags(),
-    "latest-available": Flags.boolean({
-      char: "l",
-      description: "Show only the latest available version",
+export default defineCommand({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema([
+    "versionNumber",
+    "id",
+    "versionCreatedAt",
+    "versionCreatedBy",
+    "versionComment",
+    "available",
+  ]),
+  description: "List Integration versions",
+  options: optionsSchema(
+    z.object({
+      ...ux.table.flags(),
+      "latest-available": z
+        .boolean()
+        .optional()
+        .describe("Show only the latest available version")
+        .meta({ cli: { char: "l" } }),
     }),
-  };
-
-  static args = {
-    integration: Args.string({
-      required: true,
-      description: "ID of an integration",
+  ),
+  args: argsSchema(
+    z.object({
+      integration: z.string().describe("ID of an integration"),
     }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
-      flags,
+      options: flags,
       args: { integration },
-    } = await this.parse(ListCommand);
+    } = context;
 
     const result: ResultOf<typeof LIST_INTEGRATION_VERSIONS> = await gqlRequest({
       document: LIST_INTEGRATION_VERSIONS,
@@ -38,35 +47,37 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
-    ux.table(
-      requireResource(result.integration, "Integration").versionSequence.nodes,
+    return ux.table(
+      requireResource(result.integration, "Integration").versionSequence.nodes.filter(
+        (row): row is NonNullable<typeof row> => row !== null,
+      ),
       {
         versionNumber: {
           header: "Version",
         },
         id: {
           header: "ID",
-          get: (row: any) => row.id,
+          get: (row) => row.id,
           extended: true,
         },
         versionCreatedAt: {
           header: "Created At",
-          get: (row: any) => new Date(row.versionCreatedAt).toISOString(),
+          get: (row) => new Date(row.versionCreatedAt ?? 0).toISOString(),
         },
         versionCreatedBy: {
           header: "Created By",
-          get: (row: any) => row.versionCreatedBy?.email ?? "",
+          get: (row) => row.versionCreatedBy?.email ?? "",
         },
         versionComment: {
           header: "Comment",
-          get: (row: any) => row.versionComment ?? "",
+          get: (row) => row.versionComment ?? "",
         },
         available: {
           header: "Available",
-          get: (row: any) => row.versionIsAvailable,
+          get: (row) => row.versionIsAvailable,
         },
       },
       { ...flags },
     );
-  }
-}
+  },
+});

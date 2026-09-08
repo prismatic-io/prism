@@ -1,32 +1,35 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { commandOutput, defineCommand, optionsSchema } from "../../command.js";
 import { CreateIntegrationDocument as CREATE_INTEGRATION } from "../../graphql/operations/createIntegration.generated.js";
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create an Integration";
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      required: true,
-      description: "name of the integration to create",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("integrationId"),
+  description: "Create an Integration",
+  options: optionsSchema(
+    z.object({
+      name: z
+        .string()
+        .describe("name of the integration to create")
+        .meta({ cli: { char: "n" } }),
+      description: z
+        .string()
+        .describe("longer description of the integration")
+        .meta({ cli: { char: "d" } }),
+      customer: z
+        .string()
+        .optional()
+        .describe("ID of customer with which to associate the integration")
+        .meta({ cli: { char: "c" } }),
     }),
-    description: Flags.string({
-      char: "d",
-      required: true,
-      description: "longer description of the integration",
-    }),
-    customer: Flags.string({
-      char: "c",
-      description: "ID of customer with which to associate the integration",
-    }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
-      flags: { name, description, customer },
-    } = await this.parse(CreateCommand);
+      options: { name, description, customer },
+    } = context;
 
     const result: ResultOf<typeof CREATE_INTEGRATION> = await gqlRequest({
       document: CREATE_INTEGRATION,
@@ -37,8 +40,11 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.createIntegration?.integration?.id ?? this.error("Integration was not created"),
+    return resourceOutput(
+      context,
+      "integrationId",
+      result.createIntegration?.integration?.id ??
+        commandOutput.error("Integration was not created"),
     );
-  }
-}
+  },
+});
