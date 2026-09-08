@@ -148,6 +148,7 @@ export const NativeCommands = {
   "alerts:webhooks:list": AlertsWebhooksListCommand,
   "components:actions:list": ComponentsActionsListCommand,
   "components:data-sources:list": ComponentsDataSourcesListCommand,
+  "components:dev:run": ComponentsDevRunCommand,
   "components:dev:test": ComponentsDevTestCommand,
   "components:init:component": ComponentsInitComponentCommand,
   "components:init": ComponentsInitCommand,
@@ -185,7 +186,6 @@ export const NativeCommands = {
 };
 
 export const Commands = {
-  "components:dev:run": ComponentsDevRunCommand,
   "graphql:query": GraphqlQueryCommand,
   ...Object.fromEntries(
     Object.entries(NativeCommands).map(([id, command]) => [id, asOclifCommand(id, command)]),
