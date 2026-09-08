@@ -1,12 +1,12 @@
-// Stable Prism table rendering, preserving the historic output format and the
-// case-insensitive key-or-header lookup used by --filter, --columns, and --sort.
+// Minimal reimplementation of @oclif/core v3's ux.table (removed in v4), preserving the
+// flag shape, output format, and the case-insensitive key-or-header lookup that --filter,
+// --columns, and --sort used.
 
+import { Errors, Flags } from "@oclif/core";
 import chalk from "chalk";
-import { z } from "incur";
 import { startCase } from "lodash-es";
 import { orderBy } from "natural-orderby";
 import { dumpYaml } from "./serialize.js";
-import { isAgentExecution, writeCommandOutput } from "../command.js";
 
 export type ColumnDef<T> = {
   header?: string;
@@ -34,126 +34,52 @@ export type TableFlags = {
   csv?: boolean;
   output?: string;
   extended?: boolean;
-  header?: boolean;
-  truncate?: boolean;
+  "no-header"?: boolean;
+  "no-truncate"?: boolean;
 };
 
-export type PaginationFlags = {
-  after?: string;
-  all?: boolean;
-  first?: number;
-};
-
-export const paginationFlags = () => ({
-  after: z.string().optional().describe("Resume listing after this API cursor"),
-  all: z.boolean().optional().describe("Fetch every page instead of returning one resumable page"),
-  first: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .optional()
-    .describe("Maximum number of records to request per API page"),
-});
-
-const nativeFieldSchemas = {
-  public: z.boolean(),
-  enabled: z.boolean(),
-  triggered: z.boolean(),
-  imported: z.boolean(),
-  available: z.boolean(),
-  isDefault: z.boolean(),
-  versionNumber: z.number().int(),
-  labels: z.array(z.string()),
-  headers: z.json(),
-  details: z.json(),
-  value: z.json(),
-  defaultValue: z.json(),
-};
-
-type TableField<K extends string> = K extends keyof typeof nativeFieldSchemas
-  ? (typeof nativeFieldSchemas)[K]
-  : z.ZodString;
-type TableShape<T extends readonly string[]> = {
-  [K in T[number]]: z.ZodOptional<z.ZodNullable<TableField<K>>>;
-};
-export function tableOutputSchema<
-  const T extends readonly string[],
-  const P extends boolean = false,
->(fields: T, paginated: P = false as P) {
-  const row = Object.fromEntries(
-    fields.map((name) => {
-      const field = Object.hasOwn(nativeFieldSchemas, name)
-        ? nativeFieldSchemas[name as keyof typeof nativeFieldSchemas]
-        : z.string();
-      return [name, field.nullable().optional()];
-    }),
-  ) as TableShape<T>;
-  const base = z.object({ items: z.array(z.object(row)) });
-  const page = base.extend({
-    pageInfo: z.object({
-      hasNextPage: z.boolean(),
-      endCursor: z.string().nullable().optional(),
-    }),
-  });
-  return (paginated ? page : base) as P extends true ? typeof page : typeof base;
-}
-
-// Flag order is part of the public CLI contract; don't reorder.
+// Flag order is part of the oclif manifest contract; don't reorder.
 const allFlags = () => ({
-  columns: z
-    .string()
-    .optional()
-    .describe("only show provided columns (comma-separated)")
-    .meta({ cli: { exclusive: ["extended"] } }),
-  csv: z
-    .boolean()
-    .optional()
-    .describe("output is csv format [alias: --output=csv]")
-    .meta({ cli: { exclusive: ["no-truncate"] } }),
-  extended: z
-    .boolean()
-    .optional()
-    .describe("show extra columns")
-    .meta({ cli: { char: "x", exclusive: ["columns"] } }),
-  filter: z
-    .string()
-    .optional()
-    .describe("filter property by regex, ex: name=^foo (prefix key with - to invert)"),
-  header: z
-    .boolean()
-    .optional()
-    .describe("show table headers (use --no-header to hide them)")
-    .meta({ cli: { legacyName: "no-header", exclusive: ["csv"] } }),
-  truncate: z
-    .boolean()
-    .optional()
-    .describe("truncate output to fit the screen (use --no-truncate for full values)")
-    .meta({ cli: { legacyName: "no-truncate", exclusive: ["csv"] } }),
-  output: z
-    .enum(["csv", "json", "yaml"])
-    .optional()
-    .describe("output in a more machine friendly format")
-    .meta({ cli: { exclusive: ["no-truncate", "csv"] } }),
-  sort: z
-    .string()
-    .optional()
-    .describe("property to sort by, comma-separated for multi-key (prepend '-' for descending)"),
+  columns: Flags.string({
+    exclusive: ["extended"],
+    description: "only show provided columns (comma-separated)",
+  }),
+  csv: Flags.boolean({
+    exclusive: ["no-truncate"],
+    description: "output is csv format [alias: --output=csv]",
+  }),
+  extended: Flags.boolean({
+    char: "x",
+    exclusive: ["columns"],
+    description: "show extra columns",
+  }),
+  filter: Flags.string({
+    description: "filter property by regex, ex: name=^foo (prefix key with - to invert)",
+  }),
+  "no-header": Flags.boolean({
+    exclusive: ["csv"],
+    description: "hide table header from output",
+  }),
+  "no-truncate": Flags.boolean({
+    exclusive: ["csv"],
+    description: "do not truncate output to fit screen",
+  }),
+  output: Flags.string({
+    exclusive: ["no-truncate", "csv"],
+    description: "output in a more machine friendly format",
+    options: ["csv", "json", "yaml"],
+  }),
+  sort: Flags.string({
+    description: "property to sort by, comma-separated for multi-key (prepend '-' for descending)",
+  }),
 });
 
 export const tableFlags = (opts: { only?: TableFlagKey[]; except?: TableFlagKey[] } = {}) => {
   const flags = allFlags();
-  const keys = (
-    opts.only ??
-    (Object.keys(flags).map((k) =>
-      k === "header" ? "no-header" : k === "truncate" ? "no-truncate" : k,
-    ) as TableFlagKey[])
-  ).filter((k) => !opts.except?.includes(k));
-  return Object.fromEntries(
-    keys.map((k) => {
-      const key = k === "no-header" ? "header" : k === "no-truncate" ? "truncate" : k;
-      return [key, flags[key]];
-    }),
-  ) as ReturnType<typeof allFlags>;
+  const keys = (opts.only ?? (Object.keys(flags) as TableFlagKey[])).filter(
+    (k) => !opts.except?.includes(k),
+  );
+  return Object.fromEntries(keys.map((k) => [k, flags[k]])) as Partial<ReturnType<typeof allFlags>>;
 };
 
 type Column = { key: string; header: string; minWidth: number };
@@ -216,15 +142,15 @@ const pickDisplayColumns = <T>(
   return all.filter((c) => flags.extended || !columns[c.key].extended);
 };
 
-const project = <T>(data: T[], columns: ResolvedColumn<T>[]): Array<Record<string, unknown>> =>
-  data.map((row) => Object.fromEntries(columns.map((c) => [c.key, c.get(row) ?? null])));
+const project = <T>(data: T[], columns: ResolvedColumn<T>[]): Array<Record<string, string>> =>
+  data.map((row) => Object.fromEntries(columns.map((c) => [c.key, toCell(c.get(row))])));
 
 const applyFilter = <T>(
-  rows: Array<Record<string, unknown>>,
+  rows: Array<Record<string, string>>,
   filter: string,
   columns: ColumnsConfig<T>,
-): Array<Record<string, unknown>> => {
-  const invalid = () => new Error("Filter flag has an invalid value");
+): Array<Record<string, string>> => {
+  const invalid = () => new Errors.CLIError("Filter flag has an invalid value", { exit: 1 });
   const eq = filter.indexOf("=");
   const rawInput = eq < 0 ? "" : filter.slice(0, eq);
   const pattern = eq < 0 ? "" : filter.slice(eq + 1);
@@ -238,14 +164,14 @@ const applyFilter = <T>(
   } catch {
     throw invalid();
   }
-  return rows.filter((r) => negate !== regex.test(toCell(r[key])));
+  return rows.filter((r) => negate !== regex.test(r[key] ?? ""));
 };
 
 const applySort = <T>(
-  rows: Array<Record<string, unknown>>,
+  rows: Array<Record<string, string>>,
   sort: string,
   columns: ColumnsConfig<T>,
-): Array<Record<string, unknown>> => {
+): Array<Record<string, string>> => {
   const index = buildKeyIndex(columns);
   const sorters = sort.split(",").map((s) => {
     const desc = s.startsWith("-");
@@ -254,7 +180,7 @@ const applySort = <T>(
   });
   return orderBy(
     rows,
-    sorters.map((s) => (r: Record<string, unknown>) => toCell(r[s.key])),
+    sorters.map((s) => (r: Record<string, string>) => r[s.key] ?? ""),
     sorters.map((s) => s.order),
   );
 };
@@ -277,7 +203,7 @@ const formatText = (
   });
 
   const pad = (cell: string, width: number) =>
-    flags.truncate === false || cell.length <= width
+    flags["no-truncate"] || cell.length <= width
       ? cell.padEnd(width)
       : `${cell.slice(0, Math.max(0, width - 2))}… `;
 
@@ -286,7 +212,7 @@ const formatText = (
     ` ${cells.map((c, i) => pad(c, widths[i] ?? c.length)).join(" ")} `;
 
   const out: string[] = [];
-  if (flags.header !== false) {
+  if (!flags["no-header"]) {
     out.push(chalk.bold(line(columns.map((c) => c.header))));
     out.push(chalk.bold(line(widths.map((w) => "─".repeat(w)))));
   }
@@ -315,7 +241,7 @@ export const printTable = <T>(
   data: T[],
   columns: ColumnsConfig<T>,
   flags: TableFlags = {},
-): { items: Array<Record<string, unknown>> } => {
+): void => {
   // Filter and sort run against every column, then we narrow to the display set — so
   // `--filter label=X --columns id` still matches rows by the hidden `label`.
   const all = buildAllColumns(columns);
@@ -323,33 +249,25 @@ export const printTable = <T>(
   if (flags.filter) rows = applyFilter(rows, flags.filter, columns);
   if (flags.sort) rows = applySort(rows, flags.sort, columns);
 
-  const display = pickDisplayColumns(all, columns, {
-    ...flags,
-    extended: isAgentExecution() || flags.extended,
-  });
+  const display = pickDisplayColumns(all, columns, flags);
   const displayRows = rows.map((r) =>
-    Object.fromEntries(display.map((c) => [c.key, r[c.key] ?? null])),
-  );
-
-  if (isAgentExecution()) return { items: displayRows };
-  const renderedRows = displayRows.map((row) =>
-    Object.fromEntries(Object.entries(row).map(([key, value]) => [key, toCell(value)])),
+    Object.fromEntries(display.map((c) => [c.key, r[c.key] ?? ""])),
   );
 
   switch (resolveOutput(flags)) {
     case "json":
-      writeCommandOutput(JSON.stringify(renderedRows, null, 2));
-      return { items: displayRows };
+      process.stdout.write(`${JSON.stringify(displayRows, null, 2)}\n`);
+      return;
     case "yaml":
-      writeCommandOutput(dumpYaml(renderedRows));
-      return { items: displayRows };
+      process.stdout.write(dumpYaml(displayRows));
+      return;
     case "csv":
-      writeCommandOutput(formatCsv(display, renderedRows));
-      return { items: displayRows };
+      process.stdout.write(`${formatCsv(display, displayRows)}\n`);
+      return;
     case "text": {
-      const text = formatText(display, renderedRows, flags);
-      if (text) writeCommandOutput(text);
-      return { items: displayRows };
+      const text = formatText(display, displayRows, flags);
+      if (text) process.stdout.write(`${text}\n`);
+      return;
     }
   }
 };

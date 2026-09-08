@@ -4,7 +4,7 @@ import { Flags } from "@oclif/core";
 import dayjs from "dayjs";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
-import { ux } from "../../utils/ux.js";
+import { ux } from "../../utils/legacy-ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List available Components";

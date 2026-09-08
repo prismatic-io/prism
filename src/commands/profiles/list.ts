@@ -1,6 +1,6 @@
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { listProfiles } from "../../config.js";
-import { ux } from "../../utils/ux.js";
+import { ux } from "../../utils/legacy-ux.js";
 
 export default class ProfilesListCommand extends PrismaticBaseCommand {
   static description = "List profiles";

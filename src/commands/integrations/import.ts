@@ -10,7 +10,7 @@ import {
   loadCodeNativeIntegrationEntryPoint,
 } from "../../utils/integration/import.js";
 import { openIntegration } from "../../utils/integration/open.js";
-import { ux } from "../../utils/ux.js";
+import { ux } from "../../utils/legacy-ux.js";
 
 export default class ImportCommand extends PrismaticBaseCommand {
   static description =

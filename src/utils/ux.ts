@@ -1,21 +1,39 @@
 import { setTimeout as sleep } from "node:timers/promises";
-import { ux as oclifUx } from "@oclif/core";
+import {
+  commandSignal,
+  isAgentExecution,
+  writeCommandStatus,
+  writeCommandProgress,
+} from "../command.js";
 import { confirm, pressAnyKey } from "./prompts.js";
 import { printTable, tableFlags } from "./table.js";
 import { hyperlink } from "./terminal.js";
 
-// Drop-in for the cli-ux `ux` namespace removed in @oclif/core v4. Call sites swap their
-// `@oclif/core` import for this one and keep `ux.table`, `ux.confirm`, etc. unchanged.
+// Human status helpers; native command results carry agent output.
 export const ux = {
-  ...oclifUx,
+  action: {
+    start(message: string): void {
+      writeCommandProgress(`${message}...`);
+    },
+    stop(message = "done", _options?: unknown): void {
+      if (isAgentExecution()) return;
+      writeCommandStatus(` ${message}`);
+    },
+  },
   table: Object.assign(printTable, { flags: tableFlags }),
   confirm,
   anykey: pressAnyKey,
   url: (text: string, uri: string): void => {
-    process.stdout.write(`${hyperlink(text, uri)}\n`);
+    writeCommandStatus(hyperlink(text, uri));
   },
   log: (...args: unknown[]): void => {
-    console.log(...args);
+    writeCommandStatus(args.map(String).join(" "));
   },
-  wait: (ms: number): Promise<void> => sleep(ms),
+  error(message: string, options?: { exit?: number }): never {
+    const error = new Error(message);
+    const exitCode = options?.exit ?? 2;
+    Object.assign(error, { exitCode });
+    throw error;
+  },
+  wait: (ms: number): Promise<void> => sleep(ms, undefined, { signal: commandSignal() }),
 };

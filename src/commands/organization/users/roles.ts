@@ -2,7 +2,7 @@ import type { ResultOf } from "@graphql-typed-document-node/core";
 import { ListOrganizationRolesDocument as LIST_ORGANIZATION_ROLES } from "../../../graphql/operations/listOrganizationRoles.generated.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Roles you can grant to other users in your Organization";

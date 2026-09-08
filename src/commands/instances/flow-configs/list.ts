@@ -3,7 +3,7 @@ import { ListInstanceFlowConfigsDocument as LIST_INSTANCE_FLOW_CONFIGS } from ".
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest, requireResource } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Instance Flow Configs";

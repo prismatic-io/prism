@@ -16,7 +16,7 @@ import { fetch } from "../../../utils/http.js";
 import { type IntegrationFlow, resolveFlow } from "../../../utils/integration/flows.js";
 import { runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 
 const DEFAULT_TIMEOUT_SECONDS = 1200; // 20 minutes
 const DEFAULT_OUTPUT_DIR = "./payloads";

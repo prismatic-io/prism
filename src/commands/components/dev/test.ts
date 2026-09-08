@@ -7,7 +7,7 @@ import open from "open";
 import { promisify } from "util";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { exists } from "../../../fs.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 import { deleteComponentByKey } from "../../../utils/component/deleteByKey.js";
 import {
   createComponentPackage,

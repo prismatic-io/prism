@@ -3,7 +3,7 @@ import { Args, Flags } from "@oclif/core";
 import { ListIntegrationVersionsDocument as LIST_INTEGRATION_VERSIONS } from "../../../graphql/operations/listIntegrationVersions.generated.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest, requireResource } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Integration versions";

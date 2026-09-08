@@ -3,7 +3,7 @@ import { Flags } from "@oclif/core";
 import { AvailableConnectionsDocument as AVAILABLE_CONNECTIONS } from "../../../graphql/operations/availableConnections.generated.js";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List all integration-agnostic connections available to the organization";

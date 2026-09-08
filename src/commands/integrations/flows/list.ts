@@ -1,7 +1,7 @@
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { getIntegrationFlows } from "../../../utils/integration/flows.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Integration Flows";

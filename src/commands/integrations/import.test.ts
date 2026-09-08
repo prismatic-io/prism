@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ComponentDefinition } from "../../utils/component/index.js";
-import { ux } from "../../utils/ux.js";
+import { ux } from "../../utils/legacy-ux.js";
 import ImportCommand from "./import.js";
 
 vi.mock(import("../../fs.js"), () => ({

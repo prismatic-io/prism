@@ -27,7 +27,7 @@ vi.mock(import("inquirer"), () => ({
   },
 }));
 
-vi.mock(import("../../../utils/ux.js"), async (importOriginal) => {
+vi.mock(import("../../../utils/legacy-ux.js"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,

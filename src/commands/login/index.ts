@@ -2,7 +2,7 @@ import { Flags } from "@oclif/core";
 import { isLoggedIn, login } from "../../auth.js";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { getActiveProfileName } from "../../config.js";
-import { ux } from "../../utils/ux.js";
+import { ux } from "../../utils/legacy-ux.js";
 
 export default class LoginCommand extends PrismaticBaseCommand {
   static description = "Log in to your Prismatic account";

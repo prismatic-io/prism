@@ -2,7 +2,7 @@ import type { ResultOf } from "@graphql-typed-document-node/core";
 import { ListCustomersDocument as LIST_CUSTOMERS } from "../../graphql/customers/listCustomers.generated.js";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
-import { ux } from "../../utils/ux.js";
+import { ux } from "../../utils/legacy-ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List your Customers";

@@ -3,7 +3,7 @@ import { ListComponentActionsDocument as LIST_COMPONENT_ACTIONS } from "../../..
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 
 interface ActionNode {
   [index: string]: unknown;

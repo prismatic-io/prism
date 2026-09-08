@@ -8,7 +8,7 @@ import { getPrismaticUrl } from "../../../context.js";
 import { exists, fs } from "../../../fs.js";
 import { handleError } from "../../../utils/errors.js";
 import { fetch } from "../../../utils/http.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 import {
   type FetchLogsResult,
   getExecutionLogs,

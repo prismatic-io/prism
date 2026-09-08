@@ -3,7 +3,7 @@ import { ListInstanceConfigVariablesDocument as LIST_INSTANCE_CONFIG_VARIABLES }
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest, requireResource } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
   static description = "List Config Variables used on an Instance";

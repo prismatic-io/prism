@@ -4,7 +4,7 @@ import { TestInstanceFlowConfigDocument as TEST_INSTANCE_FLOW_CONFIG } from "../
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 
 interface LogNode {
   [index: string]: unknown;

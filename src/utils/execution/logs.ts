@@ -75,6 +75,6 @@ export const displayLogs = async (executionId: string): Promise<void> => {
       },
       message: {},
     },
-    { "no-header": true },
+    { header: false },
   );
 };

@@ -4,7 +4,7 @@ import type { ListComponentActions2Query } from "../../../graphql/operations/lis
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { ux } from "../../../utils/legacy-ux.js";
 
 type ComponentDataSourceNode = NonNullable<
   ListComponentActions2Query["components"]["nodes"][number]

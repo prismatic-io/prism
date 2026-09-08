@@ -1,7 +1,7 @@
 import { Flags } from "@oclif/core";
 
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { ux } from "../../utils/ux.js";
+import { ux } from "../../utils/legacy-ux.js";
 import {
   createComponentPackage,
   createSourceCodePackage,

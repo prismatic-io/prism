@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
 import { dumpYaml } from "../../utils/serialize.js";
-import { ux } from "../../utils/ux.js";
+import { ux } from "../../utils/legacy-ux.js";
 
 export default class QueryCommand extends PrismaticBaseCommand {
   static description = "Execute an arbitrary GraphQL query against the Prismatic API";
