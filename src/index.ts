@@ -161,8 +161,10 @@ export const NativeCommands = {
   "executions:step-result:get": ExecutionsStepResultGetCommand,
   "instances:config-vars:list": InstancesConfigVarsListCommand,
   "instances:flow-configs:list": InstancesFlowConfigsListCommand,
+  "instances:flow-configs:test": InstancesFlowConfigsTestCommand,
   "integrations:convert": IntegrationConvertCommand,
   "integrations:flows:list": IntegrationsFlowsListCommand,
+  "integrations:flows:test": IntegrationsFlowsTestCommand,
   "integrations:init": IntegrationsInitCommand,
   "integrations:versions": IntegrationsVersionsCommand,
   "logs:severities:list": LogsSeveritiesListCommand,
@@ -183,9 +185,7 @@ export const NativeCommands = {
 
 export const Commands = {
   "components:dev:run": ComponentsDevRunCommand,
-  "instances:flow-configs:test": InstancesFlowConfigsTestCommand,
   "integrations:flows:listen": IntegrationsFlowsListenCommand,
-  "integrations:flows:test": IntegrationsFlowsTestCommand,
   "graphql:query": GraphqlQueryCommand,
   ...Object.fromEntries(
     Object.entries(NativeCommands).map(([id, command]) => [id, asOclifCommand(id, command)]),
