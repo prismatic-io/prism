@@ -16,12 +16,6 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const invoke = (command, args) =>
-  (typeof command === "function"
-    ? command.run(args)
-    : runCommand(command, ["--agent", ...args])
-  ).then(() => undefined);
-
 const cases = [
   { command: CustomerUsers, parent: "customer", child: "users", args: ["customer-id"] },
   { command: ConfigVariables, parent: "instance", child: "configVariables", args: ["instance-id"] },
@@ -34,7 +28,7 @@ const cases = [
 describe.each(cases)("$parent.$child resource lookup", ({ command, parent, child, args }) => {
   it("rejects a missing parent instead of reporting a successful empty list", async () => {
     server.use(api.operation(() => HttpResponse.json({ data: { [parent]: null } })));
-    await expect(invoke(command, args)).rejects.toMatchObject({
+    await expect(runCommand(command, ["--agent", ...args])).rejects.toMatchObject({
       code: "NOT_FOUND",
       exitCode: 1,
     });
@@ -52,6 +46,6 @@ describe.each(cases)("$parent.$child resource lookup", ({ command, parent, child
         }),
       ),
     );
-    await expect(invoke(command, args)).resolves.toBeUndefined();
+    await expect(runCommand(command, ["--agent", ...args])).resolves.toMatchObject({ items: [] });
   });
 });

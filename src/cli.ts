@@ -10,7 +10,7 @@ import {
   commandVars,
   commandMiddleware,
 } from "./command.js";
-import { NativeCommands as Commands } from "./index.js";
+import { Commands } from "./index.js";
 
 const topicDescriptions: Record<string, string> = {
   alerts: "Manage Alerting resources",
