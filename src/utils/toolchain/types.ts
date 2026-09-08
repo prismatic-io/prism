@@ -25,7 +25,7 @@ export abstract class Toolchain {
   abstract readonly devDependencies: Record<string, string>;
 
   /** Render this toolchain's config files (templates/<name>/) into the project. */
-  renderTemplates(data: Record<string, unknown> = {}): Promise<void> {
-    return templateDirectory(this.name, data);
+  renderTemplates(data: Record<string, unknown> = {}, directory = process.cwd()): Promise<void> {
+    return templateDirectory(this.name, data, directory);
   }
 }

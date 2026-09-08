@@ -149,6 +149,8 @@ export const NativeCommands = {
   "components:actions:list": ComponentsActionsListCommand,
   "components:data-sources:list": ComponentsDataSourcesListCommand,
   "components:dev:test": ComponentsDevTestCommand,
+  "components:init:component": ComponentsInitComponentCommand,
+  "components:init": ComponentsInitCommand,
   "components:signature": ComponentsSignatureCommand,
   "components:triggers:list": ComponentsTriggersListCommand,
   "customers:users:create": CustomersUsersCreateCommand,
@@ -161,6 +163,7 @@ export const NativeCommands = {
   "instances:flow-configs:list": InstancesFlowConfigsListCommand,
   "integrations:convert": IntegrationConvertCommand,
   "integrations:flows:list": IntegrationsFlowsListCommand,
+  "integrations:init": IntegrationsInitCommand,
   "integrations:versions": IntegrationsVersionsCommand,
   "logs:severities:list": LogsSeveritiesListCommand,
   "me:token:revoke": MeTokenRevokeCommand,
@@ -180,12 +183,9 @@ export const NativeCommands = {
 
 export const Commands = {
   "components:dev:run": ComponentsDevRunCommand,
-  "components:init:component": ComponentsInitComponentCommand,
-  "components:init": ComponentsInitCommand,
   "instances:flow-configs:test": InstancesFlowConfigsTestCommand,
   "integrations:flows:listen": IntegrationsFlowsListenCommand,
   "integrations:flows:test": IntegrationsFlowsTestCommand,
-  "integrations:init": IntegrationsInitCommand,
   "graphql:query": GraphqlQueryCommand,
   ...Object.fromEntries(
     Object.entries(NativeCommands).map(([id, command]) => [id, asOclifCommand(id, command)]),
