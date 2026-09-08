@@ -1,47 +1,62 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { defineCommand, argsSchema, optionsSchema } from "../../../command.js";
+import type { ListCustomerUsersQuery } from "../../../graphql/customers/listCustomerUsers.generated.js";
 import { ListCustomerUsersDocument as LIST_CUSTOMER_USERS } from "../../../graphql/customers/listCustomerUsers.generated.js";
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest, requireResource } from "../../../graphql.js";
-import { ux } from "../../../utils/legacy-ux.js";
+import { ux } from "../../../utils/ux.js";
+import { paginationFlags, tableOutputSchema } from "../../../utils/table.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Customer Users";
-  static args = {
-    customer: Args.string({
-      description: "ID of the customer",
-      required: true,
+type CustomerUserNode = NonNullable<
+  NonNullable<ListCustomerUsersQuery["customer"]>["users"]["nodes"][number]
+>;
+
+const isCustomerUserNode = (node: CustomerUserNode | null): node is CustomerUserNode =>
+  node !== null;
+
+export default defineCommand({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["id", "name", "email", "role", "externalId"], true),
+  description: "List Customer Users",
+  args: argsSchema(
+    z.object({
+      customer: z.string().describe("ID of the customer"),
     }),
-  };
-
-  static flags = {
-    ...ux.table.flags(),
-  };
-
-  async run() {
+  ),
+  options: optionsSchema(
+    z.object({
+      ...ux.table.flags(),
+      ...paginationFlags(),
+    }),
+  ),
+  async run(context) {
     const {
       args: { customer },
-      flags,
-    } = await this.parse(ListCommand);
+      options: flags,
+    } = context;
 
-    let customerUsers: any[] = [];
+    let customerUsers: CustomerUserNode[] = [];
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let finalPageInfo: { hasNextPage: boolean; endCursor?: string | null } = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
-      const result: ResultOf<typeof LIST_CUSTOMER_USERS> = await gqlRequest({
+      const response: ResultOf<typeof LIST_CUSTOMER_USERS> = await gqlRequest({
         document: LIST_CUSTOMER_USERS,
-        variables: { id: customer, after: cursor },
+        variables: { id: customer, after: cursor, first: flags.first },
       });
-      const {
-        users: { nodes, pageInfo },
-      } = requireResource(result.customer, "Customer");
-      customerUsers = [...customerUsers, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      const resource = requireResource(response.customer, "Customer");
+      const { nodes, pageInfo } = resource.users;
+      customerUsers = [...customerUsers, ...nodes.filter(isCustomerUserNode)];
+      cursor = pageInfo.endCursor ?? null;
+      finalPageInfo = pageInfo;
+      hasNextPage = pageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = ux.table(
       customerUsers,
       {
         id: {
@@ -58,5 +73,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+    return { ...result, pageInfo: finalPageInfo };
+  },
+});

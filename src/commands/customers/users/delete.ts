@@ -1,21 +1,22 @@
+import { z } from "incur";
+import { defineCommand, argsSchema } from "../../../command.js";
 import { DeleteUserDocument as DELETE_USER } from "../../../graphql/operations/deleteUser.generated.js";
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest } from "../../../graphql.js";
+import { resourceOutputSchema, resultOutput } from "../../../output.js";
 
-export default class DeleteCommand extends PrismaticBaseCommand {
-  static description = "Delete a Customer User";
-  static args = {
-    user: Args.string({
-      required: true,
-      description: "ID of the user to delete",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("userId").extend({ deleted: z.literal(true) }),
+  description: "Delete a Customer User",
+  args: argsSchema(
+    z.object({
+      user: z.string().describe("ID of the user to delete"),
     }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
       args: { user },
-    } = await this.parse(DeleteCommand);
+    } = context;
 
     await gqlRequest({
       document: DELETE_USER,
@@ -23,5 +24,6 @@ export default class DeleteCommand extends PrismaticBaseCommand {
         id: user,
       },
     });
-  }
-}
+    return resultOutput(context, { userId: user, deleted: true });
+  },
+});

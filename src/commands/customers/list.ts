@@ -1,33 +1,45 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { defineCommand, optionsSchema } from "../../command.js";
+import type { ListCustomersQuery } from "../../graphql/customers/listCustomers.generated.js";
 import { ListCustomersDocument as LIST_CUSTOMERS } from "../../graphql/customers/listCustomers.generated.js";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
-import { ux } from "../../utils/legacy-ux.js";
+import { paginationFlags, tableOutputSchema } from "../../utils/table.js";
+import { ux } from "../../utils/ux.js";
+import { z } from "incur";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List your Customers";
-  static flags = { ...ux.table.flags() };
+type CustomerNode = NonNullable<ListCustomersQuery["customers"]["nodes"][number]>;
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+const isCustomerNode = (node: CustomerNode | null): node is CustomerNode => node !== null;
 
-    let customers: any[] = [];
+export default defineCommand({
+  outputPolicy: "agent-only",
+  description: "List your Customers",
+  output: tableOutputSchema(["id", "name", "externalId", "description"], true),
+  options: optionsSchema(z.object({ ...ux.table.flags(), ...paginationFlags() })),
+  async run(context) {
+    const { options: flags } = context;
+
+    let customers: CustomerNode[] = [];
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let pageInfo: ListCustomersQuery["customers"]["pageInfo"] = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
       const {
-        customers: { nodes, pageInfo },
-      }: ResultOf<typeof LIST_CUSTOMERS> = await gqlRequest({
+        customers: { nodes, pageInfo: nextPageInfo },
+      }: ListCustomersQuery = await gqlRequest({
         document: LIST_CUSTOMERS,
-        variables: { after: cursor },
+        variables: { after: cursor, first: flags.first },
       });
-      customers = [...customers, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      customers = [...customers, ...nodes.filter(isCustomerNode)];
+      pageInfo = nextPageInfo;
+      cursor = nextPageInfo.endCursor ?? null;
+      hasNextPage = nextPageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = ux.table(
       customers,
       {
         id: {
@@ -43,5 +55,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+    return { ...result, pageInfo };
+  },
+});

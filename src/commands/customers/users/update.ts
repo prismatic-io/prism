@@ -1,46 +1,48 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { commandOutput, defineCommand, argsSchema, optionsSchema } from "../../../command.js";
 import { UpdateUserDocument as UPDATE_USER } from "../../../graphql/operations/updateUser.generated.js";
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gqlRequest } from "../../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class UpdateCommand extends PrismaticBaseCommand {
-  static description = "Update a User";
-  static args = {
-    user: Args.string({
-      required: true,
-      description: "ID of a user",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("userId"),
+  description: "Update a User",
+  args: argsSchema(
+    z.object({
+      user: z.string().describe("ID of a user"),
     }),
-  };
-
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      description: "name of the user",
-      required: false,
+  ),
+  options: optionsSchema(
+    z.object({
+      name: z
+        .string()
+        .optional()
+        .describe("name of the user")
+        .meta({ cli: { char: "n" } }),
+      phone: z
+        .string()
+        .optional()
+        .describe("phone number of the user")
+        .meta({ cli: { char: "p" } }),
+      "dark-mode": z
+        .string()
+        .optional()
+        .describe("whether the user should have dark mode enabled")
+        .meta({ cli: { char: "d" } }),
+      "dark-mode-os-sync": z
+        .string()
+        .optional()
+        .describe("whether dark mode should sync with OS settings")
+        .meta({ cli: { char: "o" } }),
     }),
-    phone: Flags.string({
-      char: "p",
-      description: "phone number of the user",
-      required: false,
-    }),
-    "dark-mode": Flags.string({
-      char: "d",
-      description: "whether the user should have dark mode enabled",
-      required: false,
-    }),
-    "dark-mode-os-sync": Flags.string({
-      char: "o",
-      description: "whether dark mode should sync with OS settings",
-      required: false,
-    }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
       args: { user },
-      flags: { name, phone, "dark-mode": darkMode, "dark-mode-os-sync": darkModeOsSync },
-    } = await this.parse(UpdateCommand);
+      options: { name, phone, "dark-mode": darkMode, "dark-mode-os-sync": darkModeOsSync },
+    } = context;
 
     const result: ResultOf<typeof UPDATE_USER> = await gqlRequest({
       document: UPDATE_USER,
@@ -48,11 +50,19 @@ export default class UpdateCommand extends PrismaticBaseCommand {
         user,
         name,
         phone,
-        darkMode: darkMode === undefined ? undefined : darkMode === "true",
-        darkModeOsSync: darkModeOsSync === undefined ? undefined : darkModeOsSync === "true",
+        darkMode:
+          darkMode === undefined ? undefined : z.enum(["true", "false"]).parse(darkMode) === "true",
+        darkModeOsSync:
+          darkModeOsSync === undefined
+            ? undefined
+            : z.enum(["true", "false"]).parse(darkModeOsSync) === "true",
       },
     });
 
-    this.log(result.updateUser?.user?.id ?? this.error("Customer user was not updated"));
-  }
-}
+    return resourceOutput(
+      context,
+      "userId",
+      result.updateUser?.user?.id ?? commandOutput.error("Customer user was not updated"),
+    );
+  },
+});

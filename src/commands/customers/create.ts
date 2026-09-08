@@ -1,45 +1,51 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { commandOutput, defineCommand, optionsSchema } from "../../command.js";
 import { CreateCustomerDocument as CREATE_CUSTOMER } from "../../graphql/operations/createCustomer.generated.js";
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
+import { resourceOutput, resourceOutputSchema } from "../../output.js";
+import { z } from "incur";
+import type { ResultOf } from "@graphql-typed-document-node/core";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create a new Customer";
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      required: true,
-      description: "short name of the new customer",
+export default defineCommand({
+  mutates: true,
+  output: resourceOutputSchema("customerId"),
+  description: "Create a new Customer",
+  options: optionsSchema(
+    z.object({
+      name: z
+        .string()
+        .describe("short name of the new customer")
+        .meta({ cli: { char: "n" } }),
+      description: z
+        .string()
+        .optional()
+        .describe("longer description of the customer")
+        .meta({ cli: { char: "d" } }),
+      externalId: z
+        .string()
+        .optional()
+        .describe("external ID of the customer from your system")
+        .meta({ cli: { char: "e" } }),
+      label: z
+        .array(z.string())
+        .optional()
+        .describe("a label to apply to the customer")
+        .meta({ cli: { char: "l" } }),
     }),
-    description: Flags.string({
-      char: "d",
-      description: "longer description of the customer",
-      required: false,
-    }),
-    externalId: Flags.string({
-      char: "e",
-      description: "external ID of the customer from your system",
-    }),
-    label: Flags.string({
-      char: "l",
-      description: "a label to apply to the customer",
-      multiple: true,
-    }),
-  };
-
-  static examples = [
+  ),
+  examples: [
     {
       description: "Apply multiple labels to a customer",
-      command:
-        '<%= config.bin %> <%= command.id %> --name "Widgets Inc" --externalId "abc-123" --label "Prod Customers" --label "Beta Testers"',
+      options: {
+        name: "Widgets Inc",
+        externalId: "abc-123",
+        label: ["Prod Customers", "Beta Testers"],
+      },
     },
-  ];
-
-  async run() {
+  ],
+  async run(context) {
     const {
-      flags: { name, description, externalId, label },
-    } = await this.parse(CreateCommand);
+      options: { name, description, externalId, label },
+    } = context;
 
     const result: ResultOf<typeof CREATE_CUSTOMER> = await gqlRequest({
       document: CREATE_CUSTOMER,
@@ -51,6 +57,10 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createCustomer?.customer?.id ?? this.error("Customer was not created"));
-  }
-}
+    return resourceOutput(
+      context,
+      "customerId",
+      result.createCustomer?.customer?.id ?? commandOutput.error("Customer was not created"),
+    );
+  },
+});
