@@ -22,7 +22,9 @@ describe("incremental native command contract", () => {
         for (const [name, field] of Object.entries(legacy.flags)) {
           if (["quiet", "profile", "print-requests"].includes(name)) continue;
           expect(command.contract.options[name], `${id} flag ${name}`).toBeDefined();
-          expect(command.contract.options[name].char).toBe((field as { char?: string }).char);
+          // Published -n collides; it belongs to --flow-name, while --no-prompt keeps its long form.
+          if (!(id === "integrations:flows:listen" && name === "no-prompt"))
+            expect(command.contract.options[name].char).toBe((field as { char?: string }).char);
         }
       }
       expect(normalizeCommandArguments([id, "--schema"])).toEqual([...id.split(":"), "--schema"]);

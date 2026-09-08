@@ -1,9 +1,16 @@
 import { encode } from "@msgpack/msgpack";
+import { Cli } from "incur";
 import inquirer from "inquirer";
 import { graphql, HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
+import {
+  commandMiddleware,
+  commandVars,
+  environmentOptions,
+  globalOptions,
+} from "../../../command.js";
 import { fs } from "../../../fs.js";
 import type { GetExecutionsQuery } from "../../../graphql/executions/getExecutions.generated.js";
 import type { GetPolledExecutionQuery } from "../../../graphql/executions/getPolledExecution.generated.js";
@@ -11,6 +18,7 @@ import type { GetIntegrationFlowsQuery } from "../../../graphql/integrations/get
 import type { TestIntegrationFlowMutation } from "../../../graphql/integrations/testIntegrationFlow.generated.js";
 import type { UpdateIntegrationFlowListeningModeMutation } from "../../../graphql/integrations/updateIntegrationFlowListeningMode.generated.js";
 import { ActionScheduleSupport } from "../../../graphql/schema.generated.js";
+import { runCommand } from "../../../test-command.js";
 import ListenCommand, { getTriggerType } from "./listen.js";
 
 vi.mock(import("../../../fs.js"), () => ({
@@ -27,7 +35,7 @@ vi.mock(import("inquirer"), () => ({
   },
 }));
 
-vi.mock(import("../../../utils/legacy-ux.js"), async (importOriginal) => {
+vi.mock(import("../../../utils/ux.js"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
@@ -37,6 +45,8 @@ vi.mock(import("../../../utils/legacy-ux.js"), async (importOriginal) => {
     },
   };
 });
+
+vi.mock("../../../utils/polling.js", () => ({ getAdaptivePollIntervalMs: () => 1 }));
 
 const api = graphql.link(`${TEST_PRISMATIC_URL}/api`);
 
@@ -153,7 +163,7 @@ const server = setupServer(
   ),
 );
 
-describe("oclif defaults and Zod validation integration", () => {
+describe("command defaults and Zod validation integration", () => {
   beforeAll(() => {
     server.listen({ onUnhandledRequest: "error" });
   });
@@ -167,7 +177,7 @@ describe("oclif defaults and Zod validation integration", () => {
     vi.restoreAllMocks();
   });
 
-  it("applies oclif defaults for output and timeout when flags are omitted", async () => {
+  it("applies defaults for output and timeout when flags are omitted", async () => {
     const webhookFlow = createWebhookFlow("flow-defaults-test", "Defaults Test Flow");
 
     server.use(
@@ -195,8 +205,8 @@ describe("oclif defaults and Zod validation integration", () => {
     );
 
     // Run command WITHOUT --output or --timeout flags
-    // If oclif defaults aren't applied before Zod validation, this would throw
-    await ListenCommand.run([
+    // Defaults must be applied before Zod validation.
+    await runCommand(ListenCommand, [
       "--integration-id",
       "test-integration",
       "--flow-id",
@@ -349,7 +359,7 @@ describe("ListenCommand", () => {
         ),
       );
 
-      await ListenCommand.run([
+      await runCommand(ListenCommand, [
         "--integration-id",
         "test-integration-123",
         "--flow-id",
@@ -402,7 +412,7 @@ describe("ListenCommand", () => {
         ),
       );
 
-      await ListenCommand.run([
+      await runCommand(ListenCommand, [
         "--integration-id",
         "test-integration-123",
         "--flow-id",
@@ -446,7 +456,12 @@ describe("ListenCommand", () => {
         ),
       );
 
-      await ListenCommand.run(["--integration-id", "test-integration-123", "--timeout", "5"]);
+      await runCommand(ListenCommand, [
+        "--integration-id",
+        "test-integration-123",
+        "--timeout",
+        "5",
+      ]);
 
       expect(inquirer.prompt).toHaveBeenCalled();
     });
@@ -461,7 +476,7 @@ describe("ListenCommand", () => {
       );
 
       await expect(
-        ListenCommand.run([
+        runCommand(ListenCommand, [
           "--integration-id",
           "test-integration-123",
           "--flow-id",
@@ -499,22 +514,19 @@ describe("ListenCommand", () => {
         return originalDateNow();
       });
 
-      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-      try {
-        await ListenCommand.run([
-          "--integration-id",
-          "test-integration-123",
-          "--flow-id",
-          "flow-timeout-123",
-          "--timeout",
-          "1", // 1 second timeout
-        ]);
-      } catch (error) {
-        expect((error as Error).message).toBe("process.exit called");
-      }
-
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("Timeout"));
+      const result = await runCommand(ListenCommand, [
+        "--integration-id",
+        "test-integration-123",
+        "--flow-id",
+        "flow-timeout-123",
+        "--timeout",
+        "1", // 1 second timeout
+      ]);
+      expect(result).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: "completed", status: "timed-out" }),
+        ]),
+      );
       vi.spyOn(Date, "now").mockRestore();
     });
   });
@@ -543,7 +555,7 @@ describe("ListenCommand", () => {
       );
 
       await expect(
-        ListenCommand.run([
+        runCommand(ListenCommand, [
           "--integration-id",
           "test-integration-123",
           "--flow-id",
@@ -554,4 +566,171 @@ describe("ListenCommand", () => {
       ).rejects.toThrow("Cannot listen to scheduled flows");
     });
   });
+});
+
+it("rejects agent polling without --no-prompt before enabling remote listening", async () => {
+  server.listen({ onUnhandledRequest: "error" });
+  const mutation = vi.fn();
+  server.use(
+    api.query("GetIntegrationFlows", () =>
+      HttpResponse.json(
+        buildGetIntegrationFlowsResponse([createPollingFlow("polling-id", "Polling Flow")]),
+      ),
+    ),
+    api.mutation("UpdateIntegrationFlowListeningMode", () => {
+      mutation();
+      return HttpResponse.json({ data: {} });
+    }),
+  );
+  await expect(
+    runCommand(ListenCommand, [
+      "--agent",
+      "--yes",
+      "--integration-id",
+      "integration-id",
+      "--flow-id",
+      "polling-id",
+    ]),
+  ).rejects.toThrow("--no-prompt");
+  expect(mutation).not.toHaveBeenCalled();
+  server.close();
+});
+
+it("returns named execution and payload events while restoring listening mode", async () => {
+  server.listen({ onUnhandledRequest: "error" });
+  server.use(
+    api.query("GetIntegrationFlows", () =>
+      HttpResponse.json(
+        buildGetIntegrationFlowsResponse([createWebhookFlow("flow-id", "Webhook")]),
+      ),
+    ),
+    api.query("GetExecutions", () =>
+      HttpResponse.json(
+        buildGetExecutionsResponse([
+          {
+            id: "execution-id",
+            endedAt: new Date().toISOString(),
+            requestPayloadUrl: "https://storage.example.com/agent-payload.json",
+          },
+        ]),
+      ),
+    ),
+    http.get("https://storage.example.com/agent-payload.json", () =>
+      HttpResponse.json({ body: "{}", contentType: "application/json" }),
+    ),
+  );
+  try {
+    const result = await runCommand(ListenCommand, [
+      "--agent",
+      "--yes",
+      "--integration-id",
+      "integration-id",
+      "--flow-id",
+      "flow-id",
+    ]);
+    expect(result).toEqual(
+      expect.arrayContaining([
+        { type: "listening", integrationId: "integration-id", listening: true },
+        {
+          type: "execution",
+          executionId: "execution-id",
+          integrationId: "integration-id",
+          flowId: "flow-id",
+        },
+        expect.objectContaining({
+          type: "payload",
+          executionId: "execution-id",
+          flowId: "flow-id",
+          path: expect.stringContaining("payload-flow-id-"),
+        }),
+        { type: "listening", integrationId: "integration-id", listening: false },
+      ]),
+    );
+    for (const event of result as unknown[])
+      expect(ListenCommand.output.safeParse(event).success).toBe(true);
+  } finally {
+    server.close();
+  }
+});
+
+it("awaits listening cleanup when a native HTTP stream is cancelled", async () => {
+  server.listen({ onUnhandledRequest: "error" });
+  const changes: boolean[] = [];
+  server.use(
+    api.query("GetIntegrationFlows", () =>
+      HttpResponse.json(
+        buildGetIntegrationFlowsResponse([createWebhookFlow("flow-id", "Webhook")]),
+      ),
+    ),
+    api.query("GetExecutions", () => HttpResponse.json(buildGetExecutionsResponse([]))),
+    api.mutation("UpdateIntegrationFlowListeningMode", ({ variables }) => {
+      changes.push(variables.isListening as boolean);
+      return HttpResponse.json({ data: { updateIntegration: { errors: [] } } });
+    }),
+  );
+  const native = Cli.create("prism", {
+    globals: globalOptions,
+    vars: commandVars,
+    env: environmentOptions,
+  })
+    .use(commandMiddleware)
+    .command("listen", ListenCommand);
+  const abort = new AbortController();
+  try {
+    const response = await native.fetch(
+      new Request("http://localhost/listen", {
+        method: "POST",
+        signal: abort.signal,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          "integration-id": "integration-id",
+          "flow-id": "flow-id",
+          yes: true,
+        }),
+      }),
+    );
+    expect(response.status).toBe(200);
+    const reader = response.body?.getReader();
+    const first = await reader.read();
+    expect(new TextDecoder().decode(first.value)).toContain('"listening":true');
+    abort.abort();
+    await reader.cancel();
+    expect(changes).toEqual([true, false]);
+  } finally {
+    server.close();
+  }
+});
+
+it("propagates a native stream failure after restoring listening mode", async () => {
+  server.listen({ onUnhandledRequest: "error" });
+  const changes: boolean[] = [];
+  server.use(
+    api.query("GetIntegrationFlows", () =>
+      HttpResponse.json(
+        buildGetIntegrationFlowsResponse([createWebhookFlow("flow-id", "Webhook")]),
+      ),
+    ),
+    api.query("GetExecutions", () =>
+      HttpResponse.json({ errors: [{ message: "Execution lookup failed" }] }),
+    ),
+    api.mutation("UpdateIntegrationFlowListeningMode", ({ variables }) => {
+      changes.push(variables.isListening as boolean);
+      return HttpResponse.json({ data: { updateIntegration: { errors: [] } } });
+    }),
+  );
+  try {
+    await expect(
+      runCommand(ListenCommand, [
+        "--agent",
+        "--yes",
+        "--integration-id",
+        "integration-id",
+        "--flow-id",
+        "flow-id",
+      ]),
+    ).rejects.toThrow("Execution lookup failed");
+    expect(changes).toEqual([true, false]);
+  } finally {
+    server.close();
+  }
 });

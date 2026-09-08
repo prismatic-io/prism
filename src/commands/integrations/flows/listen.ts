@@ -1,308 +1,212 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
+import { setTimeout as sleep } from "node:timers/promises";
 import { decode } from "@msgpack/msgpack";
-import { Flags } from "@oclif/core";
+import { Errors, z } from "incur";
 import inquirer from "inquirer";
-import z from "zod";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { defineCommand, optionsSchema } from "../../../command.js";
 import { exists, fs } from "../../../fs.js";
-import type { GetExecutionsQuery } from "../../../graphql/executions/getExecutions.generated.js";
 import { GetExecutionsDocument as GET_EXECUTIONS } from "../../../graphql/executions/getExecutions.generated.js";
-import type { GetPolledExecutionQuery } from "../../../graphql/executions/getPolledExecution.generated.js";
 import { GetPolledExecutionDocument as GET_POLLED_EXECUTION } from "../../../graphql/executions/getPolledExecution.generated.js";
 import { UpdateIntegrationFlowListeningModeDocument as UPDATE_INTEGRATION_FLOW_LISTENING_MODE } from "../../../graphql/integrations/updateIntegrationFlowListeningMode.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import { handleError } from "../../../utils/errors.js";
+import { type ExecutionEvent, executionEventSchema } from "../../../utils/execution-output.js";
 import { fetch } from "../../../utils/http.js";
 import { type IntegrationFlow, resolveFlow } from "../../../utils/integration/flows.js";
 import { runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
-import { ux } from "../../../utils/legacy-ux.js";
 
-const DEFAULT_TIMEOUT_SECONDS = 1200; // 20 minutes
+const DEFAULT_TIMEOUT_SECONDS = 1200;
 const DEFAULT_OUTPUT_DIR = "./payloads";
-
-/**
- * Zod schema for listen command flags.
- * Validates command arguments and provides type-safe access to flag values.
- */
+type TriggerType = "WEBHOOK" | "POLLING";
 export const listenFlagsSchema = z.object({
-  "integration-id": z.string().min(1, "Integration ID cannot be empty"),
-  "flow-id": z.string().min(1, "Flow ID cannot be empty").optional(),
-  "flow-name": z.string().min(1, "Flow name cannot be empty").optional(),
-  output: z.string(),
-  timeout: z.number().int().positive("Timeout must be a positive integer"),
-  "no-prompt": z.boolean().optional(),
-  reset: z.boolean().optional(),
-  quiet: z.boolean().optional(),
+  "integration-id": z
+    .string()
+    .min(1)
+    .describe("ID of the integration containing the flow to listen to.")
+    .meta({ cli: { char: "i" } }),
+  "flow-id": z
+    .string()
+    .min(1)
+    .optional()
+    .describe("ID of the flow to listen to. If not provided, you will be prompted to select.")
+    .meta({ cli: { char: "f", exclusive: ["flow-name"] } }),
+  "flow-name": z
+    .string()
+    .min(1)
+    .optional()
+    .describe("Name of the flow to listen to.")
+    .meta({ cli: { char: "n", exclusive: ["flow-id"] } }),
+  output: z
+    .string()
+    .default(DEFAULT_OUTPUT_DIR)
+    .describe(`Output directory for the payload file. Defaults to ${DEFAULT_OUTPUT_DIR}`)
+    .meta({ cli: { char: "o" } }),
+  timeout: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(DEFAULT_TIMEOUT_SECONDS)
+    .describe("Timeout in seconds to stop listening.")
+    .meta({ cli: { char: "t" } }),
+  prompt: z
+    .boolean()
+    .optional()
+    .describe("Prompt before polling (use --no-prompt to poll automatically).")
+    .meta({ cli: { legacyName: "no-prompt" } }),
+  reset: z
+    .boolean()
+    .optional()
+    .describe("Manually turn off listening mode for a given integration.")
+    .meta({ cli: { char: "r" } }),
 });
-
 export type ListenFlags = z.infer<typeof listenFlagsSchema>;
 
-type ExecutionResult = NonNullable<GetExecutionsQuery["executionResults"]["nodes"][number]>;
-type PolledExecutionResult = GetPolledExecutionQuery;
-
-type TriggerType = "WEBHOOK" | "POLLING";
-
-export default class ListenCommand extends PrismaticBaseCommand {
-  private startTime = 0;
-  static description = "Listen for webhook executions on a flow and save the payload to a file";
-
-  static flags = {
-    "integration-id": Flags.string({
-      char: "i",
-      description: "ID of the integration containing the flow to listen to.",
-      required: true,
-    }),
-    "flow-id": Flags.string({
-      char: "f",
-      description: "ID of the flow to listen to. If not provided, you will be prompted to select.",
-      exclusive: ["flow-name"],
-    }),
-    "flow-name": Flags.string({
-      char: "n",
-      description: "Name of the flow to listen to.",
-      exclusive: ["flow-id"],
-    }),
-    output: Flags.string({
-      char: "o",
-      description: `Output directory for the payload file. Defaults to ${DEFAULT_OUTPUT_DIR}`,
-      default: DEFAULT_OUTPUT_DIR,
-    }),
-    timeout: Flags.integer({
-      char: "t",
-      description: "Timeout in seconds to stop listening.",
-      default: DEFAULT_TIMEOUT_SECONDS,
-    }),
-    "no-prompt": Flags.boolean({
-      char: "n",
-      description:
-        "For flows using polling triggers, automatically poll without a confirmation prompt.",
-    }),
-    reset: Flags.boolean({
-      char: "r",
-      description: "Manually turn off listening mode for a given integration.",
-    }),
-  };
-
-  async run() {
-    const { flags } = await this.parseWithSchema(listenFlagsSchema);
-
+export default defineCommand({
+  mutates: true,
+  output: executionEventSchema,
+  description: "Listen for webhook executions on a flow and save the payload to a file",
+  options: optionsSchema(listenFlagsSchema),
+  async *run(context): AsyncGenerator<ExecutionEvent> {
     const {
       "integration-id": integrationId,
       "flow-id": flowIdFlag,
       "flow-name": flowNameFlag,
       output,
       timeout,
-      quiet,
-      "no-prompt": noPrompt,
+      prompt,
       reset,
-    } = flags;
-
+    } = context.options;
+    const signal = context.var.signal;
     if (reset) {
-      return await safeSetListeningMode(integrationId, false, true);
+      await setListeningMode(integrationId, false);
+      yield { type: "listening", integrationId, listening: false };
+      yield { type: "completed", integrationId, status: "listening-disabled" };
+      return;
     }
-
-    const selectedFlow = await resolveFlow({
+    const flow = await resolveFlow({
       integrationId,
       flowId: flowIdFlag,
       flowName: flowNameFlag,
       promptMessage: "Select the flow to listen to:",
     });
-    const flowId = selectedFlow.id;
-    const triggerType = getTriggerType(selectedFlow.trigger);
-
-    await safeSetListeningMode(integrationId, true);
-    this.startTime = Date.now();
-
-    this.quietLog(
-      `To enable listening for this flow directly, you can run:\nprism integrations:flows:listen -i ${integrationId} -f ${flowId}\n`,
-      quiet,
-    );
-
-    if (triggerType === "WEBHOOK") {
-      this.quietLog("\nListening for webhook executions. Press CMD+C/CTRL+C to stop.\n", quiet);
-      this.quietLog(`This process will timeout after ${timeout / 60} minutes.\n`, quiet);
-
-      await withCleanup(integrationId, async () => {
-        const execution = await pollForWebhookExecutions(flowId, this.startTime, timeout);
-
-        if (execution) {
-          ux.action.start("Downloading payload...");
-          const filepath = await downloadAndSavePayload(
-            execution.requestPayloadUrl,
-            output,
-            flowId,
-            {
-              filePrefix: "payload",
-              useMsgpack: false,
-              triggerType,
-            },
-          );
-          this.quietLog(
-            `\nTo replay this payload, you can run:\nprism integrations:flows:test -i ${integrationId} -f ${flowId} -p ${filepath}\n`,
-            quiet,
-          );
-          ux.action.stop();
-        }
-      });
-    } else if (triggerType === "POLLING") {
-      this.quietLog("\nListening for poll executions. Press CMD+C/CTRL+C to stop.\n", quiet);
-
-      if (!noPrompt) {
-        this.quietLog(
-          "When you are ready to initiate a test poll for your flow, please confirm below.\n",
-          quiet,
-        );
-
-        const result = await inquirer.prompt({
-          type: "confirm",
-          name: "confirm",
-          message: "Initiate poll?",
+    const flowId = flow.id;
+    const triggerType = getTriggerType(flow.trigger);
+    if (triggerType === "POLLING" && prompt !== false) {
+      if (context.agent)
+        throw new Errors.IncurError({
+          code: "VALIDATION_ERROR",
+          exitCode: 2,
+          message: "Agent mode requires --no-prompt for polling flows",
         });
-
-        if (!result.confirm) {
-          await safeSetListeningMode(integrationId, false, false);
-          return;
-        }
-
-        this.quietLog(`This process will timeout after ${timeout / 60} minutes.\n`, quiet);
-      }
-
-      await withCleanup(integrationId, async () => {
-        let executionId: string;
-        try {
-          const result = await runIntegrationFlow({ integrationId, flowId });
-          executionId = result.executionId;
-        } catch (err) {
-          handleError({
-            message: "Failed to initiate poll test run.",
-            err,
-          });
-        }
-
-        while (true) {
-          if (hasTimedOut(this.startTime, timeout)) {
-            this.warn("Timeout reached. Stopping listener.");
-            return;
-          }
-
-          await ux.wait(getAdaptivePollIntervalMs(this.startTime));
-
-          let result: PolledExecutionResult;
-          try {
-            result = await getPolledExecution(executionId);
-          } catch (err) {
-            handleError({
-              message: "Failed to fetch poll execution status.",
-              err,
-            });
-          }
-
-          // Having an endedAt means the execution completed.
-          if (result.executionResult?.endedAt) {
-            const stepResult = result.executionResult.stepResults.nodes[0];
-            if (stepResult?.resultsUrl) {
-              ux.action.start("Downloading poll payload...");
-              const filepath = await downloadAndSavePayload(stepResult.resultsUrl, output, flowId, {
-                filePrefix: "poll-payload",
-                useMsgpack: true,
-                triggerType,
-              });
-              this.quietLog(
-                `\nTo replay this payload, you can run:\nprism integrations:flows:test -i ${integrationId} -f ${flowId} -p ${filepath}\n`,
-                quiet,
-              );
-              ux.action.stop();
-            }
-            return;
-          }
-        }
+      const { confirm } = await inquirer.prompt({
+        type: "confirm",
+        name: "confirm",
+        message: "Initiate poll?",
       });
+      if (!confirm) {
+        yield { type: "completed", integrationId, flowId, status: "listening-disabled" };
+        return;
+      }
     }
-  }
-}
-
-async function safeSetListeningMode(
-  integrationId: string,
-  isListening: boolean,
-  exitProcess = false,
-): Promise<void> {
-  try {
-    await setListeningMode(integrationId, isListening);
-  } catch (err) {
-    console.warn(
-      `Failed to ${isListening ? "enable" : "disable"} listening mode: ${
-        err instanceof Error ? err.message : String(err)
-      }`,
-    );
-  } finally {
-    if (exitProcess) {
-      process.exit(0);
+    const startTime = Date.now();
+    const listenStartDate = new Date(startTime).toISOString();
+    let executionId: string | undefined;
+    let savedPath: string | undefined;
+    let timedOut = false;
+    try {
+      signal?.throwIfAborted();
+      await setListeningMode(integrationId, true);
+      yield { type: "listening", integrationId, listening: true };
+      if (triggerType === "POLLING") {
+        executionId = (await runIntegrationFlow({ integrationId, flowId })).executionId;
+        yield { type: "execution", executionId, integrationId, flowId };
+      }
+      while (true) {
+        if (hasTimedOut(startTime, timeout)) {
+          timedOut = true;
+          break;
+        }
+        await sleep(getAdaptivePollIntervalMs(startTime), undefined, { signal });
+        if (hasTimedOut(startTime, timeout)) {
+          timedOut = true;
+          break;
+        }
+        let url: string | undefined;
+        if (triggerType === "POLLING") {
+          const result = await gqlRequest({
+            document: GET_POLLED_EXECUTION,
+            variables: {
+              executionId:
+                executionId ??
+                (() => {
+                  throw new Error("Polling execution was not created");
+                })(),
+            },
+          });
+          if (!result.executionResult?.endedAt) continue;
+          url = result.executionResult.stepResults.nodes[0]?.resultsUrl ?? undefined;
+          if (!url) {
+            yield {
+              type: "warning",
+              message: "Execution completed without a downloadable poll payload.",
+            };
+            break;
+          }
+        } else {
+          const result = await gqlRequest({
+            document: GET_EXECUTIONS,
+            variables: {
+              limit: 1,
+              isTestExecution: true,
+              startDate: listenStartDate,
+              flowId,
+            },
+          });
+          const execution = result.executionResults.nodes[0];
+          if (!execution) continue;
+          if (executionId !== execution.id) {
+            executionId = execution.id;
+            yield { type: "execution", executionId, integrationId, flowId };
+          }
+          if (!execution.endedAt) continue;
+          url = execution.requestPayloadUrl;
+        }
+        savedPath = await downloadAndSavePayload(
+          url,
+          output,
+          flowId,
+          {
+            filePrefix: triggerType === "POLLING" ? "poll-payload" : "payload",
+            useMsgpack: triggerType === "POLLING",
+            triggerType,
+          },
+          signal,
+        );
+        if (savedPath && executionId)
+          yield { type: "payload", executionId, flowId, path: savedPath };
+        break;
+      }
+    } finally {
+      // Await remote cleanup on normal completion, error, and iterator.return().
+      await setListeningMode(integrationId, false);
     }
-  }
-}
-
-// Execute a function with cleanup handling for SIGINT and listening mode
-async function withCleanup(integrationId: string, fn: () => Promise<void>): Promise<void> {
-  const cleanup = async () => {
-    console.log("\nStopping listener...");
-    await safeSetListeningMode(integrationId, false, true);
-  };
-  process.on("SIGINT", cleanup);
-
-  try {
-    await fn();
-  } finally {
-    await safeSetListeningMode(integrationId, false, false);
-    process.removeListener("SIGINT", cleanup);
-  }
-}
+    yield { type: "listening", integrationId, listening: false };
+    yield {
+      type: "completed",
+      status: timedOut ? "timed-out" : "completed",
+      integrationId,
+      flowId,
+      ...(executionId ? { executionId } : {}),
+      ...(savedPath ? { path: savedPath } : {}),
+    };
+  },
+});
 
 async function setListeningMode(integrationId: string, isListening: boolean): Promise<void> {
   await gqlRequest({
     document: UPDATE_INTEGRATION_FLOW_LISTENING_MODE,
     variables: { integrationId, isListening },
   });
-  console.log(`Set listening mode to ${isListening} for integration ${integrationId}`);
-}
-
-async function pollForWebhookExecutions(
-  flowId: string,
-  startTime: number,
-  timeout: number,
-): Promise<ExecutionResult | null> {
-  const listenStartDate = new Date().toISOString();
-
-  while (true) {
-    await ux.wait(getAdaptivePollIntervalMs(startTime));
-
-    const result: ResultOf<typeof GET_EXECUTIONS> = await gqlRequest({
-      document: GET_EXECUTIONS,
-      variables: {
-        limit: 1,
-        isTestExecution: true,
-        startDate: listenStartDate,
-        flowId,
-      },
-    });
-
-    if (hasTimedOut(startTime, timeout)) {
-      console.warn("Timeout reached. Stopping listener.");
-      return null;
-    }
-
-    if (result.executionResults.nodes.length > 0) {
-      const execution = result.executionResults.nodes[0];
-
-      if (!execution?.endedAt) {
-        console.log(`\nExecution ${execution?.id} started, waiting for completion...`);
-        continue;
-      }
-
-      console.log("\nExecution complete.");
-      return execution;
-    }
-  }
 }
 
 async function downloadAndSavePayload(
@@ -310,13 +214,14 @@ async function downloadAndSavePayload(
   outputDir: string,
   flowId: string,
   options: { filePrefix: string; useMsgpack: boolean; triggerType: TriggerType },
+  signal?: AbortSignal,
 ): Promise<string | undefined> {
   try {
     if (!(await exists(outputDir))) {
       await fs.mkdir(outputDir, { recursive: true });
     }
 
-    const response = await fetch(url);
+    const response = await fetch(url, { signal });
     const arrayBuffer = await response.arrayBuffer();
     const resultsBuffer = Buffer.from(arrayBuffer);
 
@@ -364,7 +269,6 @@ async function downloadAndSavePayload(
     const fileName = `${outputDir}/${options.filePrefix}-${flowId}-${timestamp}.json`;
     await fs.writeFile(fileName, JSON.stringify(replayPayload, null, 2));
 
-    console.log(`\nPayload saved to: ${fileName}`);
     return fileName;
   } catch (err) {
     handleError({
@@ -376,13 +280,6 @@ async function downloadAndSavePayload(
 
 function hasTimedOut(startTime: number, timeout: number): boolean {
   return Date.now() - startTime > timeout * 1000;
-}
-
-async function getPolledExecution(executionId: string): Promise<PolledExecutionResult> {
-  return gqlRequest({
-    document: GET_POLLED_EXECUTION,
-    variables: { executionId },
-  });
 }
 
 export function getTriggerType(trigger: IntegrationFlow["trigger"]): TriggerType {
