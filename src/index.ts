@@ -1,3 +1,5 @@
+import AutocompleteCommand from "./commands/autocomplete/index.js";
+import AutocompleteScriptCommand from "./commands/autocomplete/script.js";
 import LoginCommand from "./commands/login/index.js";
 import LoginSwitchCommand from "./commands/login/switch.js";
 import LogoutCommand from "./commands/logout.js";
@@ -93,6 +95,8 @@ import { asOclifCommand } from "./migration-bridge.js";
 
 // During the stack, native commands run through incur while remaining commands keep oclif.
 export const NativeCommands = {
+  autocomplete: AutocompleteCommand,
+  "autocomplete:script": AutocompleteScriptCommand,
   login: LoginCommand,
   "login:switch": LoginSwitchCommand,
   logout: LogoutCommand,
@@ -183,10 +187,10 @@ export const NativeCommands = {
   "organization:users:update": OrganizationUsersUpdateCommand,
   "workflows:export": WorkflowsExportCommand,
   "workflows:import": WorkflowsImportCommand,
+  "graphql:query": GraphqlQueryCommand,
 };
 
 export const Commands = {
-  "graphql:query": GraphqlQueryCommand,
   ...Object.fromEntries(
     Object.entries(NativeCommands).map(([id, command]) => [id, asOclifCommand(id, command)]),
   ),

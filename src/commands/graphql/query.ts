@@ -1,195 +1,242 @@
-import { Args, Flags } from "@oclif/core";
-import { readFileSync } from "fs";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { readFile } from "node:fs/promises";
+import { Kind, parse } from "graphql";
+import {
+  assertMutationAllowed,
+  assertCommandStdinAvailable,
+  commandOutput,
+  writeCommandOutput,
+  defineCommand,
+  argsSchema,
+  optionsSchema,
+} from "../../command.js";
 import { gqlRequest } from "../../graphql.js";
 import { dumpYaml } from "../../utils/serialize.js";
-import { ux } from "../../utils/legacy-ux.js";
+import { ux } from "../../utils/ux.js";
+import { z } from "incur";
 
-export default class QueryCommand extends PrismaticBaseCommand {
-  static description = "Execute an arbitrary GraphQL query against the Prismatic API";
+const variablesSchema = z.record(z.string(), z.unknown());
 
-  static examples = [
+export const hasMutationOperation = (document: string): boolean =>
+  parse(document).definitions.some(
+    (definition) =>
+      definition.kind === Kind.OPERATION_DEFINITION && definition.operation === "mutation",
+  );
+
+const readObjectProperty = (value: unknown, key: string): unknown => {
+  if ((typeof value !== "object" && typeof value !== "function") || value === null) {
+    return undefined;
+  }
+
+  return Reflect.get(value, key);
+};
+async function readStdin(): Promise<string> {
+  assertCommandStdinAvailable();
+  return new Promise((resolve, reject) => {
+    let data = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (chunk) => {
+      data += chunk;
+    });
+    process.stdin.on("end", () => {
+      resolve(data.trim());
+    });
+    process.stdin.on("error", reject);
+  });
+}
+
+async function readVariables(variablesInput: string): Promise<Record<string, unknown>> {
+  let parsed: unknown;
+  if (variablesInput.startsWith("@")) {
+    const filePath = variablesInput.slice(1);
+    const fileContent = await readFile(filePath, { encoding: "utf-8" });
+    parsed = JSON.parse(fileContent);
+  } else {
+    parsed = JSON.parse(variablesInput);
+  }
+
+  return variablesSchema.parse(parsed);
+}
+
+function getNestedValue(obj: unknown, path: string): unknown {
+  return path.split(".").reduce<unknown>(readObjectProperty, obj);
+}
+
+function formatTableOutput(data: unknown, columns: string[]) {
+  const items: unknown[] = Array.isArray(data) ? data : [data];
+
+  const columnDefs: Record<string, { header: string; get: (row: unknown) => string }> = {};
+  for (const col of columns) {
+    columnDefs[col] = {
+      header: col.toUpperCase(),
+      get: (row: unknown) => {
+        const value = getNestedValue(row, col);
+        return value !== undefined && value !== null ? String(value) : "";
+      },
+    };
+  }
+
+  return ux.table(items, columnDefs);
+}
+
+export default defineCommand({
+  outputPolicy: "agent-only",
+  destructive: true,
+  output: z.object({
+    success: z.literal(true),
+    data: z.json(),
+    warnings: z.array(z.string()).optional(),
+  }),
+  description: "Execute an arbitrary GraphQL query against the Prismatic API",
+  examples: [
     {
       description: "Direct query string",
-      command: "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }'",
+      args: { query: "query { customers { nodes { id name } } }" },
     },
-    {
-      description: "From file",
-      command: "<%= config.bin %> <%= command.id %> --file query.graphql",
-    },
-    {
-      description: "From stdin",
-      command: "cat query.graphql | <%= config.bin %> <%= command.id %>",
-    },
+    { description: "From file", args: { query: "query.graphql" }, options: { file: true } },
+    { description: "From stdin", args: { query: "cat" } },
     {
       description: "With variables",
-      command:
-        '<%= config.bin %> <%= command.id %> --file query.graphql --variables \'{"id":"Q3VzdG9tZXI6..."}\'',
+      args: { query: "query.graphql" },
+      options: { file: true, variables: '{"id":"Q3VzdG9tZXI6..."}' },
     },
     {
       description: "Variables from file",
-      command:
-        "<%= config.bin %> <%= command.id %> 'query($id: ID!) { customer(id: $id) { name } }' --variables @vars.json",
+      args: { query: "query($id: ID!) { customer(id: $id) { name } }" },
+      options: { variables: "@vars.json" },
     },
     {
       description: "YAML output",
-      command:
-        "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }' --output yaml",
+      args: { query: "query { customers { nodes { id name } } }" },
+      options: { output: "yaml" },
     },
     {
       description: "Table output with nested data",
-      command:
-        "<%= config.bin %> <%= command.id %> 'query { customers { nodes { id name } } }' --output table --data-path customers.nodes --columns id,name",
+      args: { query: "query { customers { nodes { id name } } }" },
+      options: { output: "table", "data-path": "customers.nodes", columns: "id,name" },
     },
-  ];
-
-  static args = {
-    query: Args.string({
-      description: "GraphQL query string (omit to read from stdin)",
-      required: false,
+  ],
+  args: argsSchema(
+    z.object({
+      query: z.string().optional().describe("GraphQL query string (omit to read from stdin)"),
     }),
-  };
-
-  static flags = {
-    file: Flags.boolean({
-      char: "f",
-      description: "Treat query argument as file path",
-      default: false,
+  ),
+  options: optionsSchema(
+    z.object({
+      file: z
+        .boolean()
+        .default(false)
+        .describe("Treat query argument as file path")
+        .meta({ cli: { char: "f" } }),
+      variables: z
+        .string()
+        .optional()
+        .describe("JSON string or @file.json containing query variables")
+        .meta({ cli: { char: "v" } }),
+      output: z
+        .enum(["json", "yaml", "table"])
+        .default("json")
+        .describe("Output format")
+        .meta({ cli: { char: "o" } }),
+      columns: z
+        .string()
+        .optional()
+        .describe("Comma-separated field paths for table columns (required for table output)")
+        .meta({ cli: { char: "c" } }),
+      "data-path": z
+        .string()
+        .optional()
+        .describe("Dot-notation path to array data in result (e.g., 'customers.nodes')")
+        .meta({ cli: { char: "d" } }),
+      raw: z
+        .boolean()
+        .default(false)
+        .describe("Output raw JSON without pretty-printing")
+        .meta({ cli: { char: "r" } }),
     }),
-    variables: Flags.string({
-      char: "v",
-      description: "JSON string or @file.json containing query variables",
-    }),
-    output: Flags.string({
-      char: "o",
-      description: "Output format",
-      options: ["json", "yaml", "table"],
-      default: "json",
-    }),
-    columns: Flags.string({
-      char: "c",
-      description: "Comma-separated field paths for table columns (required for table output)",
-    }),
-    "data-path": Flags.string({
-      char: "d",
-      description: "Dot-notation path to array data in result (e.g., 'customers.nodes')",
-    }),
-    raw: Flags.boolean({
-      char: "r",
-      description: "Output raw JSON without pretty-printing",
-      default: false,
-    }),
-  };
-
-  private async readStdin(): Promise<string> {
-    return new Promise((resolve, reject) => {
-      let data = "";
-      process.stdin.setEncoding("utf8");
-      process.stdin.on("data", (chunk) => {
-        data += chunk;
-      });
-      process.stdin.on("end", () => {
-        resolve(data.trim());
-      });
-      process.stdin.on("error", reject);
-    });
-  }
-
-  private readVariables(variablesInput: string): Record<string, any> {
-    if (variablesInput.startsWith("@")) {
-      const filePath = variablesInput.slice(1);
-      const fileContent = readFileSync(filePath, { encoding: "utf-8" });
-      return JSON.parse(fileContent);
-    }
-
-    return JSON.parse(variablesInput);
-  }
-
-  private getNestedValue(obj: any, path: string): any {
-    return path.split(".").reduce((current, key) => current?.[key], obj);
-  }
-
-  private formatTableOutput(data: any, columns: string[]): void {
-    const items = Array.isArray(data) ? data : [data];
-
-    const columnDefs: Record<string, any> = {};
-    for (const col of columns) {
-      columnDefs[col] = {
-        header: col.toUpperCase(),
-        get: (row: any) => {
-          const value = this.getNestedValue(row, col);
-          return value !== undefined && value !== null ? String(value) : "";
-        },
-      };
-    }
-
-    ux.table(items, columnDefs);
-  }
-
-  async run() {
-    const { args, flags } = await this.parse(QueryCommand);
+  ),
+  async run(context) {
+    const { args, options: flags } = context;
 
     let queryString: string;
 
     if (flags.file && args.query) {
-      queryString = readFileSync(args.query, { encoding: "utf-8" });
+      queryString = await readFile(args.query, { encoding: "utf-8" });
     } else if (args.query) {
       queryString = args.query;
     } else {
       if (process.stdin.isTTY) {
-        this.error(
+        commandOutput.error(
           "No query provided. Please provide a query as an argument, use --file, or pipe via stdin.",
         );
       }
-      queryString = await this.readStdin();
+      queryString = await readStdin();
     }
 
     if (!queryString.trim()) {
-      this.error("Query string is empty");
+      commandOutput.error("Query string is empty");
     }
 
-    let variables: Record<string, any> | undefined;
+    let mutates = false;
+    try {
+      mutates = hasMutationOperation(queryString);
+    } catch (error) {
+      commandOutput.error(
+        `Invalid GraphQL document: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+    if (mutates) assertMutationAllowed(context);
+
+    let variables: Record<string, unknown> | undefined;
     if (flags.variables) {
       try {
-        variables = this.readVariables(flags.variables);
+        variables = await readVariables(flags.variables);
       } catch (error) {
-        this.error(
+        commandOutput.error(
           `Failed to parse variables: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
 
-    let result: any;
+    let result: unknown;
     try {
       result = await gqlRequest({
         document: queryString,
         variables,
       });
     } catch (error) {
-      this.error(`GraphQL query failed: ${error instanceof Error ? error.message : String(error)}`);
+      commandOutput.error(
+        `GraphQL query failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
+
+    if (context.agent && flags.output !== "table")
+      return { success: true as const, data: z.json().parse(result) };
 
     switch (flags.output) {
       case "yaml":
-        this.log(dumpYaml(result));
+        writeCommandOutput(dumpYaml(result));
         break;
 
       case "table": {
         if (!flags.columns) {
-          this.error("Table output requires --columns flag. Specify comma-separated field paths.");
+          commandOutput.error(
+            "Table output requires --columns flag. Specify comma-separated field paths.",
+          );
         }
-        const columns = flags.columns.split(",").map((c) => c.trim());
-        const data = flags["data-path"] ? this.getNestedValue(result, flags["data-path"]) : result;
-        this.formatTableOutput(data, columns);
+        const columns = flags.columns.split(",").map((c: string) => c.trim());
+        const data = flags["data-path"] ? getNestedValue(result, flags["data-path"]) : result;
+        const table = formatTableOutput(data, columns);
+        if (context.agent) return { success: true as const, data: z.json().parse(table) };
         break;
       }
       default:
         if (flags.raw) {
-          this.log(JSON.stringify(result));
+          writeCommandOutput(JSON.stringify(result));
         } else {
-          this.log(JSON.stringify(result, null, 2));
+          writeCommandOutput(JSON.stringify(result, null, 2));
         }
         break;
     }
-  }
-}
+    return { success: true as const, data: z.json().parse(result) };
+  },
+});
