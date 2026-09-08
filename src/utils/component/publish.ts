@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import { Component2Document as COMPONENT2 } from "../../graphql/operations/component2.generated.js";
 import { PublishComponentDocument as PUBLISH_COMPONENT } from "../../graphql/operations/publishComponent.generated.js";
 import type { PublishComponentMutationVariables } from "../../graphql/operations/publishComponent.generated.js";
@@ -217,6 +218,7 @@ export const uploadConnectionIcons = async (
     string,
     { iconUploadUrl?: string; avatarIconUploadUrl?: string }
   >,
+  cwd = process.cwd(),
 ): Promise<void> => {
   if (
     !connections?.length ||
@@ -246,11 +248,11 @@ export const uploadConnectionIcons = async (
       const connectionIconPaths = iconPaths[connectionKey];
 
       if (connectionIconPaths.iconPath && iconUploadUrl) {
-        acc.push(uploadFile(connectionIconPaths.iconPath, iconUploadUrl));
+        acc.push(uploadFile(resolve(cwd, connectionIconPaths.iconPath), iconUploadUrl));
       }
 
       if (connectionIconPaths.avatarIconPath && avatarIconUploadUrl) {
-        acc.push(uploadFile(connectionIconPaths.avatarIconPath, avatarIconUploadUrl));
+        acc.push(uploadFile(resolve(cwd, connectionIconPaths.avatarIconPath), avatarIconUploadUrl));
       }
 
       return acc;

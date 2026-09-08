@@ -1,10 +1,11 @@
 import type { ResultOf } from "@graphql-typed-document-node/core";
-import { ListComponentActions2Document as LIST_COMPONENT_ACTIONS } from "../../../graphql/operations/listComponentActions2.generated.js";
+import { ListComponentActions2Document as LIST_COMPONENT_ACTIONS2 } from "../../../graphql/operations/listComponentActions2.generated.js";
 import type { ListComponentActions2Query } from "../../../graphql/operations/listComponentActions2.generated.js";
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { commandOutput, defineCommand, argsSchema, optionsSchema } from "../../../command.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/legacy-ux.js";
+import { ux } from "../../../utils/ux.js";
+import { paginationFlags, tableOutputSchema } from "../../../utils/table.js";
+import { z } from "incur";
 
 type ComponentDataSourceNode = NonNullable<
   ListComponentActions2Query["components"]["nodes"][number]
@@ -12,70 +13,91 @@ type ComponentDataSourceNode = NonNullable<
 
 interface DataSourceNode extends Omit<ComponentDataSourceNode, "detailDataSource"> {
   [index: string]: unknown;
-
   detailDataSource?: string;
 }
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Data Sources that Components implement";
-
-  static examples = [
+export default defineCommand({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(
+    [
+      "id",
+      "key",
+      "label",
+      "description",
+      "dataSourceType",
+      "detailDataSource",
+      "componentid",
+      "componentkey",
+    ],
+    true,
+  ),
+  description: "List Data Sources that Components implement",
+  examples: [
     {
       description: "Get data sources related to the Salesforce component:",
-      command: "<%= config.bin %> <%= command.id %> salesforce",
+      args: { componentKey: "salesforce" },
     },
-  ];
-
-  static flags = {
-    ...ux.table.flags(),
-    public: Flags.boolean({
-      required: false,
-      description:
-        "Show data sources for the public component with the given key. Use this flag when you have a private component with the same key as a public component.",
+  ],
+  options: optionsSchema(
+    z.object({
+      ...ux.table.flags(),
+      ...paginationFlags(),
+      public: z
+        .boolean()
+        .optional()
+        .describe(
+          "Show data sources for the public component with the given key. Use this flag when you have a private component with the same key as a public component.",
+        ),
+      private: z
+        .boolean()
+        .optional()
+        .describe(
+          "Show data sources for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
+        ),
     }),
-    private: Flags.boolean({
-      required: false,
-      description:
-        "Show data sources for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
+  ),
+  args: argsSchema(
+    z.object({
+      componentKey: z
+        .string()
+        .describe("The key of the component to show data sources for (e.g. 'salesforce')")
+        .meta({ cli: { name: "Component Key" } }),
     }),
-  };
-  static args = {
-    componentKey: Args.string({
-      name: "Component Key",
-      required: true,
-      description: "The key of the component to show data sources for (e.g. 'salesforce')",
-    }),
-  };
-
-  async run() {
+  ),
+  async run(context) {
     const {
-      flags,
+      options: flags,
       args: { componentKey },
-    } = await this.parse(ListCommand);
+    } = context;
 
     let dataSources: DataSourceNode[] = [];
     let componentId: string;
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let finalPageInfo = {
+      hasNextPage: false,
+      endCursor: null as string | null,
+    };
 
     while (hasNextPage) {
       const {
         components: {
           nodes: [component],
         },
-      }: ResultOf<typeof LIST_COMPONENT_ACTIONS> = await gqlRequest({
-        document: LIST_COMPONENT_ACTIONS,
+      }: ResultOf<typeof LIST_COMPONENT_ACTIONS2> = await gqlRequest({
+        document: LIST_COMPONENT_ACTIONS2,
         variables: {
           after: cursor,
+          first: flags.first,
           componentKey,
           public: flags.public ? true : flags.private ? false : null,
         },
       });
       if (!component) {
-        console.log(
+        commandOutput.log(
           "The key you provided is not valid. Please run 'prism components:list -x' and identify a valid component key.",
         );
-        this.exit(1);
+        commandOutput.exit(1);
       }
       dataSources = [
         ...dataSources,
@@ -86,10 +108,12 @@ export default class ListCommand extends PrismaticBaseCommand {
       ];
       componentId = component.id;
       cursor = component.actions.pageInfo.endCursor;
-      hasNextPage = component.actions.pageInfo.hasNextPage;
+      finalPageInfo = component.actions.pageInfo;
+      hasNextPage =
+        component.actions.pageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = ux.table(
       dataSources,
       {
         id: {
@@ -118,5 +142,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+    return { ...result, pageInfo: finalPageInfo };
+  },
+});

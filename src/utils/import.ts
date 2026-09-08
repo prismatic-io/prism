@@ -1,4 +1,4 @@
-import { ux } from "@oclif/core";
+import { ux } from "./ux.js";
 import { resolve } from "path";
 import { exists } from "../fs.js";
 
@@ -8,8 +8,11 @@ import { exists } from "../fs.js";
  * Does not change the current working directory.
  * Throws an error if package.json cannot be found.
  */
-export const findPackageRoot = async (packageType: string): Promise<string> => {
-  let currentPath = process.cwd();
+export const findPackageRoot = async (
+  packageType: string,
+  cwd = process.cwd(),
+): Promise<string> => {
+  let currentPath = resolve(cwd);
 
   while (!(await exists(resolve(currentPath, "package.json")))) {
     const parentPath = resolve(currentPath, "..");
@@ -24,8 +27,11 @@ export const findPackageRoot = async (packageType: string): Promise<string> => {
   return currentPath;
 };
 
-export const seekPackageDistDirectory = async (packageType: string): Promise<void> => {
-  const packageRoot = await findPackageRoot(packageType);
+export const seekPackageDistDirectory = async (
+  packageType: string,
+  cwd = process.cwd(),
+): Promise<string> => {
+  const packageRoot = await findPackageRoot(packageType, cwd);
 
   if (!(await exists(resolve(packageRoot, "dist")))) {
     ux.error(`Failed to find 'dist' folder. Is the current path a ${packageType}?`, {
@@ -33,5 +39,13 @@ export const seekPackageDistDirectory = async (packageType: string): Promise<voi
     });
   }
 
-  process.chdir(resolve(packageRoot, "dist"));
+  return resolve(packageRoot, "dist");
 };
+
+export const getPackageEntrypointDirectory = async (
+  packageType: string,
+  cwd = process.cwd(),
+): Promise<string> =>
+  (await exists(resolve(cwd, "index.js")))
+    ? resolve(cwd)
+    : seekPackageDistDirectory(packageType, cwd);

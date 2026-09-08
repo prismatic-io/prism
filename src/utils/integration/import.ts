@@ -4,13 +4,13 @@ import { SetInstanceApiKeysDocument as SET_INSTANCE_API_KEYS } from "../../graph
 import { Component4Document as COMPONENT4 } from "../../graphql/operations/component4.generated.js";
 import { Integration2Document as INTEGRATION2 } from "../../graphql/operations/integration2.generated.js";
 import chardet from "chardet";
-import { ux } from "@oclif/core";
+import { ux } from "../ux.js";
 import { createRequire } from "node:module";
 import { gqlRequest } from "../../graphql.js";
 import { uploadAvatar } from "../../utils/avatar.js";
 import { exists, fs } from "../../fs.js";
 import { resolve } from "path";
-import { seekPackageDistDirectory } from "../import.js";
+import { getPackageEntrypointDirectory } from "../import.js";
 import {
   publishDefinition as publishComponentDefinition,
   uploadFile,
@@ -23,6 +23,7 @@ import {
 } from "../component/index.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
 import { loadYaml } from "../serialize.js";
+import { writeCommandOutput } from "../../command.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
 
 const require = createRequire(import.meta.url);
@@ -109,7 +110,7 @@ const setIntegrationAvatar = async (integrationId: string, iconPath: string): Pr
       },
     });
   } catch (err) {
-    console.warn(`Error setting integration icon: ${err}`);
+    writeCommandOutput(`Error setting integration icon: ${err}`, "stderr");
   }
 };
 
@@ -140,11 +141,12 @@ export const importCodeNativeIntegration = async (
   replace?: boolean,
   testApiKeyFlags?: string[],
 ): Promise<string> => {
-  const { integrationDefinition, componentDefinition, publishingMetadata } =
+  const { integrationDefinition, componentDefinition, publishingMetadata, directory } =
     await loadCodeNativeIntegrationEntryPoint();
 
   await validateDefinition(componentDefinition, {
     forCodeNativeIntegration: true,
+    cwd: directory,
   });
 
   // Parse CLI-provided test API keys
@@ -171,7 +173,7 @@ export const importCodeNativeIntegration = async (
     }
   }
 
-  const packagePath = await createComponentPackage();
+  const packagePath = await createComponentPackage(directory);
 
   const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls, versionNumber } =
     await publishComponentDefinition(componentDefinition, {
@@ -203,19 +205,22 @@ export const importCodeNativeIntegration = async (
     display: { iconPath },
   } = componentDefinition;
   if (iconPath) {
-    await uploadFile(iconPath, iconUploadUrl); // Component avatar.
-    await setIntegrationAvatar(integrationImportId, iconPath); // Integration avatar.
+    await uploadFile(resolve(directory, iconPath), iconUploadUrl); // Component avatar.
+    await setIntegrationAvatar(integrationImportId, resolve(directory, iconPath)); // Integration avatar.
   }
-  await uploadConnectionIcons(componentDefinition, connectionIconUploadUrls);
+  await uploadConnectionIcons(componentDefinition, connectionIconUploadUrls, directory);
 
   try {
-    const metadata = await getPrismMetadata({ fromDist: true });
+    const metadata = await getPrismMetadata({ fromDist: true, cwd: directory });
     await writePrismMetadata(
       { ...metadata, integrationId: integrationImportId },
-      { fromDist: true },
+      { fromDist: true, cwd: directory },
     );
   } catch (e) {
-    console.error("Import was successful but there was an error formatting local metadata:", e);
+    writeCommandOutput(
+      `Import was successful but there was an error formatting local metadata: ${e}`,
+      "stderr",
+    );
   }
 
   // Set test API keys, if they are present.
@@ -234,7 +239,7 @@ export const importCodeNativeIntegration = async (
       ux.action.stop();
     } catch (error) {
       ux.action.stop("Failed to set test API keys");
-      console.warn("Warning: Could not set test API keys:", error);
+      writeCommandOutput(`Warning: Could not set test API keys: ${error}`, "stderr");
     }
   }
 
@@ -311,7 +316,10 @@ const setTestApiKeysForFlows = async ({
       (flowConfig) => flowConfig.flow.name === metadataFlow.name,
     );
     if (!importedFlowConfig) {
-      console.warn(`Could not find imported flow "${metadataFlow.name}" to set API keys`);
+      writeCommandOutput(
+        `Could not find imported flow "${metadataFlow.name}" to set API keys`,
+        "stderr",
+      );
       continue;
     }
 
@@ -364,27 +372,21 @@ interface CodeNativeIntegrationEntrypoint {
   };
 }
 
-export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
+export const loadCodeNativeIntegrationEntryPoint = async (
+  cwd = process.cwd(),
+): Promise<{
+  directory: string;
   integrationDefinition: string;
   componentDefinition: ComponentDefinition;
   publishingMetadata?: PublishingMetadata;
 }> => {
-  // If we don't have an index.js in cwd seek directories to find package.json of Code Native Integration
-  if (!(await exists("index.js"))) {
-    await seekPackageDistDirectory("Code Native Integration");
-  }
-
-  // If we still didn't find index.js error out
-  if (!(await exists("index.js"))) {
+  const directory = await getPackageEntrypointDirectory("Code Native Integration", cwd);
+  const entrypointPath = resolve(directory, "index.js");
+  if (!(await exists(entrypointPath)))
     ux.error(
       "Failed to find 'index.js' entrypoint file. Is the current path a Code Native Integration?",
       { exit: 1 },
     );
-  }
-
-  // Require index.js and access its root-most default export which should contain the YAML definition.
-  const cwd = process.cwd();
-  const entrypointPath = resolve(cwd, "./index.js");
   const { default: componentDefinition }: CodeNativeIntegrationEntrypoint = require(entrypointPath);
 
   if (!componentDefinition?.codeNativeIntegrationYAML) {
@@ -395,6 +397,7 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
   }
 
   return {
+    directory,
     integrationDefinition: componentDefinition.codeNativeIntegrationYAML,
     componentDefinition: componentDefinition,
     publishingMetadata: componentDefinition.publishingMetadata,

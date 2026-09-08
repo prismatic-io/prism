@@ -1,35 +1,64 @@
-import type { ResultOf } from "@graphql-typed-document-node/core";
 import { ListComponentsDocument as LIST_COMPONENTS } from "../../graphql/operations/listComponents.generated.js";
-import { Flags } from "@oclif/core";
+import type { ListComponentsQuery } from "../../graphql/operations/listComponents.generated.js";
+import { defineCommand, optionsSchema } from "../../command.js";
 import dayjs from "dayjs";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { gqlRequest } from "../../graphql.js";
-import { ux } from "../../utils/legacy-ux.js";
+import { paginationFlags, tableOutputSchema } from "../../utils/table.js";
+import { ux } from "../../utils/ux.js";
+import { z } from "incur";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List available Components";
-  static flags = {
-    ...ux.table.flags(),
-    showAllVersions: Flags.boolean({
-      char: "a",
-      required: false,
-      description:
-        "If specified this command returns all versions of all components rather than only the latest version",
-    }),
-    search: Flags.string({
-      char: "s",
-      required: false,
-      description: "Search components by label first, then by key (case insensitive)",
-    }),
-  };
+type ComponentNode = NonNullable<ListComponentsQuery["components"]["nodes"][number]>;
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+export default defineCommand({
+  outputPolicy: "agent-only",
+  description: "List available Components",
+  output: tableOutputSchema(
+    [
+      "id",
+      "key",
+      "label",
+      "public",
+      "description",
+      "versionNumber",
+      "versionCreatedAt",
+      "category",
+      "customerId",
+      "customerName",
+      "customerExternalId",
+    ],
+    true,
+  ),
+  options: optionsSchema(
+    z.object({
+      ...ux.table.flags(),
+      ...paginationFlags(),
+      showAllVersions: z
+        .boolean()
+        .optional()
+        .describe(
+          "If specified this command returns all versions of all components rather than only the latest version",
+        )
+        .meta({ cli: { char: "a" } }),
+      search: z
+        .string()
+        .optional()
+        .describe("Search components by label first, then by key (case insensitive)")
+        .meta({ cli: { char: "s" } }),
+    }),
+  ),
+  async run(context) {
+    const { options: flags } = context;
     const { showAllVersions, search } = flags;
 
-    const components: any[] = await fetchComponents(showAllVersions, search);
+    const { components, pageInfo } = await fetchComponents(
+      showAllVersions ?? false,
+      search,
+      flags.after,
+      flags.first,
+      flags.all === true || !context.agent,
+    );
 
-    ux.table(
+    const result = ux.table(
       components,
       {
         id: {
@@ -65,30 +94,45 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+    return { ...result, pageInfo };
+  },
+});
 
-const fetchComponents = async (showAllVersions: boolean, search?: string): Promise<any[]> => {
-  let components: any[] = [];
+const fetchComponents = async (
+  showAllVersions: boolean,
+  search?: string,
+  after?: string,
+  first?: number,
+  fetchAll = true,
+): Promise<{
+  components: ComponentNode[];
+  pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+}> => {
+  let components: ComponentNode[] = [];
   let hasNextPage = true;
-  let cursor: string | null = "";
+  let cursor: string | null = after ?? "";
+  let finalPageInfo: { hasNextPage: boolean; endCursor?: string | null } = {
+    hasNextPage: false,
+    endCursor: null,
+  };
 
   while (hasNextPage) {
-    const {
-      components: { nodes, pageInfo },
-    }: ResultOf<typeof LIST_COMPONENTS> = await gqlRequest({
+    const response: ListComponentsQuery = await gqlRequest({
       document: LIST_COMPONENTS,
       variables: {
         showAllVersions,
         after: cursor,
+        first,
         filterQuery: search
           ? JSON.stringify(["or", ["in", "key", search], ["in", "label", search]])
           : undefined,
       },
     });
-    components = [...components, ...nodes];
-    cursor = pageInfo.endCursor;
-    hasNextPage = pageInfo.hasNextPage;
+    const { nodes, pageInfo: nextPageInfo } = response.components;
+    components = [...components, ...nodes.filter((node): node is ComponentNode => node !== null)];
+    finalPageInfo = nextPageInfo;
+    cursor = nextPageInfo.endCursor;
+    hasNextPage = nextPageInfo.hasNextPage && fetchAll;
   }
-  return components;
+  return { components, pageInfo: finalPageInfo };
 };
