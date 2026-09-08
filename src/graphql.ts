@@ -1,10 +1,12 @@
+import { print } from "graphql";
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { URL } from "url";
 import { getAccessToken } from "./auth.js";
 import { getPrismaticUrl } from "./context.js";
 import { fetch } from "./utils/http.js";
 
-interface GQLRequest<TVariables = Record<string, unknown>> {
-  document: string;
+interface GQLRequest<TData, TVariables = Record<string, unknown>> {
+  document: string | TypedDocumentNode<TData, TVariables>;
   variables?: TVariables;
 }
 
@@ -73,14 +75,22 @@ const formatError = (field: string, messages: string[]) => {
   return `${field}: ${message}`;
 };
 
+export const requireResource = <T>(value: T | null | undefined, name: string): T => {
+  if (value === null || value === undefined) {
+    throw Object.assign(new Error(`${name} not found`), { code: "NOT_FOUND", exitCode: 1 });
+  }
+  return value;
+};
+
+// Raw command queries keep their existing typing until the next PR migrates them.
 export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>({
   document,
   variables,
-}: GQLRequest<TVariables>): Promise<T> => {
+}: GQLRequest<T, TVariables>): Promise<T> => {
   const accessToken = await getAccessToken();
   const url = new URL("/api", await getPrismaticUrl()).toString();
 
-  const query = document;
+  const query = typeof document === "string" ? document : print(document);
 
   if (process.env.PRISMATIC_PRINT_REQUESTS) {
     console.log("=================================");
