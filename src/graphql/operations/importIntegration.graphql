@@ -1,0 +1,38 @@
+mutation importIntegration($definition: String!, $integrationId: ID, $replace: Boolean) {
+  importIntegration(
+    input: { definition: $definition, integrationId: $integrationId, replace: $replace }
+  ) {
+    integration {
+      id
+      flows {
+        nodes {
+          id
+          name
+        }
+      }
+      testConfigVariables(status: "pending") {
+        nodes {
+          id
+          authorizeUrl
+        }
+      }
+      systemInstance {
+        id
+        flowConfigs {
+          nodes {
+            id
+            flow {
+              id
+              name
+            }
+            apiKeys
+          }
+        }
+      }
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

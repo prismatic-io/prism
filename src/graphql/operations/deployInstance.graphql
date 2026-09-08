@@ -1,0 +1,11 @@
+mutation deployInstance($id: ID!, $force: Boolean) {
+  deployInstance(input: { id: $id, force: $force }) {
+    instance {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

@@ -1,0 +1,11 @@
+mutation createOrganizationUser($name: String, $email: String!, $role: ID!) {
+  createOrganizationUser(input: { name: $name, email: $email, role: $role }) {
+    user {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

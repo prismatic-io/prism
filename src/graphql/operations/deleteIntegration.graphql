@@ -1,0 +1,11 @@
+mutation deleteIntegration($id: ID!) {
+  deleteIntegration(input: { id: $id }) {
+    integration {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

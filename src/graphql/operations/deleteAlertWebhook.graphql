@@ -1,0 +1,11 @@
+mutation deleteAlertWebhook($id: ID!) {
+  deleteAlertWebhook(input: { id: $id }) {
+    alertWebhook {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

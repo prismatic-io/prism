@@ -1,14 +1,5 @@
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> = {
-  [_ in K]?: never;
-};
-export type Incremental<T> =
-  | T
-  | { [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string };
@@ -16,13 +7,20 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
-  BigInt: { input: any; output: any };
-  Date: { input: any; output: any };
-  DateTime: { input: any; output: any };
-  JSONOrString: { input: any; output: any };
-  JSONString: { input: any; output: any };
-  UUID: { input: any; output: any };
+  BigInt: { input: string | number; output: string };
+  Date: { input: string; output: string };
+  DateTime: { input: string; output: string };
+  GenericScalar: { input: unknown; output: unknown };
+  JSONOrString: { input: unknown; output: unknown };
+  JSONString: { input: unknown; output: unknown };
+  UUID: { input: string; output: string };
 };
+
+export enum ActionBatchSupport {
+  Invalid = "INVALID",
+  Required = "REQUIRED",
+  Valid = "VALID",
+}
 
 export enum ActionDataSourceType {
   /** Boolean */
@@ -69,10 +67,16 @@ export type ActionDefinitionInput = {
   dynamicBranchInput?: InputMaybe<Scalars["String"]["input"]>;
   /** An example of the returned payload of an Action. */
   examplePayload?: InputMaybe<Scalars["JSONString"]["input"]>;
+  /** Whether the Action's examplePerform is safe to invoke inline. */
+  examplePerformSafety?: InputMaybe<ActionPerformSafety>;
   /** The InputFields supported by the Component Action. */
   inputs: Array<InputMaybe<InputFieldDefinition>>;
   /** A string which uniquely identifies the Action in the context of the Component. */
   key: Scalars["String"]["input"];
+  /** Describes the shape of the Action's output. For branching Actions, declares a distinct schema per branch. */
+  outputSchema?: InputMaybe<ActionOutputSchemaInput>;
+  /** Whether the Action's perform is safe to invoke inline. */
+  performSafety?: InputMaybe<ActionPerformSafety>;
   /** The static branch names associated with an Action. */
   staticBranchNames?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
   /** Specifies whether the Action will terminate Instance execution. */
@@ -93,6 +97,26 @@ export type ActionDisplayDefinition = {
   label: Scalars["String"]["input"];
 };
 
+/**
+ * Identifies a single Action by composite key. Action identity at the model
+ * layer is `(tenant, component, key, is_trigger, is_data_source)` — the same
+ * key can be reused across an action, a trigger, and a data source on the
+ * same component, so the trigger/data-source flags are required to
+ * disambiguate. Both default to False (the regular-action case).
+ */
+export type ActionInputFieldsSelector = {
+  actionKey: Scalars["String"]["input"];
+  componentKey: Scalars["String"]["input"];
+  /** Specifies whether the Component is publicly available or whether it's private to the Organization. */
+  componentPublic: Scalars["Boolean"]["input"];
+  /** The pinned version of the Component. Must be a concrete integer. */
+  componentVersion: Scalars["Int"]["input"];
+  /** True when selecting a data source; defaults to False. */
+  isDataSource?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** True when selecting a trigger; defaults to False. */
+  isTrigger?: InputMaybe<Scalars["Boolean"]["input"]>;
+};
+
 /** Allows specifying which field and direction to order by. */
 export type ActionOrder = {
   /** The direction to order by. */
@@ -109,6 +133,37 @@ export enum ActionOrderField {
   IsTrigger = "IS_TRIGGER",
   Label = "LABEL",
 }
+
+/**
+ * Tagged-union input describing the shape of an Action's output.
+ *
+ * GraphQL has no native input unions, so the discriminant `type` selects
+ * which payload field applies:
+ *   * 'actionOutput'    -> `schema` (a single JSON Schema)
+ *   * 'branchingOutput' -> `branchSchemas` (a JSON Schema per branch, as a
+ *     list of name/schema pairs — GraphQL has no native map type)
+ * The server validates that exactly the field matching `type` is provided.
+ */
+export type ActionOutputSchemaInput = {
+  /** Per-branch JSON Schemas, one entry per branch. Required for 'branchingOutput'. */
+  branchSchemas?: InputMaybe<Array<InputMaybe<BranchOutputSchemaInput>>>;
+  /** A JSON Schema describing the Action's output. Required for 'actionOutput'. */
+  schema?: InputMaybe<Scalars["JSONString"]["input"]>;
+  /** The output-schema variant: 'actionOutput' or 'branchingOutput'. */
+  type: Scalars["String"]["input"];
+};
+
+export enum ActionPerformSafety {
+  NotAllowed = "NOT_ALLOWED",
+  Safe = "SAFE",
+}
+
+/** Specifies availability and recommendation for a single action. */
+export type ActionRuleInput = {
+  actionKey: Scalars["String"]["input"];
+  availability: WorkflowContextAvailability;
+  isRecommended: Scalars["Boolean"]["input"];
+};
 
 export enum ActionScheduleSupport {
   /** Invalid */
@@ -152,6 +207,15 @@ export type AdministerObjectPermissionInput = {
   object: Scalars["ID"]["input"];
   /** The Permission to grant for the specified object. */
   permission: Scalars["ID"]["input"];
+};
+
+export type AdministerObjectPermissionsInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ID of the User to mutate. */
+  id?: InputMaybe<Scalars["ID"]["input"]>;
+  /** The object Permissions to grant or revoke for the specified User. */
+  permissions: Array<InputMaybe<InputObjectPermission>>;
 };
 
 export enum AggregateDeploymentStatus {
@@ -286,6 +350,21 @@ export type AuthorizationDefinition = {
   required: Scalars["Boolean"]["input"];
 };
 
+/** A single branch's output schema, identified by branch name. */
+export type BranchOutputSchemaInput = {
+  /** The branch name; must match one of the Action's staticBranchNames. */
+  name: Scalars["String"]["input"];
+  /** A JSON Schema describing this branch's output. */
+  schema: Scalars["JSONString"]["input"];
+};
+
+export type BulkDeleteIntegrationVersionsInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** The Integration version ids to delete. All ids must belong to the same version sequence. */
+  ids: Array<InputMaybe<Scalars["ID"]["input"]>>;
+};
+
 export type BulkDisableInstancesUsingConnectionInput = {
   /** A unique identifier for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
@@ -300,10 +379,24 @@ export type BulkDisableInstancesUsingCustomerConnectionInput = {
   id?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
+export type BulkReplayExecutionsInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** The Executions to replay. No more than 25 may be specified. */
+  ids: Array<InputMaybe<Scalars["ID"]["input"]>>;
+};
+
 export type BulkUpdateInstancesToLatestIntegrationVersionInput = {
   /** A unique identifier for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
   /** The ID of the Integration to mutate. */
+  id?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
+export type CancelBatchExecutionProcessingInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ID of the InstanceExecutionResult to mutate. */
   id?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
@@ -367,6 +460,12 @@ export type ComponentDisplayDefinition = {
   label: Scalars["String"]["input"];
 };
 
+/** References a Component by key and public flag, matching across all versions. */
+export type ComponentFuzzySelector = {
+  isPublic: Scalars["Boolean"]["input"];
+  key: Scalars["String"]["input"];
+};
+
 /** Allows specifying which field and direction to order by. */
 export type ComponentOrder = {
   /** The direction to order by. */
@@ -385,6 +484,21 @@ export enum ComponentOrderField {
   VersionNumber = "VERSION_NUMBER",
 }
 
+/**
+ * Specifies a component-level rule with optional per-action overrides.
+ *
+ * If availability is provided, it applies to the whole component.
+ * If actions are provided, each action gets its own availability.
+ * These are mutually exclusive.
+ */
+export type ComponentRuleInput = {
+  actions?: InputMaybe<Array<InputMaybe<ActionRuleInput>>>;
+  availability?: InputMaybe<WorkflowContextAvailability>;
+  component: ComponentFuzzySelector;
+  isRecommended?: InputMaybe<Scalars["Boolean"]["input"]>;
+  scope: WorkflowContextRuleScope;
+};
+
 /** Represents a collection of data that references a Component. */
 export type ComponentSelector = {
   /** Specifies whether the Component is publicly available or whether it's private to the Organization. */
@@ -394,6 +508,25 @@ export type ComponentSelector = {
   /** The version of the Component */
   version?: InputMaybe<Scalars["String"]["input"]>;
 };
+
+/**
+ * References a Component by key, public flag, and signature for
+ * tenant-portable identification.
+ */
+export type ComponentSignatureSelector = {
+  /** Specifies whether the Component is publicly available or whether it's private to the Organization. */
+  isPublic: Scalars["Boolean"]["input"];
+  /** A string that uniquely identifies the Component. */
+  key: Scalars["String"]["input"];
+  /** The signature of the Component for version-independent identification. */
+  signature: Scalars["String"]["input"];
+};
+
+export enum ConcurrencyLimitSource {
+  Batch = "BATCH",
+  Customer = "CUSTOMER",
+  Tenant = "TENANT",
+}
 
 /** Represents a collection of data that defines a Component Connection. */
 export type ConnectionDefinitionInput = {
@@ -429,6 +562,8 @@ export type ConnectionInputFieldDefinition = {
   default?: InputMaybe<Scalars["JSONOrString"]["input"]>;
   /** An example valid input for this InputField. */
   example?: InputMaybe<Scalars["String"]["input"]>;
+  /** Nested InputFields. Permitted when `type` is 'structuredObject' or 'dynamicObject'. A top-level 'structuredObject' may only contain leaf children. A 'dynamicObject's children must each be a 'structuredObject' configuration; each configuration may itself contain a nested 'structuredObject' one level deep. */
+  inputs?: InputMaybe<Array<InputMaybe<InputFieldDefinition>>>;
   /** A string which uniquely identifies the InputField in the context of the Action. */
   key: Scalars["String"]["input"];
   /** Label used for the Keys of a 'keyvaluelist' collection. */
@@ -445,6 +580,8 @@ export type ConnectionInputFieldDefinition = {
   placeholder?: InputMaybe<Scalars["String"]["input"]>;
   /** Specifies whether the InputField is required by the Action. */
   required?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Specifies the scope in which this input is accessible. */
+  scope?: InputMaybe<InputFieldScope>;
   /** Whether or not the field is shown to Integrators and Deployers. Field must have a default is this is `false`. */
   shown?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** Specifies the type of data the InputField handles. */
@@ -481,6 +618,13 @@ export enum ConnectionOrderField {
   Order = "ORDER",
 }
 
+export enum ConnectionStatus {
+  Active = "ACTIVE",
+  Error = "ERROR",
+  Failed = "FAILED",
+  Pending = "PENDING",
+}
+
 /** Represents a single preset input for a ConnectionTemplate */
 export type ConnectionTemplateField = {
   /** The key of an InputField that the value is associated with. */
@@ -505,6 +649,8 @@ export enum ConnectionTemplateOrderField {
 export type ConvertLowCodeIntegrationInput = {
   /** A unique identifier for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** Optional YAML definition to convert directly, as an alternative to providing an integration id. */
+  definition?: InputMaybe<Scalars["String"]["input"]>;
   /** The ID of the Integration to mutate. */
   id?: InputMaybe<Scalars["ID"]["input"]>;
   /** Whether to include inline comments in the generated code. */
@@ -785,6 +931,8 @@ export type CreateScopedConfigVariableInput = {
   description?: InputMaybe<Scalars["String"]["input"]>;
   /** The collection of Expressions that serve as inputs to this variable. */
   inputs?: InputMaybe<Array<InputMaybe<InputExpression>>>;
+  /** Specifies whether this Config Variable is meant for testing. */
+  isTest?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The display name of this variable. */
   key: Scalars["String"]["input"];
   /** Enforces which group of users can modify the variable. */
@@ -841,6 +989,26 @@ export type CreateWebhookEndpointInput = {
   secret?: InputMaybe<Scalars["String"]["input"]>;
   /** The URL where webhook events will be sent. */
   url: Scalars["String"]["input"];
+};
+
+export type CreateWorkflowContextInput = {
+  /** The default availability for actions in this context. */
+  actionDefaultAvailability: Scalars["String"]["input"];
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** A JSON schema describing the structure of this context. */
+  contextSchema?: InputMaybe<Scalars["String"]["input"]>;
+  defaultTrigger?: InputMaybe<WorkflowContextDefaultTriggerInput>;
+  /** Additional notes about the WorkflowContext. */
+  description?: InputMaybe<Scalars["String"]["input"]>;
+  inputs?: InputMaybe<Array<InputMaybe<InputExpression>>>;
+  /** The name of the WorkflowContext. */
+  name: Scalars["String"]["input"];
+  rules?: InputMaybe<Array<InputMaybe<ComponentRuleInput>>>;
+  /** A stable identifier for the WorkflowContext. */
+  stableKey: Scalars["String"]["input"];
+  /** The default availability for triggers in this context. */
+  triggerDefaultAvailability: Scalars["String"]["input"];
 };
 
 export enum CredentialFieldType {
@@ -1046,6 +1214,13 @@ export type DeleteIntegrationTemplateInput = {
   id?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
+export type DeleteIntegrationVersionInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ID of the Integration to mutate. */
+  id?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
 export type DeleteOnPremiseResourceInput = {
   /** A unique identifier for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
@@ -1099,6 +1274,13 @@ export type DeleteWebhookEndpointInput = {
   /** A unique identifier for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
   /** The ID of the WebhookEndpoint to mutate. */
+  id?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
+export type DeleteWorkflowContextInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ID of the WorkflowContext to mutate. */
   id?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
@@ -1178,6 +1360,72 @@ export enum EnablementBlocker {
   ReferencesDeletedConnection = "REFERENCES_DELETED_CONNECTION",
 }
 
+export type EventFilterGroup = {
+  filters: Array<EventFilterInput>;
+  /** Nested filter groups combined under this group's operator. */
+  groups?: InputMaybe<Array<EventFilterGroup>>;
+  operator: LogicalOperator;
+};
+
+export type EventFilterInput = {
+  keyPath: Scalars["String"]["input"];
+  operator: FilterOperator;
+  value?: InputMaybe<Scalars["GenericScalar"]["input"]>;
+};
+
+export type EventOrder = {
+  direction: OrderDirection;
+  field: EventOrderField;
+};
+
+export enum EventOrderField {
+  Customer = "CUSTOMER",
+  Flow = "FLOW",
+  FlowConfig = "FLOW_CONFIG",
+  Instance = "INSTANCE",
+  Integration = "INTEGRATION",
+  LogType = "LOG_TYPE",
+  Message = "MESSAGE",
+  Severity = "SEVERITY",
+  Timestamp = "TIMESTAMP",
+}
+
+export enum EventType {
+  ExecutionEvent = "EXECUTION_EVENT",
+  ExecutionSection = "EXECUTION_SECTION",
+  LogEvent = "LOG_EVENT",
+  StepResult = "STEP_RESULT",
+  TriggerPayload = "TRIGGER_PAYLOAD",
+}
+
+/** Allows specifying which field and direction to order by. */
+export type ExecutionBatchOrder = {
+  /** The direction to order by. */
+  direction: OrderDirection;
+  /** The field to order by. */
+  field: ExecutionBatchOrderField;
+};
+
+/** Represents the fields by which collections of the related type may be ordered. */
+export enum ExecutionBatchOrderField {
+  CompletedAt = "COMPLETED_AT",
+  StartedAt = "STARTED_AT",
+}
+
+export enum ExecutionBatchRole {
+  /** Discovery */
+  Discovery = "DISCOVERY",
+  /** Processing */
+  Processing = "PROCESSING",
+}
+
+export enum ExecutionBatchStatus {
+  /** Completed */
+  Completed = "COMPLETED",
+  /** Failed */
+  Failed = "FAILED",
+}
+
 export type ExecutionInvokedByInput = {
   /** ID of the invoking execution. */
   id: Scalars["ID"]["input"];
@@ -1185,7 +1433,52 @@ export type ExecutionInvokedByInput = {
   startedAt: Scalars["DateTime"]["input"];
 };
 
+export enum ExecutionRunInvokeType {
+  AiAgent = "AI_AGENT",
+  CrossFlow = "CROSS_FLOW",
+  DeployFlow = "DEPLOY_FLOW",
+  InstanceSyncFlow = "INSTANCE_SYNC_FLOW",
+  IntegrationEndpointTest = "INTEGRATION_ENDPOINT_TEST",
+  IntegrationFlowTest = "INTEGRATION_FLOW_TEST",
+  Scheduled = "SCHEDULED",
+  TearDownFlow = "TEAR_DOWN_FLOW",
+  Webhook = "WEBHOOK",
+  WebhookSnapshot = "WEBHOOK_SNAPSHOT",
+}
+
+export type ExecutionRunOrder = {
+  direction: OrderDirection;
+  field: ExecutionRunOrderField;
+};
+
+export enum ExecutionRunOrderField {
+  CustomerName = "CUSTOMER_NAME",
+  DurationMs = "DURATION_MS",
+  EndedAt = "ENDED_AT",
+  ErrorStepName = "ERROR_STEP_NAME",
+  FlowName = "FLOW_NAME",
+  InstanceName = "INSTANCE_NAME",
+  IntegrationName = "INTEGRATION_NAME",
+  InvokeType = "INVOKE_TYPE",
+  QueuedAt = "QUEUED_AT",
+  ResultType = "RESULT_TYPE",
+  ResumedAt = "RESUMED_AT",
+  StartedAt = "STARTED_AT",
+  Status = "STATUS",
+  StepCount = "STEP_COUNT",
+}
+
+export enum ExecutionRunResultType {
+  CanceledAsDuplicate = "CANCELED_AS_DUPLICATE",
+  CanceledByUser = "CANCELED_BY_USER",
+  Completed = "COMPLETED",
+  Error = "ERROR",
+  PolledNoChanges = "POLLED_NO_CHANGES",
+}
+
 export enum ExecutionStatus {
+  Canceled = "CANCELED",
+  Canceling = "CANCELING",
   Error = "ERROR",
   Pending = "PENDING",
   Queued = "QUEUED",
@@ -1196,6 +1489,7 @@ export enum ExpressionType {
   Complex = "COMPLEX",
   Configvar = "CONFIGVAR",
   Reference = "REFERENCE",
+  StructuredObject = "STRUCTURED_OBJECT",
   Template = "TEMPLATE",
   Value = "VALUE",
 }
@@ -1214,6 +1508,19 @@ export enum ExternalLogStreamOrderField {
   Name = "NAME",
   UpdatedAt = "UPDATED_AT",
 }
+
+export type FetchActionContentInput = {
+  /** The Action to be run. */
+  action?: InputMaybe<Scalars["ID"]["input"]>;
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ID of the Instance to mutate. */
+  id?: InputMaybe<Scalars["ID"]["input"]>;
+  /** Input values for the specified Action. */
+  inputs?: InputMaybe<Array<InputMaybe<InputExpression>>>;
+  /** Specifies whether to use the live Action, rather than the example Action. Defaults to example. */
+  runMode?: InputMaybe<RunMode>;
+};
 
 export type FetchConfigWizardPageContentInput = {
   /** A unique identifier for the client performing the mutation. */
@@ -1234,6 +1541,16 @@ export type FetchDataSourceContentInput = {
   /** Input values for the specified Data Source. */
   inputs?: InputMaybe<Array<InputMaybe<InputExpression>>>;
 };
+
+export enum FilterOperator {
+  Contains = "CONTAINS",
+  Eq = "EQ",
+  Gte = "GTE",
+  In = "IN",
+  IsNull = "IS_NULL",
+  Lte = "LTE",
+  NotEq = "NOT_EQ",
+}
 
 export type ForkIntegrationInput = {
   /** A unique identifier for the client performing the mutation. */
@@ -1281,12 +1598,22 @@ export type ImportOrganizationSigningKeyInput = {
 export type ImportWorkflowInput = {
   /** A unique identifier for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** A payload of JSON data to inject with the WorkflowContext. */
+  contextData?: InputMaybe<Scalars["String"]["input"]>;
+  /** The stable key of a WorkflowContext to bind to the Workflow. */
+  contextStableKey?: InputMaybe<Scalars["String"]["input"]>;
   /** The Customer the Integration belongs to, if any. If this is NULL then the Integration belongs to the Organization. */
   customer?: InputMaybe<Scalars["ID"]["input"]>;
   /** The YAML serialized definition of the Workflow to import. */
-  definition: Scalars["String"]["input"];
+  definition?: InputMaybe<Scalars["String"]["input"]>;
+  /** The description of the Workflow. */
+  description?: InputMaybe<Scalars["String"]["input"]>;
+  /** An external ID to set on the Workflow. */
+  externalId?: InputMaybe<Scalars["String"]["input"]>;
   /** The ID of the Integration to mutate. */
   id?: InputMaybe<Scalars["ID"]["input"]>;
+  /** The name of the Workflow. */
+  name?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 /** Represents a specific value of a CredentialField. */
@@ -1338,6 +1665,8 @@ export type InputFieldDefinition = {
   default?: InputMaybe<Scalars["JSONOrString"]["input"]>;
   /** An example valid input for this InputField. */
   example?: InputMaybe<Scalars["String"]["input"]>;
+  /** Nested InputFields. Permitted when `type` is 'structuredObject' or 'dynamicObject'. A top-level 'structuredObject' may only contain leaf children. A 'dynamicObject's children must each be a 'structuredObject' configuration; each configuration may itself contain a nested 'structuredObject' one level deep. */
+  inputs?: InputMaybe<Array<InputMaybe<InputFieldDefinition>>>;
   /** A string which uniquely identifies the InputField in the context of the Action. */
   key: Scalars["String"]["input"];
   /** Label used for the Keys of a 'keyvaluelist' collection. */
@@ -1352,9 +1681,15 @@ export type InputFieldDefinition = {
   placeholder?: InputMaybe<Scalars["String"]["input"]>;
   /** Specifies whether the InputField is required by the Action. */
   required?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Specifies the scope in which this input is accessible. */
+  scope?: InputMaybe<InputFieldScope>;
   /** Specifies the type of data the InputField handles. */
   type: Scalars["String"]["input"];
 };
+
+export enum InputFieldScope {
+  OnDeploy = "ON_DEPLOY",
+}
 
 export enum InputFieldType {
   /** boolean */
@@ -1371,6 +1706,8 @@ export enum InputFieldType {
   Date = "DATE",
   /** dynamicFieldSelection */
   Dynamicfieldselection = "DYNAMICFIELDSELECTION",
+  /** dynamicObject */
+  Dynamicobject = "DYNAMICOBJECT",
   /** dynamicObjectSelection */
   Dynamicobjectselection = "DYNAMICOBJECTSELECTION",
   /** flow */
@@ -1385,6 +1722,8 @@ export enum InputFieldType {
   Password = "PASSWORD",
   /** string */
   String = "STRING",
+  /** structuredObject */
+  Structuredobject = "STRUCTUREDOBJECT",
   /** template */
   Template = "TEMPLATE",
   /** text */
@@ -1400,6 +1739,7 @@ export type InputInstanceConfigVariable = {
   onPremiseResourceId?: InputMaybe<Scalars["ID"]["input"]>;
   /** The schedule type for the specified Required Config Var of the Integration. */
   scheduleType?: InputMaybe<Scalars["String"]["input"]>;
+  scopedConfigVariableId?: InputMaybe<Scalars["ID"]["input"]>;
   /** The timezone for the specified Required Config Var of the Integration. */
   timeZone?: InputMaybe<Scalars["String"]["input"]>;
   /** The value to provide for the specified Required Config Var of the Integration. */
@@ -1432,6 +1772,16 @@ export type InputIntegrationFlow = {
   testPayload?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+/** A single grant/revoke operation within a batch permission mutation. */
+export type InputObjectPermission = {
+  /** Specifies whether to grant or revoke the specified Permission. */
+  grant: Scalars["Boolean"]["input"];
+  /** The object for which the specified Permission is administered. */
+  object: Scalars["ID"]["input"];
+  /** The Permission to grant or revoke for the specified object. */
+  permission: Scalars["ID"]["input"];
+};
+
 export enum InstanceConfigState {
   FullyConfigured = "FULLY_CONFIGURED",
   NeedsInstanceConfiguration = "NEEDS_INSTANCE_CONFIGURATION",
@@ -1449,6 +1799,8 @@ export enum InstanceConfigVariableScheduleType {
   Minute = "MINUTE",
   /** None */
   None = "NONE",
+  /** Once */
+  Once = "ONCE",
   /** Week */
   Week = "WEEK",
 }
@@ -1490,6 +1842,8 @@ export enum InstanceExecutionResultInvokeType {
   CrossFlow = "CROSS_FLOW",
   /** Deploy Flow */
   DeployFlow = "DEPLOY_FLOW",
+  /** Instance Sync Flow */
+  InstanceSyncFlow = "INSTANCE_SYNC_FLOW",
   /** Integration Endpoint Test */
   IntegrationEndpointTest = "INTEGRATION_ENDPOINT_TEST",
   /** Integration Flow Test */
@@ -1521,6 +1875,8 @@ export enum InstanceExecutionResultOrderField {
 export enum InstanceExecutionResultResultType {
   /** Canceled As Duplicate */
   CanceledAsDuplicate = "CANCELED_AS_DUPLICATE",
+  /** Canceled By User */
+  CanceledByUser = "CANCELED_BY_USER",
   /** Completed */
   Completed = "COMPLETED",
   /** Error */
@@ -1759,6 +2115,11 @@ export enum LogType {
   RateLimit = "RATE_LIMIT",
 }
 
+export enum LogicalOperator {
+  And = "AND",
+  Or = "OR",
+}
+
 export enum MarketplaceConfiguration {
   AvailableAndDeployable = "AVAILABLE_AND_DEPLOYABLE",
   AvailableNotDeployable = "AVAILABLE_NOT_DEPLOYABLE",
@@ -1768,6 +2129,11 @@ export enum MarketplaceConfiguration {
 export enum MediaType {
   Attachment = "ATTACHMENT",
   Avatar = "AVATAR",
+}
+
+export enum MetricsInterval {
+  Daily = "DAILY",
+  Hourly = "HOURLY",
 }
 
 export type OAuthRedirectConfigInput = {
@@ -2023,6 +2389,8 @@ export enum RequiredConfigVariableScheduleType {
   Minute = "MINUTE",
   /** None */
   None = "NONE",
+  /** Once */
+  Once = "ONCE",
   /** Week */
   Week = "WEEK",
 }
@@ -2056,6 +2424,11 @@ export type RotateOnPremiseResourceJwtInput = {
   resourceId: Scalars["ID"]["input"];
 };
 
+export enum RunMode {
+  Example = "EXAMPLE",
+  Live = "LIVE",
+}
+
 export type SaveWorkflowTemplateInput = {
   /** A unique identifier for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
@@ -2076,6 +2449,8 @@ export enum ScopedConfigVariableManagedBy {
   Org = "ORG",
   /** System */
   System = "SYSTEM",
+  /** User */
+  User = "USER",
 }
 
 /** Allows specifying which field and direction to order by. */
@@ -2112,6 +2487,8 @@ export enum ScopedConfigVariableVariableScope {
   Customer = "CUSTOMER",
   /** Org */
   Org = "ORG",
+  /** User */
+  User = "USER",
 }
 
 /** Allows specifying which field and direction to order by. */
@@ -2173,6 +2550,8 @@ export type TestIntegrationFlowInput = {
   headers?: InputMaybe<Scalars["String"]["input"]>;
   /** The ID of the IntegrationFlow to mutate. */
   id?: InputMaybe<Scalars["ID"]["input"]>;
+  /** Run the test with the Instance Sync Flow invoke type, exercising the trigger's on-deploy sync (onDeployPerform) instead of the normal trigger perform. */
+  instanceSyncFlow?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The payload to send with the POST request that triggers the Integration Flow Test Instance. */
   payload?: InputMaybe<Scalars["String"]["input"]>;
   /** The result of the test case. */
@@ -2293,8 +2672,20 @@ export type TriggerDefinitionInput = {
   dynamicBranchInput?: InputMaybe<Scalars["String"]["input"]>;
   /** An example of the returned payload of an Action. */
   examplePayload?: InputMaybe<Scalars["JSONString"]["input"]>;
+  /** Whether the Action's examplePerform is safe to invoke inline. */
+  examplePerformSafety?: InputMaybe<ActionPerformSafety>;
+  /** Whether this Trigger defines a getNextDiscoveryState function for pagination. */
+  hasGetNextDiscoveryState?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Whether this Trigger defines an onDeployResolver.getNextDiscoveryState function for pagination of the on-deploy fire. */
+  hasGetOnDeployNextDiscoveryState?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Whether this Trigger defines an onDeployPerform function. */
+  hasOnDeployPerform?: InputMaybe<Scalars["Boolean"]["input"]>;
   hasOnInstanceDelete?: InputMaybe<Scalars["Boolean"]["input"]>;
   hasOnInstanceDeploy?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Whether this Trigger defines an onDeployResolver.resolveItems function. */
+  hasResolveOnDeployItems?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Whether this Trigger defines a resolveItems function to extract items from its payload. */
+  hasResolveTriggerItems?: InputMaybe<Scalars["Boolean"]["input"]>;
   hasWebhookCreateFunction?: InputMaybe<Scalars["Boolean"]["input"]>;
   hasWebhookDeleteFunction?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The InputFields supported by the Component Action. */
@@ -2303,6 +2694,10 @@ export type TriggerDefinitionInput = {
   isPollingTrigger?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** A string which uniquely identifies the Action in the context of the Component. */
   key: Scalars["String"]["input"];
+  /** Describes the shape of the Action's output. For branching Actions, declares a distinct schema per branch. */
+  outputSchema?: InputMaybe<ActionOutputSchemaInput>;
+  /** Whether the Action's perform is safe to invoke inline. */
+  performSafety?: InputMaybe<ActionPerformSafety>;
   /** Specifies support for triggering an Integration on a recurring schedule. */
   scheduleSupport?: InputMaybe<Scalars["String"]["input"]>;
   /** The static branch names associated with an Action. */
@@ -2311,6 +2706,12 @@ export type TriggerDefinitionInput = {
   synchronousResponseSupport?: InputMaybe<Scalars["String"]["input"]>;
   /** Specifies whether the Action will terminate Instance execution. */
   terminateExecution?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Default number of items per batch. */
+  triggerResolverDefaultBatchSize?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Default max batches of a single execution running concurrently. */
+  triggerResolverDefaultConcurrentBatchLimit?: InputMaybe<Scalars["Int"]["input"]>;
+  /** Whether this Trigger supports batching its items. */
+  triggerResolverSupport?: InputMaybe<Scalars["String"]["input"]>;
 };
 
 export type UpdateAlertGroupInput = {
@@ -2845,6 +3246,26 @@ export type UpdateWebhookEndpointInput = {
   url?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type UpdateWorkflowContextInput = {
+  /** The default availability for actions in this context. */
+  actionDefaultAvailability?: InputMaybe<Scalars["String"]["input"]>;
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** A JSON schema describing the structure of this context. */
+  contextSchema?: InputMaybe<Scalars["String"]["input"]>;
+  defaultTrigger?: InputMaybe<WorkflowContextDefaultTriggerInput>;
+  /** Additional notes about the WorkflowContext. */
+  description?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ID of the WorkflowContext to mutate. */
+  id?: InputMaybe<Scalars["ID"]["input"]>;
+  inputs?: InputMaybe<Array<InputMaybe<InputExpression>>>;
+  /** The name of the WorkflowContext. */
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  rules?: InputMaybe<Array<InputMaybe<ComponentRuleInput>>>;
+  /** The default availability for triggers in this context. */
+  triggerDefaultAvailability?: InputMaybe<Scalars["String"]["input"]>;
+};
+
 export type UpdateWorkflowTestConfigurationInput = {
   /** A unique identifier for the client performing the mutation. */
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
@@ -2882,6 +3303,8 @@ export enum UserLevelConfigVariableScheduleType {
   Minute = "MINUTE",
   /** None */
   None = "NONE",
+  /** Once */
+  Once = "ONCE",
   /** Week */
   Week = "WEEK",
 }
@@ -2955,6 +3378,50 @@ export enum WebhookEndpointOrderField {
   CreatedAt = "CREATED_AT",
   Name = "NAME",
   UpdatedAt = "UPDATED_AT",
+}
+
+export enum WorkflowContextActionDefaultAvailability {
+  /** Disabled */
+  Disabled = "DISABLED",
+  /** Enabled */
+  Enabled = "ENABLED",
+}
+
+export enum WorkflowContextActionRuleAvailability {
+  /** Disabled */
+  Disabled = "DISABLED",
+  /** Enabled */
+  Enabled = "ENABLED",
+}
+
+export enum WorkflowContextAvailability {
+  Disabled = "DISABLED",
+  Enabled = "ENABLED",
+}
+
+export enum WorkflowContextComponentRuleAvailability {
+  /** Disabled */
+  Disabled = "DISABLED",
+  /** Enabled */
+  Enabled = "ENABLED",
+}
+
+/** Identifies a default trigger by action key and component selector. */
+export type WorkflowContextDefaultTriggerInput = {
+  actionKey: Scalars["String"]["input"];
+  component: ComponentSignatureSelector;
+};
+
+export enum WorkflowContextRuleScope {
+  Action = "ACTION",
+  Trigger = "TRIGGER",
+}
+
+export enum WorkflowContextTriggerDefaultAvailability {
+  /** Disabled */
+  Disabled = "DISABLED",
+  /** Enabled */
+  Enabled = "ENABLED",
 }
 
 /** Allows specifying which field and direction to order by. */

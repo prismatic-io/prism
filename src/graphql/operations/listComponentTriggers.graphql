@@ -1,0 +1,20 @@
+query listComponentTriggers($componentKey: String, $after: String, $first: Int, $public: Boolean) {
+  components(key: $componentKey, public: $public) {
+    nodes {
+      id
+      key
+      actions(isTrigger: true, after: $after, first: $first) {
+        nodes {
+          id
+          key
+          label
+          description
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}

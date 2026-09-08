@@ -1,0 +1,5 @@
+query integration2($integrationId: ID!) {
+  integration(id: $integrationId) {
+    definition
+  }
+}

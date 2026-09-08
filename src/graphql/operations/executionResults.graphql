@@ -1,0 +1,11 @@
+query executionResults($executionId: ID!) {
+  executionResult(id: $executionId) {
+    stepResults(last: 1) {
+      nodes {
+        id
+        stepName
+        resultsUrl
+      }
+    }
+  }
+}

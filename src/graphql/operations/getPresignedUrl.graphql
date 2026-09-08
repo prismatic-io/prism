@@ -1,0 +1,7 @@
+query getPresignedUrl($objectId: ID!, $fileName: String!, $mediaType: MediaType!) {
+  uploadMedia(objectId: $objectId, fileName: $fileName, mediaType: $mediaType) {
+    uploadUrl
+    objectUrl
+    error
+  }
+}

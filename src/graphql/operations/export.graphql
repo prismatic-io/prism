@@ -1,0 +1,5 @@
+query export($id: ID!, $version: Int!, $useLatestComponentVersions: Boolean!) {
+  integration(id: $id) {
+    definition(version: $version, useLatestComponentVersions: $useLatestComponentVersions)
+  }
+}

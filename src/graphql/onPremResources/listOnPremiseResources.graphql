@@ -1,0 +1,18 @@
+query listOnPremiseResources($after: String, $customer: ID, $first: Int) {
+  onPremiseResources(after: $after, customer: $customer, first: $first) {
+    nodes {
+      id
+      name
+      status
+      customer {
+        id
+        name
+        externalId
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

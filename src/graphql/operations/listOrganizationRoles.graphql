@@ -1,0 +1,7 @@
+query listOrganizationRoles {
+  organizationRoles {
+    id
+    name
+    description
+  }
+}

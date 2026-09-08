@@ -1,0 +1,28 @@
+mutation ConvertToCNI(
+  $id: ID!
+  $registryPrefix: String
+  $registryUrl: String
+  $includeComments: Boolean
+) {
+  convertLowCodeIntegration(
+    input: {
+      id: $id
+      registryPrefix: $registryPrefix
+      registryUrl: $registryUrl
+      includeComments: $includeComments
+    }
+  ) {
+    convertLowCodeIntegrationFormResult {
+      url
+      conversionErrors {
+        path
+        error
+        errorType
+      }
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

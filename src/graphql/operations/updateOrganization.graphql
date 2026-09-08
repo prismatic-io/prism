@@ -1,0 +1,11 @@
+mutation updateOrganization($name: String) {
+  updateOrganization(input: { name: $name }) {
+    organization {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

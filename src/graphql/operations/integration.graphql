@@ -1,0 +1,28 @@
+query integration($id: ID!) {
+  integration(id: $id) {
+    testConfigVariables {
+      nodes {
+        requiredConfigVariable {
+          key
+          connectionTemplate {
+            inputFieldTemplates {
+              nodes {
+                inputField {
+                  key
+                }
+                value
+              }
+            }
+          }
+        }
+        inputs {
+          nodes {
+            name
+            value
+          }
+        }
+        meta
+      }
+    }
+  }
+}
