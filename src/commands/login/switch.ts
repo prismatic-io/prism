@@ -1,4 +1,4 @@
-import { Cli, Errors, z } from "incur";
+import { Cli, z } from "incur";
 import {
   fetchUserTenants,
   getAuthenticatedContext,
@@ -30,7 +30,20 @@ export default Cli.command({
     const loggedIn = (await isLoggedIn()) && config;
     if (!loggedIn) {
       writeCommandStatus("Not logged in. Run 'prism login'.");
-      return { profile: profileName, switched: false, authenticated: false };
+      return context.ok(
+        { profile: profileName, switched: false, authenticated: false },
+        {
+          cta: {
+            commands: [
+              {
+                command: "login",
+                description: "Authenticate this profile",
+                options: { profile: profileName },
+              },
+            ],
+          },
+        },
+      );
     }
 
     const tenants = await fetchUserTenants();
@@ -45,7 +58,24 @@ export default Cli.command({
     const currentTenantSuspended = currentTenant?.systemSuspended ?? false;
     const activeTenants = tenants.filter((t) => !t.systemSuspended);
 
-    if (!currentTenantSuspended && activeTenants.length <= 1) {
+    const requestedTenant =
+      tenantId !== undefined
+        ? activeTenants.find((tenant) => tenant.tenantId === tenantId)
+        : undefined;
+    if (tenantId !== undefined && !requestedTenant) {
+      return context.error({
+        code: "VALIDATION_ERROR",
+        retryable: false,
+        message: `Tenant '${tenantId}' is not available to this profile.`,
+        exitCode: 2,
+      });
+    }
+
+    if (
+      !currentTenantSuspended &&
+      activeTenants.length <= 1 &&
+      (!requestedTenant || requestedTenant.tenantId === currentTenantId)
+    ) {
       const message =
         activeTenants.length === 1
           ? "This is the only tenant available to this profile."
@@ -63,19 +93,10 @@ export default Cli.command({
       writeCommandStatus(`Current tenant: ${currentTenant.orgName} (${currentTenant.url})\n`);
     }
 
-    const requestedTenant = tenantId
-      ? activeTenants.find((tenant) => tenant.tenantId === tenantId)
-      : undefined;
-    if (tenantId && !requestedTenant) {
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: `Tenant '${tenantId}' is not available to this profile.`,
-        exitCode: 2,
-      });
-    }
     if (context.agent && !requestedTenant) {
-      throw new Errors.IncurError({
+      return context.error({
         code: "VALIDATION_ERROR",
+        retryable: false,
         message: "Agent mode requires --tenant-id when more than one tenant is available.",
         exitCode: 2,
       });
