@@ -1,6 +1,10 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import {
+  ListInstancesDocument as LIST_INSTANCES,
+  type ListInstancesQuery,
+} from "../../graphql/instances/listInstances.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import { ux } from "../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -23,40 +27,15 @@ export default class ListCommand extends PrismaticBaseCommand {
     const { flags } = await this.parse(ListCommand);
     const { customer, integration } = flags;
 
-    let instances: any[] = [];
+    let instances: InstanceNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         instances: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listInstances($customer: ID, $integration: ID, $after: String) {
-            instances(
-              customer: $customer
-              integration: $integration
-              isSystem: false
-              after: $after
-            ) {
-              nodes {
-                id
-                name
-                description
-                enabled
-                customer {
-                  id
-                  name
-                  externalId
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
+      }: ListInstancesQuery = await gqlRequest({
+        document: LIST_INSTANCES,
         variables: {
           customer,
           integration,
@@ -94,3 +73,5 @@ export default class ListCommand extends PrismaticBaseCommand {
     );
   }
 }
+
+type InstanceNode = ListInstancesQuery["instances"]["nodes"][number];

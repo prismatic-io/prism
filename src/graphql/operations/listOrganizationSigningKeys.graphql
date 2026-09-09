@@ -1,0 +1,13 @@
+query listOrganizationSigningKeys {
+  organization {
+    signingKeys {
+      nodes {
+        id
+        publicKey
+        privateKeyPreview
+        issuedAt
+        imported
+      }
+    }
+  }
+}

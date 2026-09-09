@@ -1,0 +1,29 @@
+mutation createAlertMonitor(
+  $name: String!
+  $instance: ID!
+  $triggers: [ID]!
+  $logSeverity: Int
+  $duration: Int
+  $groups: [ID]
+  $users: [ID]
+) {
+  createAlertMonitor(
+    input: {
+      name: $name
+      instance: $instance
+      triggers: $triggers
+      logSeverityLevelCondition: $logSeverity
+      durationSecondsCondition: $duration
+      groups: $groups
+      users: $users
+    }
+  ) {
+    alertMonitor {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

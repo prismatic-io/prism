@@ -1,0 +1,11 @@
+mutation markAvailability($id: ID!, $available: Boolean!) {
+  updateIntegrationVersionAvailability(input: { id: $id, available: $available }) {
+    integration {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

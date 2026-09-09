@@ -1,0 +1,11 @@
+mutation deleteOnPremiseResource($id: ID!) {
+  deleteOnPremiseResource(input: { id: $id }) {
+    onPremiseResource {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

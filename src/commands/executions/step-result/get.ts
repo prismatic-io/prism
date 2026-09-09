@@ -1,7 +1,8 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { fs } from "../../../fs.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { GetStepOutputDetailsDocument as GET_STEP_OUTPUT_DETAILS } from "../../../graphql/operations/getStepOutputDetails.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 import {
   type DeserializeResult,
   deserialize,
@@ -49,26 +50,14 @@ export default class GetCommand extends PrismaticBaseCommand {
     const { executionId, stepName, outputPath } = flags;
 
     const result = await gqlRequest({
-      document: gql`
-        query getStepOutputDetails($executionId: ID!, $stepName: String!) {
-          executionResult(id: $executionId) {
-            id
-            stepResults(displayStepName: $stepName) {
-              nodes {
-                displayStepName
-                resultsUrl
-              }
-            }
-          }
-        }
-      `,
+      document: GET_STEP_OUTPUT_DETAILS,
       variables: {
         executionId: executionId,
         stepName: stepName,
       },
     });
 
-    const stepResult = result?.executionResult?.stepResults.nodes?.[0];
+    const stepResult = result.executionResult?.stepResults.nodes?.[0];
 
     if (stepResult?.resultsUrl) {
       const response = await fetch(stepResult.resultsUrl);

@@ -1,10 +1,13 @@
+import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { print } from "graphql";
 import { URL } from "url";
+import { z } from "zod";
 import { getAccessToken } from "./auth.js";
 import { getPrismaticUrl } from "./context.js";
 import { fetch } from "./utils/http.js";
 
-interface GQLRequest<TVariables = Record<string, unknown>> {
-  document: string;
+interface GQLRequest<TData, TVariables = Record<string, unknown>> {
+  document: string | TypedDocumentNode<TData, TVariables>;
   variables?: TVariables;
 }
 
@@ -57,13 +60,29 @@ export const gql = (strings: TemplateStringsArray, ...values: unknown[]): string
 };
 
 const isErrored = (result: unknown): result is ErroredResult => {
-  if (!(Boolean(result) && typeof result === "object" && result !== null && "errors" in result)) {
-    return false;
-  }
-
-  const assumed = result as ErroredResult;
-  return Boolean(assumed.errors) && assumed.errors.length > 0;
+  return erroredResultSchema.safeParse(result).success;
 };
+
+const erroredResultSchema = z.looseObject({
+  errors: z.array(
+    z.object({
+      field: z.string(),
+      messages: z.array(z.string()),
+    }),
+  ),
+});
+
+const graphQLErrorSchema = z.object({
+  message: z.string(),
+  locations: z.array(z.object({ line: z.number(), column: z.number() })).optional(),
+  path: z.array(z.union([z.string(), z.number()])).optional(),
+});
+
+const graphQLResponseSchema = <T>(dataSchema: z.ZodType<T>) =>
+  z.object({
+    data: dataSchema.optional(),
+    errors: z.array(graphQLErrorSchema).optional(),
+  });
 
 const formatError = (field: string, messages: string[]) => {
   const message = messages.join("\n");
@@ -73,14 +92,21 @@ const formatError = (field: string, messages: string[]) => {
   return `${field}: ${message}`;
 };
 
-export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>({
+export const requireResource = <T>(value: T | null | undefined, name: string): T => {
+  if (value === null || value === undefined) {
+    throw Object.assign(new Error(`${name} not found`), { code: "NOT_FOUND", exitCode: 1 });
+  }
+  return value;
+};
+
+export const gqlRequest = async <T = unknown, TVariables = Record<string, unknown>>({
   document,
   variables,
-}: GQLRequest<TVariables>): Promise<T> => {
+}: GQLRequest<T, TVariables>): Promise<T> => {
   const accessToken = await getAccessToken();
   const url = new URL("/api", await getPrismaticUrl()).toString();
 
-  const query = document;
+  const query = typeof document === "string" ? document : print(document);
 
   if (process.env.PRISMATIC_PRINT_REQUESTS) {
     console.log("=================================");
@@ -89,9 +115,9 @@ export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>(
     console.log("=================================");
   }
 
-  let response: Response;
+  let response: Awaited<ReturnType<typeof fetch>>;
   try {
-    response = (await fetch(url, {
+    response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -102,7 +128,7 @@ export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>(
         query,
         variables: variables || {},
       }),
-    })) as unknown as Response;
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     throw new Error(`Network request to ${url} failed: ${errorMessage}`);
@@ -112,7 +138,7 @@ export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>(
 
   let responseBody: GraphQLResponse<T>;
   try {
-    responseBody = await response.json();
+    responseBody = graphQLResponseSchema(z.custom<T>()).parse(await response.json());
   } catch (_error) {
     throw new ClientError(
       {
@@ -135,9 +161,9 @@ export const gqlRequest = async <T = any, TVariables = Record<string, unknown>>(
     );
   }
 
-  const result = responseBody.data as T;
+  const result = responseBody.data;
 
-  const errors = Object.values(result as any)
+  const errors = Object.values(result)
     .filter(isErrored)
     .flatMap(({ errors }) => errors)
     .map(({ field, messages }) => formatError(field, messages));

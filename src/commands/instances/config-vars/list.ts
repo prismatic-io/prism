@@ -1,6 +1,10 @@
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import {
+  ListInstanceConfigVariablesDocument as LIST_INSTANCE_CONFIG_VARIABLES,
+  type ListInstanceConfigVariablesQuery,
+} from "../../../graphql/instances/listInstanceConfigVariables.generated.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -19,50 +23,21 @@ export default class ListCommand extends PrismaticBaseCommand {
       flags,
     } = await this.parse(ListCommand);
 
-    let configVariables: any[] = [];
+    let configVariables: InstanceConfigVariableNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
-      const {
-        instance: {
-          configVariables: { nodes, pageInfo },
-        },
-      } = await gqlRequest({
-        document: gql`
-          query listInstanceConfigVariables($id: ID!) {
-            instance(id: $id) {
-              configVariables {
-                nodes {
-                  id
-                  value
-                  status
-                  inputs {
-                    nodes {
-                      name
-                      value
-                    }
-                  }
-                  requiredConfigVariable {
-                    id
-                    key
-                    defaultValue
-                    dataType
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        `,
+      const response: ListInstanceConfigVariablesQuery = await gqlRequest({
+        document: LIST_INSTANCE_CONFIG_VARIABLES,
         variables: {
           id: instance,
           after: cursor,
         },
       });
+      const {
+        configVariables: { nodes, pageInfo },
+      } = requireResource(response.instance, "instance");
       configVariables = [...configVariables, ...nodes];
       cursor = pageInfo.endCursor;
       hasNextPage = pageInfo.hasNextPage;
@@ -76,18 +51,18 @@ export default class ListCommand extends PrismaticBaseCommand {
           extended: true,
         },
         requiredVariableId: {
-          get: (row: any) => row.requiredConfigVariable.id,
+          get: (row) => row.requiredConfigVariable.id,
           extended: true,
         },
         key: {
-          get: (row: any) => row.requiredConfigVariable.key,
+          get: (row) => row.requiredConfigVariable.key,
         },
         value: {
-          get: (row: any) =>
+          get: (row) =>
             row.requiredConfigVariable.dataType === "CONNECTION" ? row.inputs : row.value,
         },
         defaultValue: {
-          get: (row: any) =>
+          get: (row) =>
             row.requiredConfigVariable.dataType === "CONNECTION"
               ? ""
               : row.requiredConfigVariable.defaultValue,
@@ -97,3 +72,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     );
   }
 }
+
+type InstanceConfigVariableNode = NonNullable<
+  ListInstanceConfigVariablesQuery["instance"]
+>["configVariables"]["nodes"][number];

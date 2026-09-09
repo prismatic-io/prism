@@ -1,6 +1,7 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { AvailableConnectionsDocument as AVAILABLE_CONNECTIONS } from "../../../graphql/operations/availableConnections.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -17,26 +18,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     const { flags } = await this.parse(ListCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        query availableConnections($managedBy: String) {
-          scopedConfigVariables(managedBy: $managedBy) {
-            nodes {
-              stableKey
-              description
-              managedBy
-              customer {
-                externalId
-                name
-              }
-              connection {
-                component {
-                  key
-                }
-              }
-            }
-          }
-        }
-      `,
+      document: AVAILABLE_CONNECTIONS,
       variables: {
         managedBy: flags["managed-by"] || null,
       },
@@ -61,13 +43,13 @@ export default class ListCommand extends PrismaticBaseCommand {
         },
         customer: {
           header: "Customer",
-          get: (row: any) =>
+          get: (row) =>
             row.customer ? `${row.customer.name} (${row.customer.externalId})` : "N/A",
           minWidth: 25,
         },
         component: {
           header: "Component",
-          get: (row: any) => row.connection?.component?.key || "N/A",
+          get: (row) => row.connection?.component?.key || "N/A",
           minWidth: 20,
         },
       },

@@ -1,6 +1,7 @@
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { EnableInstanceDocument as ENABLE_INSTANCE } from "../../graphql/operations/enableInstance.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class EnableCommand extends PrismaticBaseCommand {
   static description = "Enable an Instance";
@@ -17,24 +18,14 @@ export default class EnableCommand extends PrismaticBaseCommand {
     } = await this.parse(EnableCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        mutation enableInstance($id: ID!) {
-          updateInstance(input: { id: $id, enabled: true }) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: ENABLE_INSTANCE,
       variables: {
         id: instance,
       },
     });
 
-    this.log(result.updateInstance.instance.id);
+    this.log(
+      result.updateInstance?.instance?.id ?? this.error("The operation returned no resource"),
+    );
   }
 }

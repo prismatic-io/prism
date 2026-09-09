@@ -4,11 +4,15 @@ import inquirer from "inquirer";
 import z from "zod";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { exists, fs } from "../../../fs.js";
-import type { GetExecutionsQuery } from "../../../graphql/executions/getExecutions.generated.js";
-import GET_EXECUTIONS from "../../../graphql/executions/getExecutions.graphql";
-import type { GetPolledExecutionQuery } from "../../../graphql/executions/getPolledExecution.generated.js";
-import GET_POLLED_EXECUTION from "../../../graphql/executions/getPolledExecution.graphql";
-import UPDATE_INTEGRATION_FLOW_LISTENING_MODE from "../../../graphql/integrations/updateIntegrationFlowListeningMode.graphql";
+import {
+  GetExecutionsDocument as GET_EXECUTIONS,
+  type GetExecutionsQuery,
+} from "../../../graphql/executions/getExecutions.generated.js";
+import {
+  GetPolledExecutionDocument as GET_POLLED_EXECUTION,
+  type GetPolledExecutionQuery,
+} from "../../../graphql/executions/getPolledExecution.generated.js";
+import { UpdateIntegrationFlowListeningModeDocument as UPDATE_INTEGRATION_FLOW_LISTENING_MODE } from "../../../graphql/integrations/updateIntegrationFlowListeningMode.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import { handleError } from "../../../utils/errors.js";
 import { fetch } from "../../../utils/http.js";
@@ -37,7 +41,7 @@ export const listenFlagsSchema = z.object({
 
 export type ListenFlags = z.infer<typeof listenFlagsSchema>;
 
-type ExecutionResult = NonNullable<GetExecutionsQuery["executionResults"]["nodes"][number]>;
+type ExecutionResult = GetExecutionsQuery["executionResults"]["nodes"][number];
 type PolledExecutionResult = GetPolledExecutionQuery;
 
 type TriggerType = "WEBHOOK" | "POLLING";
@@ -200,7 +204,7 @@ export default class ListenCommand extends PrismaticBaseCommand {
           // Having an endedAt means the execution completed.
           if (result.executionResult?.endedAt) {
             const stepResult = result.executionResult.stepResults.nodes[0];
-            if (stepResult?.resultsUrl) {
+            if (stepResult.resultsUrl) {
               ux.action.start("Downloading poll payload...");
               const filepath = await downloadAndSavePayload(stepResult.resultsUrl, output, flowId, {
                 filePrefix: "poll-payload",
@@ -275,7 +279,7 @@ async function pollForWebhookExecutions(
   while (true) {
     await ux.wait(getAdaptivePollIntervalMs(startTime));
 
-    const result = await gqlRequest<GetExecutionsQuery>({
+    const result = await gqlRequest({
       document: GET_EXECUTIONS,
       variables: {
         limit: 1,
@@ -293,8 +297,8 @@ async function pollForWebhookExecutions(
     if (result.executionResults.nodes.length > 0) {
       const execution = result.executionResults.nodes[0];
 
-      if (!execution?.endedAt) {
-        console.log(`\nExecution ${execution?.id} started, waiting for completion...`);
+      if (!execution.endedAt) {
+        console.log(`\nExecution ${execution.id} started, waiting for completion...`);
         continue;
       }
 
@@ -378,7 +382,7 @@ function hasTimedOut(startTime: number, timeout: number): boolean {
 }
 
 async function getPolledExecution(executionId: string): Promise<PolledExecutionResult> {
-  return gqlRequest<GetPolledExecutionQuery>({
+  return gqlRequest({
     document: GET_POLLED_EXECUTION,
     variables: { executionId },
   });

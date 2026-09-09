@@ -1,0 +1,25 @@
+mutation updateIntegration(
+  $id: ID!
+  $name: String
+  $description: String
+  $customer: ID
+  $testConfigVars: [InputInstanceConfigVariable]
+) {
+  updateIntegration(
+    input: {
+      id: $id
+      name: $name
+      description: $description
+      customer: $customer
+      testConfigVariables: $testConfigVars
+    }
+  ) {
+    integration {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

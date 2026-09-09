@@ -1,0 +1,24 @@
+query listComponentActions2($componentKey: String, $after: String, $first: Int, $public: Boolean) {
+  components(key: $componentKey, public: $public) {
+    nodes {
+      id
+      key
+      actions(isTrigger: false, isDataSource: true, after: $after, first: $first) {
+        nodes {
+          id
+          key
+          label
+          description
+          dataSourceType
+          detailDataSource {
+            label
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}

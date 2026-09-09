@@ -1,5 +1,6 @@
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { ListLogSeverityLevelsDocument as LIST_LOG_SEVERITY_LEVELS } from "../../../graphql/operations/listLogSeverityLevels.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -10,14 +11,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     const { flags } = await this.parse(ListCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        query listLogSeverityLevels {
-          logSeverityLevels {
-            id
-            name
-          }
-        }
-      `,
+      document: LIST_LOG_SEVERITY_LEVELS,
     });
 
     ux.table(

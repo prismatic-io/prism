@@ -1,5 +1,9 @@
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import {
+  ListOrganizationUsersDocument as LIST_ORGANIZATION_USERS,
+  type ListOrganizationUsersQuery,
+} from "../../../graphql/organization/listOrganizationUsers.generated.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -9,40 +13,18 @@ export default class ListCommand extends PrismaticBaseCommand {
   async run() {
     const { flags } = await this.parse(ListCommand);
 
-    let customerUsers: any[] = [];
+    let customerUsers: OrganizationUserNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
-      const {
-        organization: {
-          users: { nodes, pageInfo },
-        },
-      } = await gqlRequest({
-        document: gql`
-          query listUsers($after: String) {
-            organization {
-              users(after: $after) {
-                nodes {
-                  id
-                  name
-                  email
-                  externalId
-                  phone
-                  role {
-                    name
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        `,
+      const response: ListOrganizationUsersQuery = await gqlRequest({
+        document: LIST_ORGANIZATION_USERS,
         variables: { after: cursor },
       });
+      const {
+        users: { nodes, pageInfo },
+      } = requireResource(response.organization, "organization");
       customerUsers = [...customerUsers, ...nodes];
       cursor = pageInfo.endCursor;
       hasNextPage = pageInfo.hasNextPage;
@@ -69,3 +51,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     );
   }
 }
+
+type OrganizationUserNode = NonNullable<
+  ListOrganizationUsersQuery["organization"]
+>["users"]["nodes"][number];

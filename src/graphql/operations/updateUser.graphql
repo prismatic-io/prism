@@ -1,0 +1,25 @@
+mutation updateUser(
+  $user: ID!
+  $name: String
+  $phone: String
+  $darkMode: Boolean
+  $darkModeOsSync: Boolean
+) {
+  updateUser(
+    input: {
+      id: $user
+      name: $name
+      phone: $phone
+      darkMode: $darkMode
+      darkModeSyncWithOs: $darkModeOsSync
+    }
+  ) {
+    user {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

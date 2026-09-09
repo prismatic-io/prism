@@ -1,5 +1,6 @@
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { GenerateSigningKeyDocument as GENERATE_SIGNING_KEY } from "../../../graphql/operations/generateSigningKey.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class GenerateCommand extends PrismaticBaseCommand {
   static description =
@@ -8,16 +9,11 @@ export default class GenerateCommand extends PrismaticBaseCommand {
   async run() {
     await this.parse(GenerateCommand);
     const result = await gqlRequest({
-      document: gql`
-        mutation generateSigningKey {
-          createOrganizationSigningKey(input: {}) {
-            result {
-              privateKey
-            }
-          }
-        }
-      `,
+      document: GENERATE_SIGNING_KEY,
     });
-    this.log(result.createOrganizationSigningKey.result.privateKey);
+    this.log(
+      result.createOrganizationSigningKey?.result?.privateKey ??
+        this.error("The operation returned no resource"),
+    );
   }
 }

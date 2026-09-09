@@ -1,6 +1,7 @@
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { DeleteOrganizationSigningKeyMutationDocument as DELETE_ORGANIZATION_SIGNING_KEY_MUTATION } from "../../../graphql/operations/DeleteOrganizationSigningKeyMutation.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class DeleteCommand extends PrismaticBaseCommand {
   static description = "Delete an embedded marketplace signing key";
@@ -17,19 +18,7 @@ export default class DeleteCommand extends PrismaticBaseCommand {
     } = await this.parse(DeleteCommand);
 
     await gqlRequest({
-      document: gql`
-        mutation ($id: ID!) {
-          deleteOrganizationSigningKey(input: { id: $id }) {
-            organizationSigningKey {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DELETE_ORGANIZATION_SIGNING_KEY_MUTATION,
       variables: {
         id: signingKeyId,
       },

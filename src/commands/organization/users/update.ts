@@ -1,6 +1,8 @@
 import { Args, Flags } from "@oclif/core";
+import { z } from "zod";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { UpdateUserDocument as UPDATE_USER } from "../../../graphql/operations/updateUser.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class UpdateCommand extends PrismaticBaseCommand {
   static description = "Update a User";
@@ -31,42 +33,20 @@ export default class UpdateCommand extends PrismaticBaseCommand {
     } = await this.parse(UpdateCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        mutation updateUser(
-          $user: ID!
-          $name: String
-          $phone: String
-          $darkMode: Boolean
-          $darkModeOsSync: Boolean
-        ) {
-          updateUser(
-            input: {
-              id: $user
-              name: $name
-              phone: $phone
-              darkMode: $darkMode
-              darkModeSyncWithOs: $darkModeOsSync
-            }
-          ) {
-            user {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: UPDATE_USER,
       variables: {
         user,
         name,
         phone,
-        darkMode,
-        darkModeOsSync,
+        darkMode:
+          darkMode === undefined ? undefined : z.enum(["true", "false"]).parse(darkMode) === "true",
+        darkModeOsSync:
+          darkModeOsSync === undefined
+            ? undefined
+            : z.enum(["true", "false"]).parse(darkModeOsSync) === "true",
       },
     });
 
-    this.log(result.updateUser.user.id);
+    this.log(result.updateUser?.user?.id ?? this.error("The operation returned no resource"));
   }
 }

@@ -1,0 +1,18 @@
+mutation createCustomer(
+  $name: String!
+  $description: String
+  $externalId: String
+  $labels: [String]
+) {
+  createCustomer(
+    input: { name: $name, description: $description, externalId: $externalId, labels: $labels }
+  ) {
+    customer {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

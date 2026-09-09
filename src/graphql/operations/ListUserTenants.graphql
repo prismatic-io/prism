@@ -1,0 +1,11 @@
+query ListUserTenants {
+  listUserTenants {
+    nodes {
+      tenantId
+      url
+      orgName
+      awsRegion
+      systemSuspended
+    }
+  }
+}

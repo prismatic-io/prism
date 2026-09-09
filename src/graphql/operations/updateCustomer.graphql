@@ -1,0 +1,25 @@
+mutation updateCustomer(
+  $id: ID!
+  $name: String
+  $description: String
+  $externalId: String
+  $labels: [String]
+) {
+  updateCustomer(
+    input: {
+      id: $id
+      name: $name
+      description: $description
+      externalId: $externalId
+      labels: $labels
+    }
+  ) {
+    customer {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

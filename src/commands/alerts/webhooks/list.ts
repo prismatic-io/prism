@@ -1,5 +1,9 @@
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import {
+  ListAlertWebhooksDocument as LIST_ALERT_WEBHOOKS,
+  type ListAlertWebhooksQuery,
+} from "../../../graphql/alerts/listAlertWebhooks.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -9,31 +13,15 @@ export default class ListCommand extends PrismaticBaseCommand {
   async run() {
     const { flags } = await this.parse(ListCommand);
 
-    let alertWebhooks: any[] = [];
+    let alertWebhooks: AlertWebhookNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         alertWebhooks: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listAlertWebhooks($after: String) {
-            alertWebhooks(after: $after) {
-              nodes {
-                id
-                name
-                payloadTemplate
-                url
-                headers
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
+      }: ListAlertWebhooksQuery = await gqlRequest({
+        document: LIST_ALERT_WEBHOOKS,
         variables: { after: cursor },
       });
       alertWebhooks = [...alertWebhooks, ...nodes];
@@ -64,3 +52,5 @@ export default class ListCommand extends PrismaticBaseCommand {
     );
   }
 }
+
+type AlertWebhookNode = ListAlertWebhooksQuery["alertWebhooks"]["nodes"][number];

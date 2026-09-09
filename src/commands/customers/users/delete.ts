@@ -1,6 +1,7 @@
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { DeleteUserDocument as DELETE_USER } from "../../../graphql/operations/deleteUser.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class DeleteCommand extends PrismaticBaseCommand {
   static description = "Delete a Customer User";
@@ -17,19 +18,7 @@ export default class DeleteCommand extends PrismaticBaseCommand {
     } = await this.parse(DeleteCommand);
 
     await gqlRequest({
-      document: gql`
-        mutation deleteUser($id: ID!) {
-          deleteUser(input: { id: $id }) {
-            user {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DELETE_USER,
       variables: {
         id: user,
       },

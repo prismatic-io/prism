@@ -1,0 +1,11 @@
+mutation enableInstance($id: ID!) {
+  updateInstance(input: { id: $id, enabled: true }) {
+    instance {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { CreateAlertWebhookDocument as CREATE_ALERT_WEBHOOK } from "../../../graphql/operations/createAlertWebhook.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create an Alert Webhook";
@@ -34,31 +35,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
     } = await this.parse(CreateCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        mutation createAlertWebhook(
-          $name: String!
-          $url: String!
-          $headers: String
-          $payloadTemplate: String!
-        ) {
-          createAlertWebhook(
-            input: {
-              name: $name
-              url: $url
-              headers: $headers
-              payloadTemplate: $payloadTemplate
-            }
-          ) {
-            alertWebhook {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: CREATE_ALERT_WEBHOOK,
       variables: {
         name,
         url,
@@ -67,6 +44,9 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createAlertWebhook.alertWebhook.id);
+    this.log(
+      result.createAlertWebhook?.alertWebhook?.id ??
+        this.error("The operation returned no resource"),
+    );
   }
 }

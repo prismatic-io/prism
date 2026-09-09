@@ -2,7 +2,8 @@ import { Args } from "@oclif/core";
 import chalk from "chalk";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { exists, readStdin } from "../../fs.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { ValidateIntegrationSchemaDocument as VALIDATE_INTEGRATION_SCHEMA } from "../../graphql/operations/validateIntegrationSchema.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import { extractYAMLFromPath } from "../../utils/integration/import.js";
 
 export default class ValidateYamlCommand extends PrismaticBaseCommand {
@@ -52,19 +53,7 @@ export default class ValidateYamlCommand extends PrismaticBaseCommand {
 
     try {
       const result = await gqlRequest({
-        document: gql`
-          mutation validateIntegrationSchema($definition: String!) {
-            validateIntegrationSchema(input: { definition: $definition }) {
-              result {
-                isValid
-              }
-              errors {
-                field
-                messages
-              }
-            }
-          }
-        `,
+        document: VALIDATE_INTEGRATION_SCHEMA,
         variables: {
           definition,
         },

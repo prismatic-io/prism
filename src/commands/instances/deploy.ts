@@ -1,6 +1,7 @@
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { DeployInstanceDocument as DEPLOY_INSTANCE } from "../../graphql/operations/deployInstance.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class DeployCommand extends PrismaticBaseCommand {
   static description = "Deploy an Instance";
@@ -25,25 +26,15 @@ export default class DeployCommand extends PrismaticBaseCommand {
     } = await this.parse(DeployCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        mutation deployInstance($id: ID!, $force: Boolean) {
-          deployInstance(input: { id: $id, force: $force }) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DEPLOY_INSTANCE,
       variables: {
         id: instance,
         force,
       },
     });
 
-    this.log(result.deployInstance.instance.id);
+    this.log(
+      result.deployInstance?.instance?.id ?? this.error("The operation returned no resource"),
+    );
   }
 }

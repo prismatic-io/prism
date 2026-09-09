@@ -1,0 +1,5 @@
+query exportWorkflow($workflow: ID!, $useLatestComponentVersions: Boolean) {
+  workflow(id: $workflow) {
+    definition(definitionType: WORKFLOW, useLatestComponentVersions: $useLatestComponentVersions)
+  }
+}

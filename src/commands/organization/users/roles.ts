@@ -1,5 +1,6 @@
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { ListOrganizationRolesDocument as LIST_ORGANIZATION_ROLES } from "../../../graphql/operations/listOrganizationRoles.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -13,15 +14,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     const { flags } = await this.parse(ListCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        query listOrganizationRoles {
-          organizationRoles {
-            id
-            name
-            description
-          }
-        }
-      `,
+      document: LIST_ORGANIZATION_ROLES,
     });
 
     ux.table(

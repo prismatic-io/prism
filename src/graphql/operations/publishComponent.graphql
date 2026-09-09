@@ -1,0 +1,45 @@
+mutation publishComponent(
+  $definition: ComponentDefinitionInput!
+  $actions: [ActionDefinitionInput]!
+  $triggers: [TriggerDefinitionInput]
+  $dataSources: [DataSourceDefinitionInput]
+  $connections: [ConnectionDefinitionInput]
+  $comment: String
+  $customer: ID
+  $attributes: String
+) {
+  publishComponent(
+    input: {
+      definition: $definition
+      actions: $actions
+      triggers: $triggers
+      dataSources: $dataSources
+      connections: $connections
+      comment: $comment
+      customer: $customer
+      attributes: $attributes
+    }
+  ) {
+    publishResult {
+      component {
+        id
+        versionNumber
+      }
+      iconUploadUrl
+      packageUploadUrl
+      sourceUploadUrl
+      connectionIconUploadUrls {
+        connectionKey
+        iconUploadUrl
+      }
+      connectionAvatarIconUploadUrls {
+        connectionKey
+        iconUploadUrl
+      }
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

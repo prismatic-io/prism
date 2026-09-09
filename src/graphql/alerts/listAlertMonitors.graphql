@@ -1,0 +1,21 @@
+query listAlertMonitors($after: String, $first: Int) {
+  alertMonitors(after: $after, first: $first) {
+    nodes {
+      id
+      name
+      triggered
+      instance {
+        id
+        name
+        customer {
+          id
+          name
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

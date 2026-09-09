@@ -1,6 +1,7 @@
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { DeleteAlertMonitorDocument as DELETE_ALERT_MONITOR } from "../../../graphql/operations/deleteAlertMonitor.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class DeleteCommand extends PrismaticBaseCommand {
   static description = "Delete an Alert Monitor";
@@ -17,19 +18,7 @@ export default class DeleteCommand extends PrismaticBaseCommand {
     } = await this.parse(DeleteCommand);
 
     await gqlRequest({
-      document: gql`
-        mutation deleteAlertMonitor($id: ID!) {
-          deleteAlertMonitor(input: { id: $id }) {
-            alertMonitor {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DELETE_ALERT_MONITOR,
       variables: {
         id: monitor,
       },

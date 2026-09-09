@@ -1,0 +1,11 @@
+mutation deleteAlertMonitor($id: ID!) {
+  deleteAlertMonitor(input: { id: $id }) {
+    alertMonitor {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

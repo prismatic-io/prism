@@ -1,6 +1,10 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import {
+  ListIntegrationsDocument as LIST_INTEGRATIONS,
+  type ListIntegrationsQuery,
+} from "../../graphql/integrations/listIntegrations.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import { ux } from "../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -31,49 +35,15 @@ export default class ListCommand extends PrismaticBaseCommand {
     const { flags } = await this.parse(ListCommand);
     const { showAllVersions, customer, "org-only": orgOnly, search } = flags;
 
-    let integrations: any[] = [];
+    let integrations: IntegrationNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         integrations: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listIntegrations(
-            $showAllVersions: Boolean
-            $after: String
-            $customer: ID
-            $customerIsnull: Boolean
-            $search: String
-          ) {
-            integrations(
-              allVersions: $showAllVersions
-              after: $after
-              customer: $customer
-              customer_Isnull: $customerIsnull
-              name_Icontains: $search
-            ) {
-              nodes {
-                id
-                name
-                description
-                versionNumber
-                labels
-                category
-                customer {
-                  id
-                  name
-                  externalId
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
+      }: ListIntegrationsQuery = await gqlRequest({
+        document: LIST_INTEGRATIONS,
         variables: {
           showAllVersions,
           after: cursor,
@@ -113,3 +83,5 @@ export default class ListCommand extends PrismaticBaseCommand {
     );
   }
 }
+
+type IntegrationNode = ListIntegrationsQuery["integrations"]["nodes"][number];

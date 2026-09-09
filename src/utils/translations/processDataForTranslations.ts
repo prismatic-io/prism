@@ -1,19 +1,14 @@
 import type {
-  MarketplaceTranslations,
-  MarketplaceTranslations_marketplaceIntegrations_nodes_instances_nodes as MarketplaceInstance,
-  MarketplaceTranslations_marketplaceIntegrations_nodes as MarketplaceIntegration,
-  Step,
-  Flow,
-  IntegrationSchema,
-  Branch,
-} from "../../types.js";
+  MarketplaceTranslationsQuery,
+  IntegrationTranslationFragment,
+} from "../../graphql/translations/marketplaceTranslations.generated.js";
+import type { Branch, Flow, IntegrationSchema, Step } from "../../types.js";
 
 import { loadYaml } from "../serialize.js";
 
 type ProcessedData = {
   [key: string]: string;
 };
-
 const processedProperties = new Set<string>();
 
 const setResultProperty = (property?: string | null) => {
@@ -27,39 +22,11 @@ const processProperties = (properties: Array<string | undefined | null>) => {
   properties.forEach((property) => setResultProperty(property));
 };
 
-const processIntegration = (integration: MarketplaceIntegration) => {
-  const { name, description, category, overview, definition, instances } = integration;
-
+const processIntegration = (integration: IntegrationTranslationFragment) => {
+  const { name, description, category, overview, definition } = integration;
   processProperties([name, description, category, overview]);
-
-  if (definition) {
-    processIntegrationDefinition(definition);
-  }
-
-  if (!instances) {
-    return;
-  }
-
-  // biome-ignore lint/suspicious/useIterableCallbackReturn: TODO
-  instances.nodes.forEach((instance) => processIntegrationInstance(instance));
+  if (definition) processIntegrationDefinition(definition);
 };
-
-const processIntegrationInstance = (instance: MarketplaceInstance | null) => {
-  if (!instance) {
-    return;
-  }
-
-  const { name, integration } = instance;
-
-  setResultProperty(name);
-
-  if (!integration) {
-    return;
-  }
-
-  processIntegration(instance.integration as MarketplaceIntegration);
-};
-
 const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
   const definition = loadYaml<IntegrationSchema>(unparsedYamlDefinition);
 
@@ -161,17 +128,14 @@ const isStep = (object: Flow | Step): object is Step => {
 };
 
 export const processIntegrationsForTranslations = (
-  data: MarketplaceTranslations,
+  data: MarketplaceTranslationsQuery,
 ): ProcessedData => {
-  data.marketplaceIntegrations.nodes.forEach((integration) => {
-    if (!integration) {
-      return;
-    }
-
+  for (const integration of data.marketplaceIntegrations.nodes) {
     processIntegration(integration);
-  });
-
-  const result = Object.fromEntries(processedProperties.entries());
-
-  return result;
+    for (const instance of integration.instances.nodes) {
+      setResultProperty(instance.name);
+      processIntegration(instance.integration);
+    }
+  }
+  return Object.fromEntries(processedProperties.entries());
 };

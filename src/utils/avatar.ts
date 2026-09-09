@@ -1,15 +1,10 @@
 import mimetypes from "mime-types";
 import { basename, extname } from "path";
 import { fs } from "../fs.js";
-import { gql, gqlRequest } from "../graphql.js";
+import { GetPresignedUrlDocument as GET_PRESIGNED_URL } from "../graphql/operations/getPresignedUrl.generated.js";
+import { MediaType } from "../graphql/schema.generated.js";
+import { gqlRequest } from "../graphql.js";
 import { fetch } from "./http.js";
-
-interface GetPresignedUrlResponse {
-  uploadMedia: {
-    uploadUrl: string;
-    objectUrl: string;
-  };
-}
 
 /**
  *
@@ -20,31 +15,16 @@ interface GetPresignedUrlResponse {
 export const uploadAvatar = async (objectId: string, iconPath: string) => {
   const {
     uploadMedia: { uploadUrl, objectUrl },
-  } = await gqlRequest<GetPresignedUrlResponse>({
-    document: gql`
-      query getPresignedUrl(
-        $objectId: ID!
-        $fileName: String!
-        $mediaType: MediaType!
-      ) {
-        uploadMedia(
-          objectId: $objectId
-          fileName: $fileName
-          mediaType: $mediaType
-        ) {
-          uploadUrl
-          objectUrl
-          error
-        }
-      }
-    `,
+  } = await gqlRequest({
+    document: GET_PRESIGNED_URL,
     variables: {
       objectId,
       fileName: basename(iconPath),
-      mediaType: "AVATAR",
+      mediaType: MediaType.Avatar,
     },
   });
 
+  if (!uploadUrl || !objectUrl) throw new Error("Unable to create avatar upload URL");
   await fetch(uploadUrl, {
     method: "PUT",
     body: await fs.readFile(iconPath),

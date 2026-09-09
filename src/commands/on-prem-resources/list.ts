@@ -1,6 +1,10 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import {
+  ListOnPremiseResourcesDocument as LIST_ON_PREMISE_RESOURCES,
+  type ListOnPremiseResourcesQuery,
+} from "../../graphql/onPremResources/listOnPremiseResources.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import { ux } from "../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -18,34 +22,15 @@ export default class ListCommand extends PrismaticBaseCommand {
     const { flags } = await this.parse(ListCommand);
     const { customer } = flags;
 
-    let onPremiseResources: any[] = [];
+    let onPremiseResources: OnPremiseResourceNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         onPremiseResources: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listOnPremiseResources($after: String, $customer: ID) {
-            onPremiseResources(after: $after, customer: $customer) {
-              nodes {
-                id
-                name
-                status
-                customer {
-                  id
-                  name
-                  externalId
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
+      }: ListOnPremiseResourcesQuery = await gqlRequest({
+        document: LIST_ON_PREMISE_RESOURCES,
         variables: {
           after: cursor,
           customer,
@@ -65,7 +50,7 @@ export default class ListCommand extends PrismaticBaseCommand {
         },
         name: {},
         customerId: { header: "Customer ID", extended: true, get: (row) => row.customer?.id ?? "" },
-        status: { get: (row) => row.status ?? "" },
+        status: { get: (row) => row.status },
         customer: { get: (row) => row.customer?.name ?? "" },
         customerExternalId: {
           header: "Customer External ID",
@@ -77,3 +62,5 @@ export default class ListCommand extends PrismaticBaseCommand {
     );
   }
 }
+
+type OnPremiseResourceNode = ListOnPremiseResourcesQuery["onPremiseResources"]["nodes"][number];

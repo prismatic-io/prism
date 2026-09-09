@@ -1,0 +1,12 @@
+query listAlertGroups($after: String, $first: Int) {
+  alertGroups(after: $after, first: $first) {
+    nodes {
+      id
+      name
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

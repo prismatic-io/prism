@@ -1,0 +1,18 @@
+mutation createAlertWebhook(
+  $name: String!
+  $url: String!
+  $headers: String
+  $payloadTemplate: String!
+) {
+  createAlertWebhook(
+    input: { name: $name, url: $url, headers: $headers, payloadTemplate: $payloadTemplate }
+  ) {
+    alertWebhook {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}
