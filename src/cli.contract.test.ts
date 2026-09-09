@@ -76,6 +76,7 @@ const requiredInput = (fields: Fields): Record<string, unknown> =>
 // These legacy flow flags already required tailing at runtime; native schemas
 // now express that requirement before handler execution.
 const satisfyCommandConstraints = (id: string, values: Record<string, unknown>) => {
+  if (id === "customers:users:create") return { ...values, email: "member@example.com" };
   if (
     id === "components:dev:run" &&
     values.integrationId === undefined &&
@@ -180,7 +181,10 @@ describe("legacy command contract", () => {
         if (old?.default !== undefined) expect(field.default).toEqual(old.default);
         if (!name.startsWith("no-")) expect(field.description).toBe(old?.description);
         expect(field.multiple ?? false).toBe(old?.multiple ?? false);
-        expect(field.options).toEqual(old?.options);
+        if (id === "customers:users:update" && ["dark-mode", "dark-mode-os-sync"].includes(name)) {
+          // These values were already restricted by the handler; the native input schema now advertises them.
+          expect(field.options).toEqual(["true", "false"]);
+        } else expect(field.options).toEqual(old?.options);
         expect(field.required ?? false).toBe(old?.required ?? false);
       }
     });
@@ -363,6 +367,7 @@ describe("command separators and agent mode", () => {
       "alerts:groups:list",
       "alerts:monitors:list",
       "alerts:webhooks:list",
+      "customers:users:list",
       "organization:users:list",
       "instances:config-vars:list",
       "instances:flow-configs:list",

@@ -1,16 +1,20 @@
+import { customerFailure } from "./errors.js";
+import { nonBlank } from "./schemas.js";
 import { CreateCustomerDocument as CREATE_CUSTOMER } from "../../graphql/operations/createCustomer.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
+
 export default Cli.command({
-  output: z.object({ customerId: z.string() }).extend(warningsOutput),
+  output: z.object({ customerId: nonBlank }).extend(warningsOutput),
   description: "Create a new Customer",
   options: z.object({
-    name: z.string().describe("short name of the new customer"),
+    name: nonBlank.describe("short name of the new customer"),
     description: z.string().optional().describe("longer description of the customer"),
     externalId: z.string().optional().describe("external ID of the customer from your system"),
-    label: z.array(z.string()).optional().describe("a label to apply to the customer"),
+    label: z.array(nonBlank).optional().describe("a label to apply to the customer"),
   }),
+  alias: { label: "l", externalId: "e", description: "d", name: "n" },
   examples: [
     {
       description: "Apply multiple labels to a customer",
@@ -26,24 +30,59 @@ export default Cli.command({
       options: { name, description, externalId, label },
     } = context;
 
-    const result = await gqlRequest({
-      document: CREATE_CUSTOMER,
-      variables: {
-        name,
-        description,
-        externalId,
-        labels: label,
-      },
-    });
-
-    const resourceId = result.createCustomer?.customer?.id;
-    if (resourceId == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Customer was not created",
-        exitCode: 2,
+    try {
+      const result = await gqlRequest({
+        document: CREATE_CUSTOMER,
+        variables: {
+          name,
+          description,
+          externalId,
+          labels: label,
+        },
       });
-    return { customerId: resourceId };
+
+      const customerId = result.createCustomer?.customer?.id;
+      if (!customerId)
+        return context.error({
+          code: "CUSTOMER_CREATE_FAILED",
+          message: "Customer was not created",
+          exitCode: 1,
+          retryable: false,
+          cta: {
+            commands: [
+              {
+                command: "customers list",
+                description: "Inspect customers before retrying this change",
+              },
+            ],
+          },
+        });
+      return context.ok(
+        { customerId },
+        {
+          cta: {
+            commands: [
+              {
+                command: "customers users list",
+                description: "Inspect this customer's users",
+                args: { customer: customerId },
+              },
+            ],
+          },
+        },
+      );
+    } catch (error) {
+      return context.error({
+        ...customerFailure(error, "CUSTOMER_CREATE_FAILED"),
+        cta: {
+          commands: [
+            {
+              command: "customers list",
+              description: "Inspect customers before retrying this change",
+            },
+          ],
+        },
+      });
+    }
   },
-  alias: { label: "l", externalId: "e", description: "d", name: "n" },
 });
