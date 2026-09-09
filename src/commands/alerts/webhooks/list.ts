@@ -1,35 +1,49 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import {
-  ListAlertWebhooksDocument as LIST_ALERT_WEBHOOKS,
-  type ListAlertWebhooksQuery,
-} from "../../../graphql/alerts/listAlertWebhooks.generated.js";
+import type { ListAlertWebhooksQuery } from "../../../graphql/alerts/listAlertWebhooks.generated.js";
+import { ListAlertWebhooksDocument as LIST_ALERT_WEBHOOKS } from "../../../graphql/alerts/listAlertWebhooks.generated.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import {
+  paginationFlags,
+  tableOutputSchema,
+  tableFlags,
+  printTable,
+} from "../../../utils/table.js";
+import { z, Cli } from "incur";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Alert Webhooks";
-  static flags = { ...ux.table.flags() };
+type AlertWebhookNode = ListAlertWebhooksQuery["alertWebhooks"]["nodes"][number];
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+const isAlertWebhookNode = (node: AlertWebhookNode | null): node is AlertWebhookNode =>
+  node !== null;
+
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["id", "name", "url", "headers", "payloadTemplate"], true),
+  description: "List Alert Webhooks",
+  options: z.object({ ...tableFlags(), ...paginationFlags() }),
+  async run(context) {
+    const { options: flags } = context;
 
     let alertWebhooks: AlertWebhookNode[] = [];
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let finalPageInfo: { hasNextPage: boolean; endCursor?: string | null } = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
       const {
         alertWebhooks: { nodes, pageInfo },
       }: ListAlertWebhooksQuery = await gqlRequest({
         document: LIST_ALERT_WEBHOOKS,
-        variables: { after: cursor },
+        variables: { after: cursor, first: flags.first },
       });
-      alertWebhooks = [...alertWebhooks, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      alertWebhooks = [...alertWebhooks, ...nodes.filter(isAlertWebhookNode)];
+      cursor = pageInfo.endCursor ?? null;
+      finalPageInfo = pageInfo;
+      hasNextPage = pageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = printTable(
       alertWebhooks,
       {
         id: {
@@ -50,7 +64,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
-
-type AlertWebhookNode = ListAlertWebhooksQuery["alertWebhooks"]["nodes"][number];
+    return { ...result, pageInfo: finalPageInfo };
+  },
+});

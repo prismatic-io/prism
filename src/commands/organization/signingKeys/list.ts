@@ -1,26 +1,21 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { tableOutputSchema, tableFlags, printTable } from "../../../utils/table.js";
 import { ListOrganizationSigningKeysDocument as LIST_ORGANIZATION_SIGNING_KEYS } from "../../../graphql/operations/listOrganizationSigningKeys.generated.js";
-import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
-
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List embedded signing keys for embedded marketplace";
-  static flags = { ...ux.table.flags() };
-
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+import { gqlRequest, requireResource } from "../../../graphql.js";
+import { z, Cli } from "incur";
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["id", "privateKeyPreview", "publicKey", "issuedAt", "imported"]),
+  description: "List embedded signing keys for embedded marketplace",
+  options: z.object({ ...tableFlags() }),
+  async run(context) {
+    const { options: flags } = context;
 
     const result = await gqlRequest({
       document: LIST_ORGANIZATION_SIGNING_KEYS,
     });
 
-    const signingKeys = result.organization?.signingKeys.nodes;
-    if (signingKeys == null) {
-      this.error("Organization not found");
-    }
-
-    ux.table(
-      signingKeys,
+    return printTable(
+      requireResource(result.organization, "Organization").signingKeys.nodes,
       {
         id: { minWidth: 8, extended: true },
         privateKeyPreview: { header: "Private Key Preview" },
@@ -30,5 +25,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

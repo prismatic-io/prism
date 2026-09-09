@@ -1,21 +1,18 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { openIntegration } from "../../utils/integration/open.js";
+import { z, Cli } from "incur";
 
-export default class OpenCommand extends PrismaticBaseCommand {
-  static description = "Open the Designer for the specified Integration";
-  static args = {
-    integrationId: Args.string({
-      required: true,
-      description: "ID of the integration to open",
-    }),
-  };
-
-  async run() {
+export default Cli.command({
+  output: z.object({ integrationId: z.string(), opened: z.literal(true) }),
+  description: "Open the Designer for the specified Integration",
+  args: z.object({
+    integrationId: z.string().describe("ID of the integration to open"),
+  }),
+  async run(context) {
     const {
       args: { integrationId },
-    } = await this.parse(OpenCommand);
+    } = context;
 
     await openIntegration(integrationId);
-  }
-}
+    return { integrationId, opened: true as const };
+  },
+});

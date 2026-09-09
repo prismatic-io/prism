@@ -2,7 +2,7 @@ import type {
   MarketplaceTranslationsQuery,
   IntegrationTranslationFragment,
 } from "../../graphql/translations/marketplaceTranslations.generated.js";
-import type { Branch, Flow, IntegrationSchema, Step } from "../../types.js";
+import type { Step, Flow, IntegrationSchema, Branch } from "../../types.js";
 
 import { loadYaml } from "../serialize.js";
 
@@ -75,7 +75,7 @@ const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
           }
         });
       } catch (error) {
-        console.error(`JSON Parsing Error: ${error}`);
+        writeCommandOutput(`JSON Parsing Error: ${error}`, "stderr");
       }
     }
 
@@ -139,3 +139,4 @@ export const processIntegrationsForTranslations = (
   }
   return Object.fromEntries(processedProperties.entries());
 };
+import { writeCommandOutput } from "../../command.js";

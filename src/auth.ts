@@ -3,8 +3,9 @@ import crypto from "crypto";
 import http from "http";
 import inquirer from "inquirer";
 import { jwtDecode } from "jwt-decode";
-import type { AddressInfo } from "net";
 import open from "open";
+import { z } from "zod";
+import { commandSignal, writeCommandOutput } from "./command.js";
 import { requireCommandContext } from "./command-context.js";
 import {
   type AuthContext,
@@ -20,6 +21,25 @@ import { ListUserTenantsDocument as LIST_USER_TENANTS } from "./graphql/operatio
 import { gqlRequest } from "./graphql.js";
 import { fetch } from "./utils/http.js";
 import { whoAmI } from "./utils/user/query.js";
+
+const tokenResponseSchema = z.object({
+  access_token: z.string(),
+  expires_in: z.number(),
+  refresh_token: z.string().optional(),
+  scope: z.string().default(""),
+  token_type: z.string(),
+});
+
+const tokenErrorResponseSchema = z.object({
+  error: z.string(),
+  error_description: z.string().optional(),
+});
+
+const authConfigSchema = z.object({
+  domain: z.string(),
+  clientId: z.string(),
+  audience: z.string(),
+});
 
 const urlEncodeBase64 = (value: Buffer | string): string => {
   const buffer = typeof value === "string" ? Buffer.from(value) : value;
@@ -136,41 +156,56 @@ export class Authenticate {
    * Start the PKCE authentication flow
    * @returns Promise containing authentication result
    */
-  async login(props?: { url?: boolean }): Promise<Auth> {
+  async login(props?: {
+    url?: boolean;
+    signal?: AbortSignal;
+    onChallenge?: (url: string) => void;
+  }): Promise<Auth> {
     const verifier = codeVerifier();
     const challenge = codeChallenge(verifier);
     const state = codeState();
 
     const redirectUri = await this.createRedirectServer();
 
-    if (props?.url) {
-      const challengeUrl = await this.getChallengeUrl(challenge, state, redirectUri);
-      console.log(challengeUrl);
-    } else {
-      await this.openChallengeBrowser(challenge, state, redirectUri);
-    }
-
     return new Promise<Auth>((resolve, reject) => {
-      // Close the redirect server if we don't get a response
-      const timeoutHandle = setTimeout(this.redirectServer.close, 3 * 60 * 1000);
-
-      this.redirectServer.on("request", (request, response) => {
+      const signal = props?.signal ?? commandSignal();
+      const cleanup = () => {
         clearTimeout(timeoutHandle);
-
-        response.writeHead(301, {
-          Location: this.options.successRedirectUri,
-        });
-        response.end();
-
+        signal?.removeEventListener("abort", aborted);
         this.redirectServer.close();
+      };
+      const fail = (error: unknown) => {
+        cleanup();
+        reject(error);
+      };
+      const aborted = () => fail(signal?.reason ?? new Error("Authentication cancelled."));
+      const timeoutHandle = setTimeout(
+        () => fail(new Error("Authentication timed out after 3 minutes.")),
+        3 * 60 * 1000,
+      );
+      signal?.addEventListener("abort", aborted, { once: true });
+      if (signal?.aborted) {
+        aborted();
+        return;
+      }
 
+      this.redirectServer.once("request", (request, response) => {
+        response.writeHead(301, { Location: this.options.successRedirectUri });
+        response.end();
+        cleanup();
         validateAuthorizationToken(request.url || "", state)
-          .then(async (authorizationToken) =>
+          .then((authorizationToken) =>
             this.retrieveAuthenticationToken(verifier, authorizationToken, redirectUri),
           )
-          .then(resolve)
-          .catch(reject);
+          .then(resolve, reject);
       });
+
+      const presentChallenge = props?.url
+        ? this.getChallengeUrl(challenge, state, redirectUri).then((url) =>
+            props?.onChallenge ? props.onChallenge(url) : writeCommandOutput(url),
+          )
+        : this.openChallengeBrowser(challenge, state, redirectUri);
+      void presentChallenge.catch(fail);
     });
   }
 
@@ -190,15 +225,18 @@ export class Authenticate {
       },
     });
 
-    const response = (await fetchResponse.json()) as any;
+    const responseBody = await fetchResponse.json();
+    const errorResponse = tokenErrorResponseSchema.safeParse(responseBody);
 
-    if (response.error === "access_denied") {
+    if (errorResponse.success && errorResponse.data.error === "access_denied") {
       const description =
-        response.error_description || "You do not have access to the specified tenant.";
+        errorResponse.data.error_description || "You do not have access to the specified tenant.";
       throw new Error(
         `Access denied${tenantId ? ` for tenant ID '${tenantId}'` : ""}. ${description}`,
       );
     }
+
+    const response = tokenResponseSchema.parse(responseBody);
 
     return {
       accessToken: response.access_token,
@@ -241,7 +279,11 @@ export class Authenticate {
       this.retry(5, this.attemptServerCreate)
         .then((server) => {
           this.redirectServer = server;
-          const info = server.address() as AddressInfo;
+          const info = server.address();
+          if (info === null || typeof info === "string") {
+            reject(new Error("Redirect server did not provide a TCP address."));
+            return;
+          }
           const redirectUrl = new URL("http://localhost");
           redirectUrl.port = String(info.port);
           resolve(redirectUrl.toString());
@@ -270,7 +312,9 @@ export class Authenticate {
         "Content-Type": "application/x-www-form-urlencoded",
       },
     });
-    const response = (await fetchResponse.json()) as any;
+    const response = tokenResponseSchema
+      .extend({ refresh_token: z.string() })
+      .parse(await fetchResponse.json());
     return {
       accessToken: response.access_token,
       expiresIn: response.expires_in,
@@ -312,7 +356,7 @@ export class Authenticate {
 const getAuthOptions = async (prismaticUrl?: string) => {
   const resolvedUrl = prismaticUrl ?? (await getPrismaticUrl());
   const fetchResponse = await fetch(new URL("/auth/meta", resolvedUrl).toString());
-  const authConfig = (await fetchResponse.json()) as any;
+  const authConfig = authConfigSchema.parse(await fetchResponse.json());
 
   const { domain, clientId, audience } = authConfig;
   return {
@@ -354,7 +398,7 @@ export const selectTenant = async (
 
   const activeTenants = tenants.filter((t) => !t.systemSuspended);
   if (activeTenants.length === 0) {
-    console.log(
+    writeCommandOutput(
       chalk.red(
         "You have no active tenants on this stack. Please contact Prismatic support for assistance.",
       ),
@@ -396,13 +440,23 @@ export const selectTenant = async (
   }
 };
 
-export const login = async (props?: { url: boolean }) => {
+export const login = async (props?: {
+  signal?: AbortSignal;
+  onChallenge?: (url: string) => void;
+  nonInteractive?: boolean;
+  tenantId?: string;
+  url: boolean;
+}) => {
   const target = await getProfileAuthContext();
   const { url: prismaticUrl } = target;
   const authOptions = await getAuthOptions(prismaticUrl);
   const auth = new Authenticate(authOptions);
 
-  const initialAuth = await auth.login({ url: props?.url });
+  const initialAuth = await auth.login({
+    url: props?.url,
+    signal: props?.signal,
+    onChallenge: props?.onChallenge,
+  });
   await saveProfileCredentials(initialAuth, { replace: false });
 
   const tenants = await fetchUserTenants();
@@ -417,13 +471,27 @@ export const login = async (props?: { url: boolean }) => {
   }
 
   const activeTenants = tenants.filter((t) => !t.systemSuspended);
+  const requestedTenant = props?.tenantId
+    ? activeTenants.find((tenant) => tenant.tenantId === props.tenantId)
+    : undefined;
+  if (props?.tenantId && !requestedTenant) {
+    throw new Error(`Tenant '${props.tenantId}' is not available to this profile.`);
+  }
   if (!initialTenantSuspended && activeTenants.length <= 1) {
     return;
   }
-
-  const selectedTenantId = await selectTenant(tenants, {
-    currentTenantId: initialTenantId,
-  });
+  if (props?.nonInteractive && !requestedTenant) {
+    throw new Error(
+      `Multiple tenants are available. Re-run with --tenant-id (${activeTenants
+        .map((tenant) => tenant.tenantId)
+        .join(", ")}).`,
+    );
+  }
+  const selectedTenantId =
+    requestedTenant?.tenantId ??
+    (await selectTenant(tenants, {
+      currentTenantId: initialTenantId,
+    }));
 
   if (selectedTenantId) {
     const tenantAuth = await auth.refresh(initialAuth.refreshToken, selectedTenantId);

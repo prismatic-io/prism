@@ -3,9 +3,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createCommandContext, runWithCommandContext } from "./command-context.js";
-import { type Profile, writeProfile } from "./config.js";
+import { type Profile, readConfigFile, writeProfile } from "./config.js";
 import { getAuthContext, getPrismaticUrl } from "./context.js";
 import { DEFAULT_PRISMATIC_URL } from "./env.js";
+import { runWithEnvironment } from "./runtime.js";
 
 vi.unmock("./context.js");
 
@@ -44,6 +45,26 @@ describe("profile context", () => {
   afterEach(async () => {
     vi.unstubAllEnvs();
     await rm(configPath, { force: true });
+  });
+
+  it("isolates concurrent invocation selection while saving to the same file", async () => {
+    const environment = { ...process.env };
+    const selections = await Promise.all(
+      Array.from({ length: 12 }, (_, index) =>
+        runWithEnvironment({ ...environment, PRISM_PROFILE: `profile-${index}` }, async () => {
+          await writeProfile(`profile-${index}`, makeProfile({ accessToken: `token-${index}` }));
+          return getAuthContext();
+        }),
+      ),
+    );
+    selections.forEach((selection, index) => {
+      expect(selection).toMatchObject({
+        source: "profile",
+        profileName: `profile-${index}`,
+        accessToken: `token-${index}`,
+      });
+    });
+    expect(Object.keys((await readConfigFile())?.profiles ?? {})).toHaveLength(12);
   });
 
   it("uses the default URL without a profile or environment override", async () => {

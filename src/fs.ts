@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { assertCommandStdinAvailable } from "./command.js";
 
 export const exists = async (path: string): Promise<boolean> => {
   return fs.access(path).then(
@@ -9,6 +10,7 @@ export const exists = async (path: string): Promise<boolean> => {
 };
 
 export const readStdin = async (): Promise<string> => {
+  assertCommandStdinAvailable();
   return new Promise((resolve, reject) => {
     process.stdin
       .on("readable", () => {

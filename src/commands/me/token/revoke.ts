@@ -1,39 +1,48 @@
-import { Flags } from "@oclif/core";
+import { confirm as confirmPrompt } from "../../../utils/prompts.js";
+import { z, Cli, Errors } from "incur";
 import { revokeRefreshToken } from "../../../auth.js";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { ux } from "../../../utils/ux.js";
+import { writeCommandStatus, writeCommandOutput } from "../../../command.js";
+import { warningsOutput } from "../../../output.js";
 
-export default class RevokeTokenCommand extends PrismaticBaseCommand {
-  static description = "Revoke all refresh tokens for your user";
-
-  static flags = {
-    confirm: Flags.boolean({
-      allowNo: true,
-      default: true,
-      description: "Prompt for confirmation before revoking tokens. Use --no-confirm to skip.",
-    }),
-  };
-
-  async run() {
+export default Cli.command({
+  output: z.object({
+    revoked: z.literal(true),
+    authentication: z.enum(["environment", "profile"]),
+    ...warningsOutput,
+  }),
+  description: "Revoke all refresh tokens for your user",
+  options: z.object({
+    confirm: z
+      .boolean()
+      .default(true)
+      .describe("Prompt for confirmation before revoking tokens. Use --no-confirm to skip."),
+  }),
+  async run(context) {
     const {
-      flags: { confirm },
-    } = await this.parse(RevokeTokenCommand);
+      options: { confirm },
+    } = context;
 
     if (confirm) {
-      const shouldContinue = await ux.confirm(
+      const shouldContinue = await confirmPrompt(
         "This will revoke all refresh tokens for the current user. Continue? (yes/no)",
       );
       if (!shouldContinue) {
-        this.error("Operation canceled", { exit: 1 });
+        throw new Errors.IncurError({
+          code: "COMMAND_FAILED",
+          message: "Operation canceled",
+          exitCode: 1,
+        });
       }
     }
 
     const source = await revokeRefreshToken();
-    this.log("All refresh tokens for your user have been revoked.");
+    writeCommandStatus("All refresh tokens for your user have been revoked.");
     if (source === "environment") {
-      this.warn(
+      writeCommandOutput(
         "Remove PRISM_ACCESS_TOKEN and PRISM_REFRESH_TOKEN from your environment before running more commands.",
+        "stderr",
       );
     }
-  }
-}
+    return { revoked: true as const, authentication: source };
+  },
+});

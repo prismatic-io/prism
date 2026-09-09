@@ -6,6 +6,8 @@ import { exists } from "../../fs.js";
 import { findPackageRoot, getPackageEntrypointDirectory } from "../import.js";
 import { TOOLCHAIN_CONFIG_OUTPUTS } from "../toolchain/index.js";
 import { createZip } from "../zip.js";
+import { Errors } from "incur";
+
 const require = createRequire(import.meta.url);
 
 /** Type defining leftover legacy backwards compat keys. */
@@ -34,10 +36,11 @@ export const loadEntrypoint = async (): Promise<ComponentDefinition> => {
   const directory = await getPackageEntrypointDirectory("component");
   const entrypointPath = resolve(directory, "index.js");
   if (!(await exists(entrypointPath)))
-    throw Object.assign(
-      new Error("Failed to find 'index.js' entrypoint file. Is the current path a component?"),
-      { exitCode: 1 },
-    );
+    throw new Errors.IncurError({
+      code: "COMMAND_FAILED",
+      message: "Failed to find 'index.js' entrypoint file. Is the current path a component?",
+      exitCode: 1,
+    });
   const { default: definition }: ComponentEntrypoint = require(entrypointPath);
   return definition;
 };
@@ -94,22 +97,26 @@ export const validateDefinition = async (
   } = definition;
   // Check for mistaken invocations, though an invoke from an actual CNI build context is valid.
   if (codeNativeIntegrationYAML && !options.forCodeNativeIntegration) {
-    throw Object.assign(
-      new Error(
+    throw new Errors.IncurError({
+      code: "COMMAND_FAILED",
+      message:
         "You are running a component command on what appears to be a Code Native Integration. Please check the current path.",
-      ),
-      { exitCode: 1 },
-    );
+      exitCode: 1,
+    });
   }
   if (!label || !description) {
-    throw Object.assign(new Error("Missing required values `label` or `description`. Exiting."), {
+    throw new Errors.IncurError({
+      code: "COMMAND_FAILED",
+      message: "Missing required values `label` or `description`. Exiting.",
       exitCode: 1,
     });
   }
 
   const componentIconValid = await validateIcon(iconPath);
   if (!componentIconValid) {
-    throw Object.assign(new Error("Component icon does not exist or is not a png. Exiting."), {
+    throw new Errors.IncurError({
+      code: "COMMAND_FAILED",
+      message: "Component icon does not exist or is not a png. Exiting.",
       exitCode: 1,
     });
   }
@@ -121,10 +128,11 @@ export const validateDefinition = async (
     ]),
   );
   if (connectionIconsValid.some((v) => !v)) {
-    throw Object.assign(
-      new Error("One or more connection icons do not exist or are not a png. Exiting."),
-      { exitCode: 1 },
-    );
+    throw new Errors.IncurError({
+      code: "COMMAND_FAILED",
+      message: "One or more connection icons do not exist or are not a png. Exiting.",
+      exitCode: 1,
+    });
   }
 };
 

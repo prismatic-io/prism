@@ -2,6 +2,7 @@ import { graphql, HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
+import { getAuthenticatedContext } from "../../../auth.js";
 import type { GetExecutionLogsQuery } from "../../../graphql/executions/getExecutionLogs.generated.js";
 import type { IsCniExecutionCompleteQuery } from "../../../graphql/executions/isCniExecutionComplete.generated.js";
 import type { GetIntegrationFlowsQuery } from "../../../graphql/integrations/getIntegrationFlows.generated.js";
@@ -11,7 +12,10 @@ import {
   InstanceConfigState,
   LogSeverityLevel,
 } from "../../../graphql/schema.generated.js";
-import TestFlowCommand, { buildFlagString } from "./test.js";
+import { runCommand } from "../../../test-command.js";
+import TestFlowCommand, { buildFlagString, fetchStepResultBatch } from "./test.js";
+
+vi.mock("../../../utils/polling.js", () => ({ getAdaptivePollIntervalMs: () => 1 }));
 
 const api = graphql.link(`${TEST_PRISMATIC_URL}/api`);
 
@@ -88,8 +92,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("oclif defaults and Zod validation integration", () => {
-  it("applies oclif default for payload-content-type when flag is omitted", async () => {
+describe("command defaults and Zod validation integration", () => {
+  it("applies the default payload-content-type when the flag is omitted", async () => {
     const testFlowUrl = "https://hooks.example.com/trigger/test-flow";
     let requestReceived = false;
 
@@ -104,12 +108,47 @@ describe("oclif defaults and Zod validation integration", () => {
     );
 
     // Run command WITHOUT --payload-content-type flag
-    // If oclif defaults aren't applied before Zod validation, this would throw
-    await TestFlowCommand.run(["--flow-url", testFlowUrl]);
+    // The handler applies the default after validation so explicit values remain distinguishable.
+    await runCommand(TestFlowCommand, ["--flow-url", testFlowUrl]);
 
     // Verify the command executed past Zod validation and made the HTTP request
     expect(requestReceived).toBe(true);
   });
+});
+
+it("uses the authenticated endpoint and token together for a configuration URL", async () => {
+  server.use(
+    api.query("GetIntegrationSystemInstance", () =>
+      HttpResponse.json(
+        buildGetIntegrationSystemInstanceResponse(
+          true,
+          InstanceConfigState.NeedsInstanceConfiguration,
+        ),
+      ),
+    ),
+  );
+  vi.mocked(getAuthenticatedContext)
+    .mockResolvedValueOnce({
+      source: "environment",
+      url: TEST_PRISMATIC_URL,
+      accessToken: "query-token",
+    })
+    .mockResolvedValueOnce({
+      source: "environment",
+      url: "https://bound.example.com",
+      accessToken: "bound-token",
+    });
+  const events = await runCommand(TestFlowCommand, ["--integration-id", "integration-123"]);
+  expect(events).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        type: "configuration-required",
+        url: expect.stringMatching(
+          /^https:\/\/bound\.example\.com\/configure-instance\/system-instance-123\/\?.*jwt=bound-token/,
+        ),
+      }),
+    ]),
+  );
 });
 
 describe("buildFlagString", () => {
@@ -226,39 +265,138 @@ describe("--cni-auto-end flag on non-code-native integrations", () => {
 
   it("should warn when --cni-auto-end is used with a non-code-native integration", async () => {
     setupMocks(false);
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    await TestFlowCommand.run([
+    const result = await runCommand(TestFlowCommand, [
       "--integration-id",
       integrationId,
       "--flow-id",
       flowId,
       "--tail-logs",
       "--cni-auto-end",
+      "--timeout",
+      "1",
     ]);
 
-    expect(warnSpy).toHaveBeenCalledWith(
-      "The given integration is not code-native but the --cni-auto-end flag was configured.",
-      "\nThis process will continue but ignore the --cni-auto-end flag.",
+    expect(result).toEqual(
+      expect.arrayContaining([
+        {
+          type: "warning",
+          message: "The integration is not code-native; --cni-auto-end is ignored.",
+        },
+        expect.objectContaining({ type: "completed", status: "timed-out" }),
+      ]),
     );
   });
 
   it("should not warn when --cni-auto-end is used with a code-native integration", async () => {
     setupMocks(true);
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-
-    await TestFlowCommand.run([
+    const result = await runCommand(TestFlowCommand, [
       "--integration-id",
       integrationId,
       "--flow-id",
       flowId,
       "--tail-logs",
       "--cni-auto-end",
+      "--timeout",
+      "1",
     ]);
 
-    expect(warnSpy).not.toHaveBeenCalledWith(
-      "The given integration is not code-native but the --cni-auto-end flag was configured.",
-      "\nThis process will continue but ignore the --cni-auto-end flag.",
+    expect(result).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message: "The integration is not code-native; --cni-auto-end is ignored.",
+        }),
+      ]),
     );
   });
+});
+
+describe("native agent tail output", () => {
+  it.each([false, true])("retains typed log records with legacy jsonl=%s", async (jsonl) => {
+    const log = {
+      timestamp: "2026-09-08T00:00:00Z",
+      severity: LogSeverityLevel.Info,
+      message: "hello",
+    };
+    const url = "https://hooks.example.com/native-tail";
+    server.use(
+      http.post(url, () => HttpResponse.json({ executionId: "execution-id" })),
+      api.query("GetExecutionLogs", () => HttpResponse.json(buildGetExecutionLogsResponse([log]))),
+      api.query("IsCniExecutionComplete", () =>
+        HttpResponse.json(buildIsCniExecutionCompleteResponse(2)),
+      ),
+    );
+    const result = await runCommand(TestFlowCommand, [
+      "--agent",
+      "--yes",
+      "--flow-url",
+      url,
+      "--tail-logs",
+      "--cni-auto-end",
+      ...(jsonl ? ["--jsonl"] : []),
+    ]);
+    expect(result).toEqual(
+      expect.arrayContaining([{ type: "log", executionId: "execution-id", data: log }]),
+    );
+    for (const event of result as unknown[])
+      expect(TestFlowCommand.output.safeParse(event).success).toBe(true);
+  });
+});
+
+it("retains nested typed step results when reading a native poll batch", async () => {
+  const payload = { count: 2, ok: true, values: [1, 2] };
+  const { encode } = await import("@msgpack/msgpack");
+  server.use(
+    api.query("GetExecutionStepResults", () =>
+      HttpResponse.json({
+        data: {
+          executionResult: {
+            stepResults: {
+              edges: [
+                {
+                  cursor: "next",
+                  node: {
+                    stepName: "Step",
+                    endedAt: "2026-09-08T00:00:00Z",
+                    resultsUrl: "https://storage.example.com/step",
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }),
+    ),
+    http.get("https://storage.example.com/step", () => new HttpResponse(encode(payload))),
+  );
+  const result = await fetchStepResultBatch("execution-id");
+  expect(result).toEqual({
+    cursor: "next",
+    warnings: [],
+    stepResults: [{ stepName: "Step", endedAt: "2026-09-08T00:00:00Z", result: payload }],
+  });
+});
+
+it("returns the named execution ID and typed trigger response in agent mode", async () => {
+  const testFlowUrl = "https://hooks.example.com/trigger/agent-flow";
+  server.use(
+    http.post(testFlowUrl, () =>
+      HttpResponse.json(
+        { count: 2, ok: true },
+        { headers: { "prismatic-executionid": "execution-id" } },
+      ),
+    ),
+  );
+  const result = await runCommand(TestFlowCommand, ["--agent", "--yes", "--flow-url", testFlowUrl]);
+  expect(result).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        type: "execution",
+        executionId: "execution-id",
+        response: { count: 2, ok: true },
+      }),
+      { type: "completed", executionId: "execution-id", status: "submitted" },
+    ]),
+  );
+  for (const event of result as unknown[])
+    expect(TestFlowCommand.output.safeParse(event).success).toBe(true);
 });
