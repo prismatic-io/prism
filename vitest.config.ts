@@ -17,6 +17,8 @@ const graphqlPlugin = (): Plugin => ({
 export default defineConfig({
   plugins: [graphqlPlugin()],
   test: {
+    // Cold oclif command initialization can exceed five seconds on Windows runners.
+    testTimeout: process.platform === "win32" ? 15_000 : 5_000,
     clearMocks: true,
     restoreMocks: true,
     unstubEnvs: true,
