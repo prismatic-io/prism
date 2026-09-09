@@ -1,10 +1,12 @@
-import { tableOutputSchema, tableFlags, printTable } from "../../../utils/table.js";
+import { customerRoleRowSchema } from "../schemas.js";
+import { customerFailure } from "../errors.js";
+import { tableFlags, printTable } from "../../../utils/table.js";
 import { ListCustomerRolesDocument as LIST_CUSTOMER_ROLES } from "../../../graphql/operations/listCustomerRoles.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import { z, Cli } from "incur";
 export default Cli.command({
   outputPolicy: "agent-only",
-  output: tableOutputSchema(["id", "name", "description"]),
+  output: z.object({ items: z.array(customerRoleRowSchema) }),
   description: "List Roles you can grant to Customer Users",
   options: z.object({
     ...tableFlags(),
@@ -12,21 +14,25 @@ export default Cli.command({
   async run(context) {
     const { options: flags } = context;
 
-    const result = await gqlRequest({
-      document: LIST_CUSTOMER_ROLES,
-    });
+    try {
+      const result = await gqlRequest({
+        document: LIST_CUSTOMER_ROLES,
+      });
 
-    return printTable(
-      result.customerRoles,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+      return printTable(
+        result.customerRoles.filter((role) => role !== null),
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          name: {},
+          description: {},
         },
-        name: {},
-        description: {},
-      },
-      { ...flags },
-    );
+        { ...flags },
+      );
+    } catch (error) {
+      return context.error(customerFailure(error, "CUSTOMER_ROLES_LIST_FAILED", true));
+    }
   },
 });
