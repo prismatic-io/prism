@@ -1,49 +1,59 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import {
   ListCustomerUsersDocument as LIST_CUSTOMER_USERS,
   type ListCustomerUsersQuery,
 } from "../../../graphql/customers/listCustomerUsers.generated.js";
 import { gqlRequest, requireResource } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import {
+  paginationFlags,
+  tableOutputSchema,
+  tableFlags,
+  printTable,
+} from "../../../utils/table.js";
+import { z, Cli } from "incur";
+type CustomerUserNode = NonNullable<ListCustomerUsersQuery["customer"]>["users"]["nodes"][number];
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Customer Users";
-  static args = {
-    customer: Args.string({
-      description: "ID of the customer",
-      required: true,
-    }),
-  };
+const isCustomerUserNode = (node: CustomerUserNode | null): node is CustomerUserNode =>
+  node !== null;
 
-  static flags = {
-    ...ux.table.flags(),
-  };
-
-  async run() {
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["id", "name", "email", "role", "externalId"], true),
+  description: "List Customer Users",
+  args: z.object({
+    customer: z.string().describe("ID of the customer"),
+  }),
+  options: z.object({
+    ...tableFlags(),
+    ...paginationFlags(),
+  }),
+  async run(context) {
     const {
       args: { customer },
-      flags,
-    } = await this.parse(ListCommand);
+      options: flags,
+    } = context;
 
     let customerUsers: CustomerUserNode[] = [];
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let finalPageInfo: { hasNextPage: boolean; endCursor?: string | null } = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
       const response: ListCustomerUsersQuery = await gqlRequest({
         document: LIST_CUSTOMER_USERS,
-        variables: { id: customer, after: cursor },
+        variables: { id: customer, after: cursor, first: flags.first },
       });
-      const {
-        users: { nodes, pageInfo },
-      } = requireResource(response.customer, "customer");
-      customerUsers = [...customerUsers, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      const resource = requireResource(response.customer, "Customer");
+      const { nodes, pageInfo } = resource.users;
+      customerUsers = [...customerUsers, ...nodes.filter(isCustomerUserNode)];
+      cursor = pageInfo.endCursor ?? null;
+      finalPageInfo = pageInfo;
+      hasNextPage = pageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = printTable(
       customerUsers,
       {
         id: {
@@ -60,7 +70,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
-
-type CustomerUserNode = NonNullable<ListCustomerUsersQuery["customer"]>["users"]["nodes"][number];
+    return { ...result, pageInfo: finalPageInfo };
+  },
+});

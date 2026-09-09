@@ -3,15 +3,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Profile } from "./config.js";
-import {
-  getAuthContext,
-  getConfigStore,
-  getPrismaticUrl,
-  selectProfile,
-  useDefaultAuthContext,
-  useProfileAuthContext,
-} from "./context.js";
+import { getAuthContext, getConfigStore, getPrismaticUrl } from "./context.js";
 import { DEFAULT_PRISMATIC_URL } from "./env.js";
+import { runWithEnvironment, runWithRuntimeState } from "./runtime.js";
 
 vi.unmock("./context.js");
 
@@ -45,14 +39,35 @@ describe("profile context", () => {
     vi.stubEnv("PRISM_PROFILE", "");
     vi.stubEnv("PRISM_ACCESS_TOKEN", "");
     vi.stubEnv("PRISM_REFRESH_TOKEN", "");
-    selectProfile(undefined);
-    useDefaultAuthContext();
   });
 
   afterEach(async () => {
-    selectProfile(undefined);
     vi.unstubAllEnvs();
     await rm(configPath, { force: true });
+  });
+
+  it("isolates concurrent invocation selection while saving to the same file", async () => {
+    const environment = { ...process.env };
+    const selections = await Promise.all(
+      Array.from({ length: 12 }, (_, index) =>
+        runWithEnvironment({ ...environment, PRISM_PROFILE: `profile-${index}` }, async () => {
+          const store = getConfigStore();
+          await store.saveProfile(
+            `profile-${index}`,
+            makeProfile({ accessToken: `token-${index}` }),
+          );
+          return getAuthContext();
+        }),
+      ),
+    );
+    selections.forEach((selection, index) => {
+      expect(selection).toMatchObject({
+        source: "profile",
+        profileName: `profile-${index}`,
+        accessToken: `token-${index}`,
+      });
+    });
+    expect(Object.keys((await getConfigStore().read())?.profiles ?? {})).toHaveLength(12);
   });
 
   it("uses the default URL without a profile or environment override", async () => {
@@ -65,9 +80,13 @@ describe("profile context", () => {
       "staging",
       makeProfile({ prismaticUrl: "https://staging.example.io" }),
     );
-    selectProfile("staging");
 
-    expect(await getPrismaticUrl()).toBe("https://staging.example.io");
+    expect(
+      await runWithRuntimeState(
+        { selectedProfile: "staging", profileOnly: false, quiet: false, printRequests: false },
+        getPrismaticUrl,
+      ),
+    ).toBe("https://staging.example.io");
   });
 
   it("rejects a URL that conflicts with stored profile credentials", async () => {
@@ -150,14 +169,17 @@ describe("profile context", () => {
         prismaticUrl: "https://staging.example.io",
       }),
     );
-    selectProfile("staging");
     vi.stubEnv("PRISM_ACCESS_TOKEN", "environment-access");
     vi.stubEnv("PRISM_REFRESH_TOKEN", "environment-refresh");
     vi.stubEnv("PRISMATIC_TENANT_ID", "environment-tenant");
     vi.stubEnv("PRISMATIC_URL", "https://environment.example.io");
-    useProfileAuthContext();
 
-    expect(await getAuthContext()).toMatchObject({
+    expect(
+      await runWithRuntimeState(
+        { selectedProfile: "staging", profileOnly: true, quiet: false, printRequests: false },
+        getAuthContext,
+      ),
+    ).toMatchObject({
       source: "profile",
       profileName: "staging",
       url: "https://staging.example.io",

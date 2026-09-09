@@ -1,21 +1,21 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { z, Cli } from "incur";
 import { DeleteComponentDocument as DELETE_COMPONENT } from "../../graphql/operations/deleteComponent.generated.js";
 import { gqlRequest } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
 
-export default class DeleteCommand extends PrismaticBaseCommand {
-  static description = "Delete a Component";
-  static args = {
-    component: Args.string({
-      required: true,
-      description: "ID of the component to delete",
-    }),
-  };
-
-  async run() {
+export default Cli.command({
+  output: z
+    .object({ componentId: z.string() })
+    .extend(warningsOutput)
+    .extend({ deleted: z.literal(true) }),
+  description: "Delete a Component",
+  args: z.object({
+    component: z.string().describe("ID of the component to delete"),
+  }),
+  async run(context) {
     const {
       args: { component },
-    } = await this.parse(DeleteCommand);
+    } = context;
 
     await gqlRequest({
       document: DELETE_COMPONENT,
@@ -23,5 +23,6 @@ export default class DeleteCommand extends PrismaticBaseCommand {
         id: component,
       },
     });
-  }
-}
+    return { componentId: component, deleted: true as const };
+  },
+});

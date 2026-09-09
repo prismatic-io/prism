@@ -1,30 +1,30 @@
-import { Flags } from "@oclif/core";
+import { getPackageEntrypointDirectory } from "../../utils/import.js";
 import crypto from "crypto";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { fs } from "../../fs.js";
+import { warningsOutput } from "../../output.js";
 import {
   createComponentPackage,
   loadEntrypoint,
   validateDefinition,
 } from "../../utils/component/index.js";
 import { getPackageSignatureFromApi } from "../../utils/component/signature.js";
-import { getPackageEntrypointDirectory } from "../../utils/import.js";
+import { z, Cli } from "incur";
 
-export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
-  static description = "Generate a Component signature";
-
-  static flags = {
-    "skip-signature-verify": Flags.boolean({
-      required: false,
-      description:
+export default Cli.command({
+  output: z.object({ signature: z.string() }).extend(warningsOutput),
+  description: "Generate a Component signature",
+  options: z.object({
+    "skip-signature-verify": z
+      .boolean()
+      .optional()
+      .describe(
         "This consistently returns a signature, regardless of whether the corresponding component has been published to the platform or not.",
-    }),
-  };
-
-  async run() {
+      ),
+  }),
+  async run(context) {
     const {
-      flags: { "skip-signature-verify": skipSignatureVerify },
-    } = await this.parse(ComponentsSignatureCommand);
+      options: { "skip-signature-verify": skipSignatureVerify },
+    } = context;
 
     const componentDirectory = await getPackageEntrypointDirectory("component");
     const componentDefinition = await loadEntrypoint(componentDirectory);
@@ -37,7 +37,7 @@ export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
       .digest("hex");
 
     if (skipSignatureVerify) {
-      return this.log(packageSignature);
+      return { signature: packageSignature };
     }
 
     const packageSignatureFromApi = await getPackageSignatureFromApi({
@@ -45,6 +45,6 @@ export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
       packageSignature,
     });
 
-    return this.log(packageSignatureFromApi ?? "");
-  }
-}
+    return { signature: packageSignatureFromApi ?? "" };
+  },
+});

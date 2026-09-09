@@ -1,41 +1,30 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { parseJsonOrUndefined } from "../../../fields.js";
 import { CreateAlertGroupDocument as CREATE_ALERT_GROUP } from "../../../graphql/operations/createAlertGroup.generated.js";
 import { gqlRequest } from "../../../graphql.js";
-
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create an Alert Group";
-
-  static examples = [
+import { warningsOutput } from "../../../output.js";
+import { z, Cli, Errors } from "incur";
+export default Cli.command({
+  output: z.object({ alertGroupId: z.string() }).extend(warningsOutput),
+  description: "Create an Alert Group",
+  examples: [
     {
       description: "Create a group for 'DevOps':",
-      command: `<%= config.bin %> <%= command.id %> --name DevOps --users "[\\"$(prism organization:users:list --columns id --filter 'Name=John Doe' --no-header)\\"]"`,
+      options: {
+        name: "DevOps",
+        users:
+          "[\\\"$(prism organization:users:list --columns id --filter 'Name=John Doe' --no-header)\\\"]",
+      },
     },
-  ];
-
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      required: true,
-      description: "name of the group to be created",
-    }),
-    users: Flags.string({
-      required: false,
-      char: "u",
-      description: "JSON-formatted list of Prismatic user IDs to alert",
-    }),
-    webhooks: Flags.string({
-      required: false,
-      char: "w",
-      description: "JSON-formatted list of Alert Webhook IDs to alert",
-    }),
-  };
-
-  async run() {
+  ],
+  options: z.object({
+    name: z.string().describe("name of the group to be created"),
+    users: z.string().optional().describe("JSON-formatted list of Prismatic user IDs to alert"),
+    webhooks: z.string().optional().describe("JSON-formatted list of Alert Webhook IDs to alert"),
+  }),
+  async run(context) {
     const {
-      flags: { name, users: userJson, webhooks: webhookJson },
-    } = await this.parse(CreateCommand);
+      options: { name, users: userJson, webhooks: webhookJson },
+    } = context;
 
     const users = parseJsonOrUndefined(userJson);
     const webhooks = parseJsonOrUndefined(webhookJson);
@@ -48,9 +37,17 @@ export default class CreateCommand extends PrismaticBaseCommand {
         webhooks,
       },
     });
+    const requiredValue1 = result.createAlertGroup?.alertGroup?.id;
+    if (requiredValue1 == null)
+      throw new Errors.IncurError({
+        code: "VALIDATION_ERROR",
+        message: "Alert group was not created",
+        exitCode: 2,
+      });
 
-    this.log(
-      result.createAlertGroup?.alertGroup?.id ?? this.error("The operation returned no resource"),
-    );
-  }
-}
+    return {
+      alertGroupId: requiredValue1,
+    };
+  },
+  alias: { webhooks: "w", users: "u", name: "n" },
+});

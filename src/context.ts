@@ -1,6 +1,7 @@
 import { getProfile, type Profile } from "./config.js";
 import { ConfigStore } from "./config-store.js";
 import { DEFAULT_PRISMATIC_URL, getEnv } from "./env.js";
+import { getRuntimeState } from "./runtime.js";
 
 type CredentialsContext = {
   url: string;
@@ -16,10 +17,6 @@ export type ProfileAuthContext = CredentialsContext & {
 };
 export type AuthContext = CredentialsContext & ({ source: "environment" } | ProfileAuthContext);
 
-let selectedProfile: string | undefined;
-export const selectProfile = (name?: string): void => {
-  selectedProfile = name;
-};
 export const getConfigStore = (): ConfigStore => {
   const env = getEnv();
   return new ConfigStore(env.PRISM_CONFIG_FILE, {
@@ -30,7 +27,11 @@ export const readProfileSelection = async (name?: string) => {
   const store = getConfigStore();
   const state = await store.read();
   const profileName =
-    name ?? selectedProfile ?? getEnv().PRISM_PROFILE ?? state?.defaultProfile ?? "default";
+    name ??
+    (getRuntimeState()?.selectedProfile || undefined) ??
+    getEnv().PRISM_PROFILE ??
+    state?.defaultProfile ??
+    "default";
   return { store, name: profileName, profile: getProfile(state, profileName) };
 };
 export const getActiveProfileName = async (): Promise<string> =>
@@ -38,25 +39,16 @@ export const getActiveProfileName = async (): Promise<string> =>
 export const readProfile = async (name?: string): Promise<Profile | null> =>
   (await readProfileSelection(name)).profile;
 
-let profileOnly = false;
-
 export const hasEnvironmentCredentials = (): boolean => {
   const env = getEnv();
   return Boolean(env.PRISM_ACCESS_TOKEN || env.PRISM_REFRESH_TOKEN);
 };
 
-export const useDefaultAuthContext = (): void => {
-  profileOnly = false;
-};
-
-export const useProfileAuthContext = (): void => {
-  profileOnly = true;
-};
-
 export const getAuthContext = async (): Promise<AuthContext> => {
   const env = getEnv();
-  if (profileOnly) return resolveProfileAuthContext();
-  if (!profileOnly && (env.PRISM_ACCESS_TOKEN || env.PRISM_REFRESH_TOKEN)) {
+  const useProfileOnly = getRuntimeState()?.profileOnly ?? false;
+  if (useProfileOnly) return resolveProfileAuthContext();
+  if (!useProfileOnly && (env.PRISM_ACCESS_TOKEN || env.PRISM_REFRESH_TOKEN)) {
     return {
       source: "environment",
       url: env.PRISMATIC_URL ?? DEFAULT_PRISMATIC_URL,

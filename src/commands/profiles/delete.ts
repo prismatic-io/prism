@@ -1,35 +1,46 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { Cli, Errors, z } from "incur";
+import { writeCommandStatus } from "../../command.js";
 import { getConfigStore } from "../../context.js";
+import { warningsOutput } from "../../output.js";
 
-export default class ProfilesDeleteCommand extends PrismaticBaseCommand {
-  static description = "Delete a profile";
-
-  static args = {
-    name: Args.string({
-      required: true,
-      description: "Profile to delete",
-    }),
-  };
-
-  async run() {
+export default Cli.command({
+  output: z.object({
+    profile: z.string(),
+    deleted: z.literal(true),
+    defaultProfile: z.string().nullable(),
+    ...warningsOutput,
+  }),
+  description: "Delete a profile",
+  args: z.object({
+    name: z.string().describe("Profile to delete"),
+  }),
+  async run(context) {
     const {
       args: { name },
-    } = await this.parse(ProfilesDeleteCommand);
+    } = context;
 
     const result = await getConfigStore().deleteProfile(name);
     if (!result.deleted) {
-      this.error(`Profile '${name}' does not exist.`, { exit: 1 });
+      throw new Errors.IncurError({
+        code: "COMMAND_FAILED",
+        message: `Profile '${name}' does not exist.`,
+        exitCode: 1,
+      });
     }
 
     if (result.isLast) {
-      this.log(`Deleted '${name}'. No profiles remain.`);
-      return;
+      writeCommandStatus(`Deleted '${name}'. No profiles remain.`);
+      return { profile: name, deleted: true as const, defaultProfile: null };
     }
 
-    this.log(`Deleted '${name}'.`);
+    writeCommandStatus(`Deleted '${name}'.`);
     if (result.defaultChanged) {
-      this.log(`Default profile is now '${result.defaultProfile}'.`);
+      writeCommandStatus(`Default profile is now '${result.defaultProfile}'.`);
     }
-  }
-}
+    return {
+      profile: name,
+      deleted: true as const,
+      defaultProfile: result.defaultProfile ?? null,
+    };
+  },
+});

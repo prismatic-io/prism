@@ -1,29 +1,26 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { DeployInstanceDocument as DEPLOY_INSTANCE } from "../../graphql/operations/deployInstance.generated.js";
 import { gqlRequest } from "../../graphql.js";
-
-export default class DeployCommand extends PrismaticBaseCommand {
-  static description = "Deploy an Instance";
-  static args = {
-    instance: Args.string({
-      required: true,
-      description: "ID of an instance",
-    }),
-  };
-  static flags = {
-    force: Flags.boolean({
-      char: "f",
-      description:
+import { warningsOutput } from "../../output.js";
+import { z, Cli, Errors } from "incur";
+export default Cli.command({
+  output: z.object({ instanceId: z.string() }).extend(warningsOutput),
+  description: "Deploy an Instance",
+  args: z.object({
+    instance: z.string().describe("ID of an instance"),
+  }),
+  options: z.object({
+    force: z
+      .boolean()
+      .optional()
+      .describe(
         "Force deployment even when there are certain conditions that would normally prevent it",
-    }),
-  };
-
-  async run() {
+      ),
+  }),
+  async run(context) {
     const {
       args: { instance },
-      flags: { force },
-    } = await this.parse(DeployCommand);
+      options: { force },
+    } = context;
 
     const result = await gqlRequest({
       document: DEPLOY_INSTANCE,
@@ -33,8 +30,27 @@ export default class DeployCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.deployInstance?.instance?.id ?? this.error("The operation returned no resource"),
+    const resourceId = result.deployInstance?.instance?.id;
+    if (resourceId == null)
+      throw new Errors.IncurError({
+        code: "VALIDATION_ERROR",
+        message: "Instance was not deployed",
+        exitCode: 2,
+      });
+    return context.ok(
+      { instanceId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "instances flow-configs list",
+              description: "Inspect this instance's flows",
+              args: { instance: resourceId },
+            },
+          ],
+        },
+      },
     );
-  }
-}
+  },
+  alias: { force: "f" },
+});

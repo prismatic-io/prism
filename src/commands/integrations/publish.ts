@@ -1,47 +1,37 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { PublishIntegrationDocument as PUBLISH_INTEGRATION } from "../../graphql/operations/publishIntegration.generated.js";
 import { gqlRequest } from "../../graphql.js";
-
-export default class PublishCommand extends PrismaticBaseCommand {
-  static description = "Publish a version of an Integration for use in Instances";
-
-  static args = {
-    integration: Args.string({
-      required: true,
-      description: "ID of an integration to publish",
-    }),
-  };
-
-  static flags = {
-    comment: Flags.string({
-      char: "c",
-      required: false,
-      description: "comment about changes in this publication",
-    }),
-    commitHash: Flags.string({
-      required: false,
-      description: "Commit hash corresponding to the integration version being published",
-    }),
-    commitUrl: Flags.string({
-      required: false,
-      description: "URL to the commit details corresponding to this integration version",
-    }),
-    repoUrl: Flags.string({
-      required: false,
-      description: "URL to the repository containing the definition for this integration",
-    }),
-    pullRequestUrl: Flags.string({
-      required: false,
-      description: "URL to the pull request that modified this integration version",
-    }),
-  };
-
-  async run() {
+import { warningsOutput } from "../../output.js";
+import { z, Cli, Errors } from "incur";
+export default Cli.command({
+  output: z.object({ integrationId: z.string() }).extend(warningsOutput),
+  description: "Publish a version of an Integration for use in Instances",
+  args: z.object({
+    integration: z.string().describe("ID of an integration to publish"),
+  }),
+  options: z.object({
+    comment: z.string().optional().describe("comment about changes in this publication"),
+    commitHash: z
+      .string()
+      .optional()
+      .describe("Commit hash corresponding to the integration version being published"),
+    commitUrl: z
+      .string()
+      .optional()
+      .describe("URL to the commit details corresponding to this integration version"),
+    repoUrl: z
+      .string()
+      .optional()
+      .describe("URL to the repository containing the definition for this integration"),
+    pullRequestUrl: z
+      .string()
+      .optional()
+      .describe("URL to the pull request that modified this integration version"),
+  }),
+  async run(context) {
     const {
       args: { integration },
-      flags: { comment, commitHash, commitUrl, repoUrl, pullRequestUrl },
-    } = await this.parse(PublishCommand);
+      options: { comment, commitHash, commitUrl, repoUrl, pullRequestUrl },
+    } = context;
 
     const didProvideAttributes =
       Boolean(commitHash) || Boolean(repoUrl) || Boolean(pullRequestUrl) || Boolean(commitUrl);
@@ -61,9 +51,27 @@ export default class PublishCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.publishIntegration?.integration?.id ??
-        this.error("The operation returned no resource"),
+    const resourceId = result.publishIntegration?.integration?.id;
+    if (resourceId == null)
+      throw new Errors.IncurError({
+        code: "VALIDATION_ERROR",
+        message: "Integration was not published",
+        exitCode: 2,
+      });
+    return context.ok(
+      { integrationId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "integrations flows list",
+              description: "Inspect this integration's flows",
+              args: { integration: resourceId },
+            },
+          ],
+        },
+      },
     );
-  }
-}
+  },
+  alias: { comment: "c" },
+});

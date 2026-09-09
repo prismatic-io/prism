@@ -1,25 +1,26 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { z, Cli } from "incur";
+import { writeCommandStatus } from "../../command.js";
 import { fs } from "../../fs.js";
 import { MarketplaceTranslationsDocument as MARKETPLACE_TRANSLATIONS } from "../../graphql/translations/marketplaceTranslations.generated.js";
 import { gqlRequest } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
 import { processIntegrationsForTranslations } from "../../utils/translations/processDataForTranslations.js";
-
-export default class TranslationsCommand extends PrismaticBaseCommand {
-  static description = "Generate Dynamic Phrases for Embedded Marketplace";
-  static flags = {
-    "output-file": Flags.string({
-      required: false,
-      char: "o",
-      description: "Output the results of the action to a specified file",
-      default: "translations_output.json",
-    }),
-  };
-
-  async run(): Promise<void> {
+export default Cli.command({
+  output: z.union([
+    z.object({ path: z.string(), phraseCount: z.number().int(), ...warningsOutput }),
+    z.object({ translations: z.record(z.string(), z.string()), ...warningsOutput }),
+  ]),
+  description: "Generate Dynamic Phrases for Embedded Marketplace",
+  options: z.object({
+    "output-file": z
+      .string()
+      .default("translations_output.json")
+      .describe("Output the results of the action to a specified file"),
+  }),
+  async run(context) {
     const {
-      flags: { "output-file": output },
-    } = await this.parse(TranslationsCommand);
+      options: { "output-file": output },
+    } = context;
 
     const result = await gqlRequest({
       document: MARKETPLACE_TRANSLATIONS,
@@ -28,10 +29,15 @@ export default class TranslationsCommand extends PrismaticBaseCommand {
     const processedIntegrations = processIntegrationsForTranslations(result);
 
     if (output) {
-      this.log(`Writing translations to ${output}`);
-      fs.writeFile(output, JSON.stringify(processedIntegrations, null, 2));
+      writeCommandStatus(`Writing translations to ${output}`);
+      await fs.writeFile(output, JSON.stringify(processedIntegrations, null, 2));
+      return {
+        path: output,
+        phraseCount: Object.keys(processedIntegrations).length,
+      };
     } else {
-      this.logJson(processedIntegrations);
+      return { translations: processedIntegrations };
     }
-  }
-}
+  },
+  alias: { "output-file": "o" },
+});

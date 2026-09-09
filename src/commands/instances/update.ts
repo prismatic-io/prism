@@ -1,47 +1,29 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { DeployInstance2Document as DEPLOY_INSTANCE2 } from "../../graphql/operations/deployInstance2.generated.js";
 import { UpdateInstanceDocument as UPDATE_INSTANCE } from "../../graphql/operations/updateInstance.generated.js";
 import { gqlRequest } from "../../graphql.js";
-
-export default class UpdateCommand extends PrismaticBaseCommand {
-  // TODO: Add more flags once optional updates are implemented
-  static description = "Update an Instance";
-  static args = {
-    instance: Args.string({
-      required: true,
-      description: "ID of an instance",
-    }),
-  };
-
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      description: "Name of the instance",
-    }),
-    description: Flags.string({
-      char: "d",
-      description: "Description for the instance",
-    }),
-    version: Flags.string({
-      char: "v",
-      description: "ID of integration version",
-    }),
-    deploy: Flags.boolean({
-      description: "Deploy the instance after updating",
-    }),
-    label: Flags.string({
-      char: "l",
-      description: "a label or set of labels to apply to the instance",
-      multiple: true,
-    }),
-  };
-
-  async run() {
+import { warningsOutput } from "../../output.js";
+import { z, Cli, Errors } from "incur";
+export default Cli.command({
+  output: z.object({ instanceId: z.string() }).extend(warningsOutput),
+  description: "Update an Instance",
+  args: z.object({
+    instance: z.string().describe("ID of an instance"),
+  }),
+  options: z.object({
+    name: z.string().optional().describe("Name of the instance"),
+    description: z.string().optional().describe("Description for the instance"),
+    version: z.string().optional().describe("ID of integration version"),
+    deploy: z.boolean().optional().describe("Deploy the instance after updating"),
+    label: z
+      .array(z.string())
+      .optional()
+      .describe("a label or set of labels to apply to the instance"),
+  }),
+  async run(context) {
     const {
       args: { instance },
-      flags: { name, description, version, deploy, label },
-    } = await this.parse(UpdateCommand);
+      options: { name, description, version, deploy, label },
+    } = context;
 
     const result = await gqlRequest({
       document: UPDATE_INSTANCE,
@@ -55,10 +37,27 @@ export default class UpdateCommand extends PrismaticBaseCommand {
     });
 
     if (!deploy) {
-      this.log(
-        result.updateInstance?.instance?.id ?? this.error("The operation returned no resource"),
+      const resourceId = result.updateInstance?.instance?.id;
+      if (resourceId == null)
+        throw new Errors.IncurError({
+          code: "VALIDATION_ERROR",
+          message: "Instance was not updated",
+          exitCode: 2,
+        });
+      return context.ok(
+        { instanceId: resourceId },
+        {
+          cta: {
+            commands: [
+              {
+                command: "instances flow-configs list",
+                description: "Inspect this instance's flows",
+                args: { instance: resourceId },
+              },
+            ],
+          },
+        },
       );
-      return;
     }
 
     const deployResult = await gqlRequest({
@@ -68,8 +67,27 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      deployResult.deployInstance?.instance?.id ?? this.error("The operation returned no resource"),
+    const resourceId = deployResult.deployInstance?.instance?.id;
+    if (resourceId == null)
+      throw new Errors.IncurError({
+        code: "VALIDATION_ERROR",
+        message: "Instance was not deployed",
+        exitCode: 2,
+      });
+    return context.ok(
+      { instanceId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "instances flow-configs list",
+              description: "Inspect this instance's flows",
+              args: { instance: resourceId },
+            },
+          ],
+        },
+      },
     );
-  }
-}
+  },
+  alias: { label: "l", version: "v", description: "d", name: "n" },
+});

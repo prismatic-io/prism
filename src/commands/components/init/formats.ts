@@ -1,54 +1,45 @@
-import { type Config, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { copy } from "fs-extra";
+import { z, Cli } from "incur";
 import { camelCase } from "lodash-es";
 import path, { extname } from "path";
+import { writeCommandStatus } from "../../../command.js";
 import { read } from "../../../generate/formats/readers/openapi/index.js";
 import { write } from "../../../generate/formats/writer/index.js";
-import { template, toArgv } from "../../../generate/util.js";
+import { template } from "../../../generate/util.js";
+import { warningsOutput } from "../../../output.js";
 import {
   DEFAULT_TOOLCHAIN,
   getToolchain,
   TOOLCHAIN_NAMES,
 } from "../../../utils/toolchain/index.js";
 
-export default class GenerateFormatsCommand extends PrismaticBaseCommand {
-  static hidden = true;
-  static description = "Initialize a new Component from a format";
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      description: "Name of the component",
-      required: true,
-    }),
-    icon: Flags.string({
-      char: "i",
-      description: "Path to png icon for the component",
-    }),
-    openapi: Flags.string({
-      char: "o",
-      description: "Path to OpenAPI file for the component",
-      required: true,
-    }),
-    public: Flags.boolean({
-      hidden: true,
-    }),
-    toolchain: Flags.option({
-      options: TOOLCHAIN_NAMES,
-      default: DEFAULT_TOOLCHAIN,
-      hidden: true,
-    })(),
-  };
+export default Cli.command({
+  output: z.object({
+    name: z.string(),
+    path: z.string(),
+    toolchain: z.string(),
+    ...warningsOutput,
+  }),
+  description: "Initialize a new Component from a format",
+  options: z.object({
+    name: z.string().describe("Name of the component"),
+    icon: z.string().optional().describe("Path to png icon for the component"),
+    openapi: z.string().describe("Path to OpenAPI file for the component"),
+    public: z
+      .boolean()
+      .optional()
+      .meta({ cli: { hidden: true } }),
+    toolchain: z
+      .enum(TOOLCHAIN_NAMES)
+      .default(DEFAULT_TOOLCHAIN)
+      .meta({ cli: { hidden: true } }),
+  }),
+  async run(context) {
+    return await generateFormats(context.options);
+  },
+  alias: { openapi: "o", icon: "i", name: "n" },
+});
 
-  async run() {
-    const { flags } = await this.parse(GenerateFormatsCommand);
-    await generateFormats(flags);
-  }
-
-  static async invoke(args: { [K in keyof typeof this.flags]+?: unknown }, config: Config) {
-    await GenerateFormatsCommand.run(toArgv(args), config);
-  }
-}
 export async function generateFormats(
   options: {
     name: string;
@@ -88,7 +79,7 @@ export async function generateFormats(
     await copy(icon, path.join(directory, "assets", "icon.png"));
   }
 
-  console.log(`
+  writeCommandStatus(`
 "${name}" is ready for development.
 To install dependencies, run either "npm install" or "yarn install"
 To test the component, run "npm run test" or "yarn test"

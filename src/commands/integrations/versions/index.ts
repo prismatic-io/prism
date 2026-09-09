@@ -1,32 +1,30 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { tableOutputSchema, tableFlags, printTable } from "../../../utils/table.js";
 import { ListIntegrationVersionsDocument as LIST_INTEGRATION_VERSIONS } from "../../../graphql/operations/listIntegrationVersions.generated.js";
-import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
-
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Integration versions";
-
-  static flags = {
-    ...ux.table.flags(),
-    "latest-available": Flags.boolean({
-      char: "l",
-      description: "Show only the latest available version",
-    }),
-  };
-
-  static args = {
-    integration: Args.string({
-      required: true,
-      description: "ID of an integration",
-    }),
-  };
-
-  async run() {
+import { gqlRequest, requireResource } from "../../../graphql.js";
+import { z, Cli } from "incur";
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema([
+    "versionNumber",
+    "id",
+    "versionCreatedAt",
+    "versionCreatedBy",
+    "versionComment",
+    "available",
+  ]),
+  description: "List Integration versions",
+  options: z.object({
+    ...tableFlags(),
+    "latest-available": z.boolean().optional().describe("Show only the latest available version"),
+  }),
+  args: z.object({
+    integration: z.string().describe("ID of an integration"),
+  }),
+  async run(context) {
     const {
-      flags,
+      options: flags,
       args: { integration },
-    } = await this.parse(ListCommand);
+    } = context;
 
     const result = await gqlRequest({
       document: LIST_INTEGRATION_VERSIONS,
@@ -37,8 +35,8 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
-    ux.table(
-      result.integration?.versionSequence.nodes ?? this.error("Integration not found"),
+    return printTable(
+      requireResource(result.integration, "Integration").versionSequence.nodes,
       {
         versionNumber: {
           header: "Version",
@@ -67,5 +65,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+  alias: { "latest-available": "l" },
+});

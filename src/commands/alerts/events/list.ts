@@ -1,26 +1,29 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { tableOutputSchema, tableFlags, printTable } from "../../../utils/table.js";
 import { ListAlertEventsDocument as LIST_ALERT_EVENTS } from "../../../graphql/operations/listAlertEvents.generated.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { z, Cli } from "incur";
+type AlertEvent = {
+  createdAt: unknown;
+  details: unknown;
+  id: unknown;
+  monitor: { name: unknown };
+};
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Alert Events for an Alert Monitor";
-  static args = {
-    alertMonitorId: Args.string({
-      description: "ID of an alert monitor",
-      required: true,
-    }),
-  };
-  static flags = {
-    ...ux.table.flags(),
-  };
-
-  async run() {
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["id", "name", "createdAt", "details"]),
+  description: "List Alert Events for an Alert Monitor",
+  args: z.object({
+    alertMonitorId: z.string().describe("ID of an alert monitor"),
+  }),
+  options: z.object({
+    ...tableFlags(),
+  }),
+  async run(context) {
     const {
-      flags,
+      options: flags,
       args: { alertMonitorId },
-    } = await this.parse(ListCommand);
+    } = context;
 
     const result = await gqlRequest({
       document: LIST_ALERT_EVENTS,
@@ -29,7 +32,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
-    ux.table(
+    return printTable(
       result.alertEvents.nodes,
       {
         id: {
@@ -37,7 +40,7 @@ export default class ListCommand extends PrismaticBaseCommand {
           extended: true,
         },
         name: {
-          get: (row) => row.monitor.name,
+          get: (row: AlertEvent) => row.monitor.name,
           header: "Name",
         },
         createdAt: {
@@ -47,5 +50,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

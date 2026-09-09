@@ -1,15 +1,16 @@
+import { confirm as confirmPrompt } from "../prompts.js";
+import { resolve } from "node:path";
+import { Component2Document as COMPONENT2 } from "../../graphql/operations/component2.generated.js";
+import { PublishComponentDocument as PUBLISH_COMPONENT } from "../../graphql/operations/publishComponent.generated.js";
+import type { PublishComponentMutationVariables } from "../../graphql/operations/publishComponent.generated.js";
 import crypto from "crypto";
 import mimetypes from "mime-types";
 import { extname } from "path";
 import { fs } from "../../fs.js";
-import { Component2Document as COMPONENT2 } from "../../graphql/operations/component2.generated.js";
-import type { PublishComponentMutationVariables } from "../../graphql/operations/publishComponent.generated.js";
-import { PublishComponentDocument as PUBLISH_COMPONENT } from "../../graphql/operations/publishComponent.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
-import { ux } from "../ux.js";
 import type { ComponentDefinition } from "./index.js";
-import { resolve } from "node:path";
+import { writeCommandStatus } from "../../command.js";
 
 const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {
   actions: true,
@@ -57,9 +58,9 @@ export const confirmPublish = async (
 ): Promise<boolean> => {
   if (!confirm) return true;
 
-  ux.log(label, "-", description);
+  writeCommandStatus([label, "-", description].map(String).join(" "));
 
-  return await ux.confirm(`Would you like to publish ${label}? (y/N)`);
+  return await confirmPrompt(`Would you like to publish ${label}? (y/N)`);
 };
 
 export const publishDefinition = async (

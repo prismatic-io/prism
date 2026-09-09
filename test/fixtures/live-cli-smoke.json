@@ -1,0 +1,21 @@
+{
+  "candidate": "@prismatic-io/prism/11.0.0 darwin-arm64 node-v24.19.0",
+  "checks": [
+    {
+      "command": "me",
+      "count": 8,
+      "sha256": "6ed415e1c032ca607c94e0ba50b3b05572b4697c0c770ee150c772474a95a2ff"
+    },
+    {
+      "command": "customers:list",
+      "count": 9,
+      "sha256": "e9de6d7912913dce8cb89c9cc50e6c6468465ecd0771cfc3d9e038e0eee609ee"
+    },
+    {
+      "command": "integrations:list",
+      "count": 15,
+      "sha256": "e348a5046dac2977a9a96ea3f431e8c868a8234a7afa87032f9ba42952f1d9f5"
+    }
+  ],
+  "legacy": "@prismatic-io/prism/10.2.0 darwin-arm64 node-v24.19.0"
+}

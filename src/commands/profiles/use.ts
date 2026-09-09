@@ -1,23 +1,21 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { Cli, z } from "incur";
+import { writeCommandStatus } from "../../command.js";
 import { getConfigStore } from "../../context.js";
+import { warningsOutput } from "../../output.js";
 
-export default class ProfilesUseCommand extends PrismaticBaseCommand {
-  static description = "Set the default profile";
-
-  static args = {
-    name: Args.string({
-      required: true,
-      description: "Profile to use by default",
-    }),
-  };
-
-  async run() {
+export default Cli.command({
+  output: z.object({ profile: z.string() }).extend(warningsOutput),
+  description: "Set the default profile",
+  args: z.object({
+    name: z.string().describe("Profile to use by default"),
+  }),
+  async run(context) {
     const {
       args: { name },
-    } = await this.parse(ProfilesUseCommand);
+    } = context;
 
     await getConfigStore().setDefaultProfile(name);
-    this.log(`Using '${name}' by default.`);
-  }
-}
+    writeCommandStatus(`Using '${name}' by default.`);
+    return { profile: name };
+  },
+});

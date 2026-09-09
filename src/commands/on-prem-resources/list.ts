@@ -1,47 +1,62 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import {
-  ListOnPremiseResourcesDocument as LIST_ON_PREMISE_RESOURCES,
-  type ListOnPremiseResourcesQuery,
-} from "../../graphql/onPremResources/listOnPremiseResources.generated.js";
+import type { ListOnPremiseResourcesQuery } from "../../graphql/onPremResources/listOnPremiseResources.generated.js";
+import { ListOnPremiseResourcesDocument as LIST_ON_PREMISE_RESOURCES } from "../../graphql/onPremResources/listOnPremiseResources.generated.js";
 import { gqlRequest } from "../../graphql.js";
-import { ux } from "../../utils/ux.js";
+import { paginationFlags, tableOutputSchema, tableFlags, printTable } from "../../utils/table.js";
+import { z, Cli } from "incur";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List On-Premise Resources";
-  static flags = {
-    ...ux.table.flags(),
-    customer: Flags.string({
-      char: "c",
-      description:
+type OnPremiseResourceNode = ListOnPremiseResourcesQuery["onPremiseResources"]["nodes"][number];
+
+const isOnPremiseResourceNode = (
+  node: OnPremiseResourceNode | null,
+): node is OnPremiseResourceNode => node !== null;
+
+export default Cli.command({
+  outputPolicy: "agent-only",
+  description: "List On-Premise Resources",
+  output: tableOutputSchema(
+    ["id", "name", "customerId", "status", "customer", "customerExternalId"],
+    true,
+  ),
+  options: z.object({
+    ...tableFlags(),
+    ...paginationFlags(),
+    customer: z
+      .string()
+      .optional()
+      .describe(
         "If specified this command returns only On-Premise Resources that are available to the specified customer ID",
-    }),
-  };
-
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+      ),
+  }),
+  async run(context) {
+    const { options: flags } = context;
     const { customer } = flags;
 
     let onPremiseResources: OnPremiseResourceNode[] = [];
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let pageInfo: ListOnPremiseResourcesQuery["onPremiseResources"]["pageInfo"] = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
       const {
-        onPremiseResources: { nodes, pageInfo },
+        onPremiseResources: { nodes, pageInfo: nextPageInfo },
       }: ListOnPremiseResourcesQuery = await gqlRequest({
         document: LIST_ON_PREMISE_RESOURCES,
         variables: {
           after: cursor,
           customer,
+          first: flags.first,
         },
       });
-      onPremiseResources = [...onPremiseResources, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      onPremiseResources = [...onPremiseResources, ...nodes.filter(isOnPremiseResourceNode)];
+      pageInfo = nextPageInfo;
+      cursor = nextPageInfo.endCursor ?? null;
+      hasNextPage = nextPageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = printTable(
       onPremiseResources,
       {
         id: {
@@ -60,7 +75,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
-
-type OnPremiseResourceNode = ListOnPremiseResourcesQuery["onPremiseResources"]["nodes"][number];
+    return { ...result, pageInfo };
+  },
+  alias: { customer: "c" },
+});

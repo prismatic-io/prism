@@ -1,3 +1,4 @@
+import { getRuntimeEnvironment } from "./runtime.js";
 import { homedir } from "os";
 import path from "path";
 import { z } from "zod";
@@ -27,4 +28,4 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
-export const getEnv = (): Env => envSchema.parse(process.env);
+export const getEnv = (): Env => envSchema.parse(getRuntimeEnvironment());

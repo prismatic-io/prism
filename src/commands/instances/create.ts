@@ -1,75 +1,49 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { parseJsonOrUndefined } from "../../fields.js";
 import { CreateInstanceDocument as CREATE_INSTANCE } from "../../graphql/operations/createInstance.generated.js";
 import { gqlRequest } from "../../graphql.js";
-
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create an Instance";
-
-  static examples = [
-    {
-      description: "Get the ID of the integration you want to deploy:",
-      command:
-        "INTEGRATION_ID=$(prism integrations:list --columns id --no-header --filter 'name=Acme Inc')",
-    },
-    {
-      description: "Get the version ID of the latest available published version:",
-      command:
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-        "VERSION_ID=$(prism integrations:versions ${INTEGRATION_ID} --latest-available --columns id --no-header)",
-    },
-    {
-      description: "Set up connection credentials (must be escaped):",
-      command:
-        'CREDENTIALS=\'[{"name":"username","type":"value","value":"my.username"},{"name":"password","type":"value","value":"Pa$$W0Rd"}]\'',
-    },
+import { warningsOutput } from "../../output.js";
+import { z, Cli, Errors } from "incur";
+export default Cli.command({
+  output: z.object({ instanceId: z.string() }).extend(warningsOutput),
+  description: "Create an Instance",
+  examples: [
+    { description: "Get the ID of the integration you want to deploy:" },
+    { description: "Get the version ID of the latest available published version:" },
+    { description: "Set up connection credentials (must be escaped):" },
     {
       description: "Create an instance with config variables and labels:",
-      command:
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-        '<%= config.bin %> <%= command.id %> --name \'Acme Inc\' --description \'Acme Inc instance for Smith Rocket Co\' --integration ${VERSION_ID} --customer ${CUSTOMER_ID} --config-vars \'[{"key":"My Endpoint","value":"https://example.com/api"},{"key":"Do Thing?","value":"true"},{"key":"Acme Basic Auth","values":"${CREDENTIALS}"}]\' --label \'Production\' --label \'Paid\'',
+      options: {
+        name: "Acme Inc",
+        description: "Acme Inc instance for Smith Rocket Co",
+        integration: `\${VERSION_ID}`,
+        customer: `\${CUSTOMER_ID}`,
+        "config-vars": `[{"key":"My Endpoint","value":"https://example.com/api"},{"key":"Do Thing?","value":"true"},{"key":"Acme Basic Auth","values":"\${CREDENTIALS}"}]`,
+        label: ["Production", "Paid"],
+      },
     },
-  ];
-
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      required: true,
-      description: "name of your new instance.",
-    }),
-    integration: Flags.string({
-      char: "i",
-      required: true,
-      description:
+  ],
+  options: z.object({
+    name: z.string().describe("name of your new instance."),
+    integration: z
+      .string()
+      .describe(
         "ID of the integration or a specific integration version ID this is an instance of",
-    }),
-    customer: Flags.string({
-      char: "c",
-      required: true,
-      description: "ID of customer to deploy to",
-    }),
-    description: Flags.string({
-      required: false,
-      char: "d",
-      description: "longer description of the instance",
-    }),
-    "config-vars": Flags.string({
-      required: false,
-      char: "v",
-      description: "config variables to bind to steps of your instance",
-    }),
-    label: Flags.string({
-      char: "l",
-      description: "a label or set of labels to apply to the instance",
-      multiple: true,
-    }),
-  };
-
-  async run() {
+      ),
+    customer: z.string().describe("ID of customer to deploy to"),
+    description: z.string().optional().describe("longer description of the instance"),
+    "config-vars": z
+      .string()
+      .optional()
+      .describe("config variables to bind to steps of your instance"),
+    label: z
+      .array(z.string())
+      .optional()
+      .describe("a label or set of labels to apply to the instance"),
+  }),
+  async run(context) {
     const {
-      flags: { name, description, integration, customer, "config-vars": configVars, label },
-    } = await this.parse(CreateCommand);
+      options: { name, description, integration, customer, "config-vars": configVars, label },
+    } = context;
 
     const result = await gqlRequest({
       document: CREATE_INSTANCE,
@@ -83,8 +57,34 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.createInstance?.instance?.id ?? this.error("The operation returned no resource"),
+    const resourceId = result.createInstance?.instance?.id;
+    if (resourceId == null)
+      throw new Errors.IncurError({
+        code: "VALIDATION_ERROR",
+        message: "Instance was not created",
+        exitCode: 2,
+      });
+    return context.ok(
+      { instanceId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "instances flow-configs list",
+              description: "Inspect this instance's flows",
+              args: { instance: resourceId },
+            },
+          ],
+        },
+      },
     );
-  }
-}
+  },
+  alias: {
+    label: "l",
+    "config-vars": "v",
+    description: "d",
+    customer: "c",
+    integration: "i",
+    name: "n",
+  },
+});

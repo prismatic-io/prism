@@ -1,31 +1,37 @@
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { Cli, z } from "incur";
+import { writeCommandStatus } from "../../command.js";
 import { getConfigStore } from "../../context.js";
-import { ux } from "../../utils/ux.js";
+import { printTable, tableFlags, tableOutputSchema } from "../../utils/table.js";
 
-export default class ProfilesListCommand extends PrismaticBaseCommand {
-  static description = "List profiles";
-
-  static flags = {
-    ...ux.table.flags(),
-  };
-
-  async run() {
-    const { flags } = await this.parse(ProfilesListCommand);
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["name", "prismaticUrl", "tenantId", "isDefault"]),
+  description: "List profiles",
+  options: z.object({
+    ...tableFlags(),
+  }),
+  async run(context) {
+    const { options: flags } = context;
 
     const profiles = await getConfigStore().listProfiles();
     if (profiles.length === 0) {
-      this.log("No profiles found.");
-      return;
+      if (context.agent) return { items: [] };
+      writeCommandStatus("No profiles found.");
+      return { items: [] };
     }
 
-    ux.table(
+    return printTable(
       profiles,
       {
-        name: { header: "Profile", get: (p) => (p.isDefault ? `${p.name} (default)` : p.name) },
+        name: {
+          header: "Profile",
+          get: (p) => (!context.agent && p.isDefault ? `${p.name} (default)` : p.name),
+        },
         prismaticUrl: { header: "Endpoint URL" },
+        ...(context.agent ? { isDefault: {} } : {}),
         tenantId: { header: "Tenant ID", get: (p) => p.tenantId ?? "" },
       },
       flags,
     );
-  }
-}
+  },
+});

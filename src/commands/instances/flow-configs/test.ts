@@ -1,134 +1,72 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { setTimeout as sleep } from "node:timers/promises";
+import { z, Cli } from "incur";
+import { commandSignal } from "../../../command.js";
 import { ListInstanceTestLogsDocument as LIST_INSTANCE_TEST_LOGS } from "../../../graphql/operations/listInstanceTestLogs.generated.js";
 import { TestInstanceFlowConfigDocument as TEST_INSTANCE_FLOW_CONFIG } from "../../../graphql/operations/testInstanceFlowConfig.generated.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { type ExecutionEvent, executionEventSchema } from "../../../utils/execution-output.js";
+import { tableFlags } from "../../../utils/table.js";
 
-interface LogNode {
-  [index: string]: unknown;
-  timestamp: string;
-  severity: string;
-  message: string;
-}
-
-interface FetchLogsResult {
-  logs: LogNode[];
-  cursor: string | undefined;
-  executionComplete: boolean | undefined;
-}
-
-export default class TestCommand extends PrismaticBaseCommand {
-  static description = "Test a Flow Config of an Instance";
-  static args = {
-    flowConfig: Args.string({
-      description: "ID of a Flow Config to test",
-      required: true,
-    }),
-  };
-
-  static flags = {
-    ...ux.table.flags({ only: ["extended", "columns"] }),
-    tail: Flags.boolean({
-      required: false,
-      char: "t",
-      description: "Tail logs of the flow config test run",
-    }),
-    payload: Flags.string({
-      required: false,
-      char: "p",
-      description: "Optional JSON-formatted data payload to submit with the test",
-    }),
-    contentType: Flags.string({
-      required: false,
-      char: "c",
-      description: "Optional content-type for the test payload",
-    }),
-  };
-
-  async run() {
-    const {
-      args: { flowConfig },
-      flags: { tail, payload, contentType },
-    } = await this.parse(TestCommand);
-
+export default Cli.command({
+  output: executionEventSchema,
+  description: "Test a Flow Config of an Instance",
+  args: z.object({ flowConfig: z.string().describe("ID of a Flow Config to test") }),
+  options: z.object({
+    ...tableFlags({ only: ["extended", "columns"] }),
+    tail: z.boolean().optional().describe("Tail logs of the flow config test run"),
+    payload: z
+      .string()
+      .optional()
+      .describe("Optional JSON-formatted data payload to submit with the test"),
+    contentType: z.string().optional().describe("Optional content-type for the test payload"),
+  }),
+  async *run(context): AsyncGenerator<ExecutionEvent> {
+    const { flowConfig } = context.args;
+    const { tail, payload, contentType, columns } = context.options;
+    const signal = commandSignal();
+    signal?.throwIfAborted();
     const result = await gqlRequest({
       document: TEST_INSTANCE_FLOW_CONFIG,
-      variables: {
-        id: flowConfig,
-        payload,
-        contentType,
-      },
+      variables: { id: flowConfig, payload, contentType },
     });
-
-    if (!tail) {
-      return;
+    const executionId = result.testInstanceFlowConfig?.testInstanceFlowConfigResult?.execution?.id;
+    if (!executionId) throw new Error("Flow config test did not create an execution");
+    yield { type: "execution", executionId, flowConfigId: flowConfig };
+    if (tail) {
+      let nextCursor: string | undefined;
+      while (true) {
+        await sleep(500, undefined, { signal });
+        const batch = await fetchInstanceLogs(executionId, nextCursor);
+        if (!batch) continue;
+        nextCursor = batch.cursor;
+        for (const log of batch.logs) {
+          const selected = columns?.split(",").map((name) => name.trim().toLowerCase());
+          const data = selected
+            ? Object.fromEntries(
+                Object.entries(log).filter(([key]) => selected.includes(key.toLowerCase())),
+              )
+            : log;
+          yield { type: "log", executionId, data };
+        }
+        if (batch.executionComplete) break;
+      }
     }
+    yield { type: "completed", executionId, status: tail ? "completed" : "submitted" };
+  },
+  alias: { contentType: "c", payload: "p", tail: "t" },
+});
 
-    const executionId =
-      result.testInstanceFlowConfig?.testInstanceFlowConfigResult?.execution?.id ??
-      this.error("Execution was not created");
-    await this.tailLogs(executionId);
-  }
-
-  private async tailLogs(executionId: string) {
-    const { flags } = await this.parse(TestCommand);
-
-    let nextCursor: string | undefined;
-    while (true) {
-      await ux.wait(500);
-
-      const result = await this.fetchLogs(executionId, nextCursor);
-      if (result === undefined) continue;
-
-      const { logs, cursor, executionComplete } = result;
-
-      nextCursor = cursor;
-
-      ux.table(
-        logs,
-        {
-          timestamp: {},
-          severity: {
-            minWidth: 12,
-          },
-          message: {},
-        },
-        { ...flags, "no-header": true },
-      );
-
-      if (executionComplete) return;
-    }
-  }
-
-  private async fetchLogs(
-    executionId: string,
-    nextCursor?: string,
-  ): Promise<FetchLogsResult | undefined> {
-    const results = await gqlRequest({
-      document: LIST_INSTANCE_TEST_LOGS,
-      variables: {
-        executionId,
-        nextCursor,
-      },
-    });
-
-    const {
-      edges,
-    }: {
-      edges: { cursor?: string; node: LogNode }[];
-    } = results.logs;
-    if (!edges || edges.length === 0) {
-      return undefined;
-    }
-
-    const logs = edges.map(({ node }) => node);
-    const executionComplete = logs.reduce<boolean>(
-      (result: boolean, { message }) => result || message.startsWith("Ending Instance Execution"),
-      false,
-    );
-
-    const { cursor } = edges[edges.length - 1];
-    return { logs, cursor, executionComplete };
-  }
+export async function fetchInstanceLogs(executionId: string, nextCursor?: string) {
+  const result = await gqlRequest({
+    document: LIST_INSTANCE_TEST_LOGS,
+    variables: { executionId, nextCursor },
+  });
+  const edges = result.logs.edges;
+  if (!edges.length) return undefined;
+  const logs = edges.flatMap((edge) => (edge.node ? [edge.node] : []));
+  return {
+    logs,
+    cursor: edges.at(-1)?.cursor,
+    executionComplete: logs.some(({ message }) => message.startsWith("Ending Instance Execution")),
+  };
 }

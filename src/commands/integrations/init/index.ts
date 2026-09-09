@@ -1,11 +1,12 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import fs from "fs/promises";
+import { z, Cli, Errors } from "incur";
 import { camelCase } from "lodash-es";
 import path from "path";
 import { v4 as uuid4 } from "uuid";
-import { template, updatePackageJson } from "../../../generate/util.js";
+import { writeCommandStatus } from "../../../command.js";
 import { getPrismaticUrl } from "../../../context.js";
+import { template, updatePackageJson } from "../../../generate/util.js";
+import { warningsOutput } from "../../../output.js";
 import { VALID_NAME_REGEX } from "../../../utils/generate.js";
 import {
   DEFAULT_TOOLCHAIN,
@@ -20,65 +21,55 @@ const CLEANABLE_TEMPLATES = [
   "src/configPages.ts",
 ];
 
-export default class InitializeIntegration extends PrismaticBaseCommand {
-  static description = "Initialize a new Code Native Integration";
-
-  static examples = [
+export default Cli.command({
+  output: z.object({
+    name: z.string(),
+    path: z.string(),
+    toolchain: z.string(),
+    ...warningsOutput,
+  }),
+  description: "Initialize a new Code Native Integration",
+  examples: [
     {
       description: "Initialize a new directory for a Code Native Integration:",
-      command: "<%= config.bin %> <%= command.id %> acme-integration",
+      args: { name: "acme-integration" },
     },
-    {
-      description: "Install dependencies:",
-      command: "npm install",
-    },
-    {
-      description: "Build the integration:",
-      command: "npm run build",
-    },
-    {
-      description: "Import the integration into Prismatic:",
-      command: "prism integrations:import",
-    },
-  ];
-
-  static args = {
-    name: Args.string({
-      required: true,
-      description:
+    { description: "Install dependencies:", args: { name: "npm" } },
+    { description: "Build the integration:", args: { name: "npm" } },
+    { description: "Import the integration into Prismatic:" },
+  ],
+  args: z.object({
+    name: z
+      .string()
+      .describe(
         "Name of the new integration to create (alphanumeric characters, hyphens, and underscores)",
-    }),
-  };
-  static flags = {
-    clean: Flags.boolean({
-      description: "Generate clean scaffold without example code",
-      default: false,
-    }),
-    toolchain: Flags.option({
-      options: TOOLCHAIN_NAMES,
-      default: DEFAULT_TOOLCHAIN,
-      description:
+      ),
+  }),
+  options: z.object({
+    clean: z.boolean().default(false).describe("Generate clean scaffold without example code"),
+    toolchain: z
+      .enum(TOOLCHAIN_NAMES)
+      .default(DEFAULT_TOOLCHAIN)
+      .describe(
         "Toolchain to scaffold: 'modern' (tsdown + vitest + Biome) or 'legacy' (webpack + jest + eslint)",
-    })(),
-  };
-
-  async run() {
+      ),
+  }),
+  async run(context) {
     const {
       args: { name },
-      flags: { clean, toolchain: toolchainName },
-    } = await this.parse(InitializeIntegration);
+      options: { clean, toolchain: toolchainName },
+    } = context;
 
     const toolchain = getToolchain(toolchainName);
 
     if (!VALID_NAME_REGEX.test(name)) {
       const regexUrl = new URL("https://regex101.com");
       regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
-      throw Object.assign(
-        new Error(
-          `'${name}' contains invalid characters. Please select an integration name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
-        ),
-        { exitCode: 1 },
-      );
+      throw new Errors.IncurError({
+        code: "COMMAND_FAILED",
+        message: `'${name}' contains invalid characters. Please select an integration name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
+        exitCode: 1,
+      });
     }
 
     const directory = path.resolve(name);
@@ -159,7 +150,7 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
       devDependencies: toolchain.devDependencies,
     });
 
-    this.log(`
+    writeCommandStatus(`
 "${name}" is ready for development.
 To install dependencies, run either "npm install" or "yarn install"
 To run unit tests for the integration, run "npm run test" or "yarn test"
@@ -168,5 +159,6 @@ To import the integration, run "prism integrations:import"
 
 For documentation on writing code-native integrations, visit https://prismatic.io/docs/integrations/code-native/
     `);
-  }
-}
+    return { name, path: directory, toolchain: toolchain.name };
+  },
+});

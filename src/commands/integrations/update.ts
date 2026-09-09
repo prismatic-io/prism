@@ -1,41 +1,31 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { parseJsonOrUndefined } from "../../fields.js";
 import { UpdateIntegrationDocument as UPDATE_INTEGRATION } from "../../graphql/operations/updateIntegration.generated.js";
 import { gqlRequest } from "../../graphql.js";
-
-export default class UpdateCommand extends PrismaticBaseCommand {
-  static description = "Update an Integration's name or description";
-  static args = {
-    integration: Args.string({
-      required: true,
-      description: "ID of an integration",
-    }),
-  };
-
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      description: "new name to give the integration",
-    }),
-    description: Flags.string({
-      char: "d",
-      description: "new description to give the integration",
-    }),
-    customer: Flags.string({
-      char: "c",
-      description: "ID of customer with which to associate the integration",
-    }),
-    "test-config-vars": Flags.string({
-      description: "JSON-formatted config variables to be used for testing",
-    }),
-  };
-
-  async run() {
+import { warningsOutput } from "../../output.js";
+import { z, Cli, Errors } from "incur";
+export default Cli.command({
+  output: z.object({ integrationId: z.string() }).extend(warningsOutput),
+  description: "Update an Integration's name or description",
+  args: z.object({
+    integration: z.string().describe("ID of an integration"),
+  }),
+  options: z.object({
+    name: z.string().optional().describe("new name to give the integration"),
+    description: z.string().optional().describe("new description to give the integration"),
+    customer: z
+      .string()
+      .optional()
+      .describe("ID of customer with which to associate the integration"),
+    "test-config-vars": z
+      .string()
+      .optional()
+      .describe("JSON-formatted config variables to be used for testing"),
+  }),
+  async run(context) {
     const {
       args: { integration },
-      flags: { name, description, customer, "test-config-vars": testConfigVars },
-    } = await this.parse(UpdateCommand);
+      options: { name, description, customer, "test-config-vars": testConfigVars },
+    } = context;
     const result = await gqlRequest({
       document: UPDATE_INTEGRATION,
       variables: {
@@ -47,8 +37,27 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.updateIntegration?.integration?.id ?? this.error("The operation returned no resource"),
+    const resourceId = result.updateIntegration?.integration?.id;
+    if (resourceId == null)
+      throw new Errors.IncurError({
+        code: "VALIDATION_ERROR",
+        message: "Integration was not updated",
+        exitCode: 2,
+      });
+    return context.ok(
+      { integrationId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "integrations flows list",
+              description: "Inspect this integration's flows",
+              args: { integration: resourceId },
+            },
+          ],
+        },
+      },
     );
-  }
-}
+  },
+  alias: { customer: "c", description: "d", name: "n" },
+});

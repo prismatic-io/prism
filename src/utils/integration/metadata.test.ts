@@ -20,7 +20,7 @@ describe("metadata utils", () => {
   let stderrSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    stderrSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     vi.stubEnv("PRISM_QUIET", "true");
   });
 

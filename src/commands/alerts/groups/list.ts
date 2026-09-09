@@ -1,44 +1,55 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import {
-  ListAlertGroupsDocument as LIST_ALERT_GROUPS,
-  type ListAlertGroupsQuery,
-} from "../../../graphql/alerts/listAlertGroups.generated.js";
+import type { ListAlertGroupsQuery } from "../../../graphql/alerts/listAlertGroups.generated.js";
+import { ListAlertGroupsDocument as LIST_ALERT_GROUPS } from "../../../graphql/alerts/listAlertGroups.generated.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import {
+  paginationFlags,
+  tableOutputSchema,
+  tableFlags,
+  printTable,
+} from "../../../utils/table.js";
+import { z, Cli } from "incur";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Alert Groups in your Organization";
+type AlertGroupNode = ListAlertGroupsQuery["alertGroups"]["nodes"][number];
 
-  static examples = [
+const isAlertGroupNode = (node: AlertGroupNode | null): node is AlertGroupNode => node !== null;
+
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["id", "name"], true),
+  description: "List Alert Groups in your Organization",
+  examples: [
     {
       description:
         "Fetch the ID and Name of all alert groups in JSON format, sorted descending by name:",
-      command: '<%= config.bin %> <%= command.id %> --columns "id,name" --output json --sort name',
+      options: { columns: "id,name", output: "json", sort: "name" },
     },
-  ];
-
-  static flags = { ...ux.table.flags() };
-
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+  ],
+  options: z.object({ ...tableFlags(), ...paginationFlags() }),
+  async run(context) {
+    const { options: flags } = context;
 
     let alertGroups: AlertGroupNode[] = [];
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let finalPageInfo: { hasNextPage: boolean; endCursor?: string | null } = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
       const {
         alertGroups: { nodes, pageInfo },
       }: ListAlertGroupsQuery = await gqlRequest({
         document: LIST_ALERT_GROUPS,
-        variables: { after: cursor },
+        variables: { after: cursor, first: flags.first },
       });
-      alertGroups = [...alertGroups, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      alertGroups = [...alertGroups, ...nodes.filter(isAlertGroupNode)];
+      cursor = pageInfo.endCursor ?? null;
+      finalPageInfo = pageInfo;
+      hasNextPage = pageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = printTable(
       alertGroups,
       {
         id: {
@@ -49,7 +60,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
-
-type AlertGroupNode = ListAlertGroupsQuery["alertGroups"]["nodes"][number];
+    return { ...result, pageInfo: finalPageInfo };
+  },
+});

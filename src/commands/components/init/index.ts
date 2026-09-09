@@ -1,10 +1,11 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { promises as fs } from "fs";
+import { z, Cli, Errors } from "incur";
 import * as path from "path";
 import { parseAndGenerate } from "wsdl-tsclient";
+import { writeCommandStatus } from "../../../command.js";
 import { generate } from "../../../generate/index.js";
 import { updatePackageJson } from "../../../generate/util.js";
+import { warningsOutput } from "../../../output.js";
 import { formatSourceFiles, getFilesToFormat, VALID_NAME_REGEX } from "../../../utils/generate.js";
 import {
   DEFAULT_TOOLCHAIN,
@@ -14,66 +15,68 @@ import {
 import { generateComponent } from "./component.js";
 import { generateFormats } from "./formats.js";
 
-export default class InitializeComponent extends PrismaticBaseCommand {
-  static description = "Initialize a new Component";
-
-  static examples = [
+export default Cli.command({
+  output: z.object({
+    name: z.string(),
+    path: z.string(),
+    toolchain: z.string(),
+    ...warningsOutput,
+  }),
+  description: "Initialize a new Component",
+  examples: [
     {
       description:
         "Initialize a new component directory for a component named 'send-customer-invoices':",
-      command: "<%= config.bin %> <%= command.id %> send-customer-invoices",
+      args: { name: "send-customer-invoices" },
     },
     {
       description:
         "Initialize a component from a WSDL definition file, then install dependencies, build, and publish it:",
-      command: `<%= config.bin %> <%= command.id %> --wsdl-path ./example.wsdl "Example WSDL"
-cd "Example WSDL" && yarn install && yarn build
-prism components:publish`,
+      args: { name: "Example WSDL" },
+      options: { "wsdl-path": "./example.wsdl" },
     },
-  ];
-
-  static flags = {
-    "wsdl-path": Flags.string({
-      required: false,
-      description: "Path to the WSDL definition file used to generate a Component",
-    }),
-    "open-api-path": Flags.string({
-      required: false,
-      description:
+  ],
+  options: z.object({
+    "wsdl-path": z
+      .string()
+      .optional()
+      .describe("Path to the WSDL definition file used to generate a Component"),
+    "open-api-path": z
+      .string()
+      .optional()
+      .describe(
         "The path to an OpenAPI Specification file (JSON or YAML) used to generate a Component",
-    }),
-    verbose: Flags.boolean({
-      required: false,
-      default: false,
-      description: "Output more verbose logging from Component generation",
-    }),
-    toolchain: Flags.option({
-      options: TOOLCHAIN_NAMES,
-      default: DEFAULT_TOOLCHAIN,
-      description:
+      ),
+    verbose: z
+      .boolean()
+      .default(false)
+      .describe("Output more verbose logging from Component generation"),
+    toolchain: z
+      .enum(TOOLCHAIN_NAMES)
+      .default(DEFAULT_TOOLCHAIN)
+      .describe(
         "Toolchain to scaffold: 'modern' (tsdown + vitest + Biome) or 'legacy' (webpack + jest + eslint)",
-    })(),
-  };
-  static args = {
-    name: Args.string({
-      required: true,
-      description:
+      ),
+  }),
+  args: z.object({
+    name: z
+      .string()
+      .describe(
         "Name of the new component to create (alphanumeric characters, hyphens, and underscores)",
-    }),
-  };
-
-  async run() {
+      ),
+  }),
+  async run(context) {
     const cwd = process.cwd();
 
     const {
       args: { name },
-      flags: {
+      options: {
         verbose,
         "wsdl-path": rawWsdlPath,
         "open-api-path": rawOpenApiPath,
         toolchain: toolchainName,
       },
-    } = await this.parse(InitializeComponent);
+    } = context;
 
     const toolchain = getToolchain(toolchainName);
     const wsdlPath = rawWsdlPath ? path.resolve(rawWsdlPath) : undefined;
@@ -82,19 +85,20 @@ prism components:publish`,
     if (!VALID_NAME_REGEX.test(name)) {
       const regexUrl = new URL("https://regex101.com");
       regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
-      throw Object.assign(
-        new Error(
-          `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
-        ),
-        { exitCode: 1 },
-      );
-    }
-    if (wsdlPath && !wsdlPath?.includes(".wsdl")) {
-      throw Object.assign(new Error("If a WSDL is provided it must have an extension of '.wsdl'"), {
+      throw new Errors.IncurError({
+        code: "COMMAND_FAILED",
+        message: `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
         exitCode: 1,
       });
     }
-    this.log(`Creating component directory for "${name}"...`);
+    if (wsdlPath && !wsdlPath?.includes(".wsdl")) {
+      throw new Errors.IncurError({
+        code: "COMMAND_FAILED",
+        message: "If a WSDL is provided it must have an extension of '.wsdl'",
+        exitCode: 1,
+      });
+    }
+    writeCommandStatus(`Creating component directory for "${name}"...`);
 
     const directory = path.resolve(cwd, name);
     await fs.mkdir(directory);
@@ -122,7 +126,7 @@ prism components:publish`,
         const [wsdlName] = path.basename(wsdlPath).split(".wsdl");
         await parseAndGenerate(wsdlPath, directory, {
           caseInsensitiveNames: true,
-          quiet: !verbose,
+          quiet: context.agent || !verbose,
         });
 
         await generate({
@@ -157,7 +161,7 @@ prism components:publish`,
     const filesToFormat = await getFilesToFormat(path.join(directory, "package.json"));
     await formatSourceFiles(path.join(directory, "package.json"), filesToFormat);
 
-    this.log(`
+    writeCommandStatus(`
 "${name}" is ready for development.
 To install dependencies, run either "npm install" or "yarn install"
 To test the component, run "npm run test" or "yarn test"
@@ -166,5 +170,6 @@ To publish the component, run "prism components:publish"
 
 For documentation on writing custom components, visit https://prismatic.io/docs/custom-connectors/
         `);
-  }
-}
+    return { name, path: directory, toolchain: toolchain.name };
+  },
+});

@@ -2,40 +2,54 @@ import inquirer from "inquirer";
 import { GetExecutionLogsDocument as GET_EXECUTION_LOGS } from "../../graphql/executions/getExecutionLogs.generated.js";
 import { GetExecutionStepResultsDocument as GET_EXECUTION_STEP_RESULTS } from "../../graphql/executions/getExecutionStepResults.generated.js";
 import { IsCniExecutionCompleteDocument as IS_CNI_EXECUTION_COMPLETE } from "../../graphql/executions/isCniExecutionComplete.generated.js";
-import {
-  GetIntegrationFlowsDocument as GET_INTEGRATION_FLOWS,
-  type GetIntegrationFlowsQuery,
-} from "../../graphql/integrations/getIntegrationFlows.generated.js";
+import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getIntegrationFlows.generated.js";
+import { GetIntegrationFlowsDocument as GET_INTEGRATION_FLOWS } from "../../graphql/integrations/getIntegrationFlows.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { handleError } from "../errors.js";
+import { requireInteractiveInput } from "../../command.js";
 export type IntegrationFlow = NonNullable<
   GetIntegrationFlowsQuery["integration"]
 >["flows"]["nodes"][number];
 
-export async function getIntegrationFlows(integrationId: string): Promise<IntegrationFlow[]> {
+export type IntegrationFlowsPage = {
+  flows: IntegrationFlow[];
+  pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+};
+
+export async function getIntegrationFlowsPage(
+  integrationId: string,
+  options: { after?: string; first?: number; all?: boolean } = {},
+): Promise<IntegrationFlowsPage> {
   let flows: IntegrationFlow[] = [];
   let hasNextPage = true;
-  let cursor: string | undefined;
+  let cursor = options.after;
+  let pageInfo: IntegrationFlowsPage["pageInfo"] = { hasNextPage: false, endCursor: null };
 
   while (hasNextPage) {
-    const result = await gqlRequest({
+    const result: GetIntegrationFlowsQuery = await gqlRequest({
       document: GET_INTEGRATION_FLOWS,
       variables: {
         id: integrationId,
         after: cursor,
+        first: options.first,
       },
     });
 
     const integration = result.integration;
     if (!integration) break;
 
-    const { nodes, pageInfo } = integration.flows;
+    const { nodes, pageInfo: currentPageInfo } = integration.flows;
     flows = [...flows, ...nodes];
-    cursor = pageInfo.endCursor ?? undefined;
-    hasNextPage = pageInfo.hasNextPage;
+    pageInfo = currentPageInfo;
+    cursor = currentPageInfo.endCursor ?? undefined;
+    hasNextPage = currentPageInfo.hasNextPage && options.all === true;
   }
 
-  return flows;
+  return { flows, pageInfo };
+}
+
+export async function getIntegrationFlows(integrationId: string): Promise<IntegrationFlow[]> {
+  return (await getIntegrationFlowsPage(integrationId, { all: true })).flows;
 }
 
 export interface LogNode {
@@ -120,6 +134,7 @@ export async function resolveFlow(options: ResolveFlowOptions): Promise<Integrat
   const hasFlowIdentifier = flowId || flowName;
 
   if (!hasFlowIdentifier) {
+    requireInteractiveInput("Agent mode requires --flow-id or --flow-name");
     return selectFlowPrompt(integrationId, { message: promptMessage });
   }
 

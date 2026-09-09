@@ -1,23 +1,26 @@
-import { Flags } from "@oclif/core";
+import { Cli, Errors, z } from "incur";
 import { logout } from "../auth.js";
-import { PrismaticBaseCommand } from "../baseCommand.js";
+import { writeCommandOutput, writeCommandStatus } from "../command.js";
 import { hasEnvironmentCredentials, readProfileSelection } from "../context.js";
 
-export default class LogoutCommand extends PrismaticBaseCommand {
-  static description = "Log out of your Prismatic account";
-  static flags = {
-    browser: Flags.boolean({
-      char: "b",
-      description: "additionally log out of your default browser's session",
-    }),
-  };
-
-  protected authContext = "profile" as const;
-
-  async run() {
+export default Cli.command({
+  output: z.object({
+    profile: z.string(),
+    loggedOut: z.literal(true),
+    environmentCredentialsActive: z.boolean(),
+    warnings: z.array(z.string()).optional(),
+  }),
+  description: "Log out of your Prismatic account",
+  options: z.object({
+    browser: z
+      .boolean()
+      .optional()
+      .describe("additionally log out of your default browser's session"),
+  }),
+  async run(context) {
     const {
-      flags: { browser },
-    } = await this.parse(LogoutCommand);
+      options: { browser },
+    } = context;
 
     const { store, name: profileName } = await readProfileSelection();
     const environmentCredentialsActive = hasEnvironmentCredentials();
@@ -31,13 +34,27 @@ export default class LogoutCommand extends PrismaticBaseCommand {
       const environmentHint = environmentCredentialsActive
         ? " Environment credentials remain active until you unset PRISM_ACCESS_TOKEN and PRISM_REFRESH_TOKEN."
         : "";
-      this.error(`Profile '${profileName}' does not exist.${environmentHint}`, { exit: 1 });
+      throw new Errors.IncurError({
+        code: "COMMAND_FAILED",
+        message: `Profile '${profileName}' does not exist.${environmentHint}`,
+        exitCode: 1,
+      });
     }
-    this.log(`Logged out of '${profileName}'.`);
+    writeCommandStatus(`Logged out of '${profileName}'.`);
     if (environmentCredentialsActive) {
-      this.warn(
+      writeCommandOutput(
         "Environment credentials are still active. Unset PRISM_ACCESS_TOKEN and PRISM_REFRESH_TOKEN to stop using them.",
+        "stderr",
       );
     }
-  }
-}
+    return {
+      profile: profileName,
+      loggedOut: true as const,
+      environmentCredentialsActive,
+      ...(environmentCredentialsActive
+        ? { warnings: ["Environment credentials remain active until unset."] }
+        : {}),
+    };
+  },
+  alias: { browser: "b" },
+});

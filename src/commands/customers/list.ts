@@ -1,35 +1,43 @@
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import {
-  ListCustomersDocument as LIST_CUSTOMERS,
-  type ListCustomersQuery,
-} from "../../graphql/customers/listCustomers.generated.js";
+import type { ListCustomersQuery } from "../../graphql/customers/listCustomers.generated.js";
+import { ListCustomersDocument as LIST_CUSTOMERS } from "../../graphql/customers/listCustomers.generated.js";
 import { gqlRequest } from "../../graphql.js";
-import { ux } from "../../utils/ux.js";
+import { paginationFlags, tableOutputSchema, tableFlags, printTable } from "../../utils/table.js";
+import { z, Cli } from "incur";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List your Customers";
-  static flags = { ...ux.table.flags() };
+type CustomerNode = ListCustomersQuery["customers"]["nodes"][number];
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+const isCustomerNode = (node: CustomerNode | null): node is CustomerNode => node !== null;
+
+export default Cli.command({
+  outputPolicy: "agent-only",
+  description: "List your Customers",
+  output: tableOutputSchema(["id", "name", "externalId", "description"], true),
+  options: z.object({ ...tableFlags(), ...paginationFlags() }),
+  async run(context) {
+    const { options: flags } = context;
 
     let customers: CustomerNode[] = [];
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let pageInfo: ListCustomersQuery["customers"]["pageInfo"] = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
       const {
-        customers: { nodes, pageInfo },
+        customers: { nodes, pageInfo: nextPageInfo },
       }: ListCustomersQuery = await gqlRequest({
         document: LIST_CUSTOMERS,
-        variables: { after: cursor },
+        variables: { after: cursor, first: flags.first },
       });
-      customers = [...customers, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      customers = [...customers, ...nodes.filter(isCustomerNode)];
+      pageInfo = nextPageInfo;
+      cursor = nextPageInfo.endCursor ?? null;
+      hasNextPage = nextPageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = printTable(
       customers,
       {
         id: {
@@ -45,7 +53,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
-
-type CustomerNode = ListCustomersQuery["customers"]["nodes"][number];
+    return { ...result, pageInfo };
+  },
+});

@@ -1,57 +1,33 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { CreateCustomerUserDocument as CREATE_CUSTOMER_USER } from "../../../graphql/operations/createCustomerUser.generated.js";
 import { gqlRequest } from "../../../graphql.js";
-
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create a User for the specified Customer";
-
-  static examples = [
-    {
-      description: "Get the ID of a customer named 'My First Customer':",
-      command:
-        "CUSTOMER_ID=$(prism customers:list --columns id --no-header --filter 'name=^My First Customer$')",
-    },
-    {
-      description: "Get the ID of the 'Member' role:",
-      command:
-        "ROLE_ID=$(prism customers:users:roles --columns id --no-header --filter 'name=^Member$')",
-    },
+import { warningsOutput } from "../../../output.js";
+import { z, Cli, Errors } from "incur";
+export default Cli.command({
+  output: z.object({ userId: z.string() }).extend(warningsOutput),
+  description: "Create a User for the specified Customer",
+  examples: [
+    { description: "Get the ID of a customer named 'My First Customer':" },
+    { description: "Get the ID of the 'Member' role:" },
     {
       description: "Add a new 'Member' user for the customer:",
-      command:
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-        "<%= config.bin %> <%= command.id %> --email 'bar@email.com' --name 'Thomas Bar' --customer ${CUSTOMER_ID} --role ${ROLE_ID}",
+      options: {
+        email: "bar@email.com",
+        name: "Thomas Bar",
+        customer: `\${CUSTOMER_ID}`,
+        role: `\${ROLE_ID}`,
+      },
     },
-  ];
-
-  static flags = {
-    email: Flags.string({
-      char: "e",
-      required: true,
-      description: "email address",
-    }),
-    role: Flags.string({
-      char: "r",
-      required: true,
-      description: "ID of the role to assign the user",
-    }),
-    customer: Flags.string({
-      char: "c",
-      required: true,
-      description: "ID of the customer this user is associated with",
-    }),
-    name: Flags.string({
-      char: "n",
-      description: "name of the new user",
-      required: false,
-    }),
-  };
-
-  async run() {
+  ],
+  options: z.object({
+    email: z.string().describe("email address"),
+    role: z.string().describe("ID of the role to assign the user"),
+    customer: z.string().describe("ID of the customer this user is associated with"),
+    name: z.string().optional().describe("name of the new user"),
+  }),
+  async run(context) {
     const {
-      flags: { name, email, role, customer },
-    } = await this.parse(CreateCommand);
+      options: { name, email, role, customer },
+    } = context;
 
     const result = await gqlRequest({
       document: CREATE_CUSTOMER_USER,
@@ -62,9 +38,17 @@ export default class CreateCommand extends PrismaticBaseCommand {
         customer,
       },
     });
+    const requiredValue1 = result.createCustomerUser?.user?.id;
+    if (requiredValue1 == null)
+      throw new Errors.IncurError({
+        code: "VALIDATION_ERROR",
+        message: "Customer user was not created",
+        exitCode: 2,
+      });
 
-    this.log(
-      result.createCustomerUser?.user?.id ?? this.error("The operation returned no resource"),
-    );
-  }
-}
+    return {
+      userId: requiredValue1,
+    };
+  },
+  alias: { name: "n", customer: "c", role: "r", email: "e" },
+});

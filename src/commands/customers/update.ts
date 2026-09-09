@@ -1,54 +1,32 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { UpdateCustomerDocument as UPDATE_CUSTOMER } from "../../graphql/operations/updateCustomer.generated.js";
 import { gqlRequest } from "../../graphql.js";
-
-export default class UpdateCommand extends PrismaticBaseCommand {
-  // TODO: Add more flags once optional updates are implemented
-  static description = "Update a Customer";
-  static args = {
-    customer: Args.string({
-      required: true,
-      description: "ID of a customer",
-    }),
-  };
-
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      description: "name of the customer",
-      required: false,
-    }),
-    description: Flags.string({
-      char: "d",
-      description: "description of the customer",
-      required: false,
-    }),
-    externalId: Flags.string({
-      char: "e",
-      description: "external ID of the customer from your system",
-    }),
-    label: Flags.string({
-      char: "l",
-      description: "a label to apply to the customer",
-      multiple: true,
-    }),
-  };
-
-  static examples = [
+import { warningsOutput } from "../../output.js";
+import { z, Cli, Errors } from "incur";
+export default Cli.command({
+  output: z.object({ customerId: z.string() }).extend(warningsOutput),
+  description: "Update a Customer",
+  args: z.object({
+    customer: z.string().describe("ID of a customer"),
+  }),
+  options: z.object({
+    name: z.string().optional().describe("name of the customer"),
+    description: z.string().optional().describe("description of the customer"),
+    externalId: z.string().optional().describe("external ID of the customer from your system"),
+    label: z.array(z.string()).optional().describe("a label to apply to the customer"),
+  }),
+  examples: [
     {
       description:
         "Apply multiple labels to a customer (note: previously set labels will be overwritten)",
-      command:
-        '<%= config.bin %> <%= command.id %> Q3VzdG9tZXI6MmUzZDllOTUtMWIyMy00N2FjLTk3MjUtMzU1OTA2YzgyZWZj --label "Prod Customers" --label "Beta Testers"',
+      args: { customer: "Q3VzdG9tZXI6MmUzZDllOTUtMWIyMy00N2FjLTk3MjUtMzU1OTA2YzgyZWZj" },
+      options: { label: ["Prod Customers", "Beta Testers"] },
     },
-  ];
-
-  async run() {
+  ],
+  async run(context) {
     const {
       args: { customer },
-      flags: { name, description, externalId, label },
-    } = await this.parse(UpdateCommand);
+      options: { name, description, externalId, label },
+    } = context;
 
     const result = await gqlRequest({
       document: UPDATE_CUSTOMER,
@@ -61,8 +39,27 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.updateCustomer?.customer?.id ?? this.error("The operation returned no resource"),
+    const resourceId = result.updateCustomer?.customer?.id;
+    if (resourceId == null)
+      throw new Errors.IncurError({
+        code: "VALIDATION_ERROR",
+        message: "Customer was not updated",
+        exitCode: 2,
+      });
+    return context.ok(
+      { customerId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "customers users list",
+              description: "Inspect this customer's users",
+              args: { customer: resourceId },
+            },
+          ],
+        },
+      },
     );
-  }
-}
+  },
+  alias: { label: "l", externalId: "e", description: "d", name: "n" },
+});

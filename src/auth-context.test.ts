@@ -2,9 +2,9 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Authenticate, getAuthenticatedContext } from "./auth.js";
+import { Authenticate, getAuthenticatedContext, refresh } from "./auth.js";
 import type { Credentials, Profile } from "./config.js";
-import { getConfigStore, selectProfile, useDefaultAuthContext } from "./context.js";
+import { getConfigStore } from "./context.js";
 import { gqlRequest } from "./graphql.js";
 
 vi.unmock("./auth.js");
@@ -54,12 +54,9 @@ describe("authentication and saved profile lifecycle", () => {
       "PRISMATIC_TENANT_ID",
     ])
       vi.stubEnv(name, "");
-    selectProfile(undefined);
-    useDefaultAuthContext();
     await getConfigStore().saveProfile("original", profile);
   });
   afterEach(async () => {
-    selectProfile(undefined);
     await rm(directory, { recursive: true, force: true });
   });
 
@@ -102,6 +99,34 @@ describe("authentication and saved profile lifecycle", () => {
       }),
     );
     expect((await store.read())?.defaultProfile).toBe("other");
+  });
+
+  it("allows a refreshed target without a tenant to be used for a subsequent tenant switch", async () => {
+    const { tenantId: _tenantId, ...withoutTenant } = profile;
+    await getConfigStore().saveProfile("original", withoutTenant);
+    const refreshedWithoutTenant = {
+      ...withoutTenant,
+      accessToken: "fresh-token",
+      tenantId: undefined,
+    };
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
+      Response.json({ domain: "auth.example.com", clientId: "client", audience: "audience" }),
+    );
+    vi.spyOn(Authenticate.prototype, "refresh")
+      .mockResolvedValueOnce(refreshedWithoutTenant)
+      .mockResolvedValueOnce({
+        ...refreshedWithoutTenant,
+        accessToken: "tenant-token",
+        tenantId: "selected-tenant",
+      });
+    const context = await getAuthenticatedContext();
+    expect(context.source).toBe("profile");
+    if (context.source !== "profile") throw new Error("Expected stored profile authentication");
+    await refresh(context, "selected-tenant");
+    expect((await getConfigStore().read())?.profiles.original).toMatchObject({
+      accessToken: "tenant-token",
+      tenantId: "selected-tenant",
+    });
   });
 
   it("commits refresh to the original file when the configured path changes", async () => {

@@ -1,4 +1,6 @@
-import fs from "fs";
+import { runCommand } from "../../../test-command.js";
+import { existsSync } from "node:fs";
+import { mkdir, readdir } from "node:fs/promises";
 import { readFile } from "fs-extra";
 import { kebabCase } from "lodash-es";
 import path from "path";
@@ -15,22 +17,21 @@ interface SpecMeta {
   name: string;
 }
 
+const componentsPath = path.resolve("src/commands/components");
+const tempPath = path.resolve(`${componentsPath}/init/temp`);
+
+if (!existsSync(tempPath)) {
+  await mkdir(tempPath);
+}
+
+const specs = (await readdir(`${componentsPath}/init/fixtures/specs`)).map<SpecMeta>((fileName) => {
+  const type = fileName.endsWith(".wsdl") ? "wsdl" : "openApi";
+  const [name] = fileName.toLowerCase().split(".");
+  return { type, fileName, name };
+});
+
 describe("component generation tests", () => {
   const basePath = process.env.PWD ?? process.cwd();
-  const componentsPath = path.resolve("src/commands/components");
-  const tempPath = path.resolve(`${componentsPath}/init/temp`);
-
-  if (!fs.existsSync(tempPath)) {
-    fs.mkdirSync(tempPath);
-  }
-
-  const specs = fs
-    .readdirSync(`${componentsPath}/init/fixtures/specs`)
-    .map<SpecMeta>((fileName) => {
-      const type = fileName.endsWith(".wsdl") ? "wsdl" : "openApi";
-      const [name] = fileName.toLowerCase().split(".");
-      return { type, fileName, name };
-    });
 
   for (const toolchain of TOOLCHAIN_NAMES) {
     for (const { type, fileName, name } of specs) {
@@ -42,7 +43,7 @@ describe("component generation tests", () => {
           async () => {
             process.chdir(tempPath);
 
-            await InitializeComponent.run([
+            await runCommand(InitializeComponent, [
               projectName,
               `--${kebabCase(type)}-path=../fixtures/specs/${fileName}`,
               "--toolchain",

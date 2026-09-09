@@ -1,48 +1,48 @@
-import { type Config, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { z, Cli } from "incur";
 import inquirer from "inquirer";
 import { camelCase } from "lodash-es";
 import path from "path";
-import { template, toArgv } from "../../../generate/util.js";
+import { requireInteractiveInput } from "../../../command.js";
+import { template } from "../../../generate/util.js";
+import { warningsOutput } from "../../../output.js";
 import {
   DEFAULT_TOOLCHAIN,
   getToolchain,
   TOOLCHAIN_NAMES,
 } from "../../../utils/toolchain/index.js";
 
-export default class GenerateComponentCommand extends PrismaticBaseCommand {
-  static hidden = true;
-  static description = "Initialize a new Component";
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      description: "Name of the component",
-    }),
-    description: Flags.string({
-      char: "d",
-      description: "Description for the component",
-    }),
-    toolchain: Flags.option({
-      options: TOOLCHAIN_NAMES,
-      default: DEFAULT_TOOLCHAIN,
-      hidden: true,
-    })(),
-  };
+export default Cli.command({
+  output: z.object({
+    name: z.string(),
+    path: z.string(),
+    toolchain: z.string(),
+    ...warningsOutput,
+  }),
+  description: "Initialize a new Component",
+  options: z.object({
+    name: z.string().optional().describe("Name of the component"),
+    description: z.string().optional().describe("Description for the component"),
+    toolchain: z
+      .enum(TOOLCHAIN_NAMES)
+      .default(DEFAULT_TOOLCHAIN)
+      .meta({ cli: { hidden: true } }),
+  }),
+  async run(context) {
+    return await generateComponent(context.options);
+  },
+  alias: { description: "d", name: "n" },
+});
 
-  async run() {
-    const { flags } = await this.parse(GenerateComponentCommand);
-    await generateComponent(flags);
-  }
-
-  static async invoke(args: { [K in keyof typeof this.flags]+?: unknown }, config: Config) {
-    await GenerateComponentCommand.run(toArgv(args), config);
-  }
-}
 export async function generateComponent(
   flags: { name?: string; description?: string; toolchain?: "modern" | "legacy" },
   directory = process.cwd(),
 ) {
   const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
+  if (!flags.name || !flags.description) {
+    requireInteractiveInput(
+      "Agent mode requires both --name and --description for components:init:component",
+    );
+  }
   const { name, description } = await inquirer.prompt<{
     name: string;
     description: string;

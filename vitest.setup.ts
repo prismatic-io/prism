@@ -25,8 +25,6 @@ vi.mock(import("./src/context.js"), async (importOriginal) => ({
   hasEnvironmentCredentials: vi.fn(() =>
     Boolean(process.env.PRISM_ACCESS_TOKEN || process.env.PRISM_REFRESH_TOKEN),
   ),
-  useDefaultAuthContext: vi.fn(),
-  useProfileAuthContext: vi.fn(),
 }));
 
 vi.mock(import("./src/utils/http.js"), () => ({

@@ -1,7 +1,8 @@
-import { captureOutput } from "@oclif/test";
-import { describe, expect, it } from "vitest";
+import { runCommand } from "../test-command.js";
+import { describe, expect, it, vi } from "vitest";
 import { loadYaml } from "./serialize.js";
-import { type ColumnsConfig, printTable, tableFlags } from "./table.js";
+import { applyCommandPolicy } from "../command.js";
+import { type ColumnsConfig, printTable, tableFlags, tableOutputSchema } from "./table.js";
 
 type Row = {
   id: string;
@@ -24,17 +25,41 @@ const columns: ColumnsConfig<Row> = {
 };
 
 const render = async (flags: Parameters<typeof printTable>[2] = {}) => {
-  const { stdout } = await captureOutput(async () => {
-    printTable(rows, columns, flags);
+  let stdout = "";
+  const write = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+    stdout += String(chunk);
+    return true;
   });
-  return stdout;
+  try {
+    printTable(rows, columns, flags);
+    return stdout;
+  } finally {
+    write.mockRestore();
+  }
+};
+
+const captureOutput = async (callback: () => void | Promise<void>) => {
+  let stdout = "";
+  let error: unknown;
+  const write = vi.spyOn(process.stdout, "write").mockImplementation((chunk) => {
+    stdout += String(chunk);
+    return true;
+  });
+  try {
+    await callback();
+  } catch (caught) {
+    error = caught;
+  } finally {
+    write.mockRestore();
+  }
+  return { error, stdout };
 };
 
 describe("tableFlags", () => {
   it("returns the full flag set by default", () => {
     const flags = tableFlags();
     expect(Object.keys(flags).sort()).toEqual(
-      ["columns", "csv", "extended", "filter", "no-header", "no-truncate", "output", "sort"].sort(),
+      ["columns", "csv", "extended", "filter", "header", "truncate", "output", "sort"].sort(),
     );
   });
 
@@ -46,12 +71,57 @@ describe("tableFlags", () => {
   it("honors `except`", () => {
     const flags = tableFlags({ except: ["sort", "filter"] });
     expect(Object.keys(flags).sort()).toEqual(
-      ["columns", "csv", "extended", "no-header", "no-truncate", "output"].sort(),
+      ["columns", "csv", "extended", "header", "truncate", "output"].sort(),
     );
   });
 });
 
 describe("printTable", () => {
+  it("returns identifiers and native values without changing human JSON tables", async () => {
+    const data = [
+      {
+        id: "resource-1",
+        enabled: false,
+        versionNumber: 2,
+        labels: ["Production"],
+        value: { nested: 42 },
+      },
+    ];
+    const definitions = {
+      id: { extended: true },
+      enabled: {},
+      versionNumber: {},
+      labels: {},
+      value: {},
+    };
+    const command = applyCommandPolicy({ run: () => printTable(data, definitions) });
+    const result = await runCommand(command, ["--agent"]);
+    expect(result).toEqual({ items: data });
+    expect(
+      tableOutputSchema(["id", "enabled", "versionNumber", "labels", "value"]).safeParse(result)
+        .success,
+    ).toBe(true);
+    const human = await captureOutput(() => {
+      printTable(data, definitions, { output: "json" });
+    });
+    expect(JSON.parse(human.stdout)).toEqual([
+      { enabled: "false", versionNumber: "2", labels: '["Production"]', value: '{"nested":42}' },
+    ]);
+  });
+
+  it("honors filtering, sorting, and projection in agent mode", async () => {
+    const command = applyCommandPolicy({
+      run: () =>
+        printTable(rows, columns, { filter: "role=user", sort: "-name", columns: "id,name" }),
+    });
+
+    await expect(runCommand(command, ["--agent"])).resolves.toEqual({
+      items: [
+        { id: "c3", name: "mike" },
+        { id: "b2", name: "alpha" },
+      ],
+    });
+  });
   it("hides extended columns by default", async () => {
     const stdout = await render();
     expect(stdout).toContain("Name");
@@ -94,7 +164,7 @@ describe("printTable", () => {
   });
 
   it("suppresses the header and separator with --no-header", async () => {
-    const stdout = await render({ "no-header": true });
+    const stdout = await render({ header: false });
     expect(stdout).not.toContain("Name");
     expect(stdout).not.toContain("─");
     expect(stdout).toMatch(/zeta|alpha|mike/);

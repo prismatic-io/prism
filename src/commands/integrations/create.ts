@@ -1,31 +1,22 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { CreateIntegrationDocument as CREATE_INTEGRATION } from "../../graphql/operations/createIntegration.generated.js";
 import { gqlRequest } from "../../graphql.js";
-
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create an Integration";
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      required: true,
-      description: "name of the integration to create",
-    }),
-    description: Flags.string({
-      char: "d",
-      required: true,
-      description: "longer description of the integration",
-    }),
-    customer: Flags.string({
-      char: "c",
-      description: "ID of customer with which to associate the integration",
-    }),
-  };
-
-  async run() {
+import { warningsOutput } from "../../output.js";
+import { z, Cli, Errors } from "incur";
+export default Cli.command({
+  output: z.object({ integrationId: z.string() }).extend(warningsOutput),
+  description: "Create an Integration",
+  options: z.object({
+    name: z.string().describe("name of the integration to create"),
+    description: z.string().describe("longer description of the integration"),
+    customer: z
+      .string()
+      .optional()
+      .describe("ID of customer with which to associate the integration"),
+  }),
+  async run(context) {
     const {
-      flags: { name, description, customer },
-    } = await this.parse(CreateCommand);
+      options: { name, description, customer },
+    } = context;
 
     const result = await gqlRequest({
       document: CREATE_INTEGRATION,
@@ -36,8 +27,27 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.createIntegration?.integration?.id ?? this.error("The operation returned no resource"),
+    const resourceId = result.createIntegration?.integration?.id;
+    if (resourceId == null)
+      throw new Errors.IncurError({
+        code: "VALIDATION_ERROR",
+        message: "Integration was not created",
+        exitCode: 2,
+      });
+    return context.ok(
+      { integrationId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "integrations flows list",
+              description: "Inspect this integration's flows",
+              args: { integration: resourceId },
+            },
+          ],
+        },
+      },
     );
-  }
-}
+  },
+  alias: { customer: "c", description: "d", name: "n" },
+});

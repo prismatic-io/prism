@@ -1,3 +1,4 @@
+import http from "node:http";
 import inquirer from "inquirer";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -24,7 +25,6 @@ store.replaceCredentials = vi.fn(() => Promise.resolve(true));
 vi.mock(import("./context.js"), () => ({
   getAuthContext: vi.fn(),
   resolveProfileAuthContext: vi.fn(),
-  useProfileAuthContext: vi.fn(),
   getPrismaticUrl: vi.fn(() => Promise.resolve("https://auth.example.com")),
 }));
 
@@ -89,7 +89,7 @@ describe("createRequestParams", () => {
 
 describe("selectTenant", () => {
   it("logs an error and returns undefined when every tenant is suspended", async () => {
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    const outputSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
     const tenants = [
       makeTenant("a", { systemSuspended: true }),
       makeTenant("b", { systemSuspended: true }),
@@ -99,7 +99,7 @@ describe("selectTenant", () => {
 
     expect(result).toBeUndefined();
     expect(inquirer.prompt).not.toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("no active tenants"));
+    expect(outputSpy).toHaveBeenCalledWith(expect.stringContaining("no active tenants"));
   });
 
   it("filters suspended tenants out of the choice list", async () => {
@@ -398,4 +398,54 @@ describe.skip("auth", () => {
     const data = await response.json();
     expect(data.email).toBeDefined();
   });
+});
+
+it("rejects and closes the authorization callback listener on timeout", async () => {
+  vi.useFakeTimers();
+  const auth = new Authenticate({ domain, clientId, audience, scopes: [], successRedirectUri });
+  const server = http.createServer();
+  const close = vi.spyOn(server, "close");
+  const internals = auth as unknown as {
+    redirectServer: http.Server;
+    createRedirectServer: () => Promise<string>;
+    openChallengeBrowser: () => Promise<void>;
+  };
+  internals.redirectServer = server;
+  vi.spyOn(internals, "createRedirectServer").mockResolvedValue("http://localhost:12345");
+  vi.spyOn(internals, "openChallengeBrowser").mockResolvedValue();
+  try {
+    const assertion = expect(auth.login()).rejects.toThrow("Authentication timed out");
+    await vi.advanceTimersByTimeAsync(3 * 60 * 1000);
+    await assertion;
+    expect(close).toHaveBeenCalledOnce();
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("closes the authorization callback listener when authentication is cancelled", async () => {
+  const auth = new Authenticate({ domain, clientId, audience, scopes: [], successRedirectUri });
+  const server = http.createServer();
+  const close = vi.spyOn(server, "close");
+  const internals = auth as unknown as {
+    redirectServer: http.Server;
+    createRedirectServer: () => Promise<string>;
+    openChallengeBrowser: () => Promise<void>;
+  };
+  internals.redirectServer = server;
+  vi.spyOn(internals, "createRedirectServer").mockResolvedValue("http://localhost:12345");
+  let presented!: () => void;
+  const challenge = new Promise<void>((resolve) => {
+    presented = resolve;
+  });
+  vi.spyOn(internals, "openChallengeBrowser").mockImplementation(async () => {
+    presented();
+  });
+  const abort = new AbortController();
+  const authenticating = auth.login({ signal: abort.signal });
+  const rejected = expect(authenticating).rejects.toThrow();
+  await challenge;
+  abort.abort();
+  await rejected;
+  expect(close).toHaveBeenCalledOnce();
 });

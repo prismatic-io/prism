@@ -1,33 +1,42 @@
-import { Args, Flags, ux } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { z, Cli } from "incur";
+import { warningsOutput } from "../../output.js";
 import { getPrismMetadata } from "../../utils/integration/metadata.js";
 import { setGlobalDebugOnSystemInstance } from "../../utils/integration/mutate.js";
+import { startAction, stopAction } from "../../utils/progress.js";
 
 const MISSING_ID_ERROR = "You must provide an integration-id (-i).";
 
-export default class SetDebugCommand extends PrismaticBaseCommand {
-  static description = "Set debug mode on or off for an integration's test instance.";
-
-  static args = {
-    debug: Args.boolean({
-      description:
+export default Cli.command({
+  output: z
+    .object({ integrationId: z.string() })
+    .extend(warningsOutput)
+    .extend({ debug: z.boolean() }),
+  description: "Set debug mode on or off for an integration's test instance.",
+  args: z.object({
+    debug: z
+      .preprocess(
+        (value) =>
+          typeof value === "string"
+            ? !["0", "false", "n", "no"].includes(value.toLowerCase())
+            : value,
+        z.boolean(),
+      )
+      .describe(
         "Boolean value to set whether globalDebug should be enabled for the given integration",
-      required: true,
-    }),
-  };
-
-  static flags = {
-    "integration-id": Flags.string({
-      char: "i",
-      description: "ID of the integration containing the flow to test.",
-    }),
-  };
-
-  async run() {
+      )
+      .meta({ cli: { kind: "boolean" } }),
+  }),
+  options: z.object({
+    "integration-id": z
+      .string()
+      .optional()
+      .describe("ID of the integration containing the flow to test."),
+  }),
+  async run(context) {
     const {
       args: { debug },
-      flags: { "integration-id": integrationIdFlag },
-    } = await this.parse(SetDebugCommand);
+      options: { "integration-id": integrationIdFlag },
+    } = context;
 
     let integrationId = integrationIdFlag;
 
@@ -43,8 +52,10 @@ export default class SetDebugCommand extends PrismaticBaseCommand {
       if (!integrationId) throw MISSING_ID_ERROR;
     }
 
-    ux.action.start("Updating globalDebug setting on test instance...");
+    startAction("Updating globalDebug setting on test instance...");
     await setGlobalDebugOnSystemInstance(integrationId, debug);
-    ux.action.stop();
-  }
-}
+    stopAction();
+    return { integrationId, debug };
+  },
+  alias: { "integration-id": "i" },
+});

@@ -1,7 +1,9 @@
-import { Flags } from "@oclif/core";
-
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { ux } from "../../utils/ux.js";
+import { confirm as confirmPrompt } from "../../utils/prompts.js";
+import { resolve } from "node:path";
+import { getPackageEntrypointDirectory } from "../../utils/import.js";
+import { z, Cli } from "incur";
+import { writeCommandStatus } from "../../command.js";
+import { warningsOutput } from "../../output.js";
 import {
   createComponentPackage,
   createSourceCodePackage,
@@ -16,68 +18,58 @@ import {
   uploadFile,
 } from "../../utils/component/publish.js";
 import { whoAmI } from "../../utils/user/query.js";
-import { getPackageEntrypointDirectory } from "../../utils/import.js";
-import { resolve } from "node:path";
 
-export default class PublishCommand extends PrismaticBaseCommand {
-  static description = "Publish a Component to Prismatic";
-
-  static examples = [
-    {
-      description: "Build and publish a component:",
-      command: "npm run build && <%= config.bin %> <%= command.id %>",
-    },
-  ];
-
-  static flags = {
-    comment: Flags.string({
-      required: false,
-      char: "c",
-      description: "Comment about changes in this Publish",
+export default Cli.command({
+  output: z.union([
+    z.object({
+      ...warningsOutput,
+      submitted: z.literal(true),
+      label: z.string(),
+      versionNumber: z.number(),
     }),
-    confirm: Flags.boolean({
-      allowNo: true,
-      default: true,
-      description: "Interactively confirm publish",
-    }),
-    "check-signature": Flags.boolean({
-      allowNo: true,
-      default: true,
-      description: "Check signature of existing component and confirm publish if matched",
-    }),
-    "skip-on-signature-match": Flags.boolean({
-      required: false,
-      description: "Skips component publish if the new signature matches the existing signature",
-    }),
-    customer: Flags.string({
-      description: "ID of customer with which to associate the component",
-    }),
-    commitHash: Flags.string({
-      required: false,
-      description: "Commit hash corresponding to the component version being published",
-    }),
-    commitUrl: Flags.string({
-      required: false,
-      description: "URL to the commit details for this component version",
-    }),
-    repoUrl: Flags.string({
-      required: false,
-      description: "URL to the repository containing the component definition",
-    }),
-    pullRequestUrl: Flags.string({
-      required: false,
-      description: "URL to the pull request that modified this component version",
-    }),
-    "include-source": Flags.boolean({
-      required: false,
-      default: false,
-      description: "Include source code in the component publish",
-    }),
-  };
-
-  async run() {
+    z.object({ success: z.literal(true), messages: z.array(z.string()), ...warningsOutput }),
+  ]),
+  description: "Publish a Component to Prismatic",
+  examples: [{ description: "Build and publish a component:" }],
+  options: z.object({
+    comment: z.string().optional().describe("Comment about changes in this Publish"),
+    confirm: z.boolean().default(true).describe("Interactively confirm publish"),
+    "check-signature": z
+      .boolean()
+      .default(true)
+      .describe("Check signature of existing component and confirm publish if matched"),
+    "skip-on-signature-match": z
+      .boolean()
+      .optional()
+      .describe("Skips component publish if the new signature matches the existing signature"),
+    customer: z
+      .string()
+      .optional()
+      .describe("ID of customer with which to associate the component"),
+    commitHash: z
+      .string()
+      .optional()
+      .describe("Commit hash corresponding to the component version being published"),
+    commitUrl: z
+      .string()
+      .optional()
+      .describe("URL to the commit details for this component version"),
+    repoUrl: z
+      .string()
+      .optional()
+      .describe("URL to the repository containing the component definition"),
+    pullRequestUrl: z
+      .string()
+      .optional()
+      .describe("URL to the pull request that modified this component version"),
+    "include-source": z
+      .boolean()
+      .default(false)
+      .describe("Include source code in the component publish"),
+  }),
+  async run(context) {
     const {
-      flags: {
+      options: {
         comment,
         confirm,
         "check-signature": checkSignature,
@@ -89,7 +81,7 @@ export default class PublishCommand extends PrismaticBaseCommand {
         pullRequestUrl,
         "include-source": includeSource,
       },
-    } = await this.parse(PublishCommand);
+    } = context;
 
     const me = await whoAmI();
     const customer = flagCustomer ?? me.customer?.id;
@@ -121,20 +113,23 @@ export default class PublishCommand extends PrismaticBaseCommand {
       if (signatureMatches) {
         if (
           skipOnSignatureMatch ||
-          !(await ux.confirm(
+          !(await confirmPrompt(
             "The new package signature matches the existing package signature. Continue publishing new package? (y/N)",
           ))
         ) {
           // Signatures match and we've opted to skip on match, so bail.
-          ux.log("Package signatures match, skipping publish.");
-          return;
+          writeCommandStatus("Package signatures match, skipping publish.");
+          return {
+            success: true as const,
+            messages: ["Package signatures match, skipping publish."],
+          };
         }
       }
     }
 
     const shouldPublish = await confirmPublish(definition, confirm);
     if (!shouldPublish) {
-      return;
+      return { success: true as const, messages: ["Publishing cancelled."] };
     }
 
     const {
@@ -168,8 +163,22 @@ export default class PublishCommand extends PrismaticBaseCommand {
       display: { label },
     } = definition;
     // Tell user that their publish was successful and can use components list to view status
-    this.log(
+    writeCommandStatus(
       `Successfully submitted ${label} (v${versionNumber})! The publish should finish processing shortly.`,
     );
-  }
-}
+    return context.ok(
+      { submitted: true, label, versionNumber },
+      {
+        cta: {
+          commands: [
+            {
+              command: "components list",
+              description: "Check component publication status",
+            },
+          ],
+        },
+      },
+    );
+  },
+  alias: { comment: "c" },
+});

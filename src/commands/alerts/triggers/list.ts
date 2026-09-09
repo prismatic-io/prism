@@ -1,20 +1,20 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
+import { tableOutputSchema, tableFlags, printTable } from "../../../utils/table.js";
 import { ListAlertTriggersDocument as LIST_ALERT_TRIGGERS } from "../../../graphql/operations/listAlertTriggers.generated.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
-
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Alert Triggers";
-  static flags = { ...ux.table.flags() };
-
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+import { z, Cli } from "incur";
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["id", "name"]),
+  description: "List Alert Triggers",
+  options: z.object({ ...tableFlags() }),
+  async run(context) {
+    const { options: flags } = context;
 
     const result = await gqlRequest({
       document: LIST_ALERT_TRIGGERS,
     });
 
-    ux.table(
+    return printTable(
       result.alertTriggers.nodes,
       {
         id: {
@@ -25,5 +25,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

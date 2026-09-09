@@ -1,0 +1,432 @@
+{
+  "checkedAt": "2026-09-08T18:12:45.043Z",
+  "stack": "https://app.rwersal.prismatic-dev.io",
+  "legacy": "@prismatic-io/prism/10.2.0 darwin-arm64 node-v24.19.0",
+  "candidate": "@prismatic-io/prism/11.0.0 darwin-arm64 node-v24.19.0",
+  "checks": [
+    {
+      "command": "me",
+      "status": "matched",
+      "sha256": "3b8dba3a319e1d09a95e72a6f34eb975a87f9531f662d6345b3a86cadb5c54a3"
+    },
+    {
+      "command": "customers:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 9,
+      "legacyHash": "dcc716f966afa21ba93df719f73ba3ed6eedf05f3a6b473c48694f84e05240db",
+      "candidateHash": "dcc716f966afa21ba93df719f73ba3ed6eedf05f3a6b473c48694f84e05240db"
+    },
+    {
+      "command": "customers:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 9,
+      "legacyHash": "dcc716f966afa21ba93df719f73ba3ed6eedf05f3a6b473c48694f84e05240db",
+      "candidateHash": "dcc716f966afa21ba93df719f73ba3ed6eedf05f3a6b473c48694f84e05240db"
+    },
+    {
+      "command": "customers:list",
+      "mode": "pagination",
+      "status": "matched"
+    },
+    {
+      "command": "integrations:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 16,
+      "legacyHash": "e04d33a98efd2601edcaa4b7f2d697c7c388774c9b1f69415910ce4401fafd35",
+      "candidateHash": "e04d33a98efd2601edcaa4b7f2d697c7c388774c9b1f69415910ce4401fafd35"
+    },
+    {
+      "command": "integrations:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 16,
+      "legacyHash": "e04d33a98efd2601edcaa4b7f2d697c7c388774c9b1f69415910ce4401fafd35",
+      "candidateHash": "e04d33a98efd2601edcaa4b7f2d697c7c388774c9b1f69415910ce4401fafd35"
+    },
+    {
+      "command": "integrations:list",
+      "mode": "pagination",
+      "status": "matched"
+    },
+    {
+      "command": "instances:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 7,
+      "legacyHash": "554795838225ada3744ac06cd48830c134f9208646394e491a2c5ac0def37a62",
+      "candidateHash": "554795838225ada3744ac06cd48830c134f9208646394e491a2c5ac0def37a62"
+    },
+    {
+      "command": "instances:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 7,
+      "legacyHash": "554795838225ada3744ac06cd48830c134f9208646394e491a2c5ac0def37a62",
+      "candidateHash": "554795838225ada3744ac06cd48830c134f9208646394e491a2c5ac0def37a62"
+    },
+    {
+      "command": "instances:list",
+      "mode": "pagination",
+      "status": "matched"
+    },
+    {
+      "command": "components:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 205,
+      "legacyHash": "528f9ac57549f158088153f3efa22a1acadcf0d49b229de8e3d5b288211a5dd7",
+      "candidateHash": "528f9ac57549f158088153f3efa22a1acadcf0d49b229de8e3d5b288211a5dd7"
+    },
+    {
+      "command": "components:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 205,
+      "legacyHash": "528f9ac57549f158088153f3efa22a1acadcf0d49b229de8e3d5b288211a5dd7",
+      "candidateHash": "528f9ac57549f158088153f3efa22a1acadcf0d49b229de8e3d5b288211a5dd7"
+    },
+    {
+      "command": "components:list",
+      "mode": "pagination",
+      "status": "matched"
+    },
+    {
+      "command": "on-prem-resources:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 1,
+      "legacyHash": "7c71910def5551c9930be5ee50c9df162f776fe2e51dd6f055c5e90c0135994a",
+      "candidateHash": "7c71910def5551c9930be5ee50c9df162f776fe2e51dd6f055c5e90c0135994a"
+    },
+    {
+      "command": "on-prem-resources:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 1,
+      "legacyHash": "7c71910def5551c9930be5ee50c9df162f776fe2e51dd6f055c5e90c0135994a",
+      "candidateHash": "7c71910def5551c9930be5ee50c9df162f776fe2e51dd6f055c5e90c0135994a"
+    },
+    {
+      "command": "alerts:groups:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 0,
+      "legacyHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidateHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "command": "alerts:groups:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 0,
+      "legacyHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidateHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "command": "alerts:monitors:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 2,
+      "legacyHash": "fa3e6860d444e995610bf195e6aae150beb811e1fd547e7fb2a7a4935603bcee",
+      "candidateHash": "fa3e6860d444e995610bf195e6aae150beb811e1fd547e7fb2a7a4935603bcee"
+    },
+    {
+      "command": "alerts:monitors:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 2,
+      "legacyHash": "fa3e6860d444e995610bf195e6aae150beb811e1fd547e7fb2a7a4935603bcee",
+      "candidateHash": "fa3e6860d444e995610bf195e6aae150beb811e1fd547e7fb2a7a4935603bcee"
+    },
+    {
+      "command": "alerts:monitors:list",
+      "mode": "pagination",
+      "status": "matched"
+    },
+    {
+      "command": "alerts:triggers:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 13,
+      "legacyHash": "e89c8a3bec8032e57bd53ba406ca6cbaec5b0a2ebfe4b18c346c18a5bc915a73",
+      "candidateHash": "e89c8a3bec8032e57bd53ba406ca6cbaec5b0a2ebfe4b18c346c18a5bc915a73"
+    },
+    {
+      "command": "alerts:triggers:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 13,
+      "legacyHash": "e89c8a3bec8032e57bd53ba406ca6cbaec5b0a2ebfe4b18c346c18a5bc915a73",
+      "candidateHash": "e89c8a3bec8032e57bd53ba406ca6cbaec5b0a2ebfe4b18c346c18a5bc915a73"
+    },
+    {
+      "command": "alerts:webhooks:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 1,
+      "legacyHash": "87ef17786063455dd462a1c43aad462520edd09b5ec861c8b783920d4f683fff",
+      "candidateHash": "87ef17786063455dd462a1c43aad462520edd09b5ec861c8b783920d4f683fff"
+    },
+    {
+      "command": "alerts:webhooks:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 1,
+      "legacyHash": "87ef17786063455dd462a1c43aad462520edd09b5ec861c8b783920d4f683fff",
+      "candidateHash": "87ef17786063455dd462a1c43aad462520edd09b5ec861c8b783920d4f683fff"
+    },
+    {
+      "command": "customers:users:roles",
+      "mode": "human",
+      "status": "matched",
+      "count": 4,
+      "legacyHash": "5d676a042316e9f77dc194dcd66657114dc960235674776fc0d58b874eb667e2",
+      "candidateHash": "5d676a042316e9f77dc194dcd66657114dc960235674776fc0d58b874eb667e2"
+    },
+    {
+      "command": "customers:users:roles",
+      "mode": "agent",
+      "status": "matched",
+      "count": 4,
+      "legacyHash": "5d676a042316e9f77dc194dcd66657114dc960235674776fc0d58b874eb667e2",
+      "candidateHash": "5d676a042316e9f77dc194dcd66657114dc960235674776fc0d58b874eb667e2"
+    },
+    {
+      "command": "logs:severities:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 7,
+      "legacyHash": "7986c8a162c94e5f6ffc93c11533865d2143f68462a7e6e6fdeee908eaf1c9b5",
+      "candidateHash": "7986c8a162c94e5f6ffc93c11533865d2143f68462a7e6e6fdeee908eaf1c9b5"
+    },
+    {
+      "command": "logs:severities:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 7,
+      "legacyHash": "7986c8a162c94e5f6ffc93c11533865d2143f68462a7e6e6fdeee908eaf1c9b5",
+      "candidateHash": "7986c8a162c94e5f6ffc93c11533865d2143f68462a7e6e6fdeee908eaf1c9b5"
+    },
+    {
+      "command": "organization:connections:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 26,
+      "legacyHash": "70b0b4ae2f9d6ba60595c2b8dd50af235811bd95a85e1cb6aa7afcc9a3ec0419",
+      "candidateHash": "70b0b4ae2f9d6ba60595c2b8dd50af235811bd95a85e1cb6aa7afcc9a3ec0419"
+    },
+    {
+      "command": "organization:connections:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 26,
+      "legacyHash": "70b0b4ae2f9d6ba60595c2b8dd50af235811bd95a85e1cb6aa7afcc9a3ec0419",
+      "candidateHash": "70b0b4ae2f9d6ba60595c2b8dd50af235811bd95a85e1cb6aa7afcc9a3ec0419"
+    },
+    {
+      "command": "organization:signing-keys:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 8,
+      "legacyHash": "811131984371f53130073d6602334fcbc247525bb0a42298ad28be0cede7c21a",
+      "candidateHash": "811131984371f53130073d6602334fcbc247525bb0a42298ad28be0cede7c21a"
+    },
+    {
+      "command": "organization:signing-keys:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 8,
+      "legacyHash": "811131984371f53130073d6602334fcbc247525bb0a42298ad28be0cede7c21a",
+      "candidateHash": "811131984371f53130073d6602334fcbc247525bb0a42298ad28be0cede7c21a"
+    },
+    {
+      "command": "organization:users:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 4,
+      "legacyHash": "269a931ea2c7a0f8867bf5a24a0b0a3d11941155151d03e17067ad33fdca1f8c",
+      "candidateHash": "269a931ea2c7a0f8867bf5a24a0b0a3d11941155151d03e17067ad33fdca1f8c"
+    },
+    {
+      "command": "organization:users:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 4,
+      "legacyHash": "269a931ea2c7a0f8867bf5a24a0b0a3d11941155151d03e17067ad33fdca1f8c",
+      "candidateHash": "269a931ea2c7a0f8867bf5a24a0b0a3d11941155151d03e17067ad33fdca1f8c"
+    },
+    {
+      "command": "organization:users:list",
+      "mode": "pagination",
+      "status": "matched"
+    },
+    {
+      "command": "organization:users:roles",
+      "mode": "human",
+      "status": "matched",
+      "count": 6,
+      "legacyHash": "157292e82f5987ccfb06dcbffbd5145f55d6176007013d18e0f807641bc56688",
+      "candidateHash": "157292e82f5987ccfb06dcbffbd5145f55d6176007013d18e0f807641bc56688"
+    },
+    {
+      "command": "organization:users:roles",
+      "mode": "agent",
+      "status": "matched",
+      "count": 6,
+      "legacyHash": "157292e82f5987ccfb06dcbffbd5145f55d6176007013d18e0f807641bc56688",
+      "candidateHash": "157292e82f5987ccfb06dcbffbd5145f55d6176007013d18e0f807641bc56688"
+    },
+    {
+      "command": "customers:users:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 3,
+      "legacyHash": "278877fc7dbbb217ff78c2c8505763c8b8a2a5542878994c11f44941f74b7a34",
+      "candidateHash": "278877fc7dbbb217ff78c2c8505763c8b8a2a5542878994c11f44941f74b7a34"
+    },
+    {
+      "command": "customers:users:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 3,
+      "legacyHash": "278877fc7dbbb217ff78c2c8505763c8b8a2a5542878994c11f44941f74b7a34",
+      "candidateHash": "278877fc7dbbb217ff78c2c8505763c8b8a2a5542878994c11f44941f74b7a34"
+    },
+    {
+      "command": "customers:users:list",
+      "mode": "pagination",
+      "status": "matched"
+    },
+    {
+      "command": "instances:config-vars:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 0,
+      "legacyHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidateHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "command": "instances:config-vars:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 0,
+      "legacyHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidateHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "command": "instances:flow-configs:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 1,
+      "legacyHash": "30dff89a8639b41c552eaefed77e441f3cb52cda03764591019b2e360ed84b58",
+      "candidateHash": "30dff89a8639b41c552eaefed77e441f3cb52cda03764591019b2e360ed84b58"
+    },
+    {
+      "command": "instances:flow-configs:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 1,
+      "legacyHash": "30dff89a8639b41c552eaefed77e441f3cb52cda03764591019b2e360ed84b58",
+      "candidateHash": "30dff89a8639b41c552eaefed77e441f3cb52cda03764591019b2e360ed84b58"
+    },
+    {
+      "command": "integrations:flows:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 1,
+      "legacyHash": "5c1fe24a1ea31a3da470ead2a99fbabb773ea691ff5e840bfba6dafa075b1aef",
+      "candidateHash": "5c1fe24a1ea31a3da470ead2a99fbabb773ea691ff5e840bfba6dafa075b1aef"
+    },
+    {
+      "command": "integrations:flows:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 1,
+      "legacyHash": "5c1fe24a1ea31a3da470ead2a99fbabb773ea691ff5e840bfba6dafa075b1aef",
+      "candidateHash": "5c1fe24a1ea31a3da470ead2a99fbabb773ea691ff5e840bfba6dafa075b1aef"
+    },
+    {
+      "command": "integrations:versions",
+      "mode": "human",
+      "status": "matched",
+      "count": 4,
+      "legacyHash": "58362b0c644e445b583288512093ce6bf779aa22558bb9457b645a0933d97e93",
+      "candidateHash": "58362b0c644e445b583288512093ce6bf779aa22558bb9457b645a0933d97e93"
+    },
+    {
+      "command": "integrations:versions",
+      "mode": "agent",
+      "status": "matched",
+      "count": 4,
+      "legacyHash": "58362b0c644e445b583288512093ce6bf779aa22558bb9457b645a0933d97e93",
+      "candidateHash": "58362b0c644e445b583288512093ce6bf779aa22558bb9457b645a0933d97e93"
+    },
+    {
+      "command": "components:actions:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 1,
+      "legacyHash": "e3b4d79a2229d59a480f557db6578afae3c67dcd0831f8375d3f1c867ce2cfa9",
+      "candidateHash": "e3b4d79a2229d59a480f557db6578afae3c67dcd0831f8375d3f1c867ce2cfa9"
+    },
+    {
+      "command": "components:actions:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 1,
+      "legacyHash": "e3b4d79a2229d59a480f557db6578afae3c67dcd0831f8375d3f1c867ce2cfa9",
+      "candidateHash": "e3b4d79a2229d59a480f557db6578afae3c67dcd0831f8375d3f1c867ce2cfa9"
+    },
+    {
+      "command": "components:data-sources:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 0,
+      "legacyHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidateHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "command": "components:data-sources:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 0,
+      "legacyHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidateHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "command": "components:triggers:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 0,
+      "legacyHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidateHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "command": "components:triggers:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 0,
+      "legacyHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "candidateHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "command": "alerts:events:list",
+      "mode": "human",
+      "status": "matched",
+      "count": 100,
+      "legacyHash": "fefe08a74a9361158c679a22b30ab33894b50914cb62af741de79e0f0084ec80",
+      "candidateHash": "fefe08a74a9361158c679a22b30ab33894b50914cb62af741de79e0f0084ec80"
+    },
+    {
+      "command": "alerts:events:list",
+      "mode": "agent",
+      "status": "matched",
+      "count": 100,
+      "legacyHash": "fefe08a74a9361158c679a22b30ab33894b50914cb62af741de79e0f0084ec80",
+      "candidateHash": "fefe08a74a9361158c679a22b30ab33894b50914cb62af741de79e0f0084ec80"
+    }
+  ]
+}

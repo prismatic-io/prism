@@ -5,9 +5,10 @@ interface HandleErrorProps {
 
 export function handleError({ message, err }: HandleErrorProps): never {
   if (err instanceof Error) {
-    console.error(message);
+    writeCommandOutput(message, "stderr");
     throw err;
   }
 
   throw new Error(message);
 }
+import { writeCommandOutput } from "../command.js";

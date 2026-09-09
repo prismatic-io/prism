@@ -1,63 +1,87 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import {
-  ListIntegrationsDocument as LIST_INTEGRATIONS,
-  type ListIntegrationsQuery,
-} from "../../graphql/integrations/listIntegrations.generated.js";
+import type { ListIntegrationsQuery } from "../../graphql/integrations/listIntegrations.generated.js";
+import { ListIntegrationsDocument as LIST_INTEGRATIONS } from "../../graphql/integrations/listIntegrations.generated.js";
 import { gqlRequest } from "../../graphql.js";
-import { ux } from "../../utils/ux.js";
+import { paginationFlags, tableOutputSchema, tableFlags, printTable } from "../../utils/table.js";
+import { z, Cli } from "incur";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Integrations";
-  static flags = {
-    ...ux.table.flags(),
-    showAllVersions: Flags.boolean({
-      char: "a",
-      description:
+type IntegrationNode = ListIntegrationsQuery["integrations"]["nodes"][number];
+
+const isIntegrationNode = (node: IntegrationNode | null): node is IntegrationNode => node !== null;
+
+export default Cli.command({
+  outputPolicy: "agent-only",
+  description: "List Integrations",
+  output: tableOutputSchema(
+    [
+      "id",
+      "name",
+      "description",
+      "versionNumber",
+      "labels",
+      "category",
+      "customerId",
+      "customerName",
+      "customerExternalId",
+    ],
+    true,
+  ),
+  options: z.object({
+    ...tableFlags(),
+    ...paginationFlags(),
+    showAllVersions: z
+      .boolean()
+      .optional()
+      .describe(
         "If specified this command returns all versions of all integrations rather than only the latest version",
-    }),
-    customer: Flags.string({
-      char: "c",
-      description:
+      ),
+    customer: z
+      .string()
+      .optional()
+      .describe(
         "If specified this command returns only integrations that are available to the specified customer ID",
-    }),
-    "org-only": Flags.boolean({
-      char: "o",
-      description: "If specified this command returns only org integrations",
-    }),
-    search: Flags.string({
-      char: "s",
-      description: "If specified, search for integrations by name (case insensitive).",
-    }),
-  };
-
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+      ),
+    "org-only": z
+      .boolean()
+      .optional()
+      .describe("If specified this command returns only org integrations"),
+    search: z
+      .string()
+      .optional()
+      .describe("If specified, search for integrations by name (case insensitive)."),
+  }),
+  async run(context) {
+    const { options: flags } = context;
     const { showAllVersions, customer, "org-only": orgOnly, search } = flags;
 
     let integrations: IntegrationNode[] = [];
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let pageInfo: ListIntegrationsQuery["integrations"]["pageInfo"] = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
       const {
-        integrations: { nodes, pageInfo },
+        integrations: { nodes, pageInfo: nextPageInfo },
       }: ListIntegrationsQuery = await gqlRequest({
         document: LIST_INTEGRATIONS,
         variables: {
           showAllVersions,
           after: cursor,
+          first: flags.first,
           customer,
           customerIsnull: orgOnly,
           search,
         },
       });
-      integrations = [...integrations, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      integrations = [...integrations, ...nodes.filter(isIntegrationNode)];
+      pageInfo = nextPageInfo;
+      cursor = nextPageInfo.endCursor ?? null;
+      hasNextPage = nextPageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = printTable(
       integrations,
       {
         id: {
@@ -81,7 +105,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
-
-type IntegrationNode = ListIntegrationsQuery["integrations"]["nodes"][number];
+    return { ...result, pageInfo };
+  },
+  alias: { search: "s", "org-only": "o", customer: "c", showAllVersions: "a" },
+});

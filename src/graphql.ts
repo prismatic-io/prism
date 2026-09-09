@@ -3,7 +3,9 @@ import { print } from "graphql";
 import { URL } from "url";
 import { z } from "zod";
 import { getAuthenticatedContext } from "./auth.js";
+import { writeCommandStatus } from "./command.js";
 import type { AuthContext } from "./context.js";
+import { isPrintRequestsEnabled } from "./runtime.js";
 import { fetch } from "./utils/http.js";
 
 interface GQLRequest<TData, TVariables = Record<string, unknown>> {
@@ -110,11 +112,11 @@ export const gqlRequest = async <T = unknown, TVariables = Record<string, unknow
 
   const query = typeof document === "string" ? document : print(document);
 
-  if (process.env.PRISMATIC_PRINT_REQUESTS) {
-    console.log("=================================");
-    console.log(`GraphQL Request: ${query}`);
-    console.log(`Variables: ${JSON.stringify(variables)}`);
-    console.log("=================================");
+  if (isPrintRequestsEnabled()) {
+    writeCommandStatus("=================================");
+    writeCommandStatus(`GraphQL Request: ${query}`);
+    writeCommandStatus(`Variables: ${JSON.stringify(variables)}`);
+    writeCommandStatus("=================================");
   }
 
   let response: Awaited<ReturnType<typeof fetch>>;

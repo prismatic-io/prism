@@ -25,31 +25,29 @@
   "scripts": {
     "clean": "rm -rf lib && bun run clean-test-temp",
     "clean-test-temp": "rm -rf src/commands/components/temp src/commands/components/init/temp",
-    "build": "bun run clean && bun run format && bun run lint && tsc && bun run bundle",
-    "bundle": "bun run build.ts && oclif manifest",
+    "build": "bun run clean && bun run format && bun run lint && tsc && bun run bundle && bun run test:cli",
+    "bundle": "bun run build.ts",
     "bundle:debug": "bun run build.ts --debug",
     "prepack": "bun run build",
     "lint": "biome lint .",
     "lint-fix": "biome lint --write --unsafe .",
     "format": "bun run lint-fix && biome format --write .",
     "check-format": "biome format .",
-    "test": "bun run clean-test-temp && vitest run",
-    "test:snapshots": "bun run clean-test-temp && vitest run --update",
+    "test": "bun run clean-test-temp && vitest run --project unit",
+    "test:snapshots": "bun run clean-test-temp && vitest run --project unit --update",
     "codegen:clean": "find src -name '*.generated.ts' -delete",
-    "codegen": "bun run codegen:clean && export GRAPHQL_AUTH_KEY=$(prism me:token) && export PRISMATIC_URL=$(echo $PRISMATIC_URL) && graphql-codegen --config codegen.ts && bun run format"
+    "codegen": "bun run codegen:clean && export GRAPHQL_AUTH_KEY=$(FORCE_HUMAN_MODE=true prism me:token | node scripts/read-codegen-token.mjs) && export PRISMATIC_URL=$(echo $PRISMATIC_URL) && graphql-codegen --config codegen.ts && bun run format",
+    "test:cli": "vitest run --project cli",
+    "test:live": "vitest run --config vitest.live.config.ts"
   },
   "files": [
-    "oclif.manifest.json",
     "bin",
     "lib"
   ],
   "dependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
+    "@modelcontextprotocol/server": "2.0.0-alpha.4",
     "@msgpack/msgpack": "^3.1.3",
-    "@oclif/core": "^4.11.11",
-    "@oclif/plugin-autocomplete": "^3.2.49",
-    "@oclif/plugin-help": "^6.2.48",
-    "@oclif/plugin-warn-if-update-available": "^3.1.64",
     "chardet": "^2.1.1",
     "dayjs": "^1.11.20",
     "dotenv": "^17.4.2",
@@ -57,6 +55,7 @@
     "fs-extra": "^11.3.5",
     "graphql": "^16.14.0",
     "http-status-codes": "^2.3.0",
+    "incur": "^0.5.1",
     "inquirer": "^14.2.2",
     "inquirer-autocomplete-standalone": "^0.8.1",
     "js-yaml": "^5.1.0",
@@ -87,7 +86,6 @@
     "@graphql-codegen/typescript": "^6.1.0",
     "@graphql-codegen/typescript-operations": "^6.1.6",
     "@graphql-typed-document-node/core": "^3.2.0",
-    "@oclif/test": "^4.1.20",
     "@prismatic-io/spectral": "^10.22.0",
     "@types/ejs": "^3.1.5",
     "@types/fs-extra": "^11.0.4",
@@ -101,84 +99,9 @@
     "bun-types": "^1.3.14",
     "chalk": "^6.0.0",
     "msw": "^2.14.6",
-    "oclif": "^4.23.24",
     "openapi-types": "^12.1.3",
     "typescript": "^7.0.2",
     "vitest": "^4.1.9",
     "yauzl": "^3.3.0"
-  },
-  "oclif": {
-    "commands": {
-      "strategy": "explicit",
-      "target": "./lib/index.js",
-      "identifier": "Commands"
-    },
-    "bin": "prism",
-    "dirname": "prism",
-    "plugins": [
-      "@oclif/plugin-autocomplete",
-      "@oclif/plugin-help",
-      "@oclif/plugin-warn-if-update-available"
-    ],
-    "warn-if-update-available": {
-      "timeoutInDays": 7
-    },
-    "topicSeparator": ":",
-    "topics": {
-      "alerts": {
-        "description": "Manage Alerting resources"
-      },
-      "alerts:groups": {
-        "description": "Manage Alert Groups"
-      },
-      "alerts:monitors": {
-        "description": "Manage Alert Monitors"
-      },
-      "alerts:webhooks": {
-        "description": "Manage Alert Webhooks"
-      },
-      "components": {
-        "description": "Manage, create, and publish Components"
-      },
-      "components:init": {
-        "description": "Create Components"
-      },
-      "components:dev": {
-        "description": "Component development utilities"
-      },
-      "customers": {
-        "description": "Manage Customers"
-      },
-      "customers:users": {
-        "description": "Manage Customer Users"
-      },
-      "executions": {
-        "description": "Fetch results of Instance executions or Integration test runs"
-      },
-      "help": {
-        "description": "Display this help or command specific help"
-      },
-      "instances": {
-        "description": "Manage Instances"
-      },
-      "integrations": {
-        "description": "Manage and import Integrations"
-      },
-      "organization": {
-        "description": "Manage your Organization"
-      },
-      "profiles": {
-        "description": "Manage authentication profiles"
-      },
-      "organization:users": {
-        "description": "Manage Organization Users"
-      },
-      "translations:list": {
-        "description": "Generates phrases for all marketplace integrations"
-      },
-      "workflows": {
-        "description": "Manage embedded workflow builder workflows and templates"
-      }
-    }
   }
 }

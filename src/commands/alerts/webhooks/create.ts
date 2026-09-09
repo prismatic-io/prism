@@ -1,38 +1,27 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { CreateAlertWebhookDocument as CREATE_ALERT_WEBHOOK } from "../../../graphql/operations/createAlertWebhook.generated.js";
 import { gqlRequest } from "../../../graphql.js";
-
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create an Alert Webhook";
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      required: true,
-      description: "name of the webhook to be created",
-    }),
-    url: Flags.string({
-      char: "u",
-      required: true,
-      description: "URL that will receive a POST request for an alert",
-    }),
-    headers: Flags.string({
-      required: false,
-      char: "h",
-      description: "JSON-formatted object of key/value pairs to include in the request header",
-    }),
-    payloadTemplate: Flags.string({
-      char: "p",
-      required: true,
-      description:
+import { warningsOutput } from "../../../output.js";
+import { z, Cli, Errors } from "incur";
+export default Cli.command({
+  output: z.object({ alertWebhookId: z.string() }).extend(warningsOutput),
+  description: "Create an Alert Webhook",
+  options: z.object({
+    name: z.string().describe("name of the webhook to be created"),
+    url: z.string().describe("URL that will receive a POST request for an alert"),
+    headers: z
+      .string()
+      .optional()
+      .describe("JSON-formatted object of key/value pairs to include in the request header"),
+    payloadTemplate: z
+      .string()
+      .describe(
         "template string that will be used as the request body, see documentation for details",
-    }),
-  };
-
-  async run() {
+      ),
+  }),
+  async run(context) {
     const {
-      flags: { name, url, headers, payloadTemplate },
-    } = await this.parse(CreateCommand);
+      options: { name, url, headers, payloadTemplate },
+    } = context;
 
     const result = await gqlRequest({
       document: CREATE_ALERT_WEBHOOK,
@@ -43,10 +32,17 @@ export default class CreateCommand extends PrismaticBaseCommand {
         payloadTemplate,
       },
     });
+    const requiredValue1 = result.createAlertWebhook?.alertWebhook?.id;
+    if (requiredValue1 == null)
+      throw new Errors.IncurError({
+        code: "VALIDATION_ERROR",
+        message: "Alert webhook was not created",
+        exitCode: 2,
+      });
 
-    this.log(
-      result.createAlertWebhook?.alertWebhook?.id ??
-        this.error("The operation returned no resource"),
-    );
-  }
-}
+    return {
+      alertWebhookId: requiredValue1,
+    };
+  },
+  alias: { payloadTemplate: "p", headers: "h", url: "u", name: "n" },
+});

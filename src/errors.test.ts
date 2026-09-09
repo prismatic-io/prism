@@ -3,8 +3,8 @@ import { processError } from "./errors.js";
 import { ClientError } from "./graphql.js";
 
 describe("processError", () => {
-  it("passes OclifError through unchanged", () => {
-    const err = Object.assign(new Error("boom"), { oclif: { exit: 2 } });
+  it("passes framework errors through unchanged", () => {
+    const err = Object.assign(new Error("boom"), { exitCode: 2 });
     const out = processError(err);
     expect(out).toBe(err);
   });
