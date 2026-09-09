@@ -1,4 +1,4 @@
-import { Cli, Errors, z } from "incur";
+import { Cli, z } from "incur";
 import { writeCommandStatus } from "../../command.js";
 import { getConfigStore } from "../../context.js";
 import { warningsOutput } from "../../output.js";
@@ -21,8 +21,10 @@ export default Cli.command({
 
     const result = await getConfigStore().deleteProfile(name);
     if (!result.deleted) {
-      throw new Errors.IncurError({
-        code: "COMMAND_FAILED",
+      return context.error({
+        code: "NOT_FOUND",
+        retryable: false,
+        cta: { commands: [{ command: "profiles list", description: "List available profiles" }] },
         message: `Profile '${name}' does not exist.`,
         exitCode: 1,
       });
@@ -30,17 +32,37 @@ export default Cli.command({
 
     if (result.isLast) {
       writeCommandStatus(`Deleted '${name}'. No profiles remain.`);
-      return { profile: name, deleted: true as const, defaultProfile: null };
+      return context.ok(
+        { profile: name, deleted: true, defaultProfile: null },
+        {
+          cta: {
+            commands: [
+              {
+                command: "login",
+                description: "Authenticate a new default profile",
+                options: { profile: "default" },
+              },
+            ],
+          },
+        },
+      );
     }
 
     writeCommandStatus(`Deleted '${name}'.`);
     if (result.defaultChanged) {
       writeCommandStatus(`Default profile is now '${result.defaultProfile}'.`);
     }
-    return {
-      profile: name,
-      deleted: true as const,
-      defaultProfile: result.defaultProfile ?? null,
-    };
+    return context.ok(
+      {
+        profile: name,
+        deleted: true,
+        defaultProfile: result.defaultProfile ?? null,
+      },
+      {
+        cta: {
+          commands: [{ command: "profiles list", description: "Inspect the remaining profiles" }],
+        },
+      },
+    );
   },
 });

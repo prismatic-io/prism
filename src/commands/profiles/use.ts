@@ -16,6 +16,19 @@ export default Cli.command({
 
     await getConfigStore().setDefaultProfile(name);
     writeCommandStatus(`Using '${name}' by default.`);
-    return { profile: name };
+    return context.ok(
+      { profile: name },
+      {
+        cta: {
+          commands: [
+            {
+              command: "me",
+              description: "Inspect authentication for the selected profile",
+              options: { profile: name },
+            },
+          ],
+        },
+      },
+    );
   },
 });

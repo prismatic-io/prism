@@ -1,4 +1,4 @@
-import { Cli, Errors, z } from "incur";
+import { Cli, z } from "incur";
 import {
   fetchUserTenants,
   getAuthenticatedContext,
@@ -32,7 +32,20 @@ export default Cli.command({
     const loggedIn = (await isLoggedIn(target)) && config;
     if (!loggedIn) {
       writeCommandStatus("Not logged in. Run 'prism login'.");
-      return { profile: profileName, switched: false, authenticated: false };
+      return context.ok(
+        { profile: profileName, switched: false, authenticated: false },
+        {
+          cta: {
+            commands: [
+              {
+                command: "login",
+                description: "Authenticate this profile",
+                options: { profile: profileName },
+              },
+            ],
+          },
+        },
+      );
     }
 
     const tenants = await fetchUserTenants(target);
@@ -69,15 +82,17 @@ export default Cli.command({
       ? activeTenants.find((tenant) => tenant.tenantId === tenantId)
       : undefined;
     if (tenantId && !requestedTenant) {
-      throw new Errors.IncurError({
+      return context.error({
         code: "VALIDATION_ERROR",
+        retryable: false,
         message: `Tenant '${tenantId}' is not available to this profile.`,
         exitCode: 2,
       });
     }
     if (context.agent && !requestedTenant) {
-      throw new Errors.IncurError({
+      return context.error({
         code: "VALIDATION_ERROR",
+        retryable: false,
         message: "Agent mode requires --tenant-id when more than one tenant is available.",
         exitCode: 2,
       });
