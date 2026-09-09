@@ -26,7 +26,7 @@ export function prepareCta(cta: unknown, profile?: string): unknown {
         : {
             ...command,
             args: quoteValues(command.args),
-            options: quoteValues(profile ? { ...command.options, profile } : command.options),
+            options: quoteValues(profile ? { profile, ...command.options } : command.options),
           },
     ),
   };

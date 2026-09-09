@@ -274,7 +274,7 @@ it("provides a scoped customer-user continuation and fetches all pages explicitl
     "staging",
   ]);
   expect(result.result.meta.cta.commands[0].command).toBe(
-    "prism customers users list customer-1 --after next --first 1 --columns id --profile staging",
+    "prism customers users list customer-1 --profile staging --after next --first 1 --columns id",
   );
   vi.mocked(gqlRequest).mockResolvedValueOnce(first).mockResolvedValueOnce(last);
   const all = await invoke(["customers", "users", "list", "customer-1", "--all", "--first", "1"]);
