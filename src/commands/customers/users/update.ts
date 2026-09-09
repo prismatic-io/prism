@@ -1,7 +1,8 @@
 import { UpdateUserDocument as UPDATE_USER } from "../../../graphql/operations/updateUser.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
+
 export default Cli.command({
   output: z.object({ userId: z.string() }).extend(warningsOutput),
   description: "Update a User",
@@ -17,6 +18,7 @@ export default Cli.command({
       .optional()
       .describe("whether dark mode should sync with OS settings"),
   }),
+  alias: { "dark-mode-os-sync": "o", "dark-mode": "d", phone: "p", name: "n" },
   async run(context) {
     const {
       args: { user },
@@ -37,17 +39,25 @@ export default Cli.command({
             : z.enum(["true", "false"]).parse(darkModeOsSync) === "true",
       },
     });
-    const requiredValue1 = result.updateUser?.user?.id;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+    const userId = result.updateUser?.user?.id;
+    if (userId == null)
+      return context.error({
+        code: "CUSTOMER_USERS_UPDATE_FAILED",
         message: "Customer user was not updated",
         exitCode: 2,
+        retryable: false,
+        cta: {
+          commands: [
+            {
+              command: "customers list",
+              description: "Inspect customers before retrying this change",
+            },
+          ],
+        },
       });
 
     return {
-      userId: requiredValue1,
+      userId,
     };
   },
-  alias: { "dark-mode-os-sync": "o", "dark-mode": "d", phone: "p", name: "n" },
 });

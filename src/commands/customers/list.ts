@@ -53,6 +53,24 @@ export default Cli.command({
       },
       { ...flags },
     );
-    return { ...result, pageInfo };
+    return context.ok(
+      { ...result, pageInfo },
+      context.agent && pageInfo.hasNextPage && pageInfo.endCursor
+        ? {
+            cta: {
+              commands: [
+                {
+                  command: "customers list",
+                  description: "Fetch the next page of customers",
+                  options: {
+                    after: pageInfo.endCursor,
+                    ...(flags.first !== undefined ? { first: flags.first } : {}),
+                  },
+                },
+              ],
+            },
+          }
+        : undefined,
+    );
   },
 });

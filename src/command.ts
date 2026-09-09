@@ -212,7 +212,10 @@ export function applyCommandPolicy<
       const tag = tagged?.[Symbol.for("incur.sentinel")];
       if (tag === "error") {
         if (streaming) throw nativeError(tagged);
-        return value;
+        return {
+          ...tagged,
+          ...(tagged?.cta ? { cta: prepareCta(tagged.cta, context.globals.profile) } : {}),
+        } as T;
       }
       let data = tag === "ok" ? tagged?.data : value;
       const warnings = commandWarnings();

@@ -1,7 +1,8 @@
 import { CreateCustomerUserDocument as CREATE_CUSTOMER_USER } from "../../../graphql/operations/createCustomerUser.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
+
 export default Cli.command({
   output: z.object({ userId: z.string() }).extend(warningsOutput),
   description: "Create a User for the specified Customer",
@@ -24,6 +25,7 @@ export default Cli.command({
     customer: z.string().describe("ID of the customer this user is associated with"),
     name: z.string().optional().describe("name of the new user"),
   }),
+  alias: { name: "n", customer: "c", role: "r", email: "e" },
   async run(context) {
     const {
       options: { name, email, role, customer },
@@ -38,17 +40,25 @@ export default Cli.command({
         customer,
       },
     });
-    const requiredValue1 = result.createCustomerUser?.user?.id;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+    const userId = result.createCustomerUser?.user?.id;
+    if (userId == null)
+      return context.error({
+        code: "CUSTOMER_USERS_CREATE_FAILED",
         message: "Customer user was not created",
         exitCode: 2,
+        retryable: false,
+        cta: {
+          commands: [
+            {
+              command: "customers list",
+              description: "Inspect customers before retrying this change",
+            },
+          ],
+        },
       });
 
     return {
-      userId: requiredValue1,
+      userId,
     };
   },
-  alias: { name: "n", customer: "c", role: "r", email: "e" },
 });
