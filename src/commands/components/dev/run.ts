@@ -48,17 +48,25 @@ export default Cli.command({
   args: z.object({
     command: z.array(z.string()).optional().describe("Local command and arguments to run"),
   }),
-  options: z.object({
-    integrationId: z
-      .string()
-      .optional()
-      .describe("Integration ID")
-      .meta({ cli: { exactlyOne: ["instanceId", "integrationId"] } }),
-    instanceId: z.string().optional().describe("Instance ID. "),
-    connectionKey: z
-      .string()
-      .describe("Key of the connection config variable to fetch meta/state for"),
-  }),
+  options: z
+    .object({
+      integrationId: z.string().optional().describe("Integration ID"),
+      instanceId: z.string().optional().describe("Instance ID. "),
+      connectionKey: z
+        .string()
+        .describe("Key of the connection config variable to fetch meta/state for"),
+    })
+    .superRefine((options, ctx) => {
+      if (
+        [options.integrationId, options.instanceId].filter((value) => value !== undefined)
+          .length !== 1
+      )
+        ctx.addIssue({
+          code: "custom",
+          path: ["integrationId"],
+          message: "Exactly one of --integrationId, --instanceId is required",
+        });
+    }),
   async *run(context) {
     const {
       args: { command: argv },

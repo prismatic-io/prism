@@ -50,3 +50,17 @@ it("returns native subprocess stream events with a schema-valid completion", asy
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+it.each([
+  {},
+  { integrationId: "integration", instanceId: "instance" },
+])("rejects ambiguous connection origins in the native schema: %j", async (origins) => {
+  expect(RunCommand.options?.safeParse({ connectionKey: "connection", ...origins }).success).toBe(
+    false,
+  );
+  const argv = Object.entries(origins).flatMap(([key, value]) => [`--${key}`, value]);
+  await expect(
+    runCommand(RunCommand, ["--agent", "--yes", "--connectionKey", "connection", ...argv, "node"]),
+  ).rejects.toThrow(/Exactly one/);
+  expect(gqlRequest).not.toHaveBeenCalled();
+});

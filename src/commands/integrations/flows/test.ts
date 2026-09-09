@@ -51,40 +51,27 @@ const TIMEOUT_SECONDS = 1200; // 20 minutes
  */
 export const testFlagsSchema = z
   .object({
-    "flow-id": z
-      .string()
-      .min(1)
-      .optional()
-      .describe("ID of the flow to test. Base64 encoded.")
-      .meta({ cli: { char: "f", exclusive: ["flow-url", "flow-name"] } }),
-    "flow-name": z
-      .string()
-      .min(1)
-      .optional()
-      .describe("Name of the flow to test.")
-      .meta({ cli: { char: "n", exclusive: ["flow-url", "flow-id"] } }),
+    "flow-id": z.string().min(1).optional().describe("ID of the flow to test. Base64 encoded."),
+    "flow-name": z.string().min(1).optional().describe("Name of the flow to test."),
     "flow-url": z
       .string()
       .min(1)
       .optional()
-      .describe("URL of the flow to test. Prefer to use flow-id instead, if possible.")
-      .meta({ cli: { char: "u", exclusive: ["flow-id"] } }),
+      .describe("URL of the flow to test. Prefer to use flow-id instead, if possible."),
     "integration-id": z
       .string()
       .min(1)
       .optional()
-      .describe("ID of the integration containing the flow to test. Base64 encoded.")
-      .meta({ cli: { char: "i" } }),
+      .describe("ID of the integration containing the flow to test. Base64 encoded."),
     payload: z
       .string()
       .optional()
-      .describe("Optional file containing a payload to run the flow with.")
-      .meta({ cli: { char: "p" } }),
+      .describe("Optional file containing a payload to run the flow with."),
     "payload-content-type": z
       .string()
       .optional()
       .describe("Optional Content-Type for the test payload.")
-      .meta({ cli: { char: "c", preserveExplicit: true, default: "application/json" } }),
+      .meta({ cli: { preserveExplicit: true, default: "application/json" } }),
     sync: z.boolean().optional().describe("Forces the flow to run synchronously."),
     "tail-results": z
       .boolean()
@@ -113,8 +100,7 @@ export const testFlagsSchema = z
       .optional()
       .describe(
         "Optional file to append tailed execution result data to. Results are saved into JSON Lines.",
-      )
-      .meta({ cli: { char: "r" } }),
+      ),
     jsonl: z
       .boolean()
       .optional()
@@ -151,7 +137,14 @@ export const testFlagsSchema = z
         path: ["jsonl"],
       });
     }
-  });
+  })
+  .refine(
+    (options) =>
+      [options["flow-id"], options["flow-name"], options["flow-url"]].filter(
+        (value) => value !== undefined,
+      ).length <= 1,
+    { message: "Provide only one of --flow-id, --flow-name, or --flow-url" },
+  );
 
 export type TestFlags = z.infer<typeof testFlagsSchema>;
 
@@ -440,6 +433,15 @@ export default Cli.command({
       status: completed ? "completed" : "timed-out",
       ...(resultFilePath ? { path: resultFilePath } : {}),
     };
+  },
+  alias: {
+    "result-file": "r",
+    "payload-content-type": "c",
+    payload: "p",
+    "integration-id": "i",
+    "flow-url": "u",
+    "flow-name": "n",
+    "flow-id": "f",
   },
 });
 

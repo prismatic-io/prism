@@ -8,10 +8,8 @@ export type Field = {
   kind: "boolean" | "integer" | "string";
   char?: string;
   default?: unknown;
-  dependsOn?: string[];
   description?: string;
   exclusive?: string[];
-  exactlyOne?: string[];
   hidden?: boolean;
   min?: number;
   multiple?: boolean;
@@ -87,17 +85,10 @@ export function applyLegacyOptionConstraints<T extends z.ZodRawShape>(
       const present = (key: string) => values[schemaFieldName(key)] !== undefined;
       const issue = (message: string) =>
         ctx.addIssue({ code: "custom", message, path: [schemaFieldName(name)] });
-      if (field.exactlyOne) {
-        const names = [...new Set([name, ...field.exactlyOne])];
-        if (names.filter(present).length !== 1)
-          issue(`Exactly one of ${names.map((k) => `--${k}`).join(", ")} is required`);
-      }
       if (!present(name)) continue;
       for (const exclusive of field.exclusive ?? [])
         if (present(exclusive))
           issue(`--${name} cannot also be provided when using --${exclusive}`);
-      for (const dependency of field.dependsOn ?? [])
-        if (!present(dependency)) issue(`--${name} requires --${dependency}`);
     }
   });
 }
@@ -128,5 +119,6 @@ export function decodeCliArguments<T extends z.ZodRawShape>(
     }),
   );
   // Decoding changes input bytes only; each field still returns its declared output type.
-  return z.object(shape) as unknown as z.ZodObject<T>;
+  const base: z.ZodObject = schema;
+  return base.safeExtend(shape) as unknown as z.ZodObject<T>;
 }

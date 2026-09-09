@@ -18,47 +18,42 @@ import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
 const DEFAULT_TIMEOUT_SECONDS = 1200;
 const DEFAULT_OUTPUT_DIR = "./payloads";
 type TriggerType = "WEBHOOK" | "POLLING";
-export const listenFlagsSchema = z.object({
-  "integration-id": z
-    .string()
-    .min(1)
-    .describe("ID of the integration containing the flow to listen to.")
-    .meta({ cli: { char: "i" } }),
-  "flow-id": z
-    .string()
-    .min(1)
-    .optional()
-    .describe("ID of the flow to listen to. If not provided, you will be prompted to select.")
-    .meta({ cli: { char: "f", exclusive: ["flow-name"] } }),
-  "flow-name": z
-    .string()
-    .min(1)
-    .optional()
-    .describe("Name of the flow to listen to.")
-    .meta({ cli: { char: "n", exclusive: ["flow-id"] } }),
-  output: z
-    .string()
-    .default(DEFAULT_OUTPUT_DIR)
-    .describe(`Output directory for the payload file. Defaults to ${DEFAULT_OUTPUT_DIR}`)
-    .meta({ cli: { char: "o" } }),
-  timeout: z.coerce
-    .number()
-    .int()
-    .positive()
-    .default(DEFAULT_TIMEOUT_SECONDS)
-    .describe("Timeout in seconds to stop listening.")
-    .meta({ cli: { char: "t" } }),
-  prompt: z
-    .boolean()
-    .optional()
-    .describe("Prompt before polling (use --no-prompt to poll automatically).")
-    .meta({ cli: { legacyName: "no-prompt" } }),
-  reset: z
-    .boolean()
-    .optional()
-    .describe("Manually turn off listening mode for a given integration.")
-    .meta({ cli: { char: "r" } }),
-});
+export const listenFlagsSchema = z
+  .object({
+    "integration-id": z
+      .string()
+      .min(1)
+      .describe("ID of the integration containing the flow to listen to."),
+    "flow-id": z
+      .string()
+      .min(1)
+      .optional()
+      .describe("ID of the flow to listen to. If not provided, you will be prompted to select."),
+    "flow-name": z.string().min(1).optional().describe("Name of the flow to listen to."),
+    output: z
+      .string()
+      .default(DEFAULT_OUTPUT_DIR)
+      .describe(`Output directory for the payload file. Defaults to ${DEFAULT_OUTPUT_DIR}`),
+    timeout: z.coerce
+      .number()
+      .int()
+      .positive()
+      .default(DEFAULT_TIMEOUT_SECONDS)
+      .describe("Timeout in seconds to stop listening."),
+    prompt: z
+      .boolean()
+      .optional()
+      .describe("Prompt before polling (use --no-prompt to poll automatically).")
+      .meta({ cli: { legacyName: "no-prompt" } }),
+    reset: z
+      .boolean()
+      .optional()
+      .describe("Manually turn off listening mode for a given integration."),
+  })
+  .refine((options) => options["flow-id"] === undefined || options["flow-name"] === undefined, {
+    message: "--flow-id cannot also be provided when using --flow-name",
+  });
+
 export type ListenFlags = z.infer<typeof listenFlagsSchema>;
 
 export default Cli.command({
@@ -196,6 +191,14 @@ export default Cli.command({
       ...(executionId ? { executionId } : {}),
       ...(savedPath ? { path: savedPath } : {}),
     };
+  },
+  alias: {
+    reset: "r",
+    timeout: "t",
+    output: "o",
+    "flow-name": "n",
+    "flow-id": "f",
+    "integration-id": "i",
   },
 });
 

@@ -1,11 +1,12 @@
-import { Cli, Errors, Mcp, z } from "incur";
-import { afterEach, describe, expect, expectTypeOf, it } from "vitest";
+import { Cli, Errors, Mcp, z, middleware } from "incur";
+import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import {
   assertMutationAllowed,
   commandMiddleware,
   commandVars,
   commandWarnings,
   applyCommandPolicy,
+  prepareCommand,
   environmentOptions,
   globalOptions,
   writeCommandOutput,
@@ -366,4 +367,38 @@ describe("native stream validation", () => {
     expect(JSON.stringify(chunks)).not.toContain("must not escape");
     expect(JSON.stringify(chunks)).toContain('"retryable":true');
   });
+});
+
+it("preserves native argument refinements through public argv decoding", async () => {
+  const handler = vi.fn(() => ({ accepted: true }));
+  const command = applyCommandPolicy({
+    args: z
+      .object({ name: z.string() })
+      .refine(({ name }) => name.startsWith("team-"), "Use a team name"),
+    run: handler,
+  });
+  await expect(runCommand(command, ["invalid", "--agent"])).rejects.toThrow(/Use a team name/);
+  expect(handler).not.toHaveBeenCalled();
+  await expect(runCommand(command, ["team-alpha", "--agent"])).resolves.toEqual({ accepted: true });
+});
+
+it("runs command-local native middleware inside the shared execution scope", async () => {
+  const steps: string[] = [];
+  const command = prepareCommand(
+    Cli.command({
+      middleware: [
+        middleware(async (_context, next) => {
+          steps.push("before");
+          await next();
+          steps.push("after");
+        }),
+      ],
+      run() {
+        steps.push("run");
+        return { accepted: true };
+      },
+    }),
+  );
+  await expect(runCommand(command, ["--agent"])).resolves.toEqual({ accepted: true });
+  expect(steps).toEqual(["before", "run", "after"]);
 });

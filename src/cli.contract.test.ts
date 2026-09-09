@@ -69,29 +69,19 @@ const sample = (field: Field): unknown => {
 const requiredInput = (fields: Fields): Record<string, unknown> =>
   Object.fromEntries(
     Object.entries(fields).flatMap(([name, field]) =>
-      field.required && !field.exactlyOne ? [[name, sample(field)]] : [],
+      field.required ? [[name, sample(field)]] : [],
     ),
   );
-
-const satisfyExactlyOne = (
-  fields: Fields,
-  values: Record<string, unknown>,
-  preferred?: string,
-): Record<string, unknown> => {
-  const result = { ...values };
-  for (const [name, field] of Object.entries(fields)) {
-    if (!field.exactlyOne) continue;
-    const names = [...new Set([name, ...(field.exactlyOne as string[])])];
-    const selected = preferred && names.includes(preferred) ? preferred : names[0];
-    for (const candidate of names) delete result[candidate];
-    result[selected] = sample(fields[selected]);
-  }
-  return result;
-};
 
 // These legacy flow flags already required tailing at runtime; native schemas
 // now express that requirement before handler execution.
 const satisfyCommandConstraints = (id: string, values: Record<string, unknown>) => {
+  if (
+    id === "components:dev:run" &&
+    values.integrationId === undefined &&
+    values.instanceId === undefined
+  )
+    return { ...values, integrationId: "compat-value" };
   if (
     id === "integrations:flows:test" &&
     ["cni-auto-end", "result-file", "jsonl"].some((name) => values[name])
@@ -196,18 +186,9 @@ describe("legacy command contract", () => {
     });
 
     it(`${id} accepts each option and validates every declared relationship`, () => {
-      const base = satisfyExactlyOne(
-        command.contract.options,
-        requiredInput(command.contract.options),
-      );
+      const base = requiredInput(command.contract.options);
       for (const [name, field] of Object.entries(command.contract.options)) {
-        const candidate = satisfyCommandConstraints(
-          id,
-          satisfyExactlyOne(command.contract.options, { ...base, [name]: sample(field) }, name),
-        );
-        for (const dependency of field.dependsOn ?? []) {
-          candidate[dependency] = sample(command.contract.options[dependency]);
-        }
+        const candidate = satisfyCommandConstraints(id, { ...base, [name]: sample(field) });
         expect(command.options?.safeParse(schemaInput(candidate)).success, `${id} --${name}`).toBe(
           true,
         );
@@ -237,14 +218,10 @@ describe("legacy command contract", () => {
         field.required ? [String(sample(field))] : [],
       );
       for (const [name, field] of Object.entries(command.contract.options)) {
-        const values = satisfyCommandConstraints(
-          id,
-          satisfyExactlyOne(
-            command.contract.options,
-            { ...requiredInput(command.contract.options), [name]: sample(field) },
-            name,
-          ),
-        );
+        const values = satisfyCommandConstraints(id, {
+          ...requiredInput(command.contract.options),
+          [name]: sample(field),
+        });
         const long = optionArgv(command.contract.options, values);
         const normalized = normalizeCommandArguments([id, ...requiredArgs, ...long]).slice(
           id.split(":").length,
