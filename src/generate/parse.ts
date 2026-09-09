@@ -18,8 +18,10 @@ const getWSDLClientMethods = (
 
     return wsdlClientInterface?.getMethods();
   } catch (_error) {
-    console.error("Unable to find methods for Action Generation.");
-    process.exit(1);
+    writeCommandOutput("Unable to find methods for Action Generation.", "stderr");
+    throw Object.assign(new Error("Unable to find methods for Action Generation."), {
+      exitCode: 1,
+    });
   }
 };
 
@@ -53,3 +55,4 @@ export const getActionMethods = (projectStructure: ProjectStructure): ServiceMet
     ),
   };
 };
+import { writeCommandOutput } from "../command.js";

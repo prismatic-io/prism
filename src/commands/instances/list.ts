@@ -1,53 +1,57 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import {
-  ListInstancesDocument as LIST_INSTANCES,
-  type ListInstancesQuery,
-} from "../../graphql/instances/listInstances.generated.js";
+import type { ListInstancesQuery } from "../../graphql/instances/listInstances.generated.js";
+import { ListInstancesDocument as LIST_INSTANCES } from "../../graphql/instances/listInstances.generated.js";
 import { gqlRequest } from "../../graphql.js";
-import { ux } from "../../utils/ux.js";
+import { paginationFlags, tableOutputSchema, tableFlags, printTable } from "../../utils/table.js";
+import { z, Cli } from "incur";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Instances";
-  static flags = {
-    customer: Flags.string({
-      char: "c",
-      required: false,
-      description: "ID of a customer",
-    }),
-    integration: Flags.string({
-      char: "i",
-      required: false,
-      description: "ID of an integration",
-    }),
-    ...ux.table.flags(),
-  };
+type InstanceNode = ListInstancesQuery["instances"]["nodes"][number];
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+const isInstanceNode = (node: InstanceNode | null): node is InstanceNode => node !== null;
+
+export default Cli.command({
+  outputPolicy: "agent-only",
+  description: "List Instances",
+  output: tableOutputSchema(
+    ["id", "name", "customer", "customerid", "customerExternalId", "description", "enabled"],
+    true,
+  ),
+  options: z.object({
+    customer: z.string().optional().describe("ID of a customer"),
+    integration: z.string().optional().describe("ID of an integration"),
+    ...tableFlags(),
+    ...paginationFlags(),
+  }),
+  async run(context) {
+    const { options: flags } = context;
     const { customer, integration } = flags;
 
     let instances: InstanceNode[] = [];
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let pageInfo: ListInstancesQuery["instances"]["pageInfo"] = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
       const {
-        instances: { nodes, pageInfo },
+        instances: { nodes, pageInfo: nextPageInfo },
       }: ListInstancesQuery = await gqlRequest({
         document: LIST_INSTANCES,
         variables: {
           customer,
           integration,
           after: cursor,
+          first: flags.first,
         },
       });
-      instances = [...instances, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      instances = [...instances, ...nodes.filter(isInstanceNode)];
+      pageInfo = nextPageInfo;
+      cursor = nextPageInfo.endCursor ?? null;
+      hasNextPage = nextPageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = printTable(
       instances,
       {
         id: {
@@ -71,7 +75,7 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
-
-type InstanceNode = ListInstancesQuery["instances"]["nodes"][number];
+    return { ...result, pageInfo };
+  },
+  alias: { integration: "i", customer: "c" },
+});

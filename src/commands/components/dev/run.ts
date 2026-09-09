@@ -1,10 +1,9 @@
-import { Flags, ux } from "@oclif/core";
-import { isEmpty } from "lodash-es";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { InstanceDocument as INSTANCE } from "../../../graphql/operations/instance.generated.js";
 import { IntegrationDocument as INTEGRATION } from "../../../graphql/operations/integration.generated.js";
+import { InstanceDocument as INSTANCE } from "../../../graphql/operations/instance.generated.js";
+import { commandSignal } from "../../../command.js";
 import { gqlRequest } from "../../../graphql.js";
-import { spawnProcess } from "../../../utils/process.js";
+import { spawnProcess, streamProcess } from "../../../utils/process.js";
+import { z, Cli, Errors } from "incur";
 
 interface ConfigVariable {
   requiredConfigVariable: {
@@ -17,55 +16,53 @@ interface ConfigVariable {
   meta: unknown;
 }
 
-export default class RunCommand extends PrismaticBaseCommand {
-  static description =
-    "Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.\nAfter specifying an integration ID and connection config variable name, this command executes a CLI command with that connection's fields saved as a config variable named PRISMATIC_CONNECTION_VALUE.";
-  static usage = "components:dev:run -i <value> -c <value> -- /command/to/run";
-  static examples = [
-    {
-      description: `To simply print an integration's basic auth config variable named "My Connection" and pipe the resulting JSON to jq, run:`,
-      command: `<%= config.bin %> <%= command.id %> --integrationId SW50ZWexample --connectionKey "My Connection" -- printenv PRISMATIC_CONNECTION_VALUE | jq`,
-    },
-    {
-      description: `If one of your integrations has an authenticated OAuth 2.0 config variable "Slack Connection", you could run your component's unit tests with that environment variable:`,
-      command: `<%= config.bin %> <%= command.id %> -i SW50ZWexample -c "Slack Connection" -- yarn run test`,
-    },
-    {
-      description:
-        "If you would like to fetch a connection from an instance deployed to one of your customers, specify the --instanceId flag instead",
-      command: `<%= config.bin %> <%= command.id %> --instanceId SW50ZWexample -c "Slack Connection" -- yarn run test`,
-    },
-  ];
-
-  static strict = false; // Manual capture of argv so we can get the wrapped command
-  static "--" = true; // Stop parsing flags if -- is encountered as an arg
-
-  static flags = {
-    integrationId: Flags.string({
-      char: "i",
-      description: "Integration ID",
-      exactlyOne: ["instanceId", "integrationId"],
+export default Cli.command({
+  output: z.discriminatedUnion("type", [
+    z.object({ type: z.literal("stdout"), data: z.string() }),
+    z.object({ type: z.literal("stderr"), data: z.string() }),
+    z.object({ type: z.literal("completed"), exitCode: z.literal(0) }),
+  ]),
+  description:
+    "Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.\nAfter specifying an integration ID and connection config variable name, this command executes a CLI command with that connection's fields saved as a config variable named PRISMATIC_CONNECTION_VALUE.",
+  hint: `Pass the local command after --. For example:
+prism components dev run -i INTEGRATION_ID -c "My Connection" -- printenv PRISMATIC_CONNECTION_VALUE
+prism components dev run -i INTEGRATION_ID -c "Slack Connection" -- yarn run test
+prism components dev run --instanceId INSTANCE_ID -c "Slack Connection" -- yarn run test`,
+  args: z.object({
+    command: z.array(z.string()).optional().describe("Local command and arguments to run"),
+  }),
+  options: z
+    .object({
+      integrationId: z.string().optional().describe("Integration ID"),
+      instanceId: z.string().optional().describe("Instance ID. "),
+      connectionKey: z
+        .string()
+        .describe("Key of the connection config variable to fetch meta/state for"),
+    })
+    .superRefine((options, ctx) => {
+      if (
+        [options.integrationId, options.instanceId].filter((value) => value !== undefined)
+          .length !== 1
+      )
+        ctx.addIssue({
+          code: "custom",
+          path: ["integrationId"],
+          message: "Exactly one of --integrationId, --instanceId is required",
+        });
     }),
-    instanceId: Flags.string({
-      description: "Instance ID. ",
-    }),
-    connectionKey: Flags.string({
-      required: true,
-      char: "c",
-      description: "Key of the connection config variable to fetch meta/state for",
-    }),
-  };
-
-  async run() {
+  async *run(context) {
     const {
-      argv,
-      flags: { integrationId, instanceId, connectionKey },
-    } = await this.parse(RunCommand);
+      args: { command: argv },
+      options: { integrationId, instanceId, connectionKey },
+    } = context;
 
-    if (isEmpty(argv)) {
-      this.error(
-        "A command to run must be supplied after a double dash (--) delimiter. See examples in this command's help for details.",
-      );
+    if (!argv?.length) {
+      throw new Errors.IncurError({
+        code: "VALIDATION_ERROR",
+        message:
+          "A command to run must be supplied after a double dash (--) delimiter. See examples in this command's help for details.",
+        exitCode: 2,
+      });
     }
 
     let configVariables: ConfigVariable[];
@@ -78,17 +75,22 @@ export default class RunCommand extends PrismaticBaseCommand {
           id: integrationId,
         },
       });
+      const requiredValue2 = result.integration?.testConfigVariables.nodes;
+      if (requiredValue2 == null)
+        throw new Errors.IncurError({
+          code: "VALIDATION_ERROR",
+          message: "Integration was not found",
+          exitCode: 2,
+        });
 
-      if (result.integration == null) {
-        this.error("Integration was not found");
-      }
-
-      configVariables = result.integration.testConfigVariables.nodes;
+      configVariables = requiredValue2;
     } else {
-      if (instanceId == null) {
-        this.error("Either integrationId or instanceId is required");
-      }
-
+      if (!instanceId)
+        throw new Errors.IncurError({
+          code: "VALIDATION_ERROR",
+          message: "Either integrationId or instanceId is required",
+          exitCode: 2,
+        });
       // Get the config variable from an instance
       const result = await gqlRequest({
         document: INSTANCE,
@@ -96,12 +98,15 @@ export default class RunCommand extends PrismaticBaseCommand {
           id: instanceId,
         },
       });
+      const requiredValue1 = result.instance?.configVariables.nodes;
+      if (requiredValue1 == null)
+        throw new Errors.IncurError({
+          code: "VALIDATION_ERROR",
+          message: "Instance was not found",
+          exitCode: 2,
+        });
 
-      if (result.instance == null) {
-        this.error("Instance was not found");
-      }
-
-      configVariables = result.instance.configVariables.nodes;
+      configVariables = requiredValue1;
     }
 
     const [connection] = configVariables.filter(
@@ -109,7 +114,11 @@ export default class RunCommand extends PrismaticBaseCommand {
     );
 
     if (!connection) {
-      ux.error("Failed to find active connection with that name.", { exit: 1 });
+      throw new Errors.IncurError({
+        code: "COMMAND_FAILED",
+        message: "Failed to find active connection with that name.",
+        exitCode: 1,
+      });
     }
 
     const { meta, inputs, requiredConfigVariable } = connection;
@@ -134,6 +143,12 @@ export default class RunCommand extends PrismaticBaseCommand {
       fields,
     });
 
-    await spawnProcess(argv as string[], { PRISMATIC_CONNECTION_VALUE: value });
-  }
-}
+    const environment = { PRISMATIC_CONNECTION_VALUE: value };
+    if (context.agent) {
+      yield* streamProcess(argv, environment, { signal: commandSignal() });
+    } else {
+      await spawnProcess(argv, environment, { signal: commandSignal() });
+    }
+  },
+  alias: { connectionKey: "c", integrationId: "i" },
+});

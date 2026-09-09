@@ -1,4 +1,6 @@
-import fs from "fs";
+import { runCommand } from "../../../test-command.js";
+import { existsSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { readFile } from "fs-extra";
 import path from "path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -27,9 +29,9 @@ describe("integrations:init", () => {
   const basePath = process.env.PWD ?? process.cwd();
   const tempPath = path.resolve("src/commands/integrations/init/temp");
 
-  beforeEach(() => {
-    if (!fs.existsSync(tempPath)) {
-      fs.mkdirSync(tempPath, { recursive: true });
+  beforeEach(async () => {
+    if (!existsSync(tempPath)) {
+      await mkdir(tempPath, { recursive: true });
     }
   });
 
@@ -42,11 +44,11 @@ describe("integrations:init", () => {
       describe("scaffold generation", () => {
         const integrationName = `test-integration-${toolchain}`;
 
-        afterEach(() => {
+        afterEach(async () => {
           // Clean up generated directory
           const integrationPath = path.join(tempPath, integrationName);
-          if (fs.existsSync(integrationPath)) {
-            fs.rmSync(integrationPath, { recursive: true, force: true });
+          if (existsSync(integrationPath)) {
+            await rm(integrationPath, { recursive: true, force: true });
           }
         });
 
@@ -55,7 +57,7 @@ describe("integrations:init", () => {
           async () => {
             process.chdir(tempPath);
 
-            await InitializeIntegration.run([integrationName, "--toolchain", toolchain]);
+            await runCommand(InitializeIntegration, [integrationName, "--toolchain", toolchain]);
 
             // The init command chdir's into the created directory, so go back to tempPath
             process.chdir(tempPath);
@@ -73,11 +75,11 @@ describe("integrations:init", () => {
       describe("clean scaffold generation", () => {
         const cleanIntegrationName = `clean-test-integration-${toolchain}`;
 
-        afterEach(() => {
+        afterEach(async () => {
           // Clean up generated directory
           const integrationPath = path.join(tempPath, cleanIntegrationName);
-          if (fs.existsSync(integrationPath)) {
-            fs.rmSync(integrationPath, { recursive: true, force: true });
+          if (existsSync(integrationPath)) {
+            await rm(integrationPath, { recursive: true, force: true });
           }
         });
 
@@ -86,7 +88,7 @@ describe("integrations:init", () => {
           async () => {
             process.chdir(tempPath);
 
-            await InitializeIntegration.run([
+            await runCommand(InitializeIntegration, [
               cleanIntegrationName,
               "--clean",
               "--toolchain",

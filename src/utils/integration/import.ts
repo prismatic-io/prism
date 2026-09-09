@@ -1,30 +1,32 @@
 import { getWorkingDirectory, withWorkingDirectory } from "../../command-context.js";
-import { createRequire } from "node:module";
-import { ux } from "@oclif/core";
-import chardet from "chardet";
-import { exists, fs } from "../../fs.js";
-import { CommitAvatarUpload2Document as COMMIT_AVATAR_UPLOAD2 } from "../../graphql/operations/commitAvatarUpload2.generated.js";
-import { Component4Document as COMPONENT4 } from "../../graphql/operations/component4.generated.js";
 import { ImportIntegrationDocument as IMPORT_INTEGRATION } from "../../graphql/operations/importIntegration.generated.js";
-import { Integration2Document as INTEGRATION2 } from "../../graphql/operations/integration2.generated.js";
+import { CommitAvatarUpload2Document as COMMIT_AVATAR_UPLOAD2 } from "../../graphql/operations/commitAvatarUpload2.generated.js";
 import { SetInstanceApiKeysDocument as SET_INSTANCE_API_KEYS } from "../../graphql/operations/setInstanceApiKeys.generated.js";
+import { Component4Document as COMPONENT4 } from "../../graphql/operations/component4.generated.js";
+import { Integration2Document as INTEGRATION2 } from "../../graphql/operations/integration2.generated.js";
+import chardet from "chardet";
+import { createRequire } from "node:module";
 import { gqlRequest } from "../../graphql.js";
 import { uploadAvatar } from "../../utils/avatar.js";
+import { exists, fs } from "../../fs.js";
+import { resolve } from "path";
+import { getPackageEntrypointDirectory } from "../import.js";
+import {
+  publishDefinition as publishComponentDefinition,
+  uploadFile,
+  uploadConnectionIcons,
+} from "../component/publish.js";
 import {
   type ComponentDefinition,
   createComponentPackage,
   validateDefinition,
 } from "../component/index.js";
-import {
-  publishDefinition as publishComponentDefinition,
-  uploadConnectionIcons,
-  uploadFile,
-} from "../component/publish.js";
-import { getPackageEntrypointDirectory } from "../import.js";
-import { loadYaml } from "../serialize.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
+import { loadYaml } from "../serialize.js";
+import { writeCommandOutput } from "../../command.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
-import { resolve } from "node:path";
+import { startAction, stopAction } from "../progress.js";
+import { Errors } from "incur";
 
 const require = createRequire(import.meta.url);
 
@@ -110,7 +112,7 @@ const setIntegrationAvatar = async (integrationId: string, iconPath: string): Pr
       },
     });
   } catch (err) {
-    console.warn(`Error setting integration icon: ${err}`);
+    writeCommandOutput(`Error setting integration icon: ${err}`, "stderr");
   }
 };
 
@@ -167,12 +169,11 @@ export const importCodeNativeIntegration = async (
           }
 
           if (allKeysForFlow.length === 0) {
-            throw Object.assign(
-              new Error(
-                `Flow "${flow.name}" requires customer API keys but none were provided. Use --test-api-key to specify keys in the format flowName="API_KEY".`,
-              ),
-              { exitCode: 1 },
-            );
+            throw new Errors.IncurError({
+              code: "COMMAND_FAILED",
+              message: `Flow "${flow.name}" requires customer API keys but none were provided. Use --test-api-key to specify keys in the format flowName="API_KEY".`,
+              exitCode: 1,
+            });
           }
         }
       }
@@ -184,21 +185,21 @@ export const importCodeNativeIntegration = async (
           forCodeNativeIntegration: true,
         });
 
-      ux.action.start("Uploading package for Code Native Integration");
+      startAction("Uploading package for Code Native Integration");
       await uploadFile(packagePath, packageUploadUrl);
       const uploaded = await waitForCodeNativeComponentAvailable(
         componentDefinition.key,
         versionNumber,
       );
       if (uploaded) {
-        ux.action.stop();
+        stopAction();
       } else {
-        ux.action.stop(
+        stopAction(
           "Package still processing for Code Native Integration, it will likely be available in a few minutes.",
         );
       }
 
-      ux.action.start("Importing definition for Code Native Integration into Prismatic");
+      startAction("Importing definition for Code Native Integration into Prismatic");
       const { integrationId: integrationImportId, systemInstance } = await importDefinition(
         integrationDefinition,
         integrationId,
@@ -221,8 +222,9 @@ export const importCodeNativeIntegration = async (
           { fromDist: true },
         );
       } catch (e) {
-        console.warn(
+        writeCommandOutput(
           `Import was successful but there was an error formatting local metadata: ${e}`,
+          "stderr",
         );
       }
 
@@ -234,21 +236,21 @@ export const importCodeNativeIntegration = async (
             (flow) => flow.testApiKeys?.length,
           ))
       ) {
-        ux.action.start("Setting test API keys for flows");
+        startAction("Setting test API keys for flows");
         try {
           await setTestApiKeysForFlows({
             systemInstance,
             publishingMetadata,
             cliApiKeys,
           });
-          ux.action.stop();
+          stopAction();
         } catch (error) {
-          ux.action.stop("Failed to set test API keys");
-          console.warn(`Warning: Could not set test API keys: ${error}`);
+          stopAction("Failed to set test API keys");
+          writeCommandOutput(`Warning: Could not set test API keys: ${error}`, "stderr");
         }
       }
 
-      ux.action.stop();
+      stopAction();
 
       return integrationImportId;
     },
@@ -323,7 +325,10 @@ const setTestApiKeysForFlows = async ({
       (flowConfig) => flowConfig.flow.name === metadataFlow.name,
     );
     if (!importedFlowConfig) {
-      console.warn(`Could not find imported flow "${metadataFlow.name}" to set API keys`);
+      writeCommandOutput(
+        `Could not find imported flow "${metadataFlow.name}" to set API keys`,
+        "stderr",
+      );
       continue;
     }
 
@@ -384,21 +389,21 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
   const directory = await getPackageEntrypointDirectory("Code Native Integration");
   const entrypointPath = resolve(directory, "index.js");
   if (!(await exists(entrypointPath)))
-    throw Object.assign(
-      new Error(
+    throw new Errors.IncurError({
+      code: "COMMAND_FAILED",
+      message:
         "Failed to find 'index.js' entrypoint file. Is the current path a Code Native Integration?",
-      ),
-      { exitCode: 1 },
-    );
+      exitCode: 1,
+    });
   const { default: componentDefinition }: CodeNativeIntegrationEntrypoint = require(entrypointPath);
 
   if (!componentDefinition?.codeNativeIntegrationYAML) {
-    throw Object.assign(
-      new Error(
+    throw new Errors.IncurError({
+      code: "COMMAND_FAILED",
+      message:
         "Failed to find Code Native Integration definition in 'index.js' entrypoint file. Is the current path a Code Native Integration?",
-      ),
-      { exitCode: 1 },
-    );
+      exitCode: 1,
+    });
   }
 
   return {

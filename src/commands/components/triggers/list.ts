@@ -1,61 +1,73 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import {
   ListComponentTriggersDocument as LIST_COMPONENT_TRIGGERS,
   type ListComponentTriggersQuery,
 } from "../../../graphql/operations/listComponentTriggers.generated.js";
+import { writeCommandStatus } from "../../../command.js";
 import { gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import {
+  paginationFlags,
+  tableOutputSchema,
+  tableFlags,
+  printTable,
+} from "../../../utils/table.js";
+import { z, Cli, Errors } from "incur";
 
 type TriggerNode =
   ListComponentTriggersQuery["components"]["nodes"][number]["actions"]["nodes"][number];
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Triggers that Components implement";
-
-  static examples = [
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(
+    ["id", "key", "label", "description", "componentid", "componentkey"],
+    true,
+  ),
+  description: "List Triggers that Components implement",
+  examples: [
     {
       description: "Get the ID of the Webhook trigger of the Webhook Triggers component by key:",
-      command:
-        "<%= config.bin %> <%= command.id %> --columns id --filter 'key=^webhook$' --no-header webhook-triggers",
+      args: { componentKey: "webhook-triggers" },
+      options: { columns: "id", filter: "key=^webhook$", header: false },
     },
     {
       description: "Get triggers related to the Management Triggers component:",
-      command: "<%= config.bin %> <%= command.id %> management-triggers",
+      args: { componentKey: "management-triggers" },
     },
-  ];
-
-  static flags = {
-    ...ux.table.flags(),
-    public: Flags.boolean({
-      required: false,
-      description:
+  ],
+  options: z.object({
+    ...tableFlags(),
+    ...paginationFlags(),
+    public: z
+      .boolean()
+      .optional()
+      .describe(
         "Show actions for the public component with the given key. Use this flag when you have a private component with the same key as a public component.",
-    }),
-    private: Flags.boolean({
-      required: false,
-      description:
+      ),
+    private: z
+      .boolean()
+      .optional()
+      .describe(
         "Show actions for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
-    }),
-  };
-  static args = {
-    componentKey: Args.string({
-      name: "Component Key",
-      required: true,
-      description: "The key of the component to show triggers for (e.g. 'salesforce')",
-    }),
-  };
-
-  async run() {
+      ),
+  }),
+  args: z.object({
+    componentKey: z
+      .string()
+      .describe("The key of the component to show triggers for (e.g. 'salesforce')"),
+  }),
+  async run(context) {
     const {
-      flags,
+      options: flags,
       args: { componentKey },
-    } = await this.parse(ListCommand);
+    } = context;
 
     let triggers: TriggerNode[] = [];
     let componentId: string;
     let hasNextPage = true;
-    let cursor: string | null = "";
+    let cursor: string | null = flags.after ?? "";
+    let finalPageInfo = {
+      hasNextPage: false,
+      endCursor: null as string | null,
+    };
 
     while (hasNextPage) {
       const {
@@ -66,23 +78,30 @@ export default class ListCommand extends PrismaticBaseCommand {
         document: LIST_COMPONENT_TRIGGERS,
         variables: {
           after: cursor,
+          first: flags.first,
           componentKey,
           public: flags.public ? true : flags.private ? false : null,
         },
       });
       if (!component) {
-        console.log(
+        writeCommandStatus(
           "The key you provided is not valid. Please run 'prism components:list -x' and identify a valid component key.",
         );
-        this.exit(1);
+        throw new Errors.IncurError({
+          code: "COMMAND_FAILED",
+          message: "Exited with status 1",
+          exitCode: 1,
+        });
       }
       triggers = [...triggers, ...component.actions.nodes];
       componentId = component.id;
       cursor = component.actions.pageInfo.endCursor;
-      hasNextPage = component.actions.pageInfo.hasNextPage;
+      finalPageInfo = component.actions.pageInfo;
+      hasNextPage =
+        component.actions.pageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = printTable(
       triggers,
       {
         id: {
@@ -106,5 +125,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+    return { ...result, pageInfo: finalPageInfo };
+  },
+});
