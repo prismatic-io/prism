@@ -36,6 +36,8 @@ import { deleteIntegration, runIntegrationFlow } from "../../../utils/integratio
 import { pollForActiveConfigVarState } from "../../../utils/integration/query.js";
 import { spawnProcess } from "../../../utils/process.js";
 import { whoAmI } from "../../../utils/user/query.js";
+import { getPackageEntrypointDirectory } from "../../../utils/import.js";
+import { resolve } from "node:path";
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -209,7 +211,7 @@ export default class TestCommand extends PrismaticBaseCommand {
       },
     } = await this.parse(TestCommand);
 
-    // Save the current working directory, so we can return later after moving to dist/
+    // Resolve output paths relative to the directory where the command started.
     const cwd = process.cwd();
 
     if (build) {
@@ -237,13 +239,15 @@ export default class TestCommand extends PrismaticBaseCommand {
 
     const testingKey = kebabCase(name);
 
-    const definition = await loadEntrypoint();
+    const componentDirectory = await getPackageEntrypointDirectory("component");
+    const loadedDefinition = await loadEntrypoint(componentDirectory);
+    const definition = { ...loadedDefinition, display: { ...loadedDefinition.display } };
     const { key: componentKey, public: isPublic } = definition;
     definition.key = `${componentKey}-${testingKey}-testing`;
     definition.display.label = `${definition.display.label} ${name} Testing`;
-    await validateDefinition(definition);
+    await validateDefinition(definition, { cwd: componentDirectory });
 
-    const packagePath = await createComponentPackage();
+    const packagePath = await createComponentPackage(componentDirectory);
     const signatureMatches = await checkPackageSignature(definition, packagePath);
 
     ux.action.stop();
@@ -258,10 +262,10 @@ export default class TestCommand extends PrismaticBaseCommand {
         display: { iconPath },
       } = definition;
       if (iconPath) {
-        await uploadFile(iconPath, iconUploadUrl);
+        await uploadFile(resolve(componentDirectory, iconPath), iconUploadUrl);
       }
 
-      await uploadConnectionIcons(definition, connectionIconUploadUrls);
+      await uploadConnectionIcons(definition, connectionIconUploadUrls, componentDirectory);
       await uploadFile(packagePath, packageUploadUrl);
 
       ux.action.stop();
@@ -400,9 +404,8 @@ export default class TestCommand extends PrismaticBaseCommand {
     await displayLogs(executionId);
 
     if (outputFile) {
-      process.chdir(cwd);
       console.log(`Writing step results to ${outputFile}`);
-      await writeFinalStepResults(executionId, outputFile);
+      await writeFinalStepResults(executionId, resolve(cwd, outputFile));
     }
 
     if (printResults) {

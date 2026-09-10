@@ -31,56 +31,63 @@ export default class GenerateComponentCommand extends PrismaticBaseCommand {
 
   async run() {
     const { flags } = await this.parse(GenerateComponentCommand);
-    const toolchain = getToolchain(flags.toolchain);
-    const { name, description } = await inquirer.prompt<{
-      name: string;
-      description: string;
-    }>(
-      [
-        {
-          type: "input",
-          name: "name",
-          message: "Name of the component",
-          when: () => !flags.name,
-        },
-        {
-          type: "input",
-          name: "description",
-          message: "Description for the component",
-          when: () => !flags.description,
-        },
-      ],
-      flags,
-    );
-
-    const context = { component: { name, description, key: camelCase(name) } };
-    const sharedFiles = [
-      path.join("assets", "icon.png"),
-      path.join("src", "actions.test.ts"),
-      path.join("src", "actions.ts"),
-      path.join("src", "client.ts"),
-      path.join("src", "connections.ts"),
-      path.join("src", "dataSources.test.ts"),
-      path.join("src", "dataSources.ts"),
-      path.join("src", "index.ts"),
-      path.join("src", "triggers.test.ts"),
-      path.join("src", "triggers.ts"),
-      ".env.testing",
-      "package.json",
-    ];
-    await Promise.all([
-      ...sharedFiles.map((file) =>
-        template(
-          path.join("component", file.endsWith("icon.png") ? file : `${file}.ejs`),
-          file,
-          context,
-        ),
-      ),
-      toolchain.renderTemplates(context),
-    ]);
+    await generateComponent(flags);
   }
 
   static async invoke(args: { [K in keyof typeof this.flags]+?: unknown }, config: Config) {
     await GenerateComponentCommand.run(toArgv(args), config);
   }
+}
+export async function generateComponent(
+  flags: { name?: string; description?: string; toolchain?: "modern" | "legacy" },
+  directory = process.cwd(),
+) {
+  const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
+  const { name, description } = await inquirer.prompt<{
+    name: string;
+    description: string;
+  }>(
+    [
+      {
+        type: "input",
+        name: "name",
+        message: "Name of the component",
+        when: () => !flags.name,
+      },
+      {
+        type: "input",
+        name: "description",
+        message: "Description for the component",
+        when: () => !flags.description,
+      },
+    ],
+    flags,
+  );
+
+  const context = { component: { name, description, key: camelCase(name) } };
+  const sharedFiles = [
+    path.join("assets", "icon.png"),
+    path.join("src", "actions.test.ts"),
+    path.join("src", "actions.ts"),
+    path.join("src", "client.ts"),
+    path.join("src", "connections.ts"),
+    path.join("src", "dataSources.test.ts"),
+    path.join("src", "dataSources.ts"),
+    path.join("src", "index.ts"),
+    path.join("src", "triggers.test.ts"),
+    path.join("src", "triggers.ts"),
+    ".env.testing",
+    "package.json",
+  ];
+  await Promise.all([
+    ...sharedFiles.map((file) =>
+      template(
+        path.join("component", file.endsWith("icon.png") ? file : `${file}.ejs`),
+        path.join(directory, file),
+        context,
+      ),
+    ),
+    toolchain.renderTemplates(context, directory),
+  ]);
+  return { name, path: directory, toolchain: toolchain.name };
 }

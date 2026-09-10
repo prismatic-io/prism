@@ -1,12 +1,10 @@
-import { ux } from "@oclif/core";
 import type { Component as ComponentDefinitionTemplate } from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import { createRequire } from "node:module";
 import { extname, resolve } from "node:path";
 import { exists } from "../../fs.js";
-import { findPackageRoot, seekPackageDistDirectory } from "../import.js";
+import { findPackageRoot, getPackageEntrypointDirectory } from "../import.js";
 import { TOOLCHAIN_CONFIG_OUTPUTS } from "../toolchain/index.js";
 import { createZip } from "../zip.js";
-
 const require = createRequire(import.meta.url);
 
 /** Type defining leftover legacy backwards compat keys. */
@@ -31,32 +29,23 @@ interface ComponentEntrypoint {
   default: ComponentDefinition;
 }
 
-export const loadEntrypoint = async (): Promise<ComponentDefinition> => {
-  // If we don't have an index.js in cwd seek directories to find package.json of component
-  if (!(await exists("index.js"))) {
-    await seekPackageDistDirectory("component");
-  }
-
-  // If we still didn't find index.js error out
-  if (!(await exists("index.js"))) {
-    ux.error("Failed to find 'index.js' entrypoint file. Is the current path a component?", {
-      exit: 1,
-    });
-  }
-
-  // Require index.js and access its root-most default export which should be the Component config
-  const cwd = process.cwd();
-  const entrypointPath = resolve(cwd, "./index.js");
+export const loadEntrypoint = async (cwd = process.cwd()): Promise<ComponentDefinition> => {
+  const directory = await getPackageEntrypointDirectory("component", cwd);
+  const entrypointPath = resolve(directory, "index.js");
+  if (!(await exists(entrypointPath)))
+    throw Object.assign(
+      new Error("Failed to find 'index.js' entrypoint file. Is the current path a component?"),
+      { exitCode: 1 },
+    );
   const { default: definition }: ComponentEntrypoint = require(entrypointPath);
-
   return definition;
 };
 
-export const createComponentPackage = (): Promise<string> =>
-  createZip((zip) => zip.addDirectory(process.cwd()));
+export const createComponentPackage = (cwd = process.cwd()): Promise<string> =>
+  createZip((zip) => zip.addDirectory(cwd));
 
-export const createSourceCodePackage = async (): Promise<string> => {
-  const sourceRoot = await findPackageRoot("component");
+export const createSourceCodePackage = async (cwd = process.cwd()): Promise<string> => {
+  const sourceRoot = await findPackageRoot("component", cwd);
 
   let includePatterns: string[] = ["src"];
   try {
@@ -94,7 +83,7 @@ export const createSourceCodePackage = async (): Promise<string> => {
 
 export const validateDefinition = async (
   definition: ComponentDefinition,
-  options: { forCodeNativeIntegration?: boolean } = {},
+  options: { forCodeNativeIntegration?: boolean; cwd?: string } = {},
 ): Promise<void> => {
   // Output basic information to the user to confirm that this component is what they want to publish
   const {
@@ -104,38 +93,40 @@ export const validateDefinition = async (
   } = definition;
   // Check for mistaken invocations, though an invoke from an actual CNI build context is valid.
   if (codeNativeIntegrationYAML && !options.forCodeNativeIntegration) {
-    ux.error(
-      "You are running a component command on what appears to be a Code Native Integration. Please check the current path.",
-      {
-        exit: 1,
-      },
+    throw Object.assign(
+      new Error(
+        "You are running a component command on what appears to be a Code Native Integration. Please check the current path.",
+      ),
+      { exitCode: 1 },
     );
   }
   if (!label || !description) {
-    ux.error("Missing required values `label` or `description`. Exiting.", {
-      exit: 1,
+    throw Object.assign(new Error("Missing required values `label` or `description`. Exiting."), {
+      exitCode: 1,
     });
   }
 
-  const componentIconValid = await validateIcon(iconPath);
+  const componentIconValid = await validateIcon(iconPath, options.cwd);
   if (!componentIconValid) {
-    ux.error("Component icon does not exist or is not a png. Exiting.", {
-      exit: 1,
+    throw Object.assign(new Error("Component icon does not exist or is not a png. Exiting."), {
+      exitCode: 1,
     });
   }
 
   const connectionIconsValid = await Promise.all(
     (connections ?? []).map(({ iconPath, avatarIconPath }) => [
-      validateIcon(iconPath),
-      validateIcon(avatarIconPath),
+      validateIcon(iconPath, options.cwd),
+      validateIcon(avatarIconPath, options.cwd),
     ]),
   );
   if (connectionIconsValid.some((v) => !v)) {
-    ux.error("One or more connection icons do not exist or are not a png. Exiting.", {
-      exit: 1,
-    });
+    throw Object.assign(
+      new Error("One or more connection icons do not exist or are not a png. Exiting."),
+      { exitCode: 1 },
+    );
   }
 };
 
-const validateIcon = async (iconPath?: string): Promise<boolean> =>
-  !iconPath || (extname(iconPath.trim().toLowerCase()) === ".png" && (await exists(iconPath)));
+const validateIcon = async (iconPath?: string, cwd = process.cwd()): Promise<boolean> =>
+  !iconPath ||
+  (extname(iconPath.trim().toLowerCase()) === ".png" && (await exists(resolve(cwd, iconPath))));

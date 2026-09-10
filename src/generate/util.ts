@@ -55,13 +55,18 @@ export const template = async (
 export const templateDirectory = async (
   sourceDir: string,
   data: Record<string, unknown> = {},
+  destinationDirectory = process.cwd(),
 ): Promise<void> => {
   const absoluteDir = path.join(templatesRoot(), sourceDir);
   const files = await walkDir(absoluteDir);
   await Promise.all(
     files.map((file) => {
       const relativePath = path.relative(absoluteDir, file);
-      return template(path.join(sourceDir, relativePath), relativePath.replace(/\.ejs$/, ""), data);
+      return template(
+        path.join(sourceDir, relativePath),
+        path.join(destinationDirectory, relativePath.replace(/\.ejs$/, "")),
+        data,
+      );
     }),
   );
 };

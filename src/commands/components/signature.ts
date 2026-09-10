@@ -8,6 +8,7 @@ import {
   validateDefinition,
 } from "../../utils/component/index.js";
 import { getPackageSignatureFromApi } from "../../utils/component/signature.js";
+import { getPackageEntrypointDirectory } from "../../utils/import.js";
 
 export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
   static description = "Generate a Component signature";
@@ -25,9 +26,10 @@ export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
       flags: { "skip-signature-verify": skipSignatureVerify },
     } = await this.parse(ComponentsSignatureCommand);
 
-    const componentDefinition = await loadEntrypoint();
-    await validateDefinition(componentDefinition);
-    const packagePath = await createComponentPackage();
+    const componentDirectory = await getPackageEntrypointDirectory("component");
+    const componentDefinition = await loadEntrypoint(componentDirectory);
+    await validateDefinition(componentDefinition, { cwd: componentDirectory });
+    const packagePath = await createComponentPackage(componentDirectory);
 
     const packageSignature = crypto
       .createHash("sha1")

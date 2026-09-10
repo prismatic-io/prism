@@ -16,6 +16,8 @@ import {
   uploadFile,
 } from "../../utils/component/publish.js";
 import { whoAmI } from "../../utils/user/query.js";
+import { getPackageEntrypointDirectory } from "../../utils/import.js";
+import { resolve } from "node:path";
 
 export default class PublishCommand extends PrismaticBaseCommand {
   static description = "Publish a Component to Prismatic";
@@ -101,15 +103,17 @@ export default class PublishCommand extends PrismaticBaseCommand {
       pullRequestUrl,
     };
 
-    const definition = await loadEntrypoint();
-    await validateDefinition(definition);
+    const componentDirectory = await getPackageEntrypointDirectory("component");
+    const loadedDefinition = await loadEntrypoint(componentDirectory);
+    const definition = { ...loadedDefinition, display: { ...loadedDefinition.display } };
+    await validateDefinition(definition, { cwd: componentDirectory });
 
-    const packagePath = await createComponentPackage();
+    const packagePath = await createComponentPackage(componentDirectory);
 
     // Optionally create a source code package if the --include-source flag is set
     let sourceCodePath: string | undefined;
     if (includeSource) {
-      sourceCodePath = await createSourceCodePackage();
+      sourceCodePath = await createSourceCodePackage(componentDirectory);
     }
 
     if (checkSignature) {
@@ -150,7 +154,7 @@ export default class PublishCommand extends PrismaticBaseCommand {
     } = definition;
     await uploadFile(packagePath, packageUploadUrl);
     if (iconPath) {
-      await uploadFile(iconPath, iconUploadUrl);
+      await uploadFile(resolve(componentDirectory, iconPath), iconUploadUrl);
     }
 
     // Upload source code if it was created and the API returned an upload URL
@@ -158,7 +162,7 @@ export default class PublishCommand extends PrismaticBaseCommand {
       await uploadFile(sourceCodePath, sourceUploadUrl);
     }
 
-    await uploadConnectionIcons(definition, connectionIconUploadUrls);
+    await uploadConnectionIcons(definition, connectionIconUploadUrls, componentDirectory);
 
     const {
       display: { label },

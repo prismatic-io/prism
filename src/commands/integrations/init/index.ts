@@ -73,17 +73,19 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
     if (!VALID_NAME_REGEX.test(name)) {
       const regexUrl = new URL("https://regex101.com");
       regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
-      this.error(
-        `'${name}' contains invalid characters. Please select an integration name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
-        { exit: 1 },
+      throw Object.assign(
+        new Error(
+          `'${name}' contains invalid characters. Please select an integration name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
+        ),
+        { exitCode: 1 },
       );
     }
 
-    await fs.mkdir(name);
-    process.chdir(name);
+    const directory = path.resolve(name);
+    await fs.mkdir(directory);
 
     const registryUrl = new URL("/packages/npm", await getPrismaticUrl()).toString();
-    const context = {
+    const templateContext = {
       integration: { name, description: "Prism-generated Integration", key: camelCase(name) },
       flow: {
         stableKey: uuid4(),
@@ -131,13 +133,17 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
     ];
     await Promise.all([
       ...sharedFiles.map((file) =>
-        template(path.join("integration", resolveTemplateSource(file)), file, context),
+        template(
+          path.join("integration", resolveTemplateSource(file)),
+          path.join(directory, file),
+          templateContext,
+        ),
       ),
-      toolchain.renderTemplates(context),
+      toolchain.renderTemplates(templateContext, directory),
     ]);
 
     await updatePackageJson({
-      path: "package.json",
+      path: path.join(directory, "package.json"),
       scripts: {
         build: toolchain.scripts.build,
         import: "npm run build && prism integrations:import",

@@ -3,6 +3,7 @@ import { type Output, x } from "tinyexec";
 export const spawnProcess = async (
   [command, ...args]: string[],
   env: Record<string, string>,
+  options: { cwd?: string } = {},
 ): Promise<void> => {
   if (!command) {
     throw new Error("No command was provided.");
@@ -14,6 +15,7 @@ export const spawnProcess = async (
       nodeOptions: {
         env: { ...process.env, ...env },
         stdio: "inherit",
+        cwd: options.cwd,
       },
     });
   } catch (error) {

@@ -1,3 +1,4 @@
+import { outputFile } from "fs-extra";
 import { minBy } from "lodash-es";
 import path from "path";
 import { Project, ScriptKind, type SourceFile } from "ts-morph";
@@ -214,8 +215,9 @@ export const write = async (
   key: string,
   isPublic: boolean,
   { baseUrl, component, actions, connections }: Result,
+  directory = process.cwd(),
 ): Promise<Project> => {
-  const project = new Project();
+  const project = new Project({ useInMemoryFileSystem: true });
   project.createDirectory("src");
 
   writeConnections(project, connections);
@@ -229,6 +231,17 @@ export const write = async (
   }
 
   await project.save();
+  const virtualRoot = project.getFileSystem().getCurrentDirectory();
+  await Promise.all(
+    project
+      .getSourceFiles()
+      .map((file) =>
+        outputFile(
+          path.resolve(directory, path.relative(virtualRoot, file.getFilePath())),
+          file.getFullText(),
+        ),
+      ),
+  );
 
   return project;
 };

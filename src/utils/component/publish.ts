@@ -9,6 +9,7 @@ import { gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
 import { ux } from "../ux.js";
 import type { ComponentDefinition } from "./index.js";
+import { resolve } from "node:path";
 
 const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {
   actions: true,
@@ -217,6 +218,7 @@ export const uploadConnectionIcons = async (
     string,
     { iconUploadUrl?: string; avatarIconUploadUrl?: string }
   >,
+  cwd = process.cwd(),
 ): Promise<void> => {
   if (
     !connections?.length ||
@@ -246,11 +248,11 @@ export const uploadConnectionIcons = async (
       const connectionIconPaths = iconPaths[connectionKey];
 
       if (connectionIconPaths.iconPath && iconUploadUrl) {
-        acc.push(uploadFile(connectionIconPaths.iconPath, iconUploadUrl));
+        acc.push(uploadFile(resolve(cwd, connectionIconPaths.iconPath), iconUploadUrl));
       }
 
       if (connectionIconPaths.avatarIconPath && avatarIconUploadUrl) {
-        acc.push(uploadFile(connectionIconPaths.avatarIconPath, avatarIconUploadUrl));
+        acc.push(uploadFile(resolve(cwd, connectionIconPaths.avatarIconPath), avatarIconUploadUrl));
       }
 
       return acc;

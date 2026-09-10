@@ -1,7 +1,9 @@
 import { exists, fs } from "../../fs.js";
+import { resolve } from "node:path";
 
 interface PrismMetadataOptions {
   fromDist?: boolean;
+  cwd?: string;
 }
 
 const CNI_METADATA_RELATIVE_PATH = ".spectral/prism.json";
@@ -13,7 +15,10 @@ function getPrefix(fromDist = false) {
 export async function getPrismMetadata(
   options: PrismMetadataOptions = {},
 ): Promise<Record<string, string>> {
-  const metadataPath = `${getPrefix(options.fromDist)}${CNI_METADATA_RELATIVE_PATH}`;
+  const metadataPath = resolve(
+    options.cwd ?? process.cwd(),
+    `${getPrefix(options.fromDist)}${CNI_METADATA_RELATIVE_PATH}`,
+  );
   const metadataExists = await exists(metadataPath);
 
   if (!metadataExists) {
@@ -33,7 +38,10 @@ export async function writePrismMetadata(
   metadata: Record<string, string>,
   options: PrismMetadataOptions = {},
 ) {
-  const metadataPath = `${getPrefix(options.fromDist)}${CNI_METADATA_RELATIVE_PATH}`;
+  const metadataPath = resolve(
+    options.cwd ?? process.cwd(),
+    `${getPrefix(options.fromDist)}${CNI_METADATA_RELATIVE_PATH}`,
+  );
   const alreadyExists = await exists(metadataPath);
   const file = await fs.writeFile(metadataPath, JSON.stringify(metadata));
 

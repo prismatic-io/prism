@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -103,4 +103,33 @@ describe("spawnProcess", () => {
       ).resolves.toBeUndefined();
     },
   );
+});
+
+it("passes explicit child directories and environment overrides concurrently", async () => {
+  const originalDirectory = process.cwd();
+  const originalValue = process.env.PRISM_CHILD_TEST_VALUE;
+  const directories = await Promise.all([createTemporaryDirectory(), createTemporaryDirectory()]);
+  await Promise.all(
+    directories.map((cwd, index) =>
+      spawnProcess(
+        [
+          process.execPath,
+          "-e",
+          'require("node:fs").writeFileSync("result.json", JSON.stringify({ cwd: process.cwd(), value: process.env.PRISM_CHILD_TEST_VALUE }))',
+        ],
+        { PRISM_CHILD_TEST_VALUE: `value-${index}` },
+        { cwd },
+      ),
+    ),
+  );
+  for (const [index, directory] of directories.entries()) {
+    const result = JSON.parse(await readFile(path.join(directory, "result.json"), "utf8"));
+    // Windows may report an 8.3 path for the same directory; compare canonical paths.
+    expect({ ...result, cwd: await realpath(result.cwd) }).toEqual({
+      cwd: await realpath(directory),
+      value: `value-${index}`,
+    });
+  }
+  expect(process.cwd()).toBe(originalDirectory);
+  expect(process.env.PRISM_CHILD_TEST_VALUE).toBe(originalValue);
 });
