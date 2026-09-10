@@ -1,3 +1,4 @@
+import { getWorkingDirectory, withWorkingDirectory } from "../../command-context.js";
 import { Flags } from "@oclif/core";
 
 import { PrismaticBaseCommand } from "../../baseCommand.js";
@@ -16,6 +17,8 @@ import {
   uploadFile,
 } from "../../utils/component/publish.js";
 import { whoAmI } from "../../utils/user/query.js";
+import { getPackageEntrypointDirectory } from "../../utils/import.js";
+import { resolve } from "node:path";
 
 export default class PublishCommand extends PrismaticBaseCommand {
   static description = "Publish a Component to Prismatic";
@@ -101,71 +104,74 @@ export default class PublishCommand extends PrismaticBaseCommand {
       pullRequestUrl,
     };
 
-    const definition = await loadEntrypoint();
-    await validateDefinition(definition);
+    return withWorkingDirectory(await getPackageEntrypointDirectory("component"), async () => {
+      const loadedDefinition = await loadEntrypoint();
+      const definition = { ...loadedDefinition, display: { ...loadedDefinition.display } };
+      await validateDefinition(definition);
 
-    const packagePath = await createComponentPackage();
+      const packagePath = await createComponentPackage();
 
-    // Optionally create a source code package if the --include-source flag is set
-    let sourceCodePath: string | undefined;
-    if (includeSource) {
-      sourceCodePath = await createSourceCodePackage();
-    }
+      // Optionally create a source code package if the --include-source flag is set
+      let sourceCodePath: string | undefined;
+      if (includeSource) {
+        sourceCodePath = await createSourceCodePackage();
+      }
 
-    if (checkSignature) {
-      const signatureMatches = await checkPackageSignature(definition, packagePath);
-      if (signatureMatches) {
-        if (
-          skipOnSignatureMatch ||
-          !(await ux.confirm(
-            "The new package signature matches the existing package signature. Continue publishing new package? (y/N)",
-          ))
-        ) {
-          // Signatures match and we've opted to skip on match, so bail.
-          ux.log("Package signatures match, skipping publish.");
-          return;
+      if (checkSignature) {
+        const signatureMatches = await checkPackageSignature(definition, packagePath);
+        if (signatureMatches) {
+          if (
+            skipOnSignatureMatch ||
+            !(await ux.confirm(
+              "The new package signature matches the existing package signature. Continue publishing new package? (y/N)",
+            ))
+          ) {
+            // Signatures match and we've opted to skip on match, so bail.
+            ux.log("Package signatures match, skipping publish.");
+            return;
+          }
         }
       }
-    }
 
-    const shouldPublish = await confirmPublish(definition, confirm);
-    if (!shouldPublish) {
-      return;
-    }
+      const shouldPublish = await confirmPublish(definition, confirm);
+      if (!shouldPublish) {
+        return;
+      }
 
-    const {
-      iconUploadUrl,
-      packageUploadUrl,
-      sourceUploadUrl,
-      connectionIconUploadUrls,
-      versionNumber,
-    } = await publishDefinition(definition, {
-      comment,
-      customer,
-      attributes: didProvideAttributes ? attributes : undefined,
+      const {
+        iconUploadUrl,
+        packageUploadUrl,
+        sourceUploadUrl,
+        connectionIconUploadUrls,
+        versionNumber,
+      } = await publishDefinition(definition, {
+        comment,
+        customer,
+        attributes: didProvideAttributes ? attributes : undefined,
+      });
+
+      const {
+        display: { iconPath },
+      } = definition;
+      await uploadFile(packagePath, packageUploadUrl);
+      if (iconPath) {
+        await uploadFile(resolve(getWorkingDirectory(), iconPath), iconUploadUrl);
+      }
+
+      // Upload source code if it was created and the API returned an upload URL
+      if (sourceCodePath && sourceUploadUrl) {
+        await uploadFile(sourceCodePath, sourceUploadUrl);
+      }
+
+      await uploadConnectionIcons(definition, connectionIconUploadUrls);
+
+      const {
+        display: { label },
+      } = definition;
+      // Tell user that their publish was successful and can use components list to view status
+      this.log(
+        `Successfully submitted ${label} (v${versionNumber})! The publish should finish processing shortly.`,
+      );
     });
-
-    const {
-      display: { iconPath },
-    } = definition;
-    await uploadFile(packagePath, packageUploadUrl);
-    if (iconPath) {
-      await uploadFile(iconPath, iconUploadUrl);
-    }
-
-    // Upload source code if it was created and the API returned an upload URL
-    if (sourceCodePath && sourceUploadUrl) {
-      await uploadFile(sourceCodePath, sourceUploadUrl);
-    }
-
-    await uploadConnectionIcons(definition, connectionIconUploadUrls);
-
-    const {
-      display: { label },
-    } = definition;
-    // Tell user that their publish was successful and can use components list to view status
-    this.log(
-      `Successfully submitted ${label} (v${versionNumber})! The publish should finish processing shortly.`,
-    );
   }
 }

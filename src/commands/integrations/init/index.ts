@@ -1,3 +1,4 @@
+import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import fs from "fs/promises";
@@ -73,86 +74,93 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
     if (!VALID_NAME_REGEX.test(name)) {
       const regexUrl = new URL("https://regex101.com");
       regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
-      this.error(
-        `'${name}' contains invalid characters. Please select an integration name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
-        { exit: 1 },
+      throw Object.assign(
+        new Error(
+          `'${name}' contains invalid characters. Please select an integration name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
+        ),
+        { exitCode: 1 },
       );
     }
 
-    await fs.mkdir(name);
-    process.chdir(name);
+    const directory = path.resolve(getWorkingDirectory(), name);
+    await fs.mkdir(directory);
 
-    const registryUrl = new URL("/packages/npm", await getPrismaticUrl()).toString();
-    const context = {
-      integration: { name, description: "Prism-generated Integration", key: camelCase(name) },
-      flow: {
-        stableKey: uuid4(),
-      },
-      configVars: {
-        connection: {
+    await withWorkingDirectory(directory, async () => {
+      const registryUrl = new URL("/packages/npm", await getPrismaticUrl()).toString();
+      const templateContext = {
+        integration: { name, description: "Prism-generated Integration", key: camelCase(name) },
+        flow: {
           stableKey: uuid4(),
         },
-        dataSource: {
-          stableKey: uuid4(),
+        configVars: {
+          connection: {
+            stableKey: uuid4(),
+          },
+          dataSource: {
+            stableKey: uuid4(),
+          },
         },
-      },
-      registry: {
-        url: registryUrl,
-        scope: "@component-manifests",
-      },
-    };
+        registry: {
+          url: registryUrl,
+          scope: "@component-manifests",
+        },
+      };
 
-    const templateSuffix = clean ? ".clean" : "";
-    const resolveTemplateSource = (file: string): string => {
-      if (file.endsWith("icon.png")) {
-        return file;
-      }
-      const normalizedFile = file.split(path.sep).join("/");
-      if (CLEANABLE_TEMPLATES.includes(normalizedFile)) {
-        return `${file}${templateSuffix}.ejs`;
-      }
-      return `${file}.ejs`;
-    };
+      const templateSuffix = clean ? ".clean" : "";
+      const resolveTemplateSource = (file: string): string => {
+        if (file.endsWith("icon.png")) {
+          return file;
+        }
+        const normalizedFile = file.split(path.sep).join("/");
+        if (CLEANABLE_TEMPLATES.includes(normalizedFile)) {
+          return `${file}${templateSuffix}.ejs`;
+        }
+        return `${file}.ejs`;
+      };
 
-    const sharedFiles = [
-      path.join("assets", "icon.png"),
-      path.join("src", "index.ts"),
-      path.join("src", "client.ts"),
-      path.join("src", "flows.ts"),
-      path.join("src", "flows.test.ts"),
-      path.join("src", "configPages.ts"),
-      path.join("src", "componentRegistry.ts"),
-      path.join("src", "markdown.d.ts"),
-      path.join(".spectral", "index.ts"),
-      ".env.testing",
-      ".npmrc",
-      "documentation.md",
-      "package.json",
-    ];
-    await Promise.all([
-      ...sharedFiles.map((file) =>
-        template(path.join("integration", resolveTemplateSource(file)), file, context),
-      ),
-      toolchain.renderTemplates(context),
-    ]);
+      const sharedFiles = [
+        path.join("assets", "icon.png"),
+        path.join("src", "index.ts"),
+        path.join("src", "client.ts"),
+        path.join("src", "flows.ts"),
+        path.join("src", "flows.test.ts"),
+        path.join("src", "configPages.ts"),
+        path.join("src", "componentRegistry.ts"),
+        path.join("src", "markdown.d.ts"),
+        path.join(".spectral", "index.ts"),
+        ".env.testing",
+        ".npmrc",
+        "documentation.md",
+        "package.json",
+      ];
+      await Promise.all([
+        ...sharedFiles.map((file) =>
+          template(
+            path.join("integration", resolveTemplateSource(file)),
+            path.join(directory, file),
+            templateContext,
+          ),
+        ),
+        toolchain.renderTemplates(templateContext),
+      ]);
 
-    await updatePackageJson({
-      path: "package.json",
-      scripts: {
-        build: toolchain.scripts.build,
-        import: "npm run build && prism integrations:import",
-        test: toolchain.scripts.test,
-        lint: toolchain.scripts.lint,
-        typecheck: toolchain.scripts.typecheck,
-        format: toolchain.scripts.format,
-      },
-      ...toolchain.packageJson,
-      dependencies: {
-        "@prismatic-io/spectral": "*",
-      },
-      devDependencies: toolchain.devDependencies,
+      await updatePackageJson({
+        path: path.join(directory, "package.json"),
+        scripts: {
+          build: toolchain.scripts.build,
+          import: "npm run build && prism integrations:import",
+          test: toolchain.scripts.test,
+          lint: toolchain.scripts.lint,
+          typecheck: toolchain.scripts.typecheck,
+          format: toolchain.scripts.format,
+        },
+        ...toolchain.packageJson,
+        dependencies: {
+          "@prismatic-io/spectral": "*",
+        },
+        devDependencies: toolchain.devDependencies,
+      });
     });
-
     this.log(`
 "${name}" is ready for development.
 To install dependencies, run either "npm install" or "yarn install"

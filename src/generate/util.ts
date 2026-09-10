@@ -1,3 +1,4 @@
+import { getWorkingDirectory } from "../command-context.js";
 import ejs from "ejs";
 import { copyFile, mkdirp, outputFile, readJson } from "fs-extra";
 import { camelCase, merge, startCase } from "lodash-es";
@@ -61,7 +62,11 @@ export const templateDirectory = async (
   await Promise.all(
     files.map((file) => {
       const relativePath = path.relative(absoluteDir, file);
-      return template(path.join(sourceDir, relativePath), relativePath.replace(/\.ejs$/, ""), data);
+      return template(
+        path.join(sourceDir, relativePath),
+        path.join(getWorkingDirectory(), relativePath.replace(/\.ejs$/, "")),
+        data,
+      );
     }),
   );
 };

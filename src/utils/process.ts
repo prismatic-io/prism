@@ -1,3 +1,4 @@
+import { getWorkingDirectory } from "../command-context.js";
 import { type Output, x } from "tinyexec";
 
 export const spawnProcess = async (
@@ -14,6 +15,7 @@ export const spawnProcess = async (
       nodeOptions: {
         env: { ...process.env, ...env },
         stdio: "inherit",
+        cwd: getWorkingDirectory(),
       },
     });
   } catch (error) {

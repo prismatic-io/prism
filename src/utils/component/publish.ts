@@ -1,3 +1,4 @@
+import { getWorkingDirectory } from "../../command-context.js";
 import crypto from "crypto";
 import mimetypes from "mime-types";
 import { extname } from "path";
@@ -9,6 +10,7 @@ import { gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
 import { ux } from "../ux.js";
 import type { ComponentDefinition } from "./index.js";
+import { resolve } from "node:path";
 
 const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {
   actions: true,
@@ -246,11 +248,18 @@ export const uploadConnectionIcons = async (
       const connectionIconPaths = iconPaths[connectionKey];
 
       if (connectionIconPaths.iconPath && iconUploadUrl) {
-        acc.push(uploadFile(connectionIconPaths.iconPath, iconUploadUrl));
+        acc.push(
+          uploadFile(resolve(getWorkingDirectory(), connectionIconPaths.iconPath), iconUploadUrl),
+        );
       }
 
       if (connectionIconPaths.avatarIconPath && avatarIconUploadUrl) {
-        acc.push(uploadFile(connectionIconPaths.avatarIconPath, avatarIconUploadUrl));
+        acc.push(
+          uploadFile(
+            resolve(getWorkingDirectory(), connectionIconPaths.avatarIconPath),
+            avatarIconUploadUrl,
+          ),
+        );
       }
 
       return acc;

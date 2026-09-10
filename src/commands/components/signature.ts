@@ -1,3 +1,4 @@
+import { withWorkingDirectory } from "../../command-context.js";
 import { Flags } from "@oclif/core";
 import crypto from "crypto";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
@@ -8,6 +9,7 @@ import {
   validateDefinition,
 } from "../../utils/component/index.js";
 import { getPackageSignatureFromApi } from "../../utils/component/signature.js";
+import { getPackageEntrypointDirectory } from "../../utils/import.js";
 
 export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
   static description = "Generate a Component signature";
@@ -25,24 +27,26 @@ export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
       flags: { "skip-signature-verify": skipSignatureVerify },
     } = await this.parse(ComponentsSignatureCommand);
 
-    const componentDefinition = await loadEntrypoint();
-    await validateDefinition(componentDefinition);
-    const packagePath = await createComponentPackage();
+    return withWorkingDirectory(await getPackageEntrypointDirectory("component"), async () => {
+      const componentDefinition = await loadEntrypoint();
+      await validateDefinition(componentDefinition);
+      const packagePath = await createComponentPackage();
 
-    const packageSignature = crypto
-      .createHash("sha1")
-      .update(await fs.readFile(packagePath))
-      .digest("hex");
+      const packageSignature = crypto
+        .createHash("sha1")
+        .update(await fs.readFile(packagePath))
+        .digest("hex");
 
-    if (skipSignatureVerify) {
-      return this.log(packageSignature);
-    }
+      if (skipSignatureVerify) {
+        return this.log(packageSignature);
+      }
 
-    const packageSignatureFromApi = await getPackageSignatureFromApi({
-      componentDefinition,
-      packageSignature,
+      const packageSignatureFromApi = await getPackageSignatureFromApi({
+        componentDefinition,
+        packageSignature,
+      });
+
+      return this.log(packageSignatureFromApi ?? "");
     });
-
-    return this.log(packageSignatureFromApi ?? "");
   }
 }

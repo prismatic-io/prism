@@ -21,8 +21,6 @@ export default class TranslationsCommand extends PrismaticBaseCommand {
       flags: { "output-file": output },
     } = await this.parse(TranslationsCommand);
 
-    const cwd = process.cwd();
-
     const result = await gqlRequest({
       document: MARKETPLACE_TRANSLATIONS,
     });
@@ -30,7 +28,6 @@ export default class TranslationsCommand extends PrismaticBaseCommand {
     const processedIntegrations = processIntegrationsForTranslations(result);
 
     if (output) {
-      process.chdir(cwd);
       this.log(`Writing translations to ${output}`);
       fs.writeFile(output, JSON.stringify(processedIntegrations, null, 2));
     } else {
