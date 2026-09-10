@@ -235,4 +235,29 @@ describe("ConfigStore", () => {
     await store.setDefaultProfile(name);
     expect((await store.read())?.defaultProfile).toBe(name);
   });
+
+  it("compares optional tenant values rather than their property presence", async () => {
+    await store.saveProfile("first", profile);
+    const expected = { ...profile, tenantId: undefined };
+    const { prismaticUrl: _url, ...credentials } = expected;
+    expect(
+      await store.replaceCredentials("first", expected, { ...credentials, accessToken: "fresh" }),
+    ).toBe(true);
+    expect(getProfile(await store.read(), "first")?.accessToken).toBe("fresh");
+  });
+
+  it("conditionally replaces credentials while retaining the endpoint", async () => {
+    await store.saveProfile("first", profile);
+    const { prismaticUrl: _url, ...credentials } = profile;
+    expect(
+      await store.replaceCredentials("first", profile, { ...credentials, accessToken: "fresh" }),
+    ).toBe(true);
+    expect(getProfile(await store.read(), "first")).toEqual({ ...profile, accessToken: "fresh" });
+    expect(await store.replaceCredentials("first", profile, credentials)).toBe(false);
+    await store.deleteProfile("first");
+    expect(
+      await store.replaceCredentials("first", { ...profile, accessToken: "fresh" }, credentials),
+    ).toBe(false);
+    expect(await store.read()).toBeNull();
+  });
 });

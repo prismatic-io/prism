@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { devNull } from "node:os";
 import path from "node:path";
 import {
+  type Credentials,
   decodeConfig,
   encodeConfig,
   getProfile,
@@ -102,6 +103,38 @@ export class ConfigStore {
       return {
         state: { defaultProfile, profiles },
         result: { deleted: true, isLast: false, defaultChanged, defaultProfile } as const,
+      };
+    });
+  }
+
+  // A network refresh may finish after logout or a newer login/tenant switch.
+  // Only update the session that actually supplied the refresh credentials.
+  async replaceCredentials(
+    name: string,
+    expected: Profile,
+    credentials: Credentials,
+  ): Promise<boolean> {
+    return this.update((state) => {
+      const current = getProfile(state, name);
+      const matches =
+        current &&
+        current.accessToken === expected.accessToken &&
+        current.refreshToken === expected.refreshToken &&
+        current.expiresIn === expected.expiresIn &&
+        current.scope === expected.scope &&
+        current.tokenType === expected.tokenType &&
+        current.prismaticUrl === expected.prismaticUrl &&
+        current.tenantId === expected.tenantId;
+      if (!state || !matches) return { state, result: false };
+      return {
+        state: {
+          ...state,
+          profiles: {
+            ...state.profiles,
+            [name]: { ...credentials, prismaticUrl: expected.prismaticUrl },
+          },
+        },
+        result: true,
       };
     });
   }

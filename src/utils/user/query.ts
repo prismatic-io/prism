@@ -1,3 +1,4 @@
+import type { AuthContext } from "../../context.js";
 import { WhoamiDocument as WHOAMI } from "../../graphql/operations/whoami.generated.js";
 import { gqlRequest } from "../../graphql.js";
 
@@ -27,9 +28,10 @@ interface CustomerUser {
 
 type User = OrgUser | CustomerUser;
 
-export const whoAmI = async (): Promise<User> => {
+export const whoAmI = async (authContext?: AuthContext): Promise<User> => {
   const { authenticatedUser } = await gqlRequest({
     document: WHOAMI,
+    authContext,
   });
   if (authenticatedUser.org) {
     return {

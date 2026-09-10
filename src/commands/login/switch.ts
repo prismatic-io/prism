@@ -1,6 +1,12 @@
-import { fetchUserTenants, isLoggedIn, refresh, selectTenant } from "../../auth.js";
+import {
+  fetchUserTenants,
+  getAuthenticatedContext,
+  isLoggedIn,
+  refresh,
+  selectTenant,
+} from "../../auth.js";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { getActiveProfileName, readProfile, writeActiveProfile } from "../../context.js";
+import { resolveProfileAuthContext } from "../../context.js";
 import { whoAmI } from "../../utils/user/query.js";
 
 export default class LoginSwitchCommand extends PrismaticBaseCommand {
@@ -10,19 +16,19 @@ export default class LoginSwitchCommand extends PrismaticBaseCommand {
 
   async run() {
     await this.parse(LoginSwitchCommand);
-    const profileName = this.profileName ?? (await getActiveProfileName());
-    const config = await readProfile(profileName);
-    const loggedIn = (await isLoggedIn()) && config;
+    const target = await getAuthenticatedContext(await resolveProfileAuthContext(this.profileName));
+    const { profileName, profile: config } = target;
+    const loggedIn = (await isLoggedIn(target)) && config;
     if (!loggedIn) {
       this.log("Not logged in. Run 'prism login'.");
       return;
     }
 
-    const tenants = await fetchUserTenants();
+    const tenants = await fetchUserTenants(target);
 
     let currentTenantId = config.tenantId;
     if (!currentTenantId) {
-      const user = await whoAmI();
+      const user = await whoAmI(target);
       currentTenantId = user.tenantId;
     }
 
@@ -50,20 +56,21 @@ export default class LoginSwitchCommand extends PrismaticBaseCommand {
 
     if (!selectedTenantId || selectedTenantId === currentTenantId) {
       if (currentTenantId && !currentTenantSuspended) {
-        await writeActiveProfile(
-          {
-            ...config,
-            tenantId: currentTenantId,
-          },
-          profileName,
-        );
+        const replaced = await target.store.replaceCredentials(profileName, config, {
+          ...config,
+          tenantId: currentTenantId,
+        });
+        if (!replaced)
+          throw new Error(
+            `Profile "${profileName}" changed while switching tenants. Retry the command.`,
+          );
         this.log(`Active tenant: ${currentTenant?.orgName} (${currentTenant?.url})`);
       }
       return;
     }
 
     this.log("\nSwitching tenant...");
-    await refresh(config.refreshToken, selectedTenantId, profileName);
+    await refresh(target, selectedTenantId);
 
     const selectedTenant = tenants.find((t) => t.tenantId === selectedTenantId);
     this.log(`Switched to: ${selectedTenant?.orgName} (${selectedTenant?.url})`);

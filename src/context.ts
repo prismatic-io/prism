@@ -1,15 +1,20 @@
-import { type Credentials, getProfile, type Profile } from "./config.js";
+import { getProfile, type Profile } from "./config.js";
 import { ConfigStore } from "./config-store.js";
 import { DEFAULT_PRISMATIC_URL, getEnv } from "./env.js";
 
-export type AuthContext = {
-  source: "environment" | "profile";
-  profileName?: string;
+type CredentialsContext = {
   url: string;
   accessToken?: string;
   refreshToken?: string;
   tenantId?: string;
 };
+export type ProfileAuthContext = CredentialsContext & {
+  source: "profile";
+  store: ConfigStore;
+  profileName: string;
+  profile: Profile | null;
+};
+export type AuthContext = CredentialsContext & ({ source: "environment" } | ProfileAuthContext);
 
 let selectedProfile: string | undefined;
 export const selectProfile = (name?: string): void => {
@@ -32,20 +37,6 @@ export const getActiveProfileName = async (): Promise<string> =>
   (await readProfileSelection()).name;
 export const readProfile = async (name?: string): Promise<Profile | null> =>
   (await readProfileSelection(name)).profile;
-
-export const deleteProfile = (name: string) => getConfigStore().deleteProfile(name);
-
-export const writeActiveProfile = async (
-  credentials: Credentials,
-  name?: string,
-): Promise<void> => {
-  const selection = await readProfileSelection(name);
-  await selection.store.saveProfile(selection.name, {
-    ...credentials,
-    prismaticUrl:
-      selection.profile?.prismaticUrl ?? getEnv().PRISMATIC_URL ?? DEFAULT_PRISMATIC_URL,
-  });
-};
 
 let profileOnly = false;
 
@@ -75,13 +66,15 @@ export const getAuthContext = async (): Promise<AuthContext> => {
     };
   }
 
-  const { name, profile } = await readProfileSelection();
+  const { store, name, profile } = await readProfileSelection();
   if (profile && env.PRISMATIC_URL && env.PRISMATIC_URL !== profile.prismaticUrl) {
     throw new Error(`PRISMATIC_URL does not match profile '${name}'.`);
   }
 
   return {
     source: "profile",
+    store,
+    profile,
     profileName: name,
     url: profile?.prismaticUrl ?? env.PRISMATIC_URL ?? DEFAULT_PRISMATIC_URL,
     accessToken: profile?.accessToken,
@@ -90,11 +83,13 @@ export const getAuthContext = async (): Promise<AuthContext> => {
   };
 };
 
-const resolveProfileAuthContext = async (): Promise<AuthContext> => {
-  const selection = await readProfileSelection();
+export const resolveProfileAuthContext = async (name?: string): Promise<ProfileAuthContext> => {
+  const selection = await readProfileSelection(name);
   const profile = selection.profile;
   return {
     source: "profile",
+    store: selection.store,
+    profile,
     profileName: selection.name,
     url: profile?.prismaticUrl ?? getEnv().PRISMATIC_URL ?? DEFAULT_PRISMATIC_URL,
     accessToken: profile?.accessToken,
