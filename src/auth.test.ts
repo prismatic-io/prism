@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
 import inquirer from "inquirer";
+import { describe, expect, it, vi } from "vitest";
 import {
   Authenticate,
   createRequestParams,
@@ -8,22 +8,23 @@ import {
   selectTenant,
   type Tenant,
 } from "./auth.js";
-import { deleteProfile, readProfileSelection, writeActiveProfile } from "./config.js";
-import { getAuthContext } from "./context.js";
+import {
+  deleteProfile,
+  getAuthContext,
+  readProfileSelection,
+  writeActiveProfile,
+} from "./context.js";
 import { gqlRequest } from "./graphql.js";
 import { fetch } from "./utils/http.js";
 
 vi.unmock("./auth.js");
 
-vi.mock(import("./config.js"), () => ({
+vi.mock(import("./context.js"), () => ({
   deleteProfile: vi.fn(),
   getActiveProfileName: vi.fn(),
   readProfile: vi.fn(),
   readProfileSelection: vi.fn(),
   writeActiveProfile: vi.fn(),
-}));
-
-vi.mock(import("./context.js"), () => ({
   getAuthContext: vi.fn(),
   useProfileAuthContext: vi.fn(),
   getPrismaticUrl: vi.fn(() => Promise.resolve("https://auth.example.com")),

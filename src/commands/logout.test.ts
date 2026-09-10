@@ -3,8 +3,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { logout } from "../auth.js";
-import { type Profile, readConfigFile, selectProfile, writeProfile } from "../config.js";
+import type { Profile } from "../config.js";
+import { getConfigStore, selectProfile } from "../context.js";
 import LogoutCommand from "./logout.js";
+
+vi.unmock("../context.js");
 
 const profile: Profile = {
   accessToken: "access",
@@ -38,35 +41,41 @@ describe("logout", () => {
   });
 
   it("removes only the original profile during browser logout", async () => {
-    await writeProfile("default", profile);
-    await writeProfile("staging", { ...profile, prismaticUrl: "https://staging.example.io" });
+    await getConfigStore().saveProfile("default", profile);
+    await getConfigStore().saveProfile("staging", {
+      ...profile,
+      prismaticUrl: "https://staging.example.io",
+    });
 
     await LogoutCommand.run(["--browser"]);
 
     expect(logout).toHaveBeenCalledOnce();
-    const config = await readConfigFile();
+    const config = await getConfigStore().read();
     expect(Object.keys(config?.profiles ?? {})).toEqual(["staging"]);
     expect(config?.defaultProfile).toBe("staging");
   });
 
   it("uses oclif's inherited profile flag without changing the default", async () => {
-    await writeProfile("default", profile);
-    await writeProfile("staging", { ...profile, prismaticUrl: "https://staging.example.io" });
+    await getConfigStore().saveProfile("default", profile);
+    await getConfigStore().saveProfile("staging", {
+      ...profile,
+      prismaticUrl: "https://staging.example.io",
+    });
 
     await LogoutCommand.run(["--profile", "staging"]);
 
-    const config = await readConfigFile();
+    const config = await getConfigStore().read();
     expect(Object.keys(config?.profiles ?? {})).toEqual(["default"]);
     expect(config?.defaultProfile).toBe("default");
   });
 
   it("warns when environment credentials remain active", async () => {
-    await writeProfile("default", profile);
+    await getConfigStore().saveProfile("default", profile);
     vi.stubEnv("PRISM_ACCESS_TOKEN", "environment-token");
 
     await LogoutCommand.run([]);
 
-    await expect(readConfigFile()).resolves.toBeNull();
+    await expect(getConfigStore().read()).resolves.toBeNull();
   });
 
   it("does not report a successful logout when the profile does not exist", async () => {

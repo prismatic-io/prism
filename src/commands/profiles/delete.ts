@@ -1,6 +1,6 @@
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { deleteProfile } from "../../config.js";
+import { getConfigStore } from "../../context.js";
 
 export default class ProfilesDeleteCommand extends PrismaticBaseCommand {
   static description = "Delete a profile";
@@ -17,7 +17,7 @@ export default class ProfilesDeleteCommand extends PrismaticBaseCommand {
       args: { name },
     } = await this.parse(ProfilesDeleteCommand);
 
-    const result = await deleteProfile(name);
+    const result = await getConfigStore().deleteProfile(name);
     if (!result.deleted) {
       this.error(`Profile '${name}' does not exist.`, { exit: 1 });
     }

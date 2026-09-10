@@ -1,7 +1,7 @@
 import { Flags } from "@oclif/core";
 import { logout } from "../auth.js";
 import { PrismaticBaseCommand } from "../baseCommand.js";
-import { deleteProfile, getActiveProfileName } from "../config.js";
+import { deleteProfile, getActiveProfileName } from "../context.js";
 import { hasEnvironmentCredentials } from "../context.js";
 
 export default class LogoutCommand extends PrismaticBaseCommand {

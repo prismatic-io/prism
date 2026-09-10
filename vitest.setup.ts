@@ -11,7 +11,8 @@ vi.mock(import("./src/auth.js"), () => ({
     ).toString(),
 }));
 
-vi.mock(import("./src/context.js"), () => ({
+vi.mock(import("./src/context.js"), async (original) => ({
+  ...(await original()),
   getAuthContext: vi.fn(),
   getPrismaticUrl: vi.fn(() => Promise.resolve(TEST_PRISMATIC_URL)),
   hasEnvironmentCredentials: vi.fn(() =>

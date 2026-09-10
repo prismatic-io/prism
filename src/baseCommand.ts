@@ -1,7 +1,6 @@
 import { Command, Flags, type Interfaces } from "@oclif/core";
 import type { z } from "zod";
-import { selectProfile } from "./config.js";
-import { useDefaultAuthContext, useProfileAuthContext } from "./context.js";
+import { selectProfile, useDefaultAuthContext, useProfileAuthContext } from "./context.js";
 import { validateFlags } from "./utils/validation.js";
 
 export abstract class PrismaticBaseCommand extends Command {

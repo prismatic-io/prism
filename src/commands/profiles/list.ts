@@ -1,5 +1,5 @@
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { listProfiles } from "../../config.js";
+import { getConfigStore } from "../../context.js";
 import { ux } from "../../utils/ux.js";
 
 export default class ProfilesListCommand extends PrismaticBaseCommand {
@@ -12,7 +12,7 @@ export default class ProfilesListCommand extends PrismaticBaseCommand {
   async run() {
     const { flags } = await this.parse(ProfilesListCommand);
 
-    const profiles = await listProfiles();
+    const profiles = await getConfigStore().listProfiles();
     if (profiles.length === 0) {
       this.log("No profiles found.");
       return;

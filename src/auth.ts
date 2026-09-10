@@ -5,8 +5,14 @@ import inquirer from "inquirer";
 import { jwtDecode } from "jwt-decode";
 import type { AddressInfo } from "net";
 import open from "open";
-import { deleteProfile, getActiveProfileName, writeActiveProfile } from "./config.js";
-import { type AuthContext, getAuthContext, getPrismaticUrl } from "./context.js";
+import {
+  type AuthContext,
+  deleteProfile,
+  getActiveProfileName,
+  getAuthContext,
+  getPrismaticUrl,
+  writeActiveProfile,
+} from "./context.js";
 import { AuthenticatedUserQueryDocument as AUTHENTICATED_USER_QUERY } from "./graphql/operations/AuthenticatedUserQuery.generated.js";
 import { ListUserTenantsDocument as LIST_USER_TENANTS } from "./graphql/operations/ListUserTenants.generated.js";
 import { gqlRequest } from "./graphql.js";

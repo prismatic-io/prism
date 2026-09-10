@@ -1,11 +1,8 @@
-import path from "path";
 import { z } from "zod";
-import { DEFAULT_PRISMATIC_URL, getEnv } from "./env.js";
-import { fs } from "./fs.js";
 import { dumpYaml, loadYaml } from "./utils/serialize.js";
 import { formatValidationError } from "./utils/validation.js";
 
-export const configurationSchema = z.object({
+export const credentialsSchema = z.object({
   accessToken: z.string().min(1, "accessToken cannot be empty"),
   expiresIn: z.number().int().nonnegative(),
   refreshToken: z.string().min(1, "refreshToken cannot be empty"),
@@ -14,166 +11,81 @@ export const configurationSchema = z.object({
   tenantId: z.string().min(1).optional(),
 });
 
-export const profileSchema = configurationSchema.extend({
+export const profileSchema = credentialsSchema.extend({
   prismaticUrl: z.string().min(1, "prismaticUrl cannot be empty"),
 });
 
-const CONFIG_VERSION = 1;
-const hasProfile = (profiles: Record<string, Profile>, name: string): boolean =>
-  Object.hasOwn(profiles, name);
+// Zod records discard "__proto__" keys. Validate entries without treating a
+// profile name as an object prototype, then rebuild own data properties.
+const profilesSchema = z
+  .preprocess(
+    (value) =>
+      typeof value === "object" && value !== null && !Array.isArray(value)
+        ? new Map(Object.entries(value))
+        : value,
+    z.map(z.string().min(1), profileSchema),
+  )
+  .transform((profiles) => Object.fromEntries(profiles));
 
-export const configFileSchema = z
+export const savedProfilesSchema = z
   .object({
-    version: z.literal(CONFIG_VERSION),
     defaultProfile: z.string().min(1),
-    profiles: z.record(z.string().min(1), profileSchema),
+    profiles: profilesSchema,
   })
-  .refine(({ defaultProfile, profiles }) => hasProfile(profiles, defaultProfile), {
+  .refine(({ defaultProfile, profiles }) => Object.hasOwn(profiles, defaultProfile), {
     message: "The default profile does not exist",
     path: ["defaultProfile"],
   });
 
-export type Configuration = z.infer<typeof configurationSchema>;
+export type Credentials = z.infer<typeof credentialsSchema>;
 export type Profile = z.infer<typeof profileSchema>;
-export type ConfigFile = z.infer<typeof configFileSchema>;
-export type ProfileName = string;
+export type SavedProfiles = z.infer<typeof savedProfilesSchema>;
 
-const resolveProfileUrl = (): string => getEnv().PRISMATIC_URL ?? DEFAULT_PRISMATIC_URL;
-const withProfile = (file: ConfigFile | null, name: ProfileName, profile: Profile): ConfigFile =>
-  file
-    ? { ...file, profiles: { ...file.profiles, [name]: profile } }
-    : { version: CONFIG_VERSION, defaultProfile: name, profiles: { [name]: profile } };
-let selectedProfile: string | undefined;
+const configFileSchema = savedProfilesSchema.safeExtend({ version: z.literal(1) });
 
-export const selectProfile = (name?: string): void => {
-  selectedProfile = name;
+export const getProfile = (state: SavedProfiles | null, name: string): Profile | null =>
+  state && Object.hasOwn(state.profiles, name) ? state.profiles[name] : null;
+
+export const decodeConfig = (
+  contents: string | null,
+  { legacyUrl, path }: { legacyUrl: string; path: string },
+): SavedProfiles | null => {
+  if (contents === null) return null;
+
+  let raw: unknown;
+  try {
+    raw = loadYaml(contents);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to parse configuration at ${path}: ${message}`);
+  }
+  if (raw === null || raw === undefined) return null;
+
+  const isLegacy =
+    typeof raw === "object" && !("version" in raw) && !("profiles" in raw) && "accessToken" in raw;
+  const candidate = isLegacy
+    ? {
+        version: 1,
+        defaultProfile: "default",
+        profiles: { default: { ...raw, prismaticUrl: legacyUrl } },
+      }
+    : raw;
+  const result = configFileSchema.safeParse(candidate);
+  if (!result.success) {
+    throw new Error(
+      `Prism could not read the configuration at ${path}:\n${formatValidationError(result.error)}`,
+    );
+  }
+  const { version: _version, ...state } = result.data;
+  return state;
 };
 
-const isUnversionedConfig = (raw: unknown): raw is Record<string, unknown> =>
-  typeof raw === "object" &&
-  raw !== null &&
-  !("version" in raw) &&
-  !("profiles" in raw) &&
-  "accessToken" in raw;
-
-const normalizeUnversionedConfig = (raw: Record<string, unknown>): unknown => ({
-  version: CONFIG_VERSION,
-  defaultProfile: "default",
-  profiles: { default: { ...raw, prismaticUrl: resolveProfileUrl() } },
-});
-
-const getConfigFilePath = (): string => getEnv().PRISM_CONFIG_FILE;
-
-const writeConfigFile = async (configFile: ConfigFile) => {
-  const result = configFileSchema.safeParse(configFile);
+export const encodeConfig = (state: SavedProfiles): string => {
+  const result = savedProfilesSchema.safeParse(state);
   if (!result.success) {
     throw new Error(
       `Prism could not save its configuration:\n${formatValidationError(result.error)}`,
     );
   }
-  const configFilePath = getConfigFilePath();
-  await fs.mkdir(path.dirname(configFilePath), { recursive: true });
-  const contents = dumpYaml(result.data, { skipInvalid: true });
-  await fs.writeFile(configFilePath, contents, { encoding: "utf-8" });
-};
-
-export const readConfigFile = async (): Promise<ConfigFile | null> => {
-  const configFilePath = getConfigFilePath();
-  let contents: string;
-  try {
-    contents = await fs.readFile(configFilePath, { encoding: "utf-8" });
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
-    throw error;
-  }
-
-  let raw: unknown;
-  try {
-    raw = loadYaml(contents.toString());
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to parse configuration at ${configFilePath}: ${message}`);
-  }
-  if (raw === null || raw === undefined) return null;
-
-  const candidate = isUnversionedConfig(raw) ? normalizeUnversionedConfig(raw) : raw;
-  const result = configFileSchema.safeParse(candidate);
-  if (!result.success) {
-    throw new Error(
-      `Prism could not read the configuration at ${configFilePath}:\n${formatValidationError(result.error)}`,
-    );
-  }
-  return result.data;
-};
-
-const resolveActiveName = (file: ConfigFile | null): ProfileName => {
-  if (selectedProfile) return selectedProfile;
-  const envProfile = getEnv().PRISM_PROFILE;
-  if (envProfile) return envProfile;
-  return file?.defaultProfile ?? "default";
-};
-
-export const getActiveProfileName = async (): Promise<ProfileName> =>
-  resolveActiveName(await readConfigFile());
-
-export const readProfileSelection = async (
-  name?: ProfileName,
-): Promise<{ name: ProfileName; profile: Profile | null }> => {
-  const file = await readConfigFile();
-  const profileName = name ?? resolveActiveName(file);
-  return { name: profileName, profile: file?.profiles[profileName] ?? null };
-};
-
-export const readProfile = async (name?: ProfileName): Promise<Profile | null> =>
-  (await readProfileSelection(name)).profile;
-
-export const writeProfile = async (name: ProfileName, profile: Profile) => {
-  await writeConfigFile(withProfile(await readConfigFile(), name, profile));
-};
-
-export const deleteProfile = async (name: ProfileName) => {
-  const file = await readConfigFile();
-  if (!file || !hasProfile(file.profiles, name)) return { deleted: false } as const;
-
-  const { [name]: _removed, ...remaining } = file.profiles;
-  const remainingNames = Object.keys(remaining);
-
-  if (remainingNames.length === 0) {
-    await fs.unlink(getConfigFilePath());
-    return { deleted: true, isLast: true } as const;
-  }
-
-  const defaultChanged = file.defaultProfile === name;
-  const defaultProfile = defaultChanged ? remainingNames[0] : file.defaultProfile;
-  await writeConfigFile({ version: CONFIG_VERSION, defaultProfile, profiles: remaining });
-  return { deleted: true, isLast: false, defaultChanged, defaultProfile } as const;
-};
-
-export const useProfile = async (name: ProfileName) => {
-  const file = await readConfigFile();
-  if (!file || !hasProfile(file.profiles, name)) {
-    throw new Error(`Profile "${name}" does not exist.`);
-  }
-  if (file.defaultProfile === name) return;
-  await writeConfigFile({ ...file, defaultProfile: name });
-};
-
-export const listProfiles = async (): Promise<
-  { name: ProfileName; prismaticUrl: string; tenantId?: string; isDefault: boolean }[]
-> => {
-  const file = await readConfigFile();
-  if (!file) return [];
-  return Object.entries(file.profiles).map(([name, profile]) => ({
-    name,
-    prismaticUrl: profile.prismaticUrl,
-    tenantId: profile.tenantId,
-    isDefault: name === file.defaultProfile,
-  }));
-};
-
-export const writeActiveProfile = async (config: Configuration, name?: ProfileName) => {
-  const file = await readConfigFile();
-  const profileName = name ?? resolveActiveName(file);
-  const prismaticUrl = file?.profiles[profileName]?.prismaticUrl ?? resolveProfileUrl();
-  await writeConfigFile(withProfile(file, profileName, { ...config, prismaticUrl }));
+  return dumpYaml({ version: 1, ...result.data });
 };

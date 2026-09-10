@@ -1,6 +1,6 @@
 import { fetchUserTenants, isLoggedIn, refresh, selectTenant } from "../../auth.js";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { getActiveProfileName, readProfile, writeActiveProfile } from "../../config.js";
+import { getActiveProfileName, readProfile, writeActiveProfile } from "../../context.js";
 import { whoAmI } from "../../utils/user/query.js";
 
 export default class LoginSwitchCommand extends PrismaticBaseCommand {

@@ -1,7 +1,7 @@
 import { Flags } from "@oclif/core";
 import { isLoggedIn, login } from "../../auth.js";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { getActiveProfileName } from "../../config.js";
+import { getActiveProfileName } from "../../context.js";
 import { ux } from "../../utils/ux.js";
 
 export default class LoginCommand extends PrismaticBaseCommand {

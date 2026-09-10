@@ -2,10 +2,12 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { type Profile, selectProfile, writeProfile } from "./config.js";
+import type { Profile } from "./config.js";
 import {
   getAuthContext,
+  getConfigStore,
   getPrismaticUrl,
+  selectProfile,
   useDefaultAuthContext,
   useProfileAuthContext,
 } from "./context.js";
@@ -58,29 +60,41 @@ describe("profile context", () => {
   });
 
   it("uses the selected profile URL", async () => {
-    await writeProfile("default", makeProfile());
-    await writeProfile("staging", makeProfile({ prismaticUrl: "https://staging.example.io" }));
+    await getConfigStore().saveProfile("default", makeProfile());
+    await getConfigStore().saveProfile(
+      "staging",
+      makeProfile({ prismaticUrl: "https://staging.example.io" }),
+    );
     selectProfile("staging");
 
     expect(await getPrismaticUrl()).toBe("https://staging.example.io");
   });
 
   it("rejects a URL that conflicts with stored profile credentials", async () => {
-    await writeProfile("default", makeProfile({ prismaticUrl: "https://stored.example.io" }));
+    await getConfigStore().saveProfile(
+      "default",
+      makeProfile({ prismaticUrl: "https://stored.example.io" }),
+    );
     vi.stubEnv("PRISMATIC_URL", "https://other.example.io");
 
     await expect(getPrismaticUrl()).rejects.toThrow(/does not match profile 'default'/);
   });
 
   it("accepts a matching URL override", async () => {
-    await writeProfile("default", makeProfile({ prismaticUrl: "https://stored.example.io" }));
+    await getConfigStore().saveProfile(
+      "default",
+      makeProfile({ prismaticUrl: "https://stored.example.io" }),
+    );
     vi.stubEnv("PRISMATIC_URL", "https://stored.example.io");
 
     expect(await getPrismaticUrl()).toBe("https://stored.example.io");
   });
 
   it("uses the environment URL with environment credentials", async () => {
-    await writeProfile("default", makeProfile({ prismaticUrl: "https://stored.example.io" }));
+    await getConfigStore().saveProfile(
+      "default",
+      makeProfile({ prismaticUrl: "https://stored.example.io" }),
+    );
     vi.stubEnv("PRISMATIC_URL", "https://ci.example.io");
     vi.stubEnv("PRISM_ACCESS_TOKEN", "ci-token");
 
@@ -88,7 +102,7 @@ describe("profile context", () => {
   });
 
   it("keeps a profile tenant with its profile credentials", async () => {
-    await writeProfile("default", makeProfile({ tenantId: "stored-tenant" }));
+    await getConfigStore().saveProfile("default", makeProfile({ tenantId: "stored-tenant" }));
     expect((await getAuthContext()).tenantId).toBe("stored-tenant");
 
     vi.stubEnv("PRISMATIC_TENANT_ID", "env-tenant");
@@ -99,14 +113,14 @@ describe("profile context", () => {
   });
 
   it("does not borrow a profile tenant for environment credentials", async () => {
-    await writeProfile("default", makeProfile({ tenantId: "stored-tenant" }));
+    await getConfigStore().saveProfile("default", makeProfile({ tenantId: "stored-tenant" }));
     vi.stubEnv("PRISM_ACCESS_TOKEN", "ci-token");
 
     expect((await getAuthContext()).tenantId).toBeUndefined();
   });
 
   it("uses the whole environment credential set instead of mixing it with a profile", async () => {
-    await writeProfile(
+    await getConfigStore().saveProfile(
       "default",
       makeProfile({
         accessToken: "profile-access",
@@ -117,7 +131,7 @@ describe("profile context", () => {
     );
     vi.stubEnv("PRISM_ACCESS_TOKEN", "environment-access");
 
-    expect(await getAuthContext()).toEqual({
+    expect(await getAuthContext()).toMatchObject({
       source: "environment",
       url: DEFAULT_PRISMATIC_URL,
       accessToken: "environment-access",
@@ -127,7 +141,7 @@ describe("profile context", () => {
   });
 
   it("forces profile credentials for profile-management auth flows", async () => {
-    await writeProfile(
+    await getConfigStore().saveProfile(
       "staging",
       makeProfile({
         accessToken: "profile-access",
@@ -143,7 +157,7 @@ describe("profile context", () => {
     vi.stubEnv("PRISMATIC_URL", "https://environment.example.io");
     useProfileAuthContext();
 
-    expect(await getAuthContext()).toEqual({
+    expect(await getAuthContext()).toMatchObject({
       source: "profile",
       profileName: "staging",
       url: "https://staging.example.io",

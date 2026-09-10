@@ -1,4 +1,5 @@
-import { readProfileSelection } from "./config.js";
+import { type Credentials, getProfile, type Profile } from "./config.js";
+import { ConfigStore } from "./config-store.js";
 import { DEFAULT_PRISMATIC_URL, getEnv } from "./env.js";
 
 export type AuthContext = {
@@ -8,6 +9,42 @@ export type AuthContext = {
   accessToken?: string;
   refreshToken?: string;
   tenantId?: string;
+};
+
+let selectedProfile: string | undefined;
+export const selectProfile = (name?: string): void => {
+  selectedProfile = name;
+};
+export const getConfigStore = (): ConfigStore => {
+  const env = getEnv();
+  return new ConfigStore(env.PRISM_CONFIG_FILE, {
+    legacyUrl: env.PRISMATIC_URL ?? DEFAULT_PRISMATIC_URL,
+  });
+};
+export const readProfileSelection = async (name?: string) => {
+  const store = getConfigStore();
+  const state = await store.read();
+  const profileName =
+    name ?? selectedProfile ?? getEnv().PRISM_PROFILE ?? state?.defaultProfile ?? "default";
+  return { store, name: profileName, profile: getProfile(state, profileName) };
+};
+export const getActiveProfileName = async (): Promise<string> =>
+  (await readProfileSelection()).name;
+export const readProfile = async (name?: string): Promise<Profile | null> =>
+  (await readProfileSelection(name)).profile;
+
+export const deleteProfile = (name: string) => getConfigStore().deleteProfile(name);
+
+export const writeActiveProfile = async (
+  credentials: Credentials,
+  name?: string,
+): Promise<void> => {
+  const selection = await readProfileSelection(name);
+  await selection.store.saveProfile(selection.name, {
+    ...credentials,
+    prismaticUrl:
+      selection.profile?.prismaticUrl ?? getEnv().PRISMATIC_URL ?? DEFAULT_PRISMATIC_URL,
+  });
 };
 
 let profileOnly = false;
