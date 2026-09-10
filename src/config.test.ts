@@ -15,6 +15,7 @@ import {
   writeProfile,
 } from "./config.js";
 import { DEFAULT_PRISMATIC_URL } from "./env.js";
+import { fs } from "./fs.js";
 import { dumpYaml } from "./utils/serialize.js";
 
 const makeConfig = (overrides: Partial<Configuration> = {}): Configuration => ({
@@ -88,6 +89,67 @@ describe("config with PRISM_CONFIG_FILE override", () => {
     await writeActiveProfile(makeConfig());
     await deleteProfile(await getActiveProfileName());
     expect(await readConfigFile()).toBeNull();
+  });
+
+  it("preserves overlapping profile writes, default changes, and deletions", async () => {
+    const results = await Promise.allSettled([
+      writeProfile("first", makeProfile()),
+      writeActiveProfile(makeConfig({ accessToken: "second-token" }), "second"),
+      writeProfile("third", makeProfile()),
+      useProfile("second"),
+      deleteProfile("first"),
+    ]);
+    expect(results.map(({ status }) => status)).toEqual(Array(5).fill("fulfilled"));
+    const saved = await readConfigFile();
+    expect(saved?.defaultProfile).toBe("second");
+    expect(Object.keys(saved?.profiles ?? {})).toEqual(["second", "third"]);
+    expect(saved?.profiles.second.accessToken).toBe("second-token");
+  });
+
+  it("continues queued writes after validation fails", async () => {
+    const results = await Promise.allSettled([
+      writeProfile("invalid", makeProfile({ accessToken: "" })),
+      writeProfile("valid", makeProfile()),
+    ]);
+    expect(results.map(({ status }) => status)).toEqual(["rejected", "fulfilled"]);
+    expect(Object.keys((await readConfigFile())?.profiles ?? {})).toEqual(["valid"]);
+  });
+
+  it("preserves the file after failed replacement and allows the next write", async () => {
+    await writeProfile("original", makeProfile());
+    const original = await readFile(configPath, "utf8");
+    vi.spyOn(fs, "rename").mockRejectedValueOnce(new Error("rename failed"));
+    await expect(writeProfile("failed", makeProfile())).rejects.toThrow("rename failed");
+    expect(await readFile(configPath, "utf8")).toBe(original);
+    expect((await fs.readdir(tmpDir)).filter((name) => name.endsWith(".tmp"))).toEqual([]);
+    await writeProfile("recovered", makeProfile());
+    expect(Object.keys((await readConfigFile())?.profiles ?? {})).toEqual([
+      "original",
+      "recovered",
+    ]);
+  });
+
+  it.skipIf(process.platform === "win32")(
+    "keeps credential files private after replacement",
+    async () => {
+      await writeProfile("first", makeProfile());
+      expect((await stat(configPath)).mode & 0o777).toBe(0o600);
+      await writeProfile("second", makeProfile());
+      expect((await stat(configPath)).mode & 0o777).toBe(0o600);
+    },
+  );
+
+  it("updates a symlink target without replacing the link", async () => {
+    const target = path.join(tmpDir, "target.yml");
+    await writeFile(target, "");
+    await fs.symlink(target, configPath);
+    try {
+      await writeProfile("first", makeProfile());
+      expect((await fs.lstat(configPath)).isSymbolicLink()).toBe(true);
+      expect(await readFile(target, "utf8")).toContain("defaultProfile: first");
+    } finally {
+      await rm(target, { force: true });
+    }
   });
 });
 
