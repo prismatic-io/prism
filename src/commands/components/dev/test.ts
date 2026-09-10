@@ -1,3 +1,4 @@
+import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
 import { Flags } from "@oclif/core";
 import type serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import dotenv from "dotenv";
@@ -36,6 +37,8 @@ import { deleteIntegration, runIntegrationFlow } from "../../../utils/integratio
 import { pollForActiveConfigVarState } from "../../../utils/integration/query.js";
 import { spawnProcess } from "../../../utils/process.js";
 import { whoAmI } from "../../../utils/user/query.js";
+import { getPackageEntrypointDirectory } from "../../../utils/import.js";
+import { resolve } from "node:path";
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -209,16 +212,16 @@ export default class TestCommand extends PrismaticBaseCommand {
       },
     } = await this.parse(TestCommand);
 
-    // Save the current working directory, so we can return later after moving to dist/
-    const cwd = process.cwd();
+    // Resolve output paths relative to the directory where the command started.
+    const cwd = getWorkingDirectory();
 
     if (build) {
       console.log("Building component...");
       await spawnProcess(["npm", "run", "build"], {});
     }
 
-    if (await exists(envPath)) {
-      const { error } = dotenv.config({ path: envPath, override: true });
+    if (await exists(resolve(cwd, envPath))) {
+      const { error } = dotenv.config({ path: resolve(cwd, envPath), override: true });
       if (error) {
         ux.error(`Failed to load specified dotenv file: ${error}`, {
           exit: 1,
@@ -237,188 +240,190 @@ export default class TestCommand extends PrismaticBaseCommand {
 
     const testingKey = kebabCase(name);
 
-    const definition = await loadEntrypoint();
-    const { key: componentKey, public: isPublic } = definition;
-    definition.key = `${componentKey}-${testingKey}-testing`;
-    definition.display.label = `${definition.display.label} ${name} Testing`;
-    await validateDefinition(definition);
+    return withWorkingDirectory(await getPackageEntrypointDirectory("component"), async () => {
+      const loadedDefinition = await loadEntrypoint();
+      const definition = { ...loadedDefinition, display: { ...loadedDefinition.display } };
+      const { key: componentKey, public: isPublic } = definition;
+      definition.key = `${componentKey}-${testingKey}-testing`;
+      definition.display.label = `${definition.display.label} ${name} Testing`;
+      await validateDefinition(definition);
 
-    const packagePath = await createComponentPackage();
-    const signatureMatches = await checkPackageSignature(definition, packagePath);
-
-    ux.action.stop();
-
-    if (!signatureMatches) {
-      ux.action.start("Publishing Component");
-
-      const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
-        await publishDefinition(definition);
-
-      const {
-        display: { iconPath },
-      } = definition;
-      if (iconPath) {
-        await uploadFile(iconPath, iconUploadUrl);
-      }
-
-      await uploadConnectionIcons(definition, connectionIconUploadUrls);
-      await uploadFile(packagePath, packageUploadUrl);
+      const packagePath = await createComponentPackage();
+      const signatureMatches = await checkPackageSignature(definition, packagePath);
 
       ux.action.stop();
-    }
 
-    const publishedTimestamp = Date.now();
+      if (!signatureMatches) {
+        ux.action.start("Publishing Component");
 
-    const actions = definition.actions || {};
+        const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
+          await publishDefinition(definition);
 
-    const { action } = await inquirer.prompt<{ action: serverTypes.Action }>({
-      type: "select",
-      name: "action",
-      message: "Action:",
-      choices: Object.entries(actions).map(
-        ([
-          key,
-          {
-            display: { label },
-          },
-        ]) => ({
-          name: label,
-          value: key,
-          short: key,
-        }),
-      ),
-      default: Object.keys(actions)[0],
-      filter: (value: string) => actions[value],
-    });
+        const {
+          display: { iconPath },
+        } = definition;
+        if (iconPath) {
+          await uploadFile(resolve(getWorkingDirectory(), iconPath), iconUploadUrl);
+        }
 
-    const { inputs } = action;
+        await uploadConnectionIcons(definition, connectionIconUploadUrls);
+        await uploadFile(packagePath, packageUploadUrl);
 
-    // Ask for values of action's inputs
-    const actionInputs = await inquirer.prompt(inputs.map((i) => getInputQuestion(i)));
+        ux.action.stop();
+      }
 
-    const answers = {
-      action,
-      actionInputs,
-    };
+      const publishedTimestamp = Date.now();
 
-    // Ask about Connection to test if there is a connection type input
-    const hasConnection = inputs.some(({ type }) => type === "connection");
-    if (hasConnection) {
-      const connections = definition.connections || [];
-      const { connection } = await inquirer.prompt<{
-        connection: serverTypes.Connection;
-      }>({
+      const actions = definition.actions || {};
+
+      const { action } = await inquirer.prompt<{ action: serverTypes.Action }>({
         type: "select",
-        name: "connection",
-        message: "Connection:",
-        choices: connections.map(({ key, label }) => ({
-          name: label,
-          value: key,
-          short: key,
-        })),
-        default: Object.keys(connections)[0],
-        filter: (value: string) => {
-          const [connection] = connections.filter(({ key }) => value === key);
-          return connection;
-        },
+        name: "action",
+        message: "Action:",
+        choices: Object.entries(actions).map(
+          ([
+            key,
+            {
+              display: { label },
+            },
+          ]) => ({
+            name: label,
+            value: key,
+            short: key,
+          }),
+        ),
+        default: Object.keys(actions)[0],
+        filter: (value: string) => actions[value],
       });
 
-      // Prompt for connection's inputs
-      const { inputs } = connection;
-      const connectionInputs = await inquirer.prompt(
-        inputs
-          .filter(({ shown }) => shown === undefined || shown === true)
-          .map((i) => getInputQuestion(i)),
-      );
+      const { inputs } = action;
 
-      Object.assign(answers, { connection, connectionInputs });
-    }
+      // Ask for values of action's inputs
+      const actionInputs = await inquirer.prompt(inputs.map((i) => getInputQuestion(i)));
 
-    const { actionInfo, connectionInfo } = valuesFromAnswers(answers);
+      const answers = {
+        action,
+        actionInputs,
+      };
 
-    ux.action.start("Assembling test integration");
+      // Ask about Connection to test if there is a connection type input
+      const hasConnection = inputs.some(({ type }) => type === "connection");
+      if (hasConnection) {
+        const connections = definition.connections || [];
+        const { connection } = await inquirer.prompt<{
+          connection: serverTypes.Connection;
+        }>({
+          type: "select",
+          name: "connection",
+          message: "Connection:",
+          choices: connections.map(({ key, label }) => ({
+            name: label,
+            value: key,
+            short: key,
+          })),
+          default: Object.keys(connections)[0],
+          filter: (value: string) => {
+            const [connection] = connections.filter(({ key }) => value === key);
+            return connection;
+          },
+        });
 
-    // FIXME: Wait for version to be available but due to issues we have to do a static wait.
-    const wait = 5000 - (Date.now() - publishedTimestamp);
-    if (wait > 0) {
-      await setTimeoutPromise(wait);
-    }
-
-    // Build up YAML
-    const harnessYaml = await buildComponentTestHarnessIntegration({
-      integrationInfo: {
-        name: componentTestIntegrationName(componentKey, name),
-      },
-      componentInfo: { key: definition.key, isPublic: isPublic ?? false },
-      actionInfo,
-      connectionInfo,
-    });
-
-    ux.action.stop();
-    ux.action.start("Updating test Integration");
-
-    const {
-      integrationId,
-      pendingAuthorizations,
-      systemInstance: {
-        flowConfigs: {
-          nodes: [
-            {
-              flow: { id: flowId },
-            },
-          ],
-        },
-      },
-    } = await importDefinition(harnessYaml);
-
-    ux.action.stop();
-
-    // Prompt for user authorization of pending connections
-    if (pendingAuthorizations.length > 0) {
-      const [{ id, url }] = pendingAuthorizations;
-      if (!url) {
-        throw new Error(
-          "Did not receive a valid URL for authorization. Verify your Connection inputs.",
+        // Prompt for connection's inputs
+        const { inputs } = connection;
+        const connectionInputs = await inquirer.prompt(
+          inputs
+            .filter(({ shown }) => shown === undefined || shown === true)
+            .map((i) => getInputQuestion(i)),
         );
+
+        Object.assign(answers, { connection, connectionInputs });
       }
 
-      ux.url("Authorize URL", url);
-      await ux.anykey("Press any key to open your browser and authorize the Connection");
-      await open(url);
+      const { actionInfo, connectionInfo } = valuesFromAnswers(answers);
 
-      ux.action.start("Waiting for Connection authorization");
+      ux.action.start("Assembling test integration");
 
-      await pollForActiveConfigVarState(integrationId, id);
+      // FIXME: Wait for version to be available but due to issues we have to do a static wait.
+      const wait = 5000 - (Date.now() - publishedTimestamp);
+      if (wait > 0) {
+        await setTimeoutPromise(wait);
+      }
+
+      // Build up YAML
+      const harnessYaml = await buildComponentTestHarnessIntegration({
+        integrationInfo: {
+          name: componentTestIntegrationName(componentKey, name),
+        },
+        componentInfo: { key: definition.key, isPublic: isPublic ?? false },
+        actionInfo,
+        connectionInfo,
+      });
 
       ux.action.stop();
-    }
+      ux.action.start("Updating test Integration");
 
-    ux.action.start("Running test Integration");
+      const {
+        integrationId,
+        pendingAuthorizations,
+        systemInstance: {
+          flowConfigs: {
+            nodes: [
+              {
+                flow: { id: flowId },
+              },
+            ],
+          },
+        },
+      } = await importDefinition(harnessYaml);
 
-    const { executionId } = await runIntegrationFlow({ integrationId, flowId });
-
-    await displayLogs(executionId);
-
-    if (outputFile) {
-      process.chdir(cwd);
-      console.log(`Writing step results to ${outputFile}`);
-      await writeFinalStepResults(executionId, outputFile);
-    }
-
-    if (printResults) {
-      await printFinalStepResults(executionId);
-    }
-
-    if (cleanUp) {
-      ux.action.start(`Cleaning up test Integration (${integrationId})`);
-      await deleteIntegration(integrationId);
       ux.action.stop();
 
-      ux.action.start(`Cleaning up test component (${definition.key})`);
-      await deleteComponentByKey(definition.key);
-      ux.action.stop();
-    }
+      // Prompt for user authorization of pending connections
+      if (pendingAuthorizations.length > 0) {
+        const [{ id, url }] = pendingAuthorizations;
+        if (!url) {
+          throw new Error(
+            "Did not receive a valid URL for authorization. Verify your Connection inputs.",
+          );
+        }
 
-    ux.action.stop();
+        ux.url("Authorize URL", url);
+        await ux.anykey("Press any key to open your browser and authorize the Connection");
+        await open(url);
+
+        ux.action.start("Waiting for Connection authorization");
+
+        await pollForActiveConfigVarState(integrationId, id);
+
+        ux.action.stop();
+      }
+
+      ux.action.start("Running test Integration");
+
+      const { executionId } = await runIntegrationFlow({ integrationId, flowId });
+
+      await displayLogs(executionId);
+
+      if (outputFile) {
+        console.log(`Writing step results to ${outputFile}`);
+        await writeFinalStepResults(executionId, resolve(cwd, outputFile));
+      }
+
+      if (printResults) {
+        await printFinalStepResults(executionId);
+      }
+
+      if (cleanUp) {
+        ux.action.start(`Cleaning up test Integration (${integrationId})`);
+        await deleteIntegration(integrationId);
+        ux.action.stop();
+
+        ux.action.start(`Cleaning up test component (${definition.key})`);
+        await deleteComponentByKey(definition.key);
+        ux.action.stop();
+      }
+
+      ux.action.stop();
+    });
   }
 }

@@ -1,7 +1,7 @@
+import { getWorkingDirectory, withWorkingDirectory } from "../../command-context.js";
 import { createRequire } from "node:module";
 import { ux } from "@oclif/core";
 import chardet from "chardet";
-import { resolve } from "path";
 import { exists, fs } from "../../fs.js";
 import { CommitAvatarUpload2Document as COMMIT_AVATAR_UPLOAD2 } from "../../graphql/operations/commitAvatarUpload2.generated.js";
 import { Component4Document as COMPONENT4 } from "../../graphql/operations/component4.generated.js";
@@ -20,10 +20,11 @@ import {
   uploadConnectionIcons,
   uploadFile,
 } from "../component/publish.js";
-import { seekPackageDistDirectory } from "../import.js";
+import { getPackageEntrypointDirectory } from "../import.js";
 import { loadYaml } from "../serialize.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
+import { resolve } from "node:path";
 
 const require = createRequire(import.meta.url);
 
@@ -140,107 +141,118 @@ export const importCodeNativeIntegration = async (
   replace?: boolean,
   testApiKeyFlags?: string[],
 ): Promise<string> => {
-  const { integrationDefinition, componentDefinition, publishingMetadata } =
-    await loadCodeNativeIntegrationEntryPoint();
+  return withWorkingDirectory(
+    await getPackageEntrypointDirectory("Code Native Integration"),
+    async () => {
+      const { integrationDefinition, componentDefinition, publishingMetadata } =
+        await loadCodeNativeIntegrationEntryPoint();
 
-  await validateDefinition(componentDefinition, {
-    forCodeNativeIntegration: true,
-  });
+      await validateDefinition(componentDefinition, {
+        forCodeNativeIntegration: true,
+      });
 
-  // Parse CLI-provided test API keys
-  const cliApiKeys = testApiKeyFlags ? parseTestApiKeys(testApiKeyFlags) : {};
+      // Parse CLI-provided test API keys
+      const cliApiKeys = testApiKeyFlags ? parseTestApiKeys(testApiKeyFlags) : {};
 
-  // Validate that all flows with customer required API keys have at least one key available
-  if (publishingMetadata?.flowsWithCustomerRequiredAPIKeys.length) {
-    for (const flow of publishingMetadata.flowsWithCustomerRequiredAPIKeys) {
-      const existingKeys = flow.testApiKeys || [];
-      const allKeysForFlow = [...existingKeys];
+      // Validate that all flows with customer required API keys have at least one key available
+      if (publishingMetadata?.flowsWithCustomerRequiredAPIKeys.length) {
+        for (const flow of publishingMetadata.flowsWithCustomerRequiredAPIKeys) {
+          const existingKeys = flow.testApiKeys || [];
+          const allKeysForFlow = [...existingKeys];
 
-      // Add CLI keys for providers that this flow might need
-      // biome-ignore lint/correctness/noUnusedVariables: TODO
-      for (const [provider, keys] of Object.entries(cliApiKeys)) {
-        allKeysForFlow.push(...keys);
+          // Add CLI keys for providers that this flow might need
+          // biome-ignore lint/correctness/noUnusedVariables: TODO
+          for (const [provider, keys] of Object.entries(cliApiKeys)) {
+            allKeysForFlow.push(...keys);
+          }
+
+          if (allKeysForFlow.length === 0) {
+            throw Object.assign(
+              new Error(
+                `Flow "${flow.name}" requires customer API keys but none were provided. Use --test-api-key to specify keys in the format flowName="API_KEY".`,
+              ),
+              { exitCode: 1 },
+            );
+          }
+        }
       }
 
-      if (allKeysForFlow.length === 0) {
-        ux.error(
-          `Flow "${flow.name}" requires customer API keys but none were provided. Use --test-api-key to specify keys in the format flowName="API_KEY".`,
-          { exit: 1 },
+      const packagePath = await createComponentPackage();
+
+      const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls, versionNumber } =
+        await publishComponentDefinition(componentDefinition, {
+          forCodeNativeIntegration: true,
+        });
+
+      ux.action.start("Uploading package for Code Native Integration");
+      await uploadFile(packagePath, packageUploadUrl);
+      const uploaded = await waitForCodeNativeComponentAvailable(
+        componentDefinition.key,
+        versionNumber,
+      );
+      if (uploaded) {
+        ux.action.stop();
+      } else {
+        ux.action.stop(
+          "Package still processing for Code Native Integration, it will likely be available in a few minutes.",
         );
       }
-    }
-  }
 
-  const packagePath = await createComponentPackage();
+      ux.action.start("Importing definition for Code Native Integration into Prismatic");
+      const { integrationId: integrationImportId, systemInstance } = await importDefinition(
+        integrationDefinition,
+        integrationId,
+        replace,
+      );
 
-  const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls, versionNumber } =
-    await publishComponentDefinition(componentDefinition, {
-      forCodeNativeIntegration: true,
-    });
+      const {
+        display: { iconPath },
+      } = componentDefinition;
+      if (iconPath) {
+        await uploadFile(resolve(getWorkingDirectory(), iconPath), iconUploadUrl); // Component avatar.
+        await setIntegrationAvatar(integrationImportId, resolve(getWorkingDirectory(), iconPath)); // Integration avatar.
+      }
+      await uploadConnectionIcons(componentDefinition, connectionIconUploadUrls);
 
-  ux.action.start("Uploading package for Code Native Integration");
-  await uploadFile(packagePath, packageUploadUrl);
-  const uploaded = await waitForCodeNativeComponentAvailable(
-    componentDefinition.key,
-    versionNumber,
-  );
-  if (uploaded) {
-    ux.action.stop();
-  } else {
-    ux.action.stop(
-      "Package still processing for Code Native Integration, it will likely be available in a few minutes.",
-    );
-  }
+      try {
+        const metadata = await getPrismMetadata({ fromDist: true });
+        await writePrismMetadata(
+          { ...metadata, integrationId: integrationImportId },
+          { fromDist: true },
+        );
+      } catch (e) {
+        console.warn(
+          `Import was successful but there was an error formatting local metadata: ${e}`,
+        );
+      }
 
-  ux.action.start("Importing definition for Code Native Integration into Prismatic");
-  const { integrationId: integrationImportId, systemInstance } = await importDefinition(
-    integrationDefinition,
-    integrationId,
-    replace,
-  );
+      // Set test API keys, if they are present.
+      if (
+        publishingMetadata &&
+        ((cliApiKeys && Object.keys(cliApiKeys).length > 0) ||
+          publishingMetadata.flowsWithCustomerRequiredAPIKeys.some(
+            (flow) => flow.testApiKeys?.length,
+          ))
+      ) {
+        ux.action.start("Setting test API keys for flows");
+        try {
+          await setTestApiKeysForFlows({
+            systemInstance,
+            publishingMetadata,
+            cliApiKeys,
+          });
+          ux.action.stop();
+        } catch (error) {
+          ux.action.stop("Failed to set test API keys");
+          console.warn(`Warning: Could not set test API keys: ${error}`);
+        }
+      }
 
-  const {
-    display: { iconPath },
-  } = componentDefinition;
-  if (iconPath) {
-    await uploadFile(iconPath, iconUploadUrl); // Component avatar.
-    await setIntegrationAvatar(integrationImportId, iconPath); // Integration avatar.
-  }
-  await uploadConnectionIcons(componentDefinition, connectionIconUploadUrls);
-
-  try {
-    const metadata = await getPrismMetadata({ fromDist: true });
-    await writePrismMetadata(
-      { ...metadata, integrationId: integrationImportId },
-      { fromDist: true },
-    );
-  } catch (e) {
-    console.error("Import was successful but there was an error formatting local metadata:", e);
-  }
-
-  // Set test API keys, if they are present.
-  if (
-    publishingMetadata &&
-    ((cliApiKeys && Object.keys(cliApiKeys).length > 0) ||
-      publishingMetadata.flowsWithCustomerRequiredAPIKeys.some((flow) => flow.testApiKeys?.length))
-  ) {
-    ux.action.start("Setting test API keys for flows");
-    try {
-      await setTestApiKeysForFlows({
-        systemInstance,
-        publishingMetadata,
-        cliApiKeys,
-      });
       ux.action.stop();
-    } catch (error) {
-      ux.action.stop("Failed to set test API keys");
-      console.warn("Warning: Could not set test API keys:", error);
-    }
-  }
 
-  ux.action.stop();
-
-  return integrationImportId;
+      return integrationImportId;
+    },
+  );
 };
 
 // todo: move this to a better place (share type from spectral?)
@@ -369,28 +381,23 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
   componentDefinition: ComponentDefinition;
   publishingMetadata?: PublishingMetadata;
 }> => {
-  // If we don't have an index.js in cwd seek directories to find package.json of Code Native Integration
-  if (!(await exists("index.js"))) {
-    await seekPackageDistDirectory("Code Native Integration");
-  }
-
-  // If we still didn't find index.js error out
-  if (!(await exists("index.js"))) {
-    ux.error(
-      "Failed to find 'index.js' entrypoint file. Is the current path a Code Native Integration?",
-      { exit: 1 },
+  const directory = await getPackageEntrypointDirectory("Code Native Integration");
+  const entrypointPath = resolve(directory, "index.js");
+  if (!(await exists(entrypointPath)))
+    throw Object.assign(
+      new Error(
+        "Failed to find 'index.js' entrypoint file. Is the current path a Code Native Integration?",
+      ),
+      { exitCode: 1 },
     );
-  }
-
-  // Require index.js and access its root-most default export which should contain the YAML definition.
-  const cwd = process.cwd();
-  const entrypointPath = resolve(cwd, "./index.js");
   const { default: componentDefinition }: CodeNativeIntegrationEntrypoint = require(entrypointPath);
 
   if (!componentDefinition?.codeNativeIntegrationYAML) {
-    ux.error(
-      "Failed to find Code Native Integration definition in 'index.js' entrypoint file. Is the current path a Code Native Integration?",
-      { exit: 1 },
+    throw Object.assign(
+      new Error(
+        "Failed to find Code Native Integration definition in 'index.js' entrypoint file. Is the current path a Code Native Integration?",
+      ),
+      { exitCode: 1 },
     );
   }
 

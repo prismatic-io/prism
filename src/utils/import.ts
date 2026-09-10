@@ -1,7 +1,6 @@
-import { ux } from "@oclif/core";
+import { getWorkingDirectory } from "../command-context.js";
 import { resolve } from "path";
 import { exists } from "../fs.js";
-
 /**
  * Finds the package root directory by searching upward for package.json.
  * Returns the absolute path to the directory containing package.json.
@@ -9,14 +8,15 @@ import { exists } from "../fs.js";
  * Throws an error if package.json cannot be found.
  */
 export const findPackageRoot = async (packageType: string): Promise<string> => {
-  let currentPath = process.cwd();
+  let currentPath = getWorkingDirectory();
 
   while (!(await exists(resolve(currentPath, "package.json")))) {
     const parentPath = resolve(currentPath, "..");
     if (parentPath === currentPath) {
-      ux.error(`Failed to find 'package.json' file. Is the current path a ${packageType}?`, {
-        exit: 1,
-      });
+      throw Object.assign(
+        new Error(`Failed to find 'package.json' file. Is the current path a ${packageType}?`),
+        { exitCode: 1 },
+      );
     }
     currentPath = parentPath;
   }
@@ -24,14 +24,20 @@ export const findPackageRoot = async (packageType: string): Promise<string> => {
   return currentPath;
 };
 
-export const seekPackageDistDirectory = async (packageType: string): Promise<void> => {
+export const seekPackageDistDirectory = async (packageType: string): Promise<string> => {
   const packageRoot = await findPackageRoot(packageType);
 
   if (!(await exists(resolve(packageRoot, "dist")))) {
-    ux.error(`Failed to find 'dist' folder. Is the current path a ${packageType}?`, {
-      exit: 1,
-    });
+    throw Object.assign(
+      new Error(`Failed to find 'dist' folder. Is the current path a ${packageType}?`),
+      { exitCode: 1 },
+    );
   }
 
-  process.chdir(resolve(packageRoot, "dist"));
+  return resolve(packageRoot, "dist");
 };
+
+export const getPackageEntrypointDirectory = async (packageType: string): Promise<string> =>
+  (await exists(resolve(getWorkingDirectory(), "index.js")))
+    ? getWorkingDirectory()
+    : seekPackageDistDirectory(packageType);
