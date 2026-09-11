@@ -11,5 +11,7 @@ export default defineConfig({
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
     disableConsoleIntercept: true,
+    // Cold CLI startup can exceed five seconds on Windows CI runners.
+    testTimeout: process.platform === "win32" && process.env.CI ? 15_000 : 5_000,
   },
 });
