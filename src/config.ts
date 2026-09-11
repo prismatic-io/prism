@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { devNull } from "node:os";
 import path from "path";
 import { z } from "zod";
 import { DEFAULT_PRISMATIC_URL, getEnv } from "./env.js";
@@ -64,6 +66,27 @@ const normalizeUnversionedConfig = (raw: Record<string, unknown>): unknown => ({
 
 const getConfigFilePath = (): string => getEnv().PRISM_CONFIG_FILE;
 
+// Resolve existing symlinks so replacement updates the target, not the link.
+// Missing files use the configured path; dangling links fail in realpath.
+const resolveConfigPath = async (filePath: string): Promise<string> => {
+  if (filePath === devNull) return devNull;
+  const entry = await fs.lstat(filePath).catch((error: NodeJS.ErrnoException) => {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  });
+  return entry ? fs.realpath(filePath) : path.resolve(filePath);
+};
+
+// Keep each read/modify/write operation together when MCP requests overlap.
+// This queue coordinates this process only, not separate CLI processes.
+let configUpdates: Promise<unknown> = Promise.resolve();
+const queueConfigUpdate = <T>(update: () => Promise<T>): Promise<T> => {
+  const pending = configUpdates.then(update);
+  // Return the failure to its caller, but allow the next update to proceed.
+  configUpdates = pending.catch(() => {});
+  return pending;
+};
+
 const writeConfigFile = async (configFile: ConfigFile) => {
   const result = configFileSchema.safeParse(configFile);
   if (!result.success) {
@@ -71,10 +94,18 @@ const writeConfigFile = async (configFile: ConfigFile) => {
       `Prism could not save its configuration:\n${formatValidationError(result.error)}`,
     );
   }
-  const configFilePath = getConfigFilePath();
+  const configFilePath = await resolveConfigPath(getConfigFilePath());
+  if (configFilePath === devNull) return;
   await fs.mkdir(path.dirname(configFilePath), { recursive: true });
   const contents = dumpYaml(result.data, { skipInvalid: true });
-  await fs.writeFile(configFilePath, contents, { encoding: "utf-8" });
+  const temporaryPath = `${configFilePath}.${randomUUID()}.tmp`;
+  try {
+    await fs.writeFile(temporaryPath, contents, { encoding: "utf-8", mode: 0o600, flag: "wx" });
+    await fs.rename(temporaryPath, configFilePath);
+  } catch (error) {
+    await fs.rm(temporaryPath, { force: true }).catch(() => {});
+    throw error;
+  }
 };
 
 export const readConfigFile = async (): Promise<ConfigFile | null> => {
@@ -127,36 +158,39 @@ export const readProfileSelection = async (
 export const readProfile = async (name?: ProfileName): Promise<Profile | null> =>
   (await readProfileSelection(name)).profile;
 
-export const writeProfile = async (name: ProfileName, profile: Profile) => {
-  await writeConfigFile(withProfile(await readConfigFile(), name, profile));
-};
+export const writeProfile = (name: ProfileName, profile: Profile) =>
+  queueConfigUpdate(async () => {
+    await writeConfigFile(withProfile(await readConfigFile(), name, profile));
+  });
 
-export const deleteProfile = async (name: ProfileName) => {
-  const file = await readConfigFile();
-  if (!file || !hasProfile(file.profiles, name)) return { deleted: false } as const;
+export const deleteProfile = (name: ProfileName) =>
+  queueConfigUpdate(async () => {
+    const file = await readConfigFile();
+    if (!file || !hasProfile(file.profiles, name)) return { deleted: false } as const;
 
-  const { [name]: _removed, ...remaining } = file.profiles;
-  const remainingNames = Object.keys(remaining);
+    const { [name]: _removed, ...remaining } = file.profiles;
+    const remainingNames = Object.keys(remaining);
 
-  if (remainingNames.length === 0) {
-    await fs.unlink(getConfigFilePath());
-    return { deleted: true, isLast: true } as const;
-  }
+    if (remainingNames.length === 0) {
+      await fs.unlink(getConfigFilePath());
+      return { deleted: true, isLast: true } as const;
+    }
 
-  const defaultChanged = file.defaultProfile === name;
-  const defaultProfile = defaultChanged ? remainingNames[0] : file.defaultProfile;
-  await writeConfigFile({ version: CONFIG_VERSION, defaultProfile, profiles: remaining });
-  return { deleted: true, isLast: false, defaultChanged, defaultProfile } as const;
-};
+    const defaultChanged = file.defaultProfile === name;
+    const defaultProfile = defaultChanged ? remainingNames[0] : file.defaultProfile;
+    await writeConfigFile({ version: CONFIG_VERSION, defaultProfile, profiles: remaining });
+    return { deleted: true, isLast: false, defaultChanged, defaultProfile } as const;
+  });
 
-export const useProfile = async (name: ProfileName) => {
-  const file = await readConfigFile();
-  if (!file || !hasProfile(file.profiles, name)) {
-    throw new Error(`Profile "${name}" does not exist.`);
-  }
-  if (file.defaultProfile === name) return;
-  await writeConfigFile({ ...file, defaultProfile: name });
-};
+export const useProfile = (name: ProfileName) =>
+  queueConfigUpdate(async () => {
+    const file = await readConfigFile();
+    if (!file || !hasProfile(file.profiles, name)) {
+      throw new Error(`Profile "${name}" does not exist.`);
+    }
+    if (file.defaultProfile === name) return;
+    await writeConfigFile({ ...file, defaultProfile: name });
+  });
 
 export const listProfiles = async (): Promise<
   { name: ProfileName; prismaticUrl: string; tenantId?: string; isDefault: boolean }[]
@@ -171,9 +205,10 @@ export const listProfiles = async (): Promise<
   }));
 };
 
-export const writeActiveProfile = async (config: Configuration, name?: ProfileName) => {
-  const file = await readConfigFile();
-  const profileName = name ?? resolveActiveName(file);
-  const prismaticUrl = file?.profiles[profileName]?.prismaticUrl ?? resolveProfileUrl();
-  await writeConfigFile(withProfile(file, profileName, { ...config, prismaticUrl }));
-};
+export const writeActiveProfile = (config: Configuration, name?: ProfileName) =>
+  queueConfigUpdate(async () => {
+    const file = await readConfigFile();
+    const profileName = name ?? resolveActiveName(file);
+    const prismaticUrl = file?.profiles[profileName]?.prismaticUrl ?? resolveProfileUrl();
+    await writeConfigFile(withProfile(file, profileName, { ...config, prismaticUrl }));
+  });
