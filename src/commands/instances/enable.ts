@@ -24,8 +24,11 @@ export default class EnableCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.updateInstance?.instance?.id ?? this.error("The operation returned no resource"),
-    );
+    const instanceId = result.updateInstance?.instance?.id;
+    if (instanceId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(instanceId);
   }
 }

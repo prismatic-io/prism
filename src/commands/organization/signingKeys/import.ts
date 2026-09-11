@@ -46,9 +46,12 @@ export default class ImportCommand extends PrismaticBaseCommand {
       variables: { publicKey },
     });
 
-    this.log(
-      result.importOrganizationSigningKey?.organizationSigningKey?.id ??
-        this.error("The operation returned no resource"),
-    );
+    const organizationSigningKeyId =
+      result.importOrganizationSigningKey?.organizationSigningKey?.id;
+    if (organizationSigningKeyId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(organizationSigningKeyId);
   }
 }

@@ -55,9 +55,12 @@ export default class UpdateCommand extends PrismaticBaseCommand {
     });
 
     if (!deploy) {
-      this.log(
-        result.updateInstance?.instance?.id ?? this.error("The operation returned no resource"),
-      );
+      const instanceId = result.updateInstance?.instance?.id;
+      if (instanceId == null) {
+        this.error("The operation returned no resource");
+      }
+
+      this.log(instanceId);
       return;
     }
 
@@ -68,8 +71,11 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      deployResult.deployInstance?.instance?.id ?? this.error("The operation returned no resource"),
-    );
+    const instanceId = deployResult.deployInstance?.instance?.id;
+    if (instanceId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(instanceId);
   }
 }

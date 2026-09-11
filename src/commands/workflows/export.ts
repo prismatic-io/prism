@@ -34,8 +34,11 @@ export default class ExportCommand extends PrismaticBaseCommand {
       document: EXPORT_WORKFLOW,
       variables: { workflow, useLatestComponentVersions: latest },
     });
-    this.log(
-      dumpYaml(loadYaml(result.workflow?.definition ?? this.error("Workflow was not found"))),
-    );
+    const definition = result.workflow?.definition;
+    if (definition == null) {
+      this.error("Workflow was not found");
+    }
+
+    this.log(dumpYaml(loadYaml(definition)));
   }
 }

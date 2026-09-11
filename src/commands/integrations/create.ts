@@ -36,8 +36,11 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.createIntegration?.integration?.id ?? this.error("The operation returned no resource"),
-    );
+    const integrationId = result.createIntegration?.integration?.id;
+    if (integrationId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(integrationId);
   }
 }

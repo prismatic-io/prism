@@ -44,9 +44,11 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.createAlertWebhook?.alertWebhook?.id ??
-        this.error("The operation returned no resource"),
-    );
+    const alertWebhookId = result.createAlertWebhook?.alertWebhook?.id;
+    if (alertWebhookId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(alertWebhookId);
   }
 }

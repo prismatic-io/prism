@@ -65,9 +65,10 @@ export default class TestCommand extends PrismaticBaseCommand {
       return;
     }
 
-    const executionId =
-      result.testInstanceFlowConfig?.testInstanceFlowConfigResult?.execution?.id ??
+    const executionId = result.testInstanceFlowConfig?.testInstanceFlowConfigResult?.execution?.id;
+    if (executionId == null) {
       this.error("Execution was not created");
+    }
     await this.tailLogs(executionId);
   }
 

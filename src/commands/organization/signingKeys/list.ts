@@ -14,8 +14,13 @@ export default class ListCommand extends PrismaticBaseCommand {
       document: LIST_ORGANIZATION_SIGNING_KEYS,
     });
 
+    const signingKeys = result.organization?.signingKeys.nodes;
+    if (signingKeys == null) {
+      this.error("Organization not found");
+    }
+
     ux.table(
-      result.organization?.signingKeys.nodes ?? this.error("Organization not found"),
+      signingKeys,
       {
         id: { minWidth: 8, extended: true },
         privateKeyPreview: { header: "Private Key Preview" },

@@ -79,19 +79,29 @@ export default class RunCommand extends PrismaticBaseCommand {
         },
       });
 
-      configVariables =
-        result.integration?.testConfigVariables.nodes ?? this.error("Integration was not found");
+      if (result.integration == null) {
+        this.error("Integration was not found");
+      }
+
+      configVariables = result.integration.testConfigVariables.nodes;
     } else {
+      if (instanceId == null) {
+        this.error("Either integrationId or instanceId is required");
+      }
+
       // Get the config variable from an instance
       const result = await gqlRequest({
         document: INSTANCE,
         variables: {
-          id: instanceId ?? this.error("Either integrationId or instanceId is required"),
+          id: instanceId,
         },
       });
 
-      configVariables =
-        result.instance?.configVariables.nodes ?? this.error("Instance was not found");
+      if (result.instance == null) {
+        this.error("Instance was not found");
+      }
+
+      configVariables = result.instance.configVariables.nodes;
     }
 
     const [connection] = configVariables.filter(

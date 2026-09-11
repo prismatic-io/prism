@@ -37,8 +37,13 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
+    const versions = result.integration?.versionSequence.nodes;
+    if (versions == null) {
+      this.error("Integration not found");
+    }
+
     ux.table(
-      result.integration?.versionSequence.nodes ?? this.error("Integration not found"),
+      versions,
       {
         versionNumber: {
           header: "Version",

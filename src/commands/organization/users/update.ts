@@ -1,8 +1,8 @@
 import { Args, Flags } from "@oclif/core";
-import { z } from "zod";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { UpdateUserDocument as UPDATE_USER } from "../../../graphql/operations/updateUser.generated.js";
 import { gqlRequest } from "../../../graphql.js";
+import { parseOptionalBoolean } from "../../../utils/boolean.js";
 
 export default class UpdateCommand extends PrismaticBaseCommand {
   static description = "Update a User";
@@ -38,15 +38,16 @@ export default class UpdateCommand extends PrismaticBaseCommand {
         user,
         name,
         phone,
-        darkMode:
-          darkMode === undefined ? undefined : z.enum(["true", "false"]).parse(darkMode) === "true",
-        darkModeOsSync:
-          darkModeOsSync === undefined
-            ? undefined
-            : z.enum(["true", "false"]).parse(darkModeOsSync) === "true",
+        darkMode: parseOptionalBoolean(darkMode),
+        darkModeOsSync: parseOptionalBoolean(darkModeOsSync),
       },
     });
 
-    this.log(result.updateUser?.user?.id ?? this.error("The operation returned no resource"));
+    const userId = result.updateUser?.user?.id;
+    if (userId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(userId);
   }
 }

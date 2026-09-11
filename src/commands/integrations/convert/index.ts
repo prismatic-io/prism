@@ -53,9 +53,12 @@ export default class ConvertIntegrationCommand extends PrismaticBaseCommand {
 
       ux.action.stop();
 
-      const { url, conversionErrors } =
-        result.convertLowCodeIntegration?.convertLowCodeIntegrationFormResult ??
+      const conversionResult =
+        result.convertLowCodeIntegration?.convertLowCodeIntegrationFormResult;
+      if (conversionResult == null) {
         this.error("Integration conversion returned no result");
+      }
+      const { url, conversionErrors } = conversionResult;
 
       if (conversionErrors && conversionErrors.length > 0) {
         this.warn("Conversion completed with warnings:");

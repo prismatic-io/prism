@@ -108,9 +108,11 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.createAlertMonitor?.alertMonitor?.id ??
-        this.error("The operation returned no resource"),
-    );
+    const alertMonitorId = result.createAlertMonitor?.alertMonitor?.id;
+    if (alertMonitorId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(alertMonitorId);
   }
 }

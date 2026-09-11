@@ -35,34 +35,42 @@ export default class CreateCommand extends PrismaticBaseCommand {
       flags: { customerId, orgOnly, resourceId, rotate },
     } = await this.parse(CreateCommand);
 
+    if (resourceId == null) {
+      this.error("--rotate requires --resourceId");
+    }
+
     if (rotate) {
       const result = await gqlRequest({
         document: ROTATE_ON_PREMISE_RESOURCE_JWT,
         variables: {
           customerId,
-          resourceId: resourceId ?? this.error("--rotate requires --resourceId"),
+          resourceId,
           orgOnly,
         },
       });
 
-      this.log(
-        result.rotateOnPremiseResourceJWT?.result?.jwt ??
-          this.error("The operation returned no resource"),
-      );
+      const jwt = result.rotateOnPremiseResourceJWT?.result?.jwt;
+      if (jwt == null) {
+        this.error("The operation returned no resource");
+      }
+
+      this.log(jwt);
     } else {
       const result = await gqlRequest({
         document: CREATE_ON_PREMISE_RESOURCE_JWT,
         variables: {
           customerId,
-          resourceId: resourceId ?? this.error("--rotate requires --resourceId"),
+          resourceId,
           orgOnly,
         },
       });
 
-      this.log(
-        result.createOnPremiseResourceJWT?.result?.jwt ??
-          this.error("The operation returned no resource"),
-      );
+      const jwt = result.createOnPremiseResourceJWT?.result?.jwt;
+      if (jwt == null) {
+        this.error("The operation returned no resource");
+      }
+
+      this.log(jwt);
     }
   }
 }

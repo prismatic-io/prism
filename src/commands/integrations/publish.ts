@@ -61,9 +61,11 @@ export default class PublishCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.publishIntegration?.integration?.id ??
-        this.error("The operation returned no resource"),
-    );
+    const integrationId = result.publishIntegration?.integration?.id;
+    if (integrationId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(integrationId);
   }
 }

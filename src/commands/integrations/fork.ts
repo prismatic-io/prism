@@ -41,8 +41,11 @@ export default class ForkCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.forkIntegration?.integration?.id ?? this.error("The operation returned no resource"),
-    );
+    const integrationId = result.forkIntegration?.integration?.id;
+    if (integrationId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(integrationId);
   }
 }

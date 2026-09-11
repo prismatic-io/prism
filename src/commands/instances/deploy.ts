@@ -33,8 +33,11 @@ export default class DeployCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.deployInstance?.instance?.id ?? this.error("The operation returned no resource"),
-    );
+    const instanceId = result.deployInstance?.instance?.id;
+    if (instanceId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(instanceId);
   }
 }

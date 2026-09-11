@@ -38,8 +38,11 @@ export default class ImportCommand extends PrismaticBaseCommand {
       variables: { definition, customer, workflow },
     });
 
-    this.log(
-      result.importWorkflow?.workflow?.id ?? this.error("The operation returned no resource"),
-    );
+    const workflowId = result.importWorkflow?.workflow?.id;
+    if (workflowId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(workflowId);
   }
 }

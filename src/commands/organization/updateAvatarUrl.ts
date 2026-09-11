@@ -25,17 +25,23 @@ export default class UpdateAvatarUrlCommand extends PrismaticBaseCommand {
       flags: { organizationId, avatarUrl },
     } = await this.parse(UpdateAvatarUrlCommand);
 
+    if (avatarUrl == null) {
+      this.error("--avatarUrl is required to update the avatar");
+    }
+
     const result = await gqlRequest({
       document: COMMIT_AVATAR_UPLOAD,
       variables: {
         organizationId,
-        avatarUrl: avatarUrl ?? this.error("--avatarUrl is required to update the avatar"),
+        avatarUrl,
       },
     });
 
-    this.log(
-      result.updateOrganization?.organization?.id ??
-        this.error("The operation returned no resource"),
-    );
+    const updatedOrganizationId = result.updateOrganization?.organization?.id;
+    if (updatedOrganizationId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(updatedOrganizationId);
   }
 }

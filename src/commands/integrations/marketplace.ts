@@ -62,9 +62,11 @@ export default class MarketplaceCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.updateIntegrationMarketplaceConfiguration?.integration?.id ??
-        this.error("The operation returned no resource"),
-    );
+    const integrationId = result.updateIntegrationMarketplaceConfiguration?.integration?.id;
+    if (integrationId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(integrationId);
   }
 }

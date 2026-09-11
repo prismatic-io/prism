@@ -11,9 +11,11 @@ export default class GenerateCommand extends PrismaticBaseCommand {
     const result = await gqlRequest({
       document: GENERATE_SIGNING_KEY,
     });
-    this.log(
-      result.createOrganizationSigningKey?.result?.privateKey ??
-        this.error("The operation returned no resource"),
-    );
+    const privateKey = result.createOrganizationSigningKey?.result?.privateKey;
+    if (privateKey == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(privateKey);
   }
 }

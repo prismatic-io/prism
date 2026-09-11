@@ -47,8 +47,11 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.updateIntegration?.integration?.id ?? this.error("The operation returned no resource"),
-    );
+    const integrationId = result.updateIntegration?.integration?.id;
+    if (integrationId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(integrationId);
   }
 }

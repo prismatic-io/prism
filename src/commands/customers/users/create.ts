@@ -63,8 +63,11 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(
-      result.createCustomerUser?.user?.id ?? this.error("The operation returned no resource"),
-    );
+    const userId = result.createCustomerUser?.user?.id;
+    if (userId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(userId);
   }
 }
