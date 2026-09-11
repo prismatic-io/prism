@@ -1,8 +1,6 @@
-import DELETE_INTEGRATION from "../../graphql/integrations/deleteIntegration.graphql";
-import type { GetIntegrationFlowQuery } from "../../graphql/integrations/getIntegrationFlow.generated.js";
-import GET_INTEGRATION_FLOW from "../../graphql/integrations/getIntegrationFlow.graphql";
-import type { TestIntegrationFlowMutation } from "../../graphql/integrations/testIntegrationFlow.generated.js";
-import TEST_INTEGRATION_FLOW from "../../graphql/integrations/testIntegrationFlow.graphql";
+import { DeleteIntegrationDocument as DELETE_INTEGRATION } from "../../graphql/integrations/deleteIntegration.generated.js";
+import { GetIntegrationFlowDocument as GET_INTEGRATION_FLOW } from "../../graphql/integrations/getIntegrationFlow.generated.js";
+import { TestIntegrationFlowDocument as TEST_INTEGRATION_FLOW } from "../../graphql/integrations/testIntegrationFlow.generated.js";
 import { gqlRequest } from "../../graphql.js";
 
 /** Return Flow ID of given flow name on specified Integration. */
@@ -11,7 +9,7 @@ export const getIntegrationFlow = async (
   flowName: string,
 ): Promise<string> => {
   // TODO: Make flows searchable by name.
-  const result = await gqlRequest<GetIntegrationFlowQuery>({
+  const result = await gqlRequest({
     document: GET_INTEGRATION_FLOW,
     variables: { id: integrationId },
   });
@@ -22,7 +20,6 @@ export const getIntegrationFlow = async (
   }
 
   const flows = integration.flows.nodes
-    .filter((n): n is NonNullable<typeof n> => n !== null)
     .map(({ id, name }) => ({
       id,
       name: name.toLowerCase().trim(),
@@ -68,7 +65,7 @@ export const runIntegrationFlow = async ({
     throw new Error("Either flowId or flowName must be provided");
   }
 
-  const result = await gqlRequest<TestIntegrationFlowMutation>({
+  const result = await gqlRequest({
     document: TEST_INTEGRATION_FLOW,
     variables: { id: integrationFlowId },
   });

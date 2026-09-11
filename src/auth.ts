@@ -1,15 +1,17 @@
+import chalk from "chalk";
 import crypto from "crypto";
 import http from "http";
-import { jwtDecode } from "jwt-decode";
 import inquirer from "inquirer";
-import chalk from "chalk";
-import { deleteProfile, getActiveProfileName, writeActiveProfile } from "./config.js";
-import { type AuthContext, getAuthContext, getPrismaticUrl } from "./context.js";
-import { gqlRequest, gql } from "./graphql.js";
+import { jwtDecode } from "jwt-decode";
 import type { AddressInfo } from "net";
 import open from "open";
-import { whoAmI } from "./utils/user/query.js";
+import { deleteProfile, getActiveProfileName, writeActiveProfile } from "./config.js";
+import { type AuthContext, getAuthContext, getPrismaticUrl } from "./context.js";
+import { AuthenticatedUserQueryDocument as AUTHENTICATED_USER_QUERY } from "./graphql/operations/AuthenticatedUserQuery.generated.js";
+import { ListUserTenantsDocument as LIST_USER_TENANTS } from "./graphql/operations/ListUserTenants.generated.js";
+import { gqlRequest } from "./graphql.js";
 import { fetch } from "./utils/http.js";
+import { whoAmI } from "./utils/user/query.js";
 
 const urlEncodeBase64 = (value: Buffer | string): string => {
   const buffer = typeof value === "string" ? Buffer.from(value) : value;
@@ -319,30 +321,12 @@ export interface Tenant {
   url: string;
   orgName: string;
   awsRegion: string;
-  systemSuspended: boolean;
-}
-
-interface ListUserTenantsResponse {
-  listUserTenants: {
-    nodes: Tenant[];
-  };
+  systemSuspended: boolean | null;
 }
 
 export const fetchUserTenants = async (): Promise<Tenant[]> => {
-  const result = await gqlRequest<ListUserTenantsResponse>({
-    document: gql`
-      query ListUserTenants {
-        listUserTenants {
-          nodes {
-            tenantId
-            url
-            orgName
-            awsRegion
-            systemSuspended
-          }
-        }
-      }
-    `,
+  const result = await gqlRequest({
+    document: LIST_USER_TENANTS,
   });
 
   return result.listUserTenants.nodes;
@@ -511,13 +495,7 @@ export const isLoggedIn = async (): Promise<boolean> => {
 
   try {
     await gqlRequest({
-      document: gql`
-        query {
-          authenticatedUser {
-            id
-          }
-        }
-      `,
+      document: AUTHENTICATED_USER_QUERY,
     });
   } catch {
     return false;

@@ -1,0 +1,33 @@
+query listComponents(
+  $showAllVersions: Boolean
+  $after: String
+  $first: Int
+  $filterQuery: JSONString
+) {
+  components(
+    allVersions: $showAllVersions
+    after: $after
+    first: $first
+    filterQuery: $filterQuery
+  ) {
+    nodes {
+      id
+      key
+      public
+      label
+      description
+      versionNumber
+      category
+      versionCreatedAt
+      customer {
+        id
+        externalId
+        name
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

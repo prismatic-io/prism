@@ -1,40 +1,23 @@
-import { gql, gqlRequest } from "../../graphql.js";
+import { GetSystemInstanceIdDocument as GET_SYSTEM_INSTANCE_ID } from "../../graphql/operations/getSystemInstanceId.generated.js";
+import { UpdateInstanceGlobalDebugDocument as UPDATE_INSTANCE_GLOBAL_DEBUG } from "../../graphql/operations/updateInstanceGlobalDebug.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 export const setGlobalDebugOnSystemInstance = async (
   integrationId: string,
   globalDebug: boolean,
 ): Promise<void> => {
   const systemInstanceResult = await gqlRequest({
-    document: gql`
-      query getSystemInstanceId($integrationId: ID!) {
-        integration(id: $integrationId) {
-          systemInstance {
-            id
-          }
-        }
-      }
-    `,
+    document: GET_SYSTEM_INSTANCE_ID,
     variables: {
       integrationId,
     },
   });
 
-  const instanceId = systemInstanceResult.integration.systemInstance.id;
+  const instanceId = systemInstanceResult.integration?.systemInstance.id;
+  if (!instanceId) throw new Error(`Integration not found: ${integrationId}`);
 
   await gqlRequest({
-    document: gql`
-      mutation updateInstanceGlobalDebug($instanceId: ID!, $globalDebug: Boolean!) {
-        updateInstance(input: { id: $instanceId, globalDebug: $globalDebug }) {
-          instance {
-            id
-          }
-          errors {
-            field
-            messages
-          }
-        }
-      }
-    `,
+    document: UPDATE_INSTANCE_GLOBAL_DEBUG,
     variables: {
       instanceId,
       globalDebug,

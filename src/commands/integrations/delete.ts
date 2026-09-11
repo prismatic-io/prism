@@ -1,6 +1,7 @@
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { DeleteIntegrationDocument as DELETE_INTEGRATION } from "../../graphql/operations/deleteIntegration.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class DeleteCommand extends PrismaticBaseCommand {
   static description = "Delete an Integration";
@@ -17,19 +18,7 @@ export default class DeleteCommand extends PrismaticBaseCommand {
     } = await this.parse(DeleteCommand);
 
     await gqlRequest({
-      document: gql`
-        mutation deleteIntegration($id: ID!) {
-          deleteIntegration(input: { id: $id }) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DELETE_INTEGRATION,
       variables: {
         id: integration,
       },

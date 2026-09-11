@@ -1,6 +1,8 @@
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { DeployInstance2Document as DEPLOY_INSTANCE2 } from "../../graphql/operations/deployInstance2.generated.js";
+import { UpdateInstanceDocument as UPDATE_INSTANCE } from "../../graphql/operations/updateInstance.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class UpdateCommand extends PrismaticBaseCommand {
   // TODO: Add more flags once optional updates are implemented
@@ -42,33 +44,7 @@ export default class UpdateCommand extends PrismaticBaseCommand {
     } = await this.parse(UpdateCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        mutation updateInstance(
-          $id: ID!
-          $name: String
-          $description: String
-          $version: ID
-          $labels: [String]
-        ) {
-          updateInstance(
-            input: {
-              id: $id
-              name: $name
-              description: $description
-              integration: $version
-              labels: $labels
-            }
-          ) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: UPDATE_INSTANCE,
       variables: {
         id: instance,
         name,
@@ -79,29 +55,27 @@ export default class UpdateCommand extends PrismaticBaseCommand {
     });
 
     if (!deploy) {
-      this.log(result.updateInstance.instance.id);
+      const instanceId = result.updateInstance?.instance?.id;
+      if (instanceId == null) {
+        this.error("The operation returned no resource");
+      }
+
+      this.log(instanceId);
       return;
     }
 
     const deployResult = await gqlRequest({
-      document: gql`
-        mutation deployInstance($id: ID!) {
-          deployInstance(input: { id: $id }) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DEPLOY_INSTANCE2,
       variables: {
         id: instance,
       },
     });
 
-    this.log(deployResult.deployInstance.instance.id);
+    const instanceId = deployResult.deployInstance?.instance?.id;
+    if (instanceId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(instanceId);
   }
 }

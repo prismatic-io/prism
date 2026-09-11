@@ -1,6 +1,19 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
 const schemaUrl = new URL("/api", process.env.PRISMATIC_URL).toString();
+const scalarConfig = {
+  defaultScalarType: "unknown",
+  strictScalars: true,
+  scalars: {
+    BigInt: { input: "string | number", output: "string" },
+    Date: "string",
+    DateTime: "string",
+    GenericScalar: "unknown",
+    JSONOrString: "unknown",
+    JSONString: "unknown",
+    UUID: "string",
+  },
+};
 
 const config: CodegenConfig = {
   overwrite: true,
@@ -21,6 +34,7 @@ const config: CodegenConfig = {
     "src/graphql/schema.generated.ts": {
       plugins: ["typescript"],
       config: {
+        ...scalarConfig,
         onlyOperationTypes: true,
       },
     },
@@ -31,7 +45,8 @@ const config: CodegenConfig = {
         extension: ".generated.ts",
         baseTypesPath: "schema.generated.js",
       },
-      plugins: ["typescript-operations"],
+      plugins: ["typescript-operations", "typed-document-node"],
+      config: scalarConfig,
     },
   },
 };

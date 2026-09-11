@@ -1,6 +1,8 @@
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { ListInstanceTestLogsDocument as LIST_INSTANCE_TEST_LOGS } from "../../../graphql/operations/listInstanceTestLogs.generated.js";
+import { TestInstanceFlowConfigDocument as TEST_INSTANCE_FLOW_CONFIG } from "../../../graphql/operations/testInstanceFlowConfig.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 interface LogNode {
@@ -51,30 +53,7 @@ export default class TestCommand extends PrismaticBaseCommand {
     } = await this.parse(TestCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        mutation testInstanceFlowConfig(
-          $id: ID!
-          $payload: String
-          $contentType: String
-        ) {
-          testInstanceFlowConfig(
-            input: { id: $id, payload: $payload, contentType: $contentType }
-          ) {
-            testInstanceFlowConfigResult {
-              flowConfig {
-                id
-              }
-              execution {
-                id
-              }
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: TEST_INSTANCE_FLOW_CONFIG,
       variables: {
         id: flowConfig,
         payload,
@@ -86,7 +65,10 @@ export default class TestCommand extends PrismaticBaseCommand {
       return;
     }
 
-    const executionId = result.testInstanceFlowConfig.testInstanceFlowConfigResult.execution.id;
+    const executionId = result.testInstanceFlowConfig?.testInstanceFlowConfigResult?.execution?.id;
+    if (executionId == null) {
+      this.error("Execution was not created");
+    }
     await this.tailLogs(executionId);
   }
 
@@ -97,7 +79,7 @@ export default class TestCommand extends PrismaticBaseCommand {
     while (true) {
       await ux.wait(500);
 
-      const result: any = await this.fetchLogs(executionId, nextCursor);
+      const result = await this.fetchLogs(executionId, nextCursor);
       if (result === undefined) continue;
 
       const { logs, cursor, executionComplete } = result;
@@ -125,24 +107,7 @@ export default class TestCommand extends PrismaticBaseCommand {
     nextCursor?: string,
   ): Promise<FetchLogsResult | undefined> {
     const results = await gqlRequest({
-      document: gql`
-        query listInstanceTestLogs($executionId: ID!, $nextCursor: String) {
-          logs(
-            executionResult: $executionId
-            after: $nextCursor
-            orderBy: { field: TIMESTAMP, direction: ASC }
-          ) {
-            edges {
-              node {
-                timestamp
-                severity
-                message
-              }
-              cursor
-            }
-          }
-        }
-      `,
+      document: LIST_INSTANCE_TEST_LOGS,
       variables: {
         executionId,
         nextCursor,

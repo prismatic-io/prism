@@ -1,6 +1,7 @@
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { UpdateCustomerDocument as UPDATE_CUSTOMER } from "../../graphql/operations/updateCustomer.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class UpdateCommand extends PrismaticBaseCommand {
   // TODO: Add more flags once optional updates are implemented
@@ -50,33 +51,7 @@ export default class UpdateCommand extends PrismaticBaseCommand {
     } = await this.parse(UpdateCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        mutation updateCustomer(
-          $id: ID!
-          $name: String
-          $description: String
-          $externalId: String
-          $labels: [String]
-        ) {
-          updateCustomer(
-            input: {
-              id: $id
-              name: $name
-              description: $description
-              externalId: $externalId
-              labels: $labels
-            }
-          ) {
-            customer {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: UPDATE_CUSTOMER,
       variables: {
         id: customer,
         name,
@@ -86,6 +61,11 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateCustomer.customer.id);
+    const customerId = result.updateCustomer?.customer?.id;
+    if (customerId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(customerId);
   }
 }

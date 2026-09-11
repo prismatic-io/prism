@@ -17,8 +17,8 @@ vi.mock(import("inquirer"), () => ({
 const api = graphql.link(`${TEST_PRISMATIC_URL}/api`);
 
 type IntegrationFlowNode = NonNullable<
-  NonNullable<GetIntegrationFlowsQuery["integration"]>["flows"]["nodes"][number]
->;
+  GetIntegrationFlowsQuery["integration"]
+>["flows"]["nodes"][number];
 
 const createFlowNode = (
   id: string,
@@ -134,26 +134,13 @@ describe("flows utils", () => {
       expect(result).toEqual([]);
     });
 
-    it("should filter out null nodes", async () => {
+    it("returns an empty array for an integration with no flows", async () => {
       server.use(
         api.query("GetIntegrationFlows", () =>
-          HttpResponse.json({
-            data: {
-              integration: {
-                flows: {
-                  nodes: [createFlowNode("flow-1", "Flow One"), null],
-                  pageInfo: { hasNextPage: false, endCursor: null },
-                },
-              },
-            },
-          }),
+          HttpResponse.json(buildGetIntegrationFlowsResponse([])),
         ),
       );
-
-      const result = await getIntegrationFlows("integration-123");
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe("flow-1");
+      expect(await getIntegrationFlows("integration-123")).toEqual([]);
     });
   });
 

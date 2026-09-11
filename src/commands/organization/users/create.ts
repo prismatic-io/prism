@@ -1,6 +1,7 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { CreateOrganizationUserDocument as CREATE_ORGANIZATION_USER } from "../../../graphql/operations/createOrganizationUser.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create a User for your Organization";
@@ -39,25 +40,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
     } = await this.parse(CreateCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        mutation createOrganizationUser(
-          $name: String
-          $email: String!
-          $role: ID!
-        ) {
-          createOrganizationUser(
-            input: { name: $name, email: $email, role: $role }
-          ) {
-            user {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: CREATE_ORGANIZATION_USER,
       variables: {
         name,
         email,
@@ -65,6 +48,11 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createOrganizationUser.user.id);
+    const userId = result.createOrganizationUser?.user?.id;
+    if (userId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(userId);
   }
 }

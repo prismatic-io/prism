@@ -1,0 +1,11 @@
+mutation validateIntegrationSchema($definition: String!) {
+  validateIntegrationSchema(input: { definition: $definition }) {
+    result {
+      isValid
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

@@ -1,7 +1,8 @@
 import { Flags } from "@oclif/core";
 import { readFileSync } from "fs";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { ImportPublicKeyDocument as IMPORT_PUBLIC_KEY } from "../../../graphql/operations/importPublicKey.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class ImportCommand extends PrismaticBaseCommand {
   static description =
@@ -41,22 +42,16 @@ export default class ImportCommand extends PrismaticBaseCommand {
     });
 
     const result = await gqlRequest({
-      document: gql`
-        mutation importPublicKey($publicKey: String!) {
-          importOrganizationSigningKey(input: { publicKey: $publicKey }) {
-            organizationSigningKey {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: IMPORT_PUBLIC_KEY,
       variables: { publicKey },
     });
 
-    this.log(result.importOrganizationSigningKey.organizationSigningKey.id);
+    const organizationSigningKeyId =
+      result.importOrganizationSigningKey?.organizationSigningKey?.id;
+    if (organizationSigningKeyId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(organizationSigningKeyId);
   }
 }

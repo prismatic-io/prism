@@ -1,0 +1,11 @@
+mutation commitAvatarUpload2($integrationId: ID!, $avatarUrl: String!) {
+  updateIntegration(input: { id: $integrationId, avatarUrl: $avatarUrl }) {
+    integration {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

@@ -1,26 +1,8 @@
 import { Args, type Config, Flags, ux } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { toArgv } from "../../../generate/util.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-
-interface ConversionError {
-  path: string;
-  error: string;
-  errorType: string;
-}
-
-interface ConvertLowCodeIntegrationResult {
-  convertLowCodeIntegration: {
-    convertLowCodeIntegrationFormResult: {
-      url: string;
-      conversionErrors: ConversionError[];
-    };
-    errors: {
-      field: string;
-      messages: string[];
-    }[];
-  };
-}
+import { ConvertToCniDocument as CONVERT_TO_CNI } from "../../../graphql/operations/ConvertToCNI.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class ConvertIntegrationCommand extends PrismaticBaseCommand {
   static description = "Convert a Low-Code Integration's YAML file into a Code Native Integration";
@@ -59,25 +41,8 @@ export default class ConvertIntegrationCommand extends PrismaticBaseCommand {
     ux.action.start("Converting low-code integration to code-native integration");
 
     try {
-      const result = await gqlRequest<ConvertLowCodeIntegrationResult>({
-        document: gql`
-          mutation ConvertToCNI($id: ID!, $registryPrefix: String, $registryUrl: String, $includeComments: Boolean) {
-            convertLowCodeIntegration(input: { id: $id, registryPrefix: $registryPrefix, registryUrl: $registryUrl, includeComments: $includeComments }) {
-              convertLowCodeIntegrationFormResult {
-                url
-                conversionErrors {
-                  path
-                  error
-                  errorType
-                }
-              }
-              errors {
-                field
-                messages
-              }
-            }
-          }
-        `,
+      const result = await gqlRequest({
+        document: CONVERT_TO_CNI,
         variables: {
           id: integration,
           registryPrefix,
@@ -88,12 +53,16 @@ export default class ConvertIntegrationCommand extends PrismaticBaseCommand {
 
       ux.action.stop();
 
-      const { url, conversionErrors } =
-        result.convertLowCodeIntegration.convertLowCodeIntegrationFormResult;
+      const conversionResult =
+        result.convertLowCodeIntegration?.convertLowCodeIntegrationFormResult;
+      if (conversionResult == null) {
+        this.error("Integration conversion returned no result");
+      }
+      const { url, conversionErrors } = conversionResult;
 
       if (conversionErrors && conversionErrors.length > 0) {
         this.warn("Conversion completed with warnings:");
-        for (const error of conversionErrors) {
+        for (const error of conversionErrors.filter((error) => error !== null)) {
           this.warn(`  ${error.path}: ${error.error} (${error.errorType})`);
         }
       }

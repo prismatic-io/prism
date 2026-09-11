@@ -1,0 +1,11 @@
+mutation updateInstanceGlobalDebug($instanceId: ID!, $globalDebug: Boolean!) {
+  updateInstance(input: { id: $instanceId, globalDebug: $globalDebug }) {
+    instance {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

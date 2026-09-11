@@ -1,6 +1,7 @@
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { PublishIntegrationDocument as PUBLISH_INTEGRATION } from "../../graphql/operations/publishIntegration.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class PublishCommand extends PrismaticBaseCommand {
   static description = "Publish a version of an Integration for use in Instances";
@@ -52,25 +53,7 @@ export default class PublishCommand extends PrismaticBaseCommand {
     };
 
     const result = await gqlRequest({
-      document: gql`
-        mutation publishIntegration(
-          $id: ID!
-          $comment: String
-          $attributes: String
-        ) {
-          publishIntegration(
-            input: { id: $id, comment: $comment, attributes: $attributes }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: PUBLISH_INTEGRATION,
       variables: {
         id: integration,
         comment,
@@ -78,6 +61,11 @@ export default class PublishCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.publishIntegration.integration.id);
+    const integrationId = result.publishIntegration?.integration?.id;
+    if (integrationId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(integrationId);
   }
 }

@@ -1,6 +1,7 @@
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { UpdateMarketplaceConfigurationDocument as UPDATE_MARKETPLACE_CONFIGURATION } from "../../graphql/operations/updateMarketplaceConfiguration.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class MarketplaceCommand extends PrismaticBaseCommand {
   static description = "Make a version of an Integration available in the Marketplace";
@@ -50,31 +51,7 @@ export default class MarketplaceCommand extends PrismaticBaseCommand {
       : "NOT_AVAILABLE_IN_MARKETPLACE";
 
     const result = await gqlRequest({
-      document: gql`
-        mutation updateMarketplaceConfiguration(
-          $id: ID
-          $marketplaceConfiguration: String!
-          $overview: String!
-          $multipleInstances: Boolean
-        ) {
-          updateIntegrationMarketplaceConfiguration(
-            input: {
-              id: $id
-              marketplaceConfiguration: $marketplaceConfiguration
-              overview: $overview
-              allowMultipleMarketplaceInstances: $multipleInstances
-            }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: UPDATE_MARKETPLACE_CONFIGURATION,
       variables: {
         id: integration,
         marketplaceConfiguration,
@@ -85,6 +62,11 @@ export default class MarketplaceCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateIntegrationMarketplaceConfiguration.integration.id);
+    const integrationId = result.updateIntegrationMarketplaceConfiguration?.integration?.id;
+    if (integrationId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(integrationId);
   }
 }

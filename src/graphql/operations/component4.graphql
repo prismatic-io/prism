@@ -1,0 +1,12 @@
+query component4($componentKey: String!, $versionNumber: Int!) {
+  components(
+    key: $componentKey
+    versionNumber: $versionNumber
+    public: false
+    includeComponentsForCodeNativeIntegrations: true
+  ) {
+    nodes {
+      id
+    }
+  }
+}

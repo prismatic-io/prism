@@ -1,6 +1,8 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { CreateOnPremiseResourceJwtDocument as CREATE_ON_PREMISE_RESOURCE_JWT } from "../../graphql/operations/createOnPremiseResourceJWT.generated.js";
+import { RotateOnPremiseResourceJwtDocument as ROTATE_ON_PREMISE_RESOURCE_JWT } from "../../graphql/operations/rotateOnPremiseResourceJWT.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 const onlyWhenOrgUser = "Only valid for Organization users.";
 
@@ -33,27 +35,13 @@ export default class CreateCommand extends PrismaticBaseCommand {
       flags: { customerId, orgOnly, resourceId, rotate },
     } = await this.parse(CreateCommand);
 
+    if (resourceId == null) {
+      this.error("--rotate requires --resourceId");
+    }
+
     if (rotate) {
       const result = await gqlRequest({
-        document: gql`
-          mutation rotateOnPremiseResourceJWT(
-            $customerId: ID
-            $resourceId: ID!
-            $orgOnly: Boolean
-          ) {
-            rotateOnPremiseResourceJWT(
-              input: { customerId: $customerId, orgOnly: $orgOnly, resourceId: $resourceId }
-            ) {
-              result {
-                jwt
-              }
-              errors {
-                field
-                messages
-              }
-            }
-          }
-        `,
+        document: ROTATE_ON_PREMISE_RESOURCE_JWT,
         variables: {
           customerId,
           resourceId,
@@ -61,28 +49,15 @@ export default class CreateCommand extends PrismaticBaseCommand {
         },
       });
 
-      this.log(result.rotateOnPremiseResourceJWT.result.jwt);
+      const jwt = result.rotateOnPremiseResourceJWT?.result?.jwt;
+      if (jwt == null) {
+        this.error("The operation returned no resource");
+      }
+
+      this.log(jwt);
     } else {
       const result = await gqlRequest({
-        document: gql`
-          mutation createOnPremiseResourceJWT(
-            $customerId: ID
-            $resourceId: ID
-            $orgOnly: Boolean
-          ) {
-            createOnPremiseResourceJWT(
-              input: { customerId: $customerId, orgOnly: $orgOnly, resourceId: $resourceId }
-            ) {
-              result {
-                jwt
-              }
-              errors {
-                field
-                messages
-              }
-            }
-          }
-        `,
+        document: CREATE_ON_PREMISE_RESOURCE_JWT,
         variables: {
           customerId,
           resourceId,
@@ -90,7 +65,12 @@ export default class CreateCommand extends PrismaticBaseCommand {
         },
       });
 
-      this.log(result.createOnPremiseResourceJWT.result.jwt);
+      const jwt = result.createOnPremiseResourceJWT?.result?.jwt;
+      if (jwt == null) {
+        this.error("The operation returned no resource");
+      }
+
+      this.log(jwt);
     }
   }
 }

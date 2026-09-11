@@ -1,7 +1,11 @@
 import { Flags } from "@oclif/core";
 import dayjs from "dayjs";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import {
+  ListComponentsDocument as LIST_COMPONENTS,
+  type ListComponentsQuery,
+} from "../../graphql/operations/listComponents.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import { ux } from "../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -25,7 +29,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     const { flags } = await this.parse(ListCommand);
     const { showAllVersions, search } = flags;
 
-    const components: any[] = await fetchComponents(showAllVersions, search);
+    const components: ComponentNode[] = await fetchComponents(showAllVersions, search);
 
     ux.table(
       components,
@@ -66,40 +70,19 @@ export default class ListCommand extends PrismaticBaseCommand {
   }
 }
 
-const fetchComponents = async (showAllVersions: boolean, search?: string): Promise<any[]> => {
-  let components: any[] = [];
+const fetchComponents = async (
+  showAllVersions: boolean,
+  search?: string,
+): Promise<ComponentNode[]> => {
+  let components: ComponentNode[] = [];
   let hasNextPage = true;
-  let cursor = "";
+  let cursor: string | null = "";
 
   while (hasNextPage) {
     const {
       components: { nodes, pageInfo },
-    } = await gqlRequest({
-      document: gql`
-        query listComponents($showAllVersions: Boolean, $after: String, $filterQuery: JSONString) {
-              components(allVersions: $showAllVersions, after: $after, filterQuery: $filterQuery) {
-                nodes {
-                  id
-                  key
-                  public
-                  label
-                  description
-                  versionNumber
-                  category
-                  versionCreatedAt
-                  customer {
-                    id
-                    externalId
-                    name
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          `,
+    }: ListComponentsQuery = await gqlRequest({
+      document: LIST_COMPONENTS,
       variables: {
         showAllVersions,
         after: cursor,
@@ -114,3 +97,5 @@ const fetchComponents = async (showAllVersions: boolean, search?: string): Promi
   }
   return components;
 };
+
+type ComponentNode = ListComponentsQuery["components"]["nodes"][number];

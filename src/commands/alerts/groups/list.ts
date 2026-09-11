@@ -1,5 +1,9 @@
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import {
+  ListAlertGroupsDocument as LIST_ALERT_GROUPS,
+  type ListAlertGroupsQuery,
+} from "../../../graphql/alerts/listAlertGroups.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -18,28 +22,15 @@ export default class ListCommand extends PrismaticBaseCommand {
   async run() {
     const { flags } = await this.parse(ListCommand);
 
-    let alertGroups: any[] = [];
+    let alertGroups: AlertGroupNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         alertGroups: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listAlertGroups($after: String) {
-            alertGroups(after: $after) {
-              nodes {
-                id
-                name
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
+      }: ListAlertGroupsQuery = await gqlRequest({
+        document: LIST_ALERT_GROUPS,
         variables: { after: cursor },
       });
       alertGroups = [...alertGroups, ...nodes];
@@ -60,3 +51,5 @@ export default class ListCommand extends PrismaticBaseCommand {
     );
   }
 }
+
+type AlertGroupNode = ListAlertGroupsQuery["alertGroups"]["nodes"][number];

@@ -1,7 +1,8 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { parseJsonOrUndefined } from "../../../fields.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { CreateAlertMonitorDocument as CREATE_ALERT_MONITOR } from "../../../graphql/operations/createAlertMonitor.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description =
@@ -95,37 +96,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
     const users = parseJsonOrUndefined(userJson);
 
     const result = await gqlRequest({
-      document: gql`
-        mutation createAlertMonitor(
-          $name: String!
-          $instance: ID!
-          $triggers: [ID]!
-          $logSeverity: Int
-          $duration: Int
-          $groups: [ID]
-          $users: [ID]
-        ) {
-          createAlertMonitor(
-            input: {
-              name: $name
-              instance: $instance
-              triggers: $triggers
-              logSeverityLevelCondition: $logSeverity
-              durationSecondsCondition: $duration
-              groups: $groups
-              users: $users
-            }
-          ) {
-            alertMonitor {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: CREATE_ALERT_MONITOR,
       variables: {
         name,
         instance,
@@ -137,6 +108,11 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createAlertMonitor.alertMonitor.id);
+    const alertMonitorId = result.createAlertMonitor?.alertMonitor?.id;
+    if (alertMonitorId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(alertMonitorId);
   }
 }

@@ -1,0 +1,20 @@
+query listIntegrationVersions($integrationId: ID!, $onlyAvailable: Boolean, $onlyShowOne: Int) {
+  integration(id: $integrationId) {
+    versionSequence(
+      versionIsAvailable: $onlyAvailable
+      sortBy: [{ field: VERSION_NUMBER, direction: DESC }]
+      first: $onlyShowOne
+    ) {
+      nodes {
+        id
+        versionNumber
+        versionCreatedAt
+        versionCreatedBy {
+          email
+        }
+        versionComment
+        versionIsAvailable
+      }
+    }
+  }
+}

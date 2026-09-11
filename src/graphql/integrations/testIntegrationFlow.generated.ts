@@ -1,17 +1,97 @@
-import type * as Types from "../schema.generated.js";
+/** Internal type. DO NOT USE DIRECTLY. */
+type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+/** Internal type. DO NOT USE DIRECTLY. */
+export type Incremental<T> =
+  | T
+  | { [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never };
 
-export type TestIntegrationFlowMutationVariables = Types.Exact<{
-  id: Types.Scalars["ID"]["input"];
+import type { TypedDocumentNode as DocumentNode } from "@graphql-typed-document-node/core";
+export type TestIntegrationFlowMutationVariables = Exact<{
+  id: string | number;
 }>;
 
 export type TestIntegrationFlowMutation = {
-  __typename?: "RootMutation";
-  testIntegrationFlow?: {
-    __typename?: "TestIntegrationFlowPayload";
-    testIntegrationFlowResult?: {
-      __typename?: "TestIntegrationFlowResult";
-      execution?: { __typename?: "InstanceExecutionResult"; id: string } | null;
-    } | null;
-    errors: Array<{ __typename?: "ErrorType"; field: string; messages: Array<string> }>;
+  testIntegrationFlow: {
+    testIntegrationFlowResult: { execution: { id: string } | null } | null;
+    errors: Array<{ field: string; messages: Array<string> }>;
   } | null;
 };
+
+export const TestIntegrationFlowDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "TestIntegrationFlow" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "id" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "testIntegrationFlow" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "input" },
+                value: {
+                  kind: "ObjectValue",
+                  fields: [
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "id" },
+                      value: { kind: "Variable", name: { kind: "Name", value: "id" } },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "testIntegrationFlowResult" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "execution" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [{ kind: "Field", name: { kind: "Name", value: "id" } }],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "errors" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "field" } },
+                      { kind: "Field", name: { kind: "Name", value: "messages" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<TestIntegrationFlowMutation, TestIntegrationFlowMutationVariables>;

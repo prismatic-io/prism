@@ -1,18 +1,20 @@
 import { Flags, ux } from "@oclif/core";
 import { isEmpty } from "lodash-es";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { InstanceDocument as INSTANCE } from "../../../graphql/operations/instance.generated.js";
+import { IntegrationDocument as INTEGRATION } from "../../../graphql/operations/integration.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 import { spawnProcess } from "../../../utils/process.js";
 
 interface ConfigVariable {
   requiredConfigVariable: {
     key: string;
     connectionTemplate?: {
-      inputFieldTemplates: { nodes: { inputField: { key: string }; value: string }[] };
-    };
+      inputFieldTemplates: { nodes: { inputField: { key: string }; value: string | null }[] };
+    } | null;
   };
-  inputs: { nodes: { name: string; value: string }[] };
-  meta: string;
+  inputs: { nodes: { name: string; value: string }[] } | null;
+  meta: unknown;
 }
 
 export default class RunCommand extends PrismaticBaseCommand {
@@ -71,79 +73,33 @@ export default class RunCommand extends PrismaticBaseCommand {
     // Get connection from the integration's test instance
     if (integrationId) {
       const result = await gqlRequest({
-        document: gql`
-          query integration($id: ID!) {
-            integration(id: $id) {
-              testConfigVariables {
-                nodes {
-                  requiredConfigVariable {
-                    key
-                    connectionTemplate {
-                      inputFieldTemplates {
-                        nodes {
-                          inputField {
-                            key
-                          }
-                          value
-                        }
-                      }
-                    }
-                  }
-                  inputs {
-                    nodes {
-                      name
-                      value
-                    }
-                  }
-                  meta
-                }
-              }
-            }
-          }
-        `,
+        document: INTEGRATION,
         variables: {
           id: integrationId,
         },
       });
 
+      if (result.integration == null) {
+        this.error("Integration was not found");
+      }
+
       configVariables = result.integration.testConfigVariables.nodes;
     } else {
+      if (instanceId == null) {
+        this.error("Either integrationId or instanceId is required");
+      }
+
       // Get the config variable from an instance
       const result = await gqlRequest({
-        document: gql`
-          query instance($id: ID!) {
-            instance(id: $id) {
-              configVariables {
-                nodes {
-                  requiredConfigVariable {
-                    key
-                    connectionTemplate {
-                      inputFieldTemplates {
-                        nodes {
-                          inputField {
-                            key
-                          }
-                          value
-                        }
-                      }
-                    }
-                  }
-                  inputs {
-                    nodes {
-                      name
-                      value
-                    }
-                  }
-                  meta
-                }
-              }
-            }
-          }
-        `,
+        document: INSTANCE,
         variables: {
           id: instanceId,
         },
       });
+
+      if (result.instance == null) {
+        this.error("Instance was not found");
+      }
 
       configVariables = result.instance.configVariables.nodes;
     }
@@ -163,14 +119,18 @@ export default class RunCommand extends PrismaticBaseCommand {
       ...requiredConfigVariable.connectionTemplate?.inputFieldTemplates.nodes.reduce<
         Record<string, unknown>
       >((result, { inputField, value }) => ({ ...result, [inputField.key]: value }), {}),
-      ...inputs.nodes.reduce<Record<string, unknown>>(
+      ...(inputs?.nodes ?? []).reduce<Record<string, unknown>>(
         (result, { name, value }) => ({ ...result, [name]: value }),
         {},
       ),
     };
 
     const value = JSON.stringify({
-      ...JSON.parse(meta),
+      ...(typeof meta === "string"
+        ? JSON.parse(meta)
+        : meta && typeof meta === "object"
+          ? meta
+          : {}),
       fields,
     });
 

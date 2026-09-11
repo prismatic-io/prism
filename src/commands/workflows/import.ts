@@ -1,19 +1,8 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { ImportWorkflowDocument as IMPORT_WORKFLOW } from "../../graphql/operations/importWorkflow.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import { extractYAMLFromPath } from "../../utils/integration/import.js";
-
-interface ImportWorkflowResult {
-  importWorkflow: {
-    workflow?: {
-      id: string;
-    };
-    errors: {
-      field: string;
-      messages: string[];
-    }[];
-  };
-}
 
 export default class ImportCommand extends PrismaticBaseCommand {
   static description = "Import an embedded workflow or workflow template YAML definition";
@@ -44,24 +33,16 @@ export default class ImportCommand extends PrismaticBaseCommand {
     } = await this.parse(ImportCommand);
     const definition = await extractYAMLFromPath(path);
 
-    const result = await gqlRequest<ImportWorkflowResult>({
-      document: gql`
-        mutation importWorkflow($workflow: ID, $customer: ID, $definition: String!) {
-          importWorkflow(
-            input: {id: $workflow, definition: $definition, customer: $customer}
-          ) {
-            workflow {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }`,
+    const result = await gqlRequest({
+      document: IMPORT_WORKFLOW,
       variables: { definition, customer, workflow },
     });
 
-    this.log(result.importWorkflow.workflow?.id);
+    const workflowId = result.importWorkflow?.workflow?.id;
+    if (workflowId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(workflowId);
   }
 }

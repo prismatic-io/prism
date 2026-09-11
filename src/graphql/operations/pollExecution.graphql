@@ -1,0 +1,5 @@
+query pollExecution($executionId: ID!) {
+  executionResult(id: $executionId) {
+    endedAt
+  }
+}

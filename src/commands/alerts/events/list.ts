@@ -1,6 +1,7 @@
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { ListAlertEventsDocument as LIST_ALERT_EVENTS } from "../../../graphql/operations/listAlertEvents.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -22,23 +23,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     } = await this.parse(ListCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        query listAlertEvents($alertMonitorId: ID) {
-          alertEvents(
-            monitor: $alertMonitorId
-            sortBy: [{ field: CREATED_AT, direction: DESC }]
-          ) {
-            nodes {
-              id
-              monitor {
-                name
-              }
-              createdAt
-              details
-            }
-          }
-        }
-      `,
+      document: LIST_ALERT_EVENTS,
       variables: {
         alertMonitorId,
       },
@@ -52,7 +37,7 @@ export default class ListCommand extends PrismaticBaseCommand {
           extended: true,
         },
         name: {
-          get: (row: any) => row.monitor.name,
+          get: (row) => row.monitor.name,
           header: "Name",
         },
         createdAt: {

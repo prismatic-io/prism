@@ -1,0 +1,11 @@
+mutation deleteUser($id: ID!) {
+  deleteUser(input: { id: $id }) {
+    user {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

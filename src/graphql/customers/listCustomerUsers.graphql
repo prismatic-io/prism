@@ -1,0 +1,19 @@
+query listCustomerUsers($id: ID!, $after: String, $first: Int) {
+  customer(id: $id) {
+    users(after: $after, first: $first) {
+      nodes {
+        id
+        name
+        email
+        externalId
+        role {
+          name
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

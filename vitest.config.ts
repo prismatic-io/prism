@@ -1,21 +1,6 @@
-import { readFileSync } from "node:fs";
-import { defineConfig, type Plugin } from "vitest/config";
-
-const graphqlPlugin = (): Plugin => ({
-  name: "graphql-loader",
-  transform: (_, id) => {
-    if (id.endsWith(".graphql")) {
-      const content = readFileSync(id, "utf-8");
-      return {
-        code: `export default ${JSON.stringify(content)};`,
-        map: null,
-      };
-    }
-  },
-});
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [graphqlPlugin()],
   test: {
     clearMocks: true,
     restoreMocks: true,
@@ -26,5 +11,7 @@ export default defineConfig({
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
     disableConsoleIntercept: true,
+    // Cold CLI startup can exceed five seconds on Windows CI runners.
+    testTimeout: process.platform === "win32" && process.env.CI ? 15_000 : 5_000,
   },
 });

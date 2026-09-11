@@ -1,6 +1,7 @@
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { ListIntegrationVersionsDocument as LIST_INTEGRATION_VERSIONS } from "../../../graphql/operations/listIntegrationVersions.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -28,32 +29,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     } = await this.parse(ListCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        query listIntegrationVersions(
-          $integrationId: ID!
-          $onlyAvailable: Boolean
-          $onlyShowOne: Int
-        ) {
-          integration(id: $integrationId) {
-            versionSequence(
-              versionIsAvailable: $onlyAvailable
-              sortBy: [{ field: VERSION_NUMBER, direction: DESC }]
-              first: $onlyShowOne
-            ) {
-              nodes {
-                id
-                versionNumber
-                versionCreatedAt
-                versionCreatedBy {
-                  email
-                }
-                versionComment
-                versionIsAvailable
-              }
-            }
-          }
-        }
-      `,
+      document: LIST_INTEGRATION_VERSIONS,
       variables: {
         integrationId: integration,
         onlyAvailable: flags["latest-available"] ? true : null,
@@ -61,32 +37,37 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
+    const versions = result.integration?.versionSequence.nodes;
+    if (versions == null) {
+      this.error("Integration not found");
+    }
+
     ux.table(
-      result.integration.versionSequence.nodes,
+      versions,
       {
         versionNumber: {
           header: "Version",
         },
         id: {
           header: "ID",
-          get: (row: any) => row.id,
+          get: (row) => row.id,
           extended: true,
         },
         versionCreatedAt: {
           header: "Created At",
-          get: (row: any) => new Date(row.versionCreatedAt).toISOString(),
+          get: (row) => new Date(row.versionCreatedAt ?? 0).toISOString(),
         },
         versionCreatedBy: {
           header: "Created By",
-          get: (row: any) => row.versionCreatedBy?.email ?? "",
+          get: (row) => row.versionCreatedBy?.email ?? "",
         },
         versionComment: {
           header: "Comment",
-          get: (row: any) => row.versionComment ?? "",
+          get: (row) => row.versionComment ?? "",
         },
         available: {
           header: "Available",
-          get: (row: any) => row.versionIsAvailable,
+          get: (row) => row.versionIsAvailable,
         },
       },
       { ...flags },

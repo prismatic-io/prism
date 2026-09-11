@@ -1,0 +1,11 @@
+mutation deleteAlertGroup($id: ID!) {
+  deleteAlertGroup(input: { id: $id }) {
+    alertGroup {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

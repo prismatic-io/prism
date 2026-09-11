@@ -1,5 +1,6 @@
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { ListOrganizationSigningKeysDocument as LIST_ORGANIZATION_SIGNING_KEYS } from "../../../graphql/operations/listOrganizationSigningKeys.generated.js";
+import { gqlRequest } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -10,25 +11,16 @@ export default class ListCommand extends PrismaticBaseCommand {
     const { flags } = await this.parse(ListCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        query listOrganizationSigningKeys {
-          organization {
-            signingKeys {
-              nodes {
-                id
-                publicKey
-                privateKeyPreview
-                issuedAt
-                imported
-              }
-            }
-          }
-        }
-      `,
+      document: LIST_ORGANIZATION_SIGNING_KEYS,
     });
 
+    const signingKeys = result.organization?.signingKeys.nodes;
+    if (signingKeys == null) {
+      this.error("Organization not found");
+    }
+
     ux.table(
-      result.organization.signingKeys.nodes,
+      signingKeys,
       {
         id: { minWidth: 8, extended: true },
         privateKeyPreview: { header: "Private Key Preview" },

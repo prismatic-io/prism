@@ -1,5 +1,9 @@
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import {
+  ListCustomersDocument as LIST_CUSTOMERS,
+  type ListCustomersQuery,
+} from "../../graphql/customers/listCustomers.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import { ux } from "../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -9,30 +13,15 @@ export default class ListCommand extends PrismaticBaseCommand {
   async run() {
     const { flags } = await this.parse(ListCommand);
 
-    let customers: any[] = [];
+    let customers: CustomerNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
       const {
         customers: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listCustomers($after: String) {
-            customers(isSystem: false, after: $after) {
-              nodes {
-                id
-                name
-                externalId
-                description
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
+      }: ListCustomersQuery = await gqlRequest({
+        document: LIST_CUSTOMERS,
         variables: { after: cursor },
       });
       customers = [...customers, ...nodes];
@@ -58,3 +47,5 @@ export default class ListCommand extends PrismaticBaseCommand {
     );
   }
 }
+
+type CustomerNode = ListCustomersQuery["customers"]["nodes"][number];

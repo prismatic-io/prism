@@ -1,7 +1,8 @@
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
 import { parseJsonOrUndefined } from "../../fields.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { UpdateIntegrationDocument as UPDATE_INTEGRATION } from "../../graphql/operations/updateIntegration.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class UpdateCommand extends PrismaticBaseCommand {
   static description = "Update an Integration's name or description";
@@ -36,33 +37,7 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       flags: { name, description, customer, "test-config-vars": testConfigVars },
     } = await this.parse(UpdateCommand);
     const result = await gqlRequest({
-      document: gql`
-        mutation updateIntegration(
-          $id: ID!
-          $name: String
-          $description: String
-          $customer: ID
-          $testConfigVars: [InputInstanceConfigVariable]
-        ) {
-          updateIntegration(
-            input: {
-              id: $id
-              name: $name
-              description: $description
-              customer: $customer
-              testConfigVariables: $testConfigVars
-            }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: UPDATE_INTEGRATION,
       variables: {
         id: integration,
         name,
@@ -72,6 +47,11 @@ export default class UpdateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateIntegration.integration.id);
+    const integrationId = result.updateIntegration?.integration?.id;
+    if (integrationId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(integrationId);
   }
 }

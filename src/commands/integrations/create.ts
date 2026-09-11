@@ -1,6 +1,7 @@
 import { Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { CreateIntegrationDocument as CREATE_INTEGRATION } from "../../graphql/operations/createIntegration.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 export default class CreateCommand extends PrismaticBaseCommand {
   static description = "Create an Integration";
@@ -27,29 +28,7 @@ export default class CreateCommand extends PrismaticBaseCommand {
     } = await this.parse(CreateCommand);
 
     const result = await gqlRequest({
-      document: gql`
-        mutation createIntegration(
-          $name: String!
-          $description: String!
-          $customer: ID
-        ) {
-          createIntegration(
-            input: {
-              name: $name
-              description: $description
-              customer: $customer
-            }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: CREATE_INTEGRATION,
       variables: {
         name,
         description,
@@ -57,6 +36,11 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createIntegration.integration.id);
+    const integrationId = result.createIntegration?.integration?.id;
+    if (integrationId == null) {
+      this.error("The operation returned no resource");
+    }
+
+    this.log(integrationId);
   }
 }

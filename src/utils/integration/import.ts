@@ -1,23 +1,28 @@
-import chardet from "chardet";
-import { ux } from "@oclif/core";
 import { createRequire } from "node:module";
-import { gqlRequest, gql } from "../../graphql.js";
-import { uploadAvatar } from "../../utils/avatar.js";
-import { exists, fs } from "../../fs.js";
+import { ux } from "@oclif/core";
+import chardet from "chardet";
 import { resolve } from "path";
-import { seekPackageDistDirectory } from "../import.js";
-import {
-  publishDefinition as publishComponentDefinition,
-  uploadFile,
-  uploadConnectionIcons,
-} from "../component/publish.js";
+import { exists, fs } from "../../fs.js";
+import { CommitAvatarUpload2Document as COMMIT_AVATAR_UPLOAD2 } from "../../graphql/operations/commitAvatarUpload2.generated.js";
+import { Component4Document as COMPONENT4 } from "../../graphql/operations/component4.generated.js";
+import { ImportIntegrationDocument as IMPORT_INTEGRATION } from "../../graphql/operations/importIntegration.generated.js";
+import { Integration2Document as INTEGRATION2 } from "../../graphql/operations/integration2.generated.js";
+import { SetInstanceApiKeysDocument as SET_INSTANCE_API_KEYS } from "../../graphql/operations/setInstanceApiKeys.generated.js";
+import { gqlRequest } from "../../graphql.js";
+import { uploadAvatar } from "../../utils/avatar.js";
 import {
   type ComponentDefinition,
   createComponentPackage,
   validateDefinition,
 } from "../component/index.js";
-import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
+import {
+  publishDefinition as publishComponentDefinition,
+  uploadConnectionIcons,
+  uploadFile,
+} from "../component/publish.js";
+import { seekPackageDistDirectory } from "../import.js";
 import { loadYaml } from "../serialize.js";
+import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
 
 const require = createRequire(import.meta.url);
@@ -62,63 +67,8 @@ export const importDefinition = async (
   integrationId?: string,
   replace?: boolean,
 ): Promise<ImportDefinitionResult> => {
-  const result = await gqlRequest<{
-    importIntegration: {
-      integration: Integration;
-      errors: Array<{
-        field: string;
-        messages: string[];
-      }>;
-    };
-  }>({
-    document: gql`
-      mutation importIntegration(
-        $definition: String!
-        $integrationId: ID
-        $replace: Boolean
-      ) {
-        importIntegration(
-          input: {
-            definition: $definition
-            integrationId: $integrationId
-            replace: $replace
-          }
-        ) {
-          integration {
-            id
-            flows {
-              nodes {
-                id
-                name
-              }
-            }
-            testConfigVariables(status: "pending") {
-              nodes {
-                id
-                authorizeUrl
-              }
-            }
-            systemInstance {
-              id
-              flowConfigs {
-                nodes {
-                  id
-                  flow {
-                    id
-                    name
-                  }
-                  apiKeys
-                }
-              }
-            }
-          }
-          errors {
-            field
-            messages
-          }
-        }
-      }
-    `,
+  const result = await gqlRequest({
+    document: IMPORT_INTEGRATION,
     variables: {
       definition,
       integrationId,
@@ -126,16 +76,24 @@ export const importDefinition = async (
     },
   });
 
-  const integration = result.importIntegration.integration;
+  const integration = result.importIntegration?.integration;
   if (!integration) {
     throw new Error("Failed to import integration");
   }
   return {
     integrationId: integration.id,
-    pendingAuthorizations: integration.testConfigVariables.nodes.map(
-      ({ id, authorizeUrl: url }) => ({ id, url }),
+    pendingAuthorizations: integration.testConfigVariables.nodes.flatMap(({ id, authorizeUrl }) =>
+      authorizeUrl ? [{ id, url: authorizeUrl }] : [],
     ),
-    systemInstance: integration.systemInstance,
+    systemInstance: {
+      ...integration.systemInstance,
+      flowConfigs: {
+        nodes: integration.systemInstance.flowConfigs.nodes.map((flowConfig) => ({
+          ...flowConfig,
+          apiKeys: flowConfig.apiKeys?.filter((key): key is string => key !== null) ?? [],
+        })),
+      },
+    },
   };
 };
 
@@ -144,21 +102,7 @@ const setIntegrationAvatar = async (integrationId: string, iconPath: string): Pr
     const avatarUrl = await uploadAvatar(integrationId, iconPath);
 
     await gqlRequest({
-      document: gql`
-        mutation commitAvatarUpload($integrationId: ID!, $avatarUrl: String!) {
-          updateIntegration(
-            input: { id: $integrationId, avatarUrl: $avatarUrl }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: COMMIT_AVATAR_UPLOAD2,
       variables: {
         integrationId,
         avatarUrl,
@@ -397,64 +341,15 @@ const setFlowTestApiKeys = async ({
   instanceId,
   flowConfigs,
 }: SetFlowTestApiKeysParams): Promise<void> => {
-  const result = await gqlRequest<{
-    updateInstance: {
-      instance: {
-        id: string;
-        flowConfigs: {
-          nodes: Array<{
-            id: string;
-            apiKeys: string[];
-            flow: {
-              id: string;
-            };
-          }>;
-        };
-      };
-      errors: Array<{
-        field: string;
-        messages: string[];
-      }>;
-    };
-  }>({
-    document: gql`
-      mutation setInstanceApiKeys(
-        $instanceId: ID!
-        $flowConfigs: [InputInstanceFlowConfig]
-      ) {
-        updateInstance(
-          input: {
-            id: $instanceId
-            flowConfigs: $flowConfigs
-            configMode: "INSTANCE"
-          }
-        ) {
-          instance {
-            id
-            flowConfigs {
-              nodes {
-                id
-                apiKeys
-                flow {
-                  id
-                }
-              }
-            }
-          }
-          errors {
-            field
-            messages
-          }
-        }
-      }
-    `,
+  const result = await gqlRequest({
+    document: SET_INSTANCE_API_KEYS,
     variables: {
       instanceId,
       flowConfigs,
     },
   });
 
-  if (result.updateInstance.errors?.length) {
+  if (result.updateInstance?.errors?.length) {
     throw new Error(
       `Failed to set test API keys: ${result.updateInstance.errors
         .map((e: { messages: string[] }) => e.messages.join(", "))
@@ -508,26 +403,13 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
 
 export const waitForCodeNativeComponentAvailable = async (
   componentKey: string,
-  versionNumber: string,
+  versionNumber: number,
   attemptNumber = 0,
   maximumAttempts = 10,
 ): Promise<boolean> => {
   // Wait until component becomes available
   const results = await gqlRequest({
-    document: gql`
-      query component($componentKey: String!, $versionNumber: Int!) {
-        components(
-          key: $componentKey
-          versionNumber: $versionNumber
-          public: false
-          includeComponentsForCodeNativeIntegrations: true
-        ) {
-          nodes {
-            id
-          }
-        }
-      }
-    `,
+    document: COMPONENT4,
     variables: {
       componentKey,
       versionNumber,
@@ -553,19 +435,15 @@ export const waitForCodeNativeComponentAvailable = async (
 
 export const getIntegrationDefinition = async (integrationId: string): Promise<string> => {
   const result = await gqlRequest({
-    document: gql`
-      query integration($integrationId: ID!) {
-        integration(id: $integrationId) {
-          definition
-        }
-      }
-    `,
+    document: INTEGRATION2,
     variables: { integrationId },
   });
   if (!result.integration) {
     throw new Error(`Integration not found: ${integrationId}`);
   }
-  return result.integration.definition;
+  const definition = result.integration.definition;
+  if (!definition) throw new Error(`Integration not found: ${integrationId}`);
+  return definition;
 };
 
 export const compareConfigVars = async (current: string, next: string): Promise<Array<string>> => {

@@ -1,0 +1,11 @@
+query logs($executionId: ID!) {
+  executionResult(id: $executionId) {
+    logs(orderBy: { field: TIMESTAMP, direction: ASC }) {
+      nodes {
+        timestamp
+        severity
+        message
+      }
+    }
+  }
+}

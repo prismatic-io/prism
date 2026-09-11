@@ -1,6 +1,10 @@
 import { Args } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import {
+  ListInstanceFlowConfigsDocument as LIST_INSTANCE_FLOW_CONFIGS,
+  type ListInstanceFlowConfigsQuery,
+} from "../../../graphql/instances/listInstanceFlowConfigs.generated.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
 import { ux } from "../../../utils/ux.js";
 
 export default class ListCommand extends PrismaticBaseCommand {
@@ -18,40 +22,21 @@ export default class ListCommand extends PrismaticBaseCommand {
       flags,
     } = await this.parse(ListCommand);
 
-    let flowConfigs: any[] = [];
+    let flowConfigs: InstanceFlowConfigNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = "";
 
     while (hasNextPage) {
-      const {
-        instance: {
-          flowConfigs: { nodes, pageInfo },
-        },
-      } = await gqlRequest({
-        document: gql`
-          query listInstanceFlowConfigs($id: ID!, $after: String) {
-            instance(id: $id) {
-              flowConfigs(after: $after) {
-                nodes {
-                  id
-                  flow {
-                    name
-                  }
-                  webhookUrl
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        `,
+      const response: ListInstanceFlowConfigsQuery = await gqlRequest({
+        document: LIST_INSTANCE_FLOW_CONFIGS,
         variables: {
           id: instance,
           after: cursor,
         },
       });
+      const {
+        flowConfigs: { nodes, pageInfo },
+      } = requireResource(response.instance, "instance");
       flowConfigs = [...flowConfigs, ...nodes];
       cursor = pageInfo.endCursor;
       hasNextPage = pageInfo.hasNextPage;
@@ -65,7 +50,7 @@ export default class ListCommand extends PrismaticBaseCommand {
           extended: true,
         },
         name: {
-          get: (row: any) => row.flow.name,
+          get: (row) => row.flow.name,
         },
         webhookUrl: {
           extended: true,
@@ -75,3 +60,7 @@ export default class ListCommand extends PrismaticBaseCommand {
     );
   }
 }
+
+type InstanceFlowConfigNode = NonNullable<
+  ListInstanceFlowConfigsQuery["instance"]
+>["flowConfigs"]["nodes"][number];
