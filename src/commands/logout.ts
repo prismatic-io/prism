@@ -1,7 +1,7 @@
 import { Flags } from "@oclif/core";
 import { logout } from "../auth.js";
 import { PrismaticBaseCommand } from "../baseCommand.js";
-import { deleteProfile, getActiveProfileName } from "../config.js";
+import { deleteProfile, readProfileSelection } from "../config.js";
 import { hasEnvironmentCredentials } from "../context.js";
 
 export default class LogoutCommand extends PrismaticBaseCommand {
@@ -20,14 +20,14 @@ export default class LogoutCommand extends PrismaticBaseCommand {
       flags: { browser },
     } = await this.parse(LogoutCommand);
 
-    const profileName = await getActiveProfileName();
+    const { configPath, name: profileName } = await readProfileSelection();
     const environmentCredentialsActive = hasEnvironmentCredentials();
 
     if (browser) {
       await logout();
     }
 
-    const result = await deleteProfile(profileName);
+    const result = await deleteProfile(profileName, configPath);
     if (!result.deleted) {
       const environmentHint = environmentCredentialsActive
         ? " Environment credentials remain active until you unset PRISM_ACCESS_TOKEN and PRISM_REFRESH_TOKEN."

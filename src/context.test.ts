@@ -145,6 +145,13 @@ describe("profile context", () => {
 
     expect(await getAuthContext()).toEqual({
       source: "profile",
+      configPath: process.env.PRISM_CONFIG_FILE,
+      profile: makeProfile({
+        accessToken: "profile-access",
+        refreshToken: "profile-refresh",
+        tenantId: "profile-tenant",
+        prismaticUrl: "https://staging.example.io",
+      }),
       profileName: "staging",
       url: "https://staging.example.io",
       accessToken: "profile-access",

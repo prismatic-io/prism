@@ -2,13 +2,14 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { print } from "graphql";
 import { URL } from "url";
 import { z } from "zod";
-import { getAccessToken } from "./auth.js";
-import { getPrismaticUrl } from "./context.js";
+import { getAuthenticatedContext } from "./auth.js";
+import type { AuthContext } from "./context.js";
 import { fetch } from "./utils/http.js";
 
 interface GQLRequest<TData, TVariables = Record<string, unknown>> {
   document: string | TypedDocumentNode<TData, TVariables>;
   variables?: TVariables;
+  authContext?: AuthContext;
 }
 
 interface GraphQLResponse<T> {
@@ -102,9 +103,10 @@ export const requireResource = <T>(value: T | null | undefined, name: string): T
 export const gqlRequest = async <T = unknown, TVariables = Record<string, unknown>>({
   document,
   variables,
+  authContext,
 }: GQLRequest<T, TVariables>): Promise<T> => {
-  const accessToken = await getAccessToken();
-  const url = new URL("/api", await getPrismaticUrl()).toString();
+  const { accessToken, url: endpoint } = await getAuthenticatedContext(authContext);
+  const url = new URL("/api", endpoint).toString();
 
   const query = typeof document === "string" ? document : print(document);
 

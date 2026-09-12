@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
 import inquirer from "inquirer";
+import { describe, expect, it, vi } from "vitest";
 import {
   Authenticate,
   createRequestParams,
@@ -8,26 +8,37 @@ import {
   selectTenant,
   type Tenant,
 } from "./auth.js";
-import { deleteProfile, readProfileSelection, writeActiveProfile } from "./config.js";
-import { getAuthContext } from "./context.js";
+import type { Profile } from "./config.js";
+import { deleteProfile, replaceCredentials, writeProfile } from "./config.js";
+import { getAuthContext, resolveProfileAuthContext } from "./context.js";
 import { gqlRequest } from "./graphql.js";
 import { fetch } from "./utils/http.js";
 
 vi.unmock("./auth.js");
 
-vi.mock(import("./config.js"), () => ({
+vi.mock(import("./config.js"), async (original) => ({
+  ...(await original()),
+  writeProfile: vi.fn(),
   deleteProfile: vi.fn(),
-  getActiveProfileName: vi.fn(),
-  readProfile: vi.fn(),
-  readProfileSelection: vi.fn(),
-  writeActiveProfile: vi.fn(),
+  replaceCredentials: vi.fn(() => Promise.resolve(true)),
 }));
 
 vi.mock(import("./context.js"), () => ({
   getAuthContext: vi.fn(),
+  resolveProfileAuthContext: vi.fn(),
   useProfileAuthContext: vi.fn(),
   getPrismaticUrl: vi.fn(() => Promise.resolve("https://auth.example.com")),
 }));
+
+const storedProfile: Profile = {
+  accessToken: "old-access",
+  refreshToken: "profile-refresh-token",
+  expiresIn: 3600,
+  scope: "openid",
+  tokenType: "Bearer",
+  prismaticUrl: "https://staging.example.com",
+  tenantId: "profile-tenant",
+};
 
 vi.mock(import("./graphql.js"), () => ({
   gql: (strings: TemplateStringsArray) => strings.join(""),
@@ -173,7 +184,7 @@ describe("getAccessToken", () => {
     expect(refreshRequest[1]?.body).toBe(
       "grant_type=refresh_token&client_id=client&refresh_token=env-refresh-token",
     );
-    expect(writeActiveProfile).not.toHaveBeenCalled();
+    expect(replaceCredentials).not.toHaveBeenCalled();
   });
 
   it("does not persist a session obtained from an environment refresh token", async () => {
@@ -199,11 +210,10 @@ describe("getAccessToken", () => {
 
     await expect(getAccessToken()).resolves.toBe("refreshed-access-token");
 
-    expect(readProfileSelection).not.toHaveBeenCalled();
     expect(fetchSpy.mock.calls[1][1]?.body).toBe(
       "grant_type=refresh_token&client_id=client&refresh_token=env-refresh-token&tenant_id=env-tenant",
     );
-    expect(writeActiveProfile).not.toHaveBeenCalled();
+    expect(replaceCredentials).not.toHaveBeenCalled();
   });
 
   it("returns a valid profile access token without refreshing it", async () => {
@@ -211,6 +221,8 @@ describe("getAccessToken", () => {
     const accessToken = tokenExpiringAt(Math.floor(Date.now() / 1000) + 600);
     vi.mocked(getAuthContext).mockResolvedValue({
       source: "profile",
+      configPath: "unused",
+      profile: storedProfile,
       profileName: "staging",
       url: "https://staging.example.com",
       accessToken,
@@ -221,12 +233,14 @@ describe("getAccessToken", () => {
     await expect(getAccessToken()).resolves.toBe(accessToken);
 
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(writeActiveProfile).not.toHaveBeenCalled();
+    expect(replaceCredentials).not.toHaveBeenCalled();
   });
 
   it("refreshes an expired profile token into the same profile", async () => {
     vi.mocked(getAuthContext).mockResolvedValue({
       source: "profile",
+      configPath: "unused",
+      profile: storedProfile,
       profileName: "staging",
       url: "https://staging.example.com",
       accessToken: tokenExpiringAt(0),
@@ -248,7 +262,9 @@ describe("getAccessToken", () => {
 
     await expect(getAccessToken()).resolves.toBe("refreshed-profile-token");
 
-    expect(writeActiveProfile).toHaveBeenCalledWith(
+    expect(replaceCredentials).toHaveBeenCalledWith(
+      "staging",
+      storedProfile,
       {
         accessToken: "refreshed-profile-token",
         expiresIn: 3600,
@@ -257,7 +273,7 @@ describe("getAccessToken", () => {
         tokenType: "Bearer",
         tenantId: "profile-tenant",
       },
-      "staging",
+      "unused",
     );
   });
 
@@ -272,8 +288,7 @@ describe("getAccessToken", () => {
     await expect(getAccessToken()).resolves.toBe("opaque-ci-token");
 
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(readProfileSelection).not.toHaveBeenCalled();
-    expect(writeActiveProfile).not.toHaveBeenCalled();
+    expect(replaceCredentials).not.toHaveBeenCalled();
   });
 });
 
@@ -287,6 +302,13 @@ describe("login", () => {
   };
 
   const mockLogin = (tenants: Tenant[], tenantId: string) => {
+    vi.mocked(resolveProfileAuthContext).mockResolvedValue({
+      source: "profile",
+      profileName: "staging",
+      profile: null,
+      configPath: "unused",
+      url: "https://auth.example.com",
+    });
     vi.spyOn(Authenticate.prototype, "login").mockResolvedValue(initialAuth);
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       Response.json({ domain: "auth.example.com", clientId: "client", audience: "audience" }),
@@ -309,11 +331,24 @@ describe("login", () => {
 
     await login({ url: false, profileName: "staging" });
 
-    expect(writeActiveProfile).toHaveBeenNthCalledWith(1, initialAuth, "staging");
-    expect(writeActiveProfile).toHaveBeenNthCalledWith(
-      2,
-      { ...initialAuth, tenantId: "tenant-1" },
+    expect(writeProfile).toHaveBeenNthCalledWith(
+      1,
       "staging",
+      {
+        ...initialAuth,
+        prismaticUrl: "https://auth.example.com",
+      },
+      "unused",
+    );
+    expect(writeProfile).toHaveBeenNthCalledWith(
+      2,
+      "staging",
+      {
+        ...initialAuth,
+        tenantId: "tenant-1",
+        prismaticUrl: "https://auth.example.com",
+      },
+      "unused",
     );
     expect(deleteProfile).not.toHaveBeenCalled();
   });
@@ -323,7 +358,7 @@ describe("login", () => {
 
     await login({ url: false, profileName: "staging" });
 
-    expect(deleteProfile).toHaveBeenCalledWith("staging");
+    expect(deleteProfile).toHaveBeenCalledWith("staging", "unused");
   });
 
   it("retains the profile when a suspended tenant is replaced with an active one", async () => {
@@ -337,7 +372,14 @@ describe("login", () => {
 
     await login({ url: false, profileName: "staging" });
 
-    expect(writeActiveProfile).toHaveBeenLastCalledWith(refreshedAuth, "staging");
+    expect(writeProfile).toHaveBeenLastCalledWith(
+      "staging",
+      {
+        ...refreshedAuth,
+        prismaticUrl: "https://auth.example.com",
+      },
+      "unused",
+    );
     expect(deleteProfile).not.toHaveBeenCalled();
   });
 });
