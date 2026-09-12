@@ -1,6 +1,12 @@
-import { fetchUserTenants, isLoggedIn, refresh, selectTenant } from "../../auth.js";
+import {
+  fetchUserTenants,
+  getAuthenticatedContext,
+  isLoggedIn,
+  refresh,
+  selectTenant,
+} from "../../auth.js";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { getActiveProfileName, readProfile, writeActiveProfile } from "../../config.js";
+import { getProfileAuthContext, saveProfileCredentials } from "../../context.js";
 import { whoAmI } from "../../utils/user/query.js";
 
 export default class LoginSwitchCommand extends PrismaticBaseCommand {
@@ -10,8 +16,8 @@ export default class LoginSwitchCommand extends PrismaticBaseCommand {
 
   async run() {
     await this.parse(LoginSwitchCommand);
-    const profileName = this.profileName ?? (await getActiveProfileName());
-    const config = await readProfile(profileName);
+    await getAuthenticatedContext();
+    const { profile: config } = await getProfileAuthContext();
     const loggedIn = (await isLoggedIn()) && config;
     if (!loggedIn) {
       this.log("Not logged in. Run 'prism login'.");
@@ -50,20 +56,14 @@ export default class LoginSwitchCommand extends PrismaticBaseCommand {
 
     if (!selectedTenantId || selectedTenantId === currentTenantId) {
       if (currentTenantId && !currentTenantSuspended) {
-        await writeActiveProfile(
-          {
-            ...config,
-            tenantId: currentTenantId,
-          },
-          profileName,
-        );
+        await saveProfileCredentials({ ...config, tenantId: currentTenantId });
         this.log(`Active tenant: ${currentTenant?.orgName} (${currentTenant?.url})`);
       }
       return;
     }
 
     this.log("\nSwitching tenant...");
-    await refresh(config.refreshToken, selectedTenantId, profileName);
+    await refresh(selectedTenantId);
 
     const selectedTenant = tenants.find((t) => t.tenantId === selectedTenantId);
     this.log(`Switched to: ${selectedTenant?.orgName} (${selectedTenant?.url})`);

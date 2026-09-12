@@ -1,7 +1,8 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { devNull } from "node:os";
 import path from "path";
 import { z } from "zod";
+import { getCommandContext } from "./command-context.js";
 import { DEFAULT_PRISMATIC_URL, getEnv } from "./env.js";
 import { fs } from "./fs.js";
 import { dumpYaml, loadYaml } from "./utils/serialize.js";
@@ -45,12 +46,6 @@ const withProfile = (file: ConfigFile | null, name: ProfileName, profile: Profil
   file
     ? { ...file, profiles: { ...file.profiles, [name]: profile } }
     : { version: CONFIG_VERSION, defaultProfile: name, profiles: { [name]: profile } };
-let selectedProfile: string | undefined;
-
-export const selectProfile = (name?: string): void => {
-  selectedProfile = name;
-};
-
 const isUnversionedConfig = (raw: unknown): raw is Record<string, unknown> =>
   typeof raw === "object" &&
   raw !== null &&
@@ -58,10 +53,10 @@ const isUnversionedConfig = (raw: unknown): raw is Record<string, unknown> =>
   !("profiles" in raw) &&
   "accessToken" in raw;
 
-const normalizeUnversionedConfig = (raw: Record<string, unknown>): unknown => ({
+const normalizeUnversionedConfig = (raw: Record<string, unknown>, legacyUrl: string): unknown => ({
   version: CONFIG_VERSION,
   defaultProfile: "default",
-  profiles: { default: { ...raw, prismaticUrl: resolveProfileUrl() } },
+  profiles: { default: { ...raw, prismaticUrl: legacyUrl } },
 });
 
 const getConfigFilePath = (): string => getEnv().PRISM_CONFIG_FILE;
@@ -87,14 +82,14 @@ const queueConfigUpdate = <T>(update: () => Promise<T>): Promise<T> => {
   return pending;
 };
 
-const writeConfigFile = async (configFile: ConfigFile) => {
+const writeConfigFile = async (configFile: ConfigFile, filePath = getConfigFilePath()) => {
   const result = configFileSchema.safeParse(configFile);
   if (!result.success) {
     throw new Error(
       `Prism could not save its configuration:\n${formatValidationError(result.error)}`,
     );
   }
-  const configFilePath = await resolveConfigPath(getConfigFilePath());
+  const configFilePath = await resolveConfigPath(filePath);
   if (configFilePath === devNull) return;
   await fs.mkdir(path.dirname(configFilePath), { recursive: true });
   const contents = dumpYaml(result.data, { skipInvalid: true });
@@ -108,8 +103,10 @@ const writeConfigFile = async (configFile: ConfigFile) => {
   }
 };
 
-export const readConfigFile = async (): Promise<ConfigFile | null> => {
-  const configFilePath = getConfigFilePath();
+export const readConfigFile = async (
+  configFilePath = getConfigFilePath(),
+): Promise<ConfigFile | null> => {
+  const legacyUrl = resolveProfileUrl();
   let contents: string;
   try {
     contents = await fs.readFile(configFilePath, { encoding: "utf-8" });
@@ -127,7 +124,7 @@ export const readConfigFile = async (): Promise<ConfigFile | null> => {
   }
   if (raw === null || raw === undefined) return null;
 
-  const candidate = isUnversionedConfig(raw) ? normalizeUnversionedConfig(raw) : raw;
+  const candidate = isUnversionedConfig(raw) ? normalizeUnversionedConfig(raw, legacyUrl) : raw;
   const result = configFileSchema.safeParse(candidate);
   if (!result.success) {
     throw new Error(
@@ -138,6 +135,7 @@ export const readConfigFile = async (): Promise<ConfigFile | null> => {
 };
 
 const resolveActiveName = (file: ConfigFile | null): ProfileName => {
+  const selectedProfile = getCommandContext()?.profileName;
   if (selectedProfile) return selectedProfile;
   const envProfile = getEnv().PRISM_PROFILE;
   if (envProfile) return envProfile;
@@ -149,36 +147,49 @@ export const getActiveProfileName = async (): Promise<ProfileName> =>
 
 export const readProfileSelection = async (
   name?: ProfileName,
-): Promise<{ name: ProfileName; profile: Profile | null }> => {
-  const file = await readConfigFile();
-  const profileName = name ?? resolveActiveName(file);
-  return { name: profileName, profile: file?.profiles[profileName] ?? null };
+): Promise<{ configPath: string; name: ProfileName; profile: Profile | null }> => {
+  const configPath = path.resolve(getConfigFilePath());
+  const selectedName = name ?? getCommandContext()?.profileName ?? getEnv().PRISM_PROFILE;
+  const file = await readConfigFile(configPath);
+  const profileName = selectedName ?? file?.defaultProfile ?? "default";
+  return {
+    configPath,
+    name: profileName,
+    profile: file && hasProfile(file.profiles, profileName) ? file.profiles[profileName] : null,
+  };
 };
 
 export const readProfile = async (name?: ProfileName): Promise<Profile | null> =>
   (await readProfileSelection(name)).profile;
 
-export const writeProfile = (name: ProfileName, profile: Profile) =>
+export const writeProfile = (
+  name: ProfileName,
+  profile: Profile,
+  configPath = getConfigFilePath(),
+) =>
   queueConfigUpdate(async () => {
-    await writeConfigFile(withProfile(await readConfigFile(), name, profile));
+    await writeConfigFile(withProfile(await readConfigFile(configPath), name, profile), configPath);
   });
 
-export const deleteProfile = (name: ProfileName) =>
+export const deleteProfile = (name: ProfileName, configPath = getConfigFilePath()) =>
   queueConfigUpdate(async () => {
-    const file = await readConfigFile();
+    const file = await readConfigFile(configPath);
     if (!file || !hasProfile(file.profiles, name)) return { deleted: false } as const;
 
     const { [name]: _removed, ...remaining } = file.profiles;
     const remainingNames = Object.keys(remaining);
 
     if (remainingNames.length === 0) {
-      await fs.unlink(getConfigFilePath());
+      await fs.unlink(configPath);
       return { deleted: true, isLast: true } as const;
     }
 
     const defaultChanged = file.defaultProfile === name;
     const defaultProfile = defaultChanged ? remainingNames[0] : file.defaultProfile;
-    await writeConfigFile({ version: CONFIG_VERSION, defaultProfile, profiles: remaining });
+    await writeConfigFile(
+      { version: CONFIG_VERSION, defaultProfile, profiles: remaining },
+      configPath,
+    );
     return { deleted: true, isLast: false, defaultChanged, defaultProfile } as const;
   });
 
@@ -211,4 +222,32 @@ export const writeActiveProfile = (config: Configuration, name?: ProfileName) =>
     const profileName = name ?? resolveActiveName(file);
     const prismaticUrl = file?.profiles[profileName]?.prismaticUrl ?? resolveProfileUrl();
     await writeConfigFile(withProfile(file, profileName, { ...config, prismaticUrl }));
+  });
+
+// Hash the schema-normalized profile so property order, unknown fields, and
+// omitted versus undefined optional values do not change the fingerprint.
+const profileFingerprint = (profile: Profile): string => {
+  const normalized = profileSchema.parse(profile);
+  const canonical = Object.fromEntries(
+    Object.entries(normalized).sort(([left], [right]) => left.localeCompare(right)),
+  );
+  return createHash("sha256").update(JSON.stringify(canonical)).digest("hex");
+};
+
+// Refresh only the session that supplied the credentials, within the mutation queue.
+export const replaceCredentials = (
+  name: ProfileName,
+  expected: Profile,
+  credentials: Configuration,
+  configPath = getConfigFilePath(),
+): Promise<boolean> =>
+  queueConfigUpdate(async () => {
+    const file = await readConfigFile(configPath);
+    const current = file && hasProfile(file.profiles, name) ? file.profiles[name] : null;
+    if (!current || profileFingerprint(current) !== profileFingerprint(expected)) return false;
+    await writeConfigFile(
+      withProfile(file, name, { ...credentials, prismaticUrl: expected.prismaticUrl }),
+      configPath,
+    );
+    return true;
   });

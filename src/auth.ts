@@ -5,8 +5,16 @@ import inquirer from "inquirer";
 import { jwtDecode } from "jwt-decode";
 import type { AddressInfo } from "net";
 import open from "open";
-import { deleteProfile, getActiveProfileName, writeActiveProfile } from "./config.js";
-import { type AuthContext, getAuthContext, getPrismaticUrl } from "./context.js";
+import { requireCommandContext } from "./command-context.js";
+import {
+  type AuthContext,
+  deleteAuthProfile,
+  getAuthContext,
+  getPrismaticUrl,
+  getProfileAuthContext,
+  saveProfileCredentials,
+  setAuthContext,
+} from "./context.js";
 import { AuthenticatedUserQueryDocument as AUTHENTICATED_USER_QUERY } from "./graphql/operations/AuthenticatedUserQuery.generated.js";
 import { ListUserTenantsDocument as LIST_USER_TENANTS } from "./graphql/operations/ListUserTenants.generated.js";
 import { gqlRequest } from "./graphql.js";
@@ -388,14 +396,14 @@ export const selectTenant = async (
   }
 };
 
-export const login = async (props?: { url: boolean; profileName?: string }) => {
-  const profileName = props?.profileName ?? (await getActiveProfileName());
-  const prismaticUrl = await getPrismaticUrl();
+export const login = async (props?: { url: boolean }) => {
+  const target = await getProfileAuthContext();
+  const { url: prismaticUrl } = target;
   const authOptions = await getAuthOptions(prismaticUrl);
   const auth = new Authenticate(authOptions);
 
   const initialAuth = await auth.login({ url: props?.url });
-  await writeActiveProfile(initialAuth, profileName);
+  await saveProfileCredentials(initialAuth, { replace: false });
 
   const tenants = await fetchUserTenants();
 
@@ -405,13 +413,7 @@ export const login = async (props?: { url: boolean; profileName?: string }) => {
   const initialTenantSuspended = initialTenant?.systemSuspended ?? false;
 
   if (!initialTenantSuspended && initialTenantId) {
-    await writeActiveProfile(
-      {
-        ...initialAuth,
-        tenantId: initialTenantId,
-      },
-      profileName,
-    );
+    await saveProfileCredentials({ ...initialAuth, tenantId: initialTenantId });
   }
 
   const activeTenants = tenants.filter((t) => !t.systemSuspended);
@@ -425,9 +427,9 @@ export const login = async (props?: { url: boolean; profileName?: string }) => {
 
   if (selectedTenantId) {
     const tenantAuth = await auth.refresh(initialAuth.refreshToken, selectedTenantId);
-    await writeActiveProfile(tenantAuth, profileName);
+    await saveProfileCredentials(tenantAuth);
   } else if (initialTenantSuspended) {
-    await deleteProfile(profileName);
+    await deleteAuthProfile();
   }
 
   return;
@@ -440,10 +442,11 @@ const refreshAuthentication = async (refreshToken: string, tenantId?: string, ur
   return auth.refresh(refreshToken, tenantId);
 };
 
-export const refresh = async (refreshToken: string, tenantId?: string, profileName?: string) => {
-  const selectedName = profileName ?? (await getActiveProfileName());
-  const response = await refreshAuthentication(refreshToken, tenantId, await getPrismaticUrl());
-  await writeActiveProfile(response, selectedName);
+export const refresh = async (tenantId?: string): Promise<Auth> => {
+  const target = await getProfileAuthContext();
+  if (!target.profile) throw new Error(`Profile "${target.profileName}" does not exist.`);
+  const response = await refreshAuthentication(target.profile.refreshToken, tenantId, target.url);
+  await saveProfileCredentials(response);
   return response;
 };
 
@@ -459,30 +462,41 @@ export const logout = async () => {
  * but will use the config file values if those are not set. This function will
  * also refresh the access token using the provided refresh token if possible.
  */
-export const getAccessToken = async (): Promise<string | undefined> => {
-  const { source, profileName, accessToken, refreshToken, tenantId, url } = await getAuthContext();
-
-  if (!accessToken && refreshToken) {
-    const refreshed = await refreshAuthentication(refreshToken, tenantId, url);
-    if (source === "profile") await writeActiveProfile(refreshed, profileName);
-    return refreshed.accessToken;
+const authenticate = async (): Promise<AuthContext> => {
+  const context = await getAuthContext();
+  const { accessToken, refreshToken, tenantId, url } = context;
+  if (!refreshToken) return context;
+  const needsRefresh =
+    !accessToken ||
+    jwtDecode<{ exp: number }>(accessToken).exp - Math.floor(Date.now() / 1000) < 5 * 60;
+  if (!needsRefresh) return context;
+  const refreshed = await refreshAuthentication(refreshToken, tenantId, url);
+  if (context.source === "profile") {
+    await saveProfileCredentials(refreshed);
+    return {
+      ...context,
+      ...refreshed,
+      tenantId: refreshed.tenantId,
+      profile: { ...refreshed, prismaticUrl: context.url },
+    };
   }
-
-  if (accessToken && refreshToken) {
-    const now = Math.floor(Date.now() / 1000);
-    const { exp } = jwtDecode<{ exp: number }>(accessToken);
-
-    if (exp - now < 5 * 60) {
-      const refreshed =
-        source === "environment"
-          ? await refreshAuthentication(refreshToken, tenantId, url)
-          : await refresh(refreshToken, tenantId, profileName);
-      return refreshed.accessToken;
-    }
-  }
-
-  return accessToken;
+  const updated = { ...context, ...refreshed, tenantId: refreshed.tenantId };
+  setAuthContext(updated);
+  return updated;
 };
+
+export const getAuthenticatedContext = (): Promise<AuthContext> => {
+  const command = requireCommandContext();
+  if (!command.authentication) {
+    command.authentication = authenticate().finally(() => {
+      command.authentication = undefined;
+    });
+  }
+  return command.authentication;
+};
+
+export const getAccessToken = async (): Promise<string | undefined> =>
+  (await getAuthenticatedContext()).accessToken;
 
 /**
  * Check if the user is currently logged in. Return true if so, and false otherwise.
@@ -508,12 +522,12 @@ export const isLoggedIn = async (): Promise<boolean> => {
  * Revoke ALL refresh tokens for the logged in user
  */
 export const revokeRefreshToken = async (): Promise<AuthContext["source"]> => {
-  const authContext = await getAuthContext();
   const loggedIn = await isLoggedIn();
   if (!loggedIn) {
     throw new Error("You are not currently logged in.");
   }
 
+  const authContext = await getAuthContext();
   await fetch(new URL("/auth/revoke", authContext.url).toString(), {
     method: "POST",
     headers: {
@@ -524,7 +538,7 @@ export const revokeRefreshToken = async (): Promise<AuthContext["source"]> => {
     }),
   });
   if (authContext.source === "profile" && authContext.profileName) {
-    await deleteProfile(authContext.profileName);
+    await deleteAuthProfile();
   }
   return authContext.source;
 };

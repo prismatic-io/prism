@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
 import inquirer from "inquirer";
+import { describe, expect, it, vi } from "vitest";
 import {
   Authenticate,
   createRequestParams,
@@ -8,26 +8,37 @@ import {
   selectTenant,
   type Tenant,
 } from "./auth.js";
-import { deleteProfile, readProfileSelection, writeActiveProfile } from "./config.js";
-import { getAuthContext } from "./context.js";
+import { createCommandContext, runWithCommandContext } from "./command-context.js";
+import type { Profile } from "./config.js";
+import {
+  deleteAuthProfile,
+  getAuthContext,
+  getProfileAuthContext,
+  saveProfileCredentials,
+} from "./context.js";
 import { gqlRequest } from "./graphql.js";
 import { fetch } from "./utils/http.js";
 
 vi.unmock("./auth.js");
 
-vi.mock(import("./config.js"), () => ({
-  deleteProfile: vi.fn(),
-  getActiveProfileName: vi.fn(),
-  readProfile: vi.fn(),
-  readProfileSelection: vi.fn(),
-  writeActiveProfile: vi.fn(),
-}));
-
 vi.mock(import("./context.js"), () => ({
   getAuthContext: vi.fn(),
-  useProfileAuthContext: vi.fn(),
+  getProfileAuthContext: vi.fn(),
+  saveProfileCredentials: vi.fn(),
+  deleteAuthProfile: vi.fn(),
+  setAuthContext: vi.fn(),
   getPrismaticUrl: vi.fn(() => Promise.resolve("https://auth.example.com")),
 }));
+
+const storedProfile: Profile = {
+  accessToken: "old-access",
+  refreshToken: "profile-refresh-token",
+  expiresIn: 3600,
+  scope: "openid",
+  tokenType: "Bearer",
+  prismaticUrl: "https://staging.example.com",
+  tenantId: "profile-tenant",
+};
 
 vi.mock(import("./graphql.js"), () => ({
   gql: (strings: TemplateStringsArray) => strings.join(""),
@@ -166,14 +177,16 @@ describe("getAccessToken", () => {
         }),
       );
 
-    await expect(getAccessToken()).resolves.toBe("refreshed-access-token");
+    await expect(runWithCommandContext(createCommandContext(), getAccessToken)).resolves.toBe(
+      "refreshed-access-token",
+    );
 
     const refreshRequest = fetchSpy.mock.calls[1];
     expect(refreshRequest[0].toString()).toBe("https://auth.example.com/oauth/token");
     expect(refreshRequest[1]?.body).toBe(
       "grant_type=refresh_token&client_id=client&refresh_token=env-refresh-token",
     );
-    expect(writeActiveProfile).not.toHaveBeenCalled();
+    expect(saveProfileCredentials).not.toHaveBeenCalled();
   });
 
   it("does not persist a session obtained from an environment refresh token", async () => {
@@ -197,13 +210,14 @@ describe("getAccessToken", () => {
         }),
       );
 
-    await expect(getAccessToken()).resolves.toBe("refreshed-access-token");
+    await expect(runWithCommandContext(createCommandContext(), getAccessToken)).resolves.toBe(
+      "refreshed-access-token",
+    );
 
-    expect(readProfileSelection).not.toHaveBeenCalled();
     expect(fetchSpy.mock.calls[1][1]?.body).toBe(
       "grant_type=refresh_token&client_id=client&refresh_token=env-refresh-token&tenant_id=env-tenant",
     );
-    expect(writeActiveProfile).not.toHaveBeenCalled();
+    expect(saveProfileCredentials).not.toHaveBeenCalled();
   });
 
   it("returns a valid profile access token without refreshing it", async () => {
@@ -211,6 +225,8 @@ describe("getAccessToken", () => {
     const accessToken = tokenExpiringAt(Math.floor(Date.now() / 1000) + 600);
     vi.mocked(getAuthContext).mockResolvedValue({
       source: "profile",
+      configPath: "unused",
+      profile: storedProfile,
       profileName: "staging",
       url: "https://staging.example.com",
       accessToken,
@@ -218,15 +234,19 @@ describe("getAccessToken", () => {
       tenantId: "profile-tenant",
     });
 
-    await expect(getAccessToken()).resolves.toBe(accessToken);
+    await expect(runWithCommandContext(createCommandContext(), getAccessToken)).resolves.toBe(
+      accessToken,
+    );
 
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(writeActiveProfile).not.toHaveBeenCalled();
+    expect(saveProfileCredentials).not.toHaveBeenCalled();
   });
 
   it("refreshes an expired profile token into the same profile", async () => {
     vi.mocked(getAuthContext).mockResolvedValue({
       source: "profile",
+      configPath: "unused",
+      profile: storedProfile,
       profileName: "staging",
       url: "https://staging.example.com",
       accessToken: tokenExpiringAt(0),
@@ -246,19 +266,18 @@ describe("getAccessToken", () => {
         }),
       );
 
-    await expect(getAccessToken()).resolves.toBe("refreshed-profile-token");
-
-    expect(writeActiveProfile).toHaveBeenCalledWith(
-      {
-        accessToken: "refreshed-profile-token",
-        expiresIn: 3600,
-        refreshToken: "profile-refresh-token",
-        scope: "openid",
-        tokenType: "Bearer",
-        tenantId: "profile-tenant",
-      },
-      "staging",
+    await expect(runWithCommandContext(createCommandContext(), getAccessToken)).resolves.toBe(
+      "refreshed-profile-token",
     );
+
+    expect(saveProfileCredentials).toHaveBeenCalledWith({
+      accessToken: "refreshed-profile-token",
+      expiresIn: 3600,
+      refreshToken: "profile-refresh-token",
+      scope: "openid",
+      tokenType: "Bearer",
+      tenantId: "profile-tenant",
+    });
   });
 
   it("returns an environment access token without borrowing a profile refresh token", async () => {
@@ -269,11 +288,12 @@ describe("getAccessToken", () => {
       accessToken: "opaque-ci-token",
     });
 
-    await expect(getAccessToken()).resolves.toBe("opaque-ci-token");
+    await expect(runWithCommandContext(createCommandContext(), getAccessToken)).resolves.toBe(
+      "opaque-ci-token",
+    );
 
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(readProfileSelection).not.toHaveBeenCalled();
-    expect(writeActiveProfile).not.toHaveBeenCalled();
+    expect(saveProfileCredentials).not.toHaveBeenCalled();
   });
 });
 
@@ -287,6 +307,13 @@ describe("login", () => {
   };
 
   const mockLogin = (tenants: Tenant[], tenantId: string) => {
+    vi.mocked(getProfileAuthContext).mockResolvedValue({
+      source: "profile",
+      profileName: "staging",
+      profile: null,
+      configPath: "unused",
+      url: "https://auth.example.com",
+    });
     vi.spyOn(Authenticate.prototype, "login").mockResolvedValue(initialAuth);
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       Response.json({ domain: "auth.example.com", clientId: "client", audience: "audience" }),
@@ -307,23 +334,26 @@ describe("login", () => {
   it("writes every authentication update to the selected profile", async () => {
     mockLogin([makeTenant("tenant-1")], "tenant-1");
 
-    await login({ url: false, profileName: "staging" });
-
-    expect(writeActiveProfile).toHaveBeenNthCalledWith(1, initialAuth, "staging");
-    expect(writeActiveProfile).toHaveBeenNthCalledWith(
-      2,
-      { ...initialAuth, tenantId: "tenant-1" },
-      "staging",
+    await runWithCommandContext(createCommandContext({ profileOnly: true }), () =>
+      login({ url: false }),
     );
-    expect(deleteProfile).not.toHaveBeenCalled();
+
+    expect(saveProfileCredentials).toHaveBeenNthCalledWith(1, initialAuth, { replace: false });
+    expect(saveProfileCredentials).toHaveBeenNthCalledWith(2, {
+      ...initialAuth,
+      tenantId: "tenant-1",
+    });
+    expect(deleteAuthProfile).not.toHaveBeenCalled();
   });
 
   it("deletes the selected profile when its tenant is suspended and none are active", async () => {
     mockLogin([makeTenant("suspended", { systemSuspended: true })], "suspended");
 
-    await login({ url: false, profileName: "staging" });
+    await runWithCommandContext(createCommandContext({ profileOnly: true }), () =>
+      login({ url: false }),
+    );
 
-    expect(deleteProfile).toHaveBeenCalledWith("staging");
+    expect(deleteAuthProfile).toHaveBeenCalledOnce();
   });
 
   it("retains the profile when a suspended tenant is replaced with an active one", async () => {
@@ -335,10 +365,12 @@ describe("login", () => {
     vi.mocked(inquirer.prompt).mockResolvedValueOnce({ tenantId: "active" });
     vi.spyOn(Authenticate.prototype, "refresh").mockResolvedValueOnce(refreshedAuth);
 
-    await login({ url: false, profileName: "staging" });
+    await runWithCommandContext(createCommandContext({ profileOnly: true }), () =>
+      login({ url: false }),
+    );
 
-    expect(writeActiveProfile).toHaveBeenLastCalledWith(refreshedAuth, "staging");
-    expect(deleteProfile).not.toHaveBeenCalled();
+    expect(saveProfileCredentials).toHaveBeenLastCalledWith(refreshedAuth);
+    expect(deleteAuthProfile).not.toHaveBeenCalled();
   });
 });
 
