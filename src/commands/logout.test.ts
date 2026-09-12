@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { logout } from "../auth.js";
-import { type Profile, readConfigFile, selectProfile, writeProfile } from "../config.js";
+import { type Profile, readConfigFile, writeProfile } from "../config.js";
 import LogoutCommand from "./logout.js";
 
 const profile: Profile = {
@@ -29,7 +29,6 @@ describe("logout", () => {
     configPath = path.join(tmpDir, "config.yml");
     vi.stubEnv("PRISM_CONFIG_FILE", configPath);
     vi.stubEnv("PRISM_PROFILE", "");
-    selectProfile(undefined);
   });
 
   afterEach(async () => {

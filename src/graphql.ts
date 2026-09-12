@@ -2,8 +2,7 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { print } from "graphql";
 import { URL } from "url";
 import { z } from "zod";
-import { getAccessToken } from "./auth.js";
-import { getPrismaticUrl } from "./context.js";
+import { getAuthenticatedContext } from "./auth.js";
 import { fetch } from "./utils/http.js";
 
 interface GQLRequest<TData, TVariables = Record<string, unknown>> {
@@ -103,8 +102,8 @@ export const gqlRequest = async <T = unknown, TVariables = Record<string, unknow
   document,
   variables,
 }: GQLRequest<T, TVariables>): Promise<T> => {
-  const accessToken = await getAccessToken();
-  const url = new URL("/api", await getPrismaticUrl()).toString();
+  const { accessToken, url: endpoint } = await getAuthenticatedContext();
+  const url = new URL("/api", endpoint).toString();
 
   const query = typeof document === "string" ? document : print(document);
 

@@ -1,7 +1,6 @@
 import { Command, Flags, type Interfaces } from "@oclif/core";
 import type { z } from "zod";
-import { selectProfile } from "./config.js";
-import { useDefaultAuthContext, useProfileAuthContext } from "./context.js";
+import { createCommandContext, runWithCommandContext } from "./command-context.js";
 import { validateFlags } from "./utils/validation.js";
 
 export abstract class PrismaticBaseCommand extends Command {
@@ -32,7 +31,11 @@ export abstract class PrismaticBaseCommand extends Command {
   };
 
   protected authContext: "default" | "profile" = "default";
-  protected profileName?: string;
+  private readonly invocation = createCommandContext();
+
+  protected override _run<T>(): Promise<T> {
+    return runWithCommandContext(this.invocation, () => super._run<T>());
+  }
 
   protected async parse<
     CommandFlags extends Record<string, unknown>,
@@ -43,13 +46,8 @@ export abstract class PrismaticBaseCommand extends Command {
     argv?: string[],
   ): Promise<Interfaces.ParserOutput<CommandFlags, BaseFlags, CommandArgs>> {
     const result = await super.parse(options, argv);
-    this.profileName = result.flags.profile as string | undefined;
-    selectProfile(this.profileName);
-    if (this.authContext === "profile") {
-      useProfileAuthContext();
-    } else {
-      useDefaultAuthContext();
-    }
+    this.invocation.profileName = result.flags.profile as string | undefined;
+    this.invocation.profileOnly = this.authContext === "profile";
     return result;
   }
 

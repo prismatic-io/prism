@@ -23,7 +23,7 @@ export default class WhoAmICommand extends PrismaticBaseCommand {
     }
     this.log("Endpoint URL:", authContext.url);
     this.log("Authentication:", authContext.source === "environment" ? "Environment" : "Profile");
-    if (authContext.profileName) {
+    if (authContext.source === "profile") {
       this.log("Profile:", authContext.profileName);
     }
   }

@@ -1,7 +1,7 @@
 import { Flags } from "@oclif/core";
 import { isLoggedIn, login } from "../../auth.js";
 import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { getActiveProfileName } from "../../config.js";
+import { getProfileAuthContext } from "../../context.js";
 import { ux } from "../../utils/ux.js";
 
 export default class LoginCommand extends PrismaticBaseCommand {
@@ -27,7 +27,7 @@ export default class LoginCommand extends PrismaticBaseCommand {
       flags: { force, url },
     } = await this.parse(LoginCommand);
 
-    const profileName = await getActiveProfileName();
+    const { profileName } = await getProfileAuthContext();
 
     if (!force && (await isLoggedIn())) {
       this.log(`Already logged in to '${profileName}'.`);
@@ -38,7 +38,7 @@ export default class LoginCommand extends PrismaticBaseCommand {
       await ux.anykey("Press any key to open prismatic.io in your default browser");
     }
 
-    await login({ url, profileName });
+    await login({ url });
     this.log(`Logged in to '${profileName}'.`);
   }
 }
