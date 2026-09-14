@@ -1,6 +1,8 @@
 import inquirer from "inquirer";
 import type { GetExecutionLogsQuery } from "../../graphql/executions/getExecutionLogs.generated.js";
 import GET_EXECUTION_LOGS from "../../graphql/executions/getExecutionLogs.graphql";
+import type { GetExecutionSectionsQuery } from "../../graphql/executions/getExecutionSections.generated.js";
+import GET_EXECUTION_SECTIONS from "../../graphql/executions/getExecutionSections.graphql";
 import type { GetExecutionStepResultsQuery } from "../../graphql/executions/getExecutionStepResults.generated.js";
 import GET_EXECUTION_STEP_RESULTS from "../../graphql/executions/getExecutionStepResults.graphql";
 import type { IsCniExecutionCompleteQuery } from "../../graphql/executions/isCniExecutionComplete.generated.js";
@@ -48,6 +50,7 @@ export interface LogNode {
   timestamp: string;
   severity: string;
   message: string;
+  sectionId?: string | null;
 }
 
 export interface FetchLogsResult {
@@ -62,6 +65,16 @@ export async function getExecutionLogs(executionId: string, nextCursor?: string)
     variables: {
       executionId,
       nextCursor,
+    },
+  });
+}
+
+export async function getExecutionSections(executionId: string, sectionIds: string[]) {
+  return await gqlRequest<GetExecutionSectionsQuery>({
+    document: GET_EXECUTION_SECTIONS,
+    variables: {
+      executionId,
+      sectionIds,
     },
   });
 }

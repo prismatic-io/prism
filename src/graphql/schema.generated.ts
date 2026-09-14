@@ -1185,6 +1185,21 @@ export type ExecutionInvokedByInput = {
   startedAt: Scalars["DateTime"]["input"];
 };
 
+/** Allows specifying which field and direction to order by. */
+export type ExecutionSectionOrder = {
+  /** The direction to order by. */
+  direction: OrderDirection;
+  /** The field to order by. */
+  field: ExecutionSectionOrderField;
+};
+
+/** Represents the fields by which collections of the related type may be ordered. */
+export enum ExecutionSectionOrderField {
+  EndedAt = "ENDED_AT",
+  Label = "LABEL",
+  StartedAt = "STARTED_AT",
+}
+
 export enum ExecutionStatus {
   Error = "ERROR",
   Pending = "PENDING",
