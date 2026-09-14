@@ -14,6 +14,7 @@ const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>>
   dataSources: true,
   display: true,
   documentationUrl: true,
+  hasConfigurationInit: true,
   key: true,
   public: true,
   triggers: true,

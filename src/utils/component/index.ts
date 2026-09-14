@@ -17,6 +17,11 @@ type LegacyDefinition = {
   };
 };
 
+/** Keys newer Spectral versions emit that the pinned type does not yet declare. */
+type ForwardDefinition = {
+  hasConfigurationInit?: boolean;
+};
+
 /**
  * Superset of component definitions built from our current latest Spectral
  * definitions as well as legacy backwards compat for deprecated features.
@@ -25,7 +30,8 @@ type LegacyDefinition = {
  */
 export type ComponentDefinition = Omit<ComponentDefinitionTemplate, "hooks"> &
   Pick<ComponentDefinitionTemplate, "documentationUrl"> &
-  LegacyDefinition;
+  LegacyDefinition &
+  ForwardDefinition;
 
 interface ComponentEntrypoint {
   default: ComponentDefinition;
