@@ -440,6 +440,8 @@ export type ComponentDefinitionInput = {
   documentationUrl?: InputMaybe<Scalars["String"]["input"]>;
   /** Specifies whether the Component is for a Code Native Integration. */
   forCodeNativeIntegration?: InputMaybe<Scalars["Boolean"]["input"]>;
+  /** Whether this Component defines a configuration init function. */
+  hasConfigurationInit?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** A string that uniquely identifies the Component. */
   key: Scalars["String"]["input"];
   /** Specifies whether the Component is publicly available or whether it's private to the Organization. */
@@ -806,6 +808,7 @@ export type CreateInstanceInput = {
   configMode?: InputMaybe<Scalars["String"]["input"]>;
   /** Config variable values that are associated with the Instance. */
   configVariables?: InputMaybe<Array<InputMaybe<InputInstanceConfigVariable>>>;
+  configuration?: InputMaybe<Scalars["String"]["input"]>;
   /** The Customer for which the Instance is deployed. */
   customer: Scalars["ID"]["input"];
   /** Additional notes about the Instance. */
@@ -1386,6 +1389,7 @@ export enum EventOrderField {
   Integration = "INTEGRATION",
   LogType = "LOG_TYPE",
   Message = "MESSAGE",
+  OccurredAt = "OCCURRED_AT",
   Severity = "SEVERITY",
   Timestamp = "TIMESTAMP",
 }
@@ -1476,6 +1480,21 @@ export enum ExecutionRunResultType {
   PolledNoChanges = "POLLED_NO_CHANGES",
 }
 
+/** Allows specifying which field and direction to order by. */
+export type ExecutionSectionOrder = {
+  /** The direction to order by. */
+  direction: OrderDirection;
+  /** The field to order by. */
+  field: ExecutionSectionOrderField;
+};
+
+/** Represents the fields by which collections of the related type may be ordered. */
+export enum ExecutionSectionOrderField {
+  EndedAt = "ENDED_AT",
+  Label = "LABEL",
+  StartedAt = "STARTED_AT",
+}
+
 export enum ExecutionStatus {
   Canceled = "CANCELED",
   Canceling = "CANCELING",
@@ -1542,6 +1561,13 @@ export type FetchDataSourceContentInput = {
   inputs?: InputMaybe<Array<InputMaybe<InputExpression>>>;
 };
 
+export enum FilterFieldDataType {
+  Boolean = "BOOLEAN",
+  Datetime = "DATETIME",
+  Number = "NUMBER",
+  String = "STRING",
+}
+
 export enum FilterOperator {
   Contains = "CONTAINS",
   Eq = "EQ",
@@ -1550,6 +1576,7 @@ export enum FilterOperator {
   IsNull = "IS_NULL",
   Lte = "LTE",
   NotEq = "NOT_EQ",
+  StartsWith = "STARTS_WITH",
 }
 
 export type ForkIntegrationInput = {
@@ -1575,6 +1602,10 @@ export type ImportIntegrationInput = {
   customer?: InputMaybe<Scalars["ID"]["input"]>;
   /** The YAML serialized definition of the Integration to import. */
   definition: Scalars["String"]["input"];
+  /** The ETag previously read from this record. The save fails if the record has changed since it was read. */
+  expectedETag?: InputMaybe<Scalars["String"]["input"]>;
+  /** When true, the save is applied even if the record has changed since expectedETag was read. */
+  ignoreConflictingETag?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The ID of the Integration being imported. */
   integrationId?: InputMaybe<Scalars["ID"]["input"]>;
   /** Allows for replacing an existing low-code integration or CNI with one of the opposite type. */
@@ -1608,12 +1639,23 @@ export type ImportWorkflowInput = {
   definition?: InputMaybe<Scalars["String"]["input"]>;
   /** The description of the Workflow. */
   description?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ETag previously read from this record. The save fails if the record has changed since it was read. */
+  expectedETag?: InputMaybe<Scalars["String"]["input"]>;
   /** An external ID to set on the Workflow. */
   externalId?: InputMaybe<Scalars["String"]["input"]>;
   /** The ID of the Integration to mutate. */
   id?: InputMaybe<Scalars["ID"]["input"]>;
+  /** When true, the save is applied even if the record has changed since expectedETag was read. */
+  ignoreConflictingETag?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The name of the Workflow. */
   name?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type InitializeInstanceConfigurationInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ID of the Instance to mutate. */
+  id?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
 /** Represents a specific value of a CredentialField. */
@@ -2068,6 +2110,17 @@ export enum IntegrationVariantType {
   Workflow = "WORKFLOW",
 }
 
+export type InvokeServerFunctionInput = {
+  /** A unique identifier for the client performing the mutation. */
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ID of the Instance to mutate. */
+  id?: InputMaybe<Scalars["ID"]["input"]>;
+  /** The JSON inputs for the Server Function. */
+  inputs?: InputMaybe<Scalars["String"]["input"]>;
+  /** The key of the Server Function from the Instance's Integration version to invoke. */
+  key?: InputMaybe<Scalars["String"]["input"]>;
+};
+
 /** Allows specifying which field and direction to order by. */
 export type LogOrder = {
   /** The direction to order by. */
@@ -2113,6 +2166,7 @@ export enum LogType {
   Execution = "EXECUTION",
   Management = "MANAGEMENT",
   RateLimit = "RATE_LIMIT",
+  ServerFunction = "SERVER_FUNCTION",
 }
 
 export enum LogicalOperator {
@@ -2255,6 +2309,8 @@ export type PublishComponentInput = {
   dataSources?: InputMaybe<Array<InputMaybe<DataSourceDefinitionInput>>>;
   /** The Component definition. */
   definition: ComponentDefinitionInput;
+  /** A list of Component Server Functions. */
+  serverFunctions?: InputMaybe<Array<InputMaybe<ServerFunctionDefinitionInput>>>;
   /** A list of Component Triggers. */
   triggers?: InputMaybe<Array<InputMaybe<TriggerDefinitionInput>>>;
 };
@@ -2489,6 +2545,32 @@ export enum ScopedConfigVariableVariableScope {
   Org = "ORG",
   /** User */
   User = "USER",
+}
+
+/** Represents a collection of data that defines a Component Server Function. */
+export type ServerFunctionDefinitionInput = {
+  /** Specifies how the Server Function is displayed. */
+  display: ActionDisplayDefinition;
+  /** The JSON Schema describing the Server Function inputs. */
+  inputSchema: Scalars["JSONString"]["input"];
+  /** A string which uniquely identifies the Server Function in the context of the Component. */
+  key: Scalars["String"]["input"];
+  /** The JSON Schema describing the Server Function result. */
+  outputSchema: Scalars["JSONString"]["input"];
+};
+
+/** Allows specifying which field and direction to order by. */
+export type ServerFunctionOrder = {
+  /** The direction to order by. */
+  direction: OrderDirection;
+  /** The field to order by. */
+  field: ServerFunctionOrderField;
+};
+
+/** Represents the fields by which collections of the related type may be ordered. */
+export enum ServerFunctionOrderField {
+  Key = "KEY",
+  Label = "LABEL",
 }
 
 /** Allows specifying which field and direction to order by. */
@@ -2919,6 +3001,7 @@ export type UpdateInstanceInput = {
   configMode?: InputMaybe<Scalars["String"]["input"]>;
   /** The Instance with which the Config Variable is associated. */
   configVariables?: InputMaybe<Array<InputMaybe<InputInstanceConfigVariable>>>;
+  configuration?: InputMaybe<Scalars["String"]["input"]>;
   /** Additional notes about the Instance. */
   description?: InputMaybe<Scalars["String"]["input"]>;
   /** Specifies whether the Instance is currently enabled and in an executable state. */
@@ -3002,10 +3085,14 @@ export type UpdateIntegrationInput = {
   endpointConfigTestHeaders?: InputMaybe<Scalars["String"]["input"]>;
   /** Data payload for testing the endpoint configuration for this Integration. */
   endpointConfigTestPayload?: InputMaybe<Scalars["String"]["input"]>;
+  /** The ETag previously read from this record. The save fails if the record has changed since it was read. */
+  expectedETag?: InputMaybe<Scalars["String"]["input"]>;
   /** The Integration of which the IntegrationFlow is a part. */
   flows?: InputMaybe<Array<InputMaybe<InputIntegrationFlow>>>;
   /** The ID of the Integration to mutate. */
   id?: InputMaybe<Scalars["ID"]["input"]>;
+  /** When true, the save is applied even if the record has changed since expectedETag was read. */
+  ignoreConflictingETag?: InputMaybe<Scalars["Boolean"]["input"]>;
   /** The labels that are associated with the object. */
   labels?: InputMaybe<Array<InputMaybe<Scalars["String"]["input"]>>>;
   /** A JSON string that represents metadata for the Integration. */

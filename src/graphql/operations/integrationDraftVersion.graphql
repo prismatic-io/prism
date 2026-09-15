@@ -1,0 +1,6 @@
+query integrationDraftVersion($integrationId: ID!) {
+  integration(id: $integrationId) {
+    id
+    versionNumber
+  }
+}
