@@ -4,6 +4,12 @@ import { CommandFailedError, ValidationError } from "../../errors.js";
 import { exists } from "../../fs.js";
 import { warningsOutput } from "../../output.js";
 import {
+  resolveWaitOptions,
+  waitForComponentVersion,
+  waitOptions,
+  waitTimeout,
+} from "../../utils/availability.js";
+import {
   compareConfigVars,
   extractYAMLFromPath,
   getIntegrationDefinition,
@@ -12,6 +18,7 @@ import {
   loadCodeNativeIntegrationEntryPoint,
 } from "../../utils/integration/import.js";
 import { openIntegration } from "../../utils/integration/open.js";
+import { startAction, stopAction } from "../../utils/progress.js";
 import { confirm as confirmPrompt } from "../../utils/prompts.js";
 
 export default Cli.command({
@@ -51,6 +58,10 @@ export default Cli.command({
       .boolean()
       .default(true)
       .describe("Interactively confirm the import when using --replace"),
+    ...waitOptions({
+      until: "the imported Code Native Integration is ready to run",
+      otherwise: "the definition is imported",
+    }),
   }),
   async run(context) {
     const {
@@ -64,6 +75,7 @@ export default Cli.command({
         confirm,
       },
     } = context;
+    const wait = resolveWaitOptions(context.options);
 
     if (path && !(await exists(path))) {
       throw new ValidationError({
@@ -127,31 +139,45 @@ There will be no way to restore the existing draft. If you wish to save it, eith
       }
     }
 
-    const integrationImportId = path
-      ? // A path was specified, so assume we're importing a YAML Integration.
-        await importYamlIntegration(path, integrationId, iconPath, replace)
-      : // No path was specified, so assume the current directory is a Code Native Integration and import it.
-        await importCodeNativeIntegration(integrationId, replace, testApiKey);
+    const { integrationId: integrationImportId, componentId } = path
+      ? {
+          integrationId: await importYamlIntegration(path, integrationId, iconPath, replace),
+          componentId: undefined,
+        }
+      : await importCodeNativeIntegration(integrationId, replace, testApiKey);
 
     writeCommandStatus(integrationImportId);
 
     if (open) {
       await openIntegration(integrationImportId);
     }
-    return context.ok(
-      { integrationId: integrationImportId },
-      {
-        cta: {
-          commands: [
-            {
-              command: "integrations flows list",
-              description: "Inspect the imported integration",
-              args: { integration: integrationImportId },
-            },
-          ],
+
+    const cta = {
+      commands: [
+        {
+          command: "integrations flows list",
+          description: "Inspect the imported integration",
+          args: { integration: integrationImportId },
         },
-      },
-    );
+      ],
+    };
+
+    if (componentId && wait) {
+      startAction("Waiting for the Code Native Integration package to finish processing");
+      const available = await waitForComponentVersion(componentId, wait);
+      if (!available) {
+        stopAction("timed out");
+        return context.error({
+          ...waitTimeout(
+            `The integration was imported but its package is still processing after ${wait.timeoutSeconds} seconds. It can run once processing finishes.`,
+          ),
+          cta,
+        });
+      }
+      stopAction();
+    }
+
+    return context.ok({ integrationId: integrationImportId }, { cta });
   },
   alias: { replace: "r", open: "o", integrationId: "i", path: "p" },
 });

@@ -4,6 +4,13 @@ import { writeCommandStatus } from "../../command.js";
 import { getWorkingDirectory, withWorkingDirectory } from "../../command-context.js";
 import { warningsOutput } from "../../output.js";
 import {
+  publishWaitDescription,
+  resolveWaitOptions,
+  waitForComponentVersion,
+  waitOptions,
+  waitTimeout,
+} from "../../utils/availability.js";
+import {
   createComponentPackage,
   createSourceCodePackage,
   loadEntrypoint,
@@ -17,6 +24,7 @@ import {
   uploadFile,
 } from "../../utils/component/publish.js";
 import { getPackageEntrypointDirectory } from "../../utils/import.js";
+import { startAction, stopAction } from "../../utils/progress.js";
 import { confirm as confirmPrompt } from "../../utils/prompts.js";
 import { whoAmI } from "../../utils/user/query.js";
 
@@ -24,9 +32,10 @@ export default Cli.command({
   output: z.union([
     z.object({
       ...warningsOutput,
-      submitted: z.literal(true),
+      componentId: z.string(),
       label: z.string(),
       versionNumber: z.number(),
+      available: z.boolean(),
     }),
     z.object({ success: z.literal(true), messages: z.array(z.string()), ...warningsOutput }),
   ]),
@@ -67,6 +76,7 @@ export default Cli.command({
       .boolean()
       .default(false)
       .describe("Include source code in the component publish"),
+    ...waitOptions(publishWaitDescription),
   }),
   async run(context) {
     const {
@@ -83,6 +93,7 @@ export default Cli.command({
         "include-source": includeSource,
       },
     } = context;
+    const wait = resolveWaitOptions(context.options);
 
     const me = await whoAmI();
     const customer = flagCustomer ?? me.customer?.id;
@@ -134,6 +145,7 @@ export default Cli.command({
       }
 
       const {
+        componentId,
         iconUploadUrl,
         packageUploadUrl,
         sourceUploadUrl,
@@ -161,25 +173,40 @@ export default Cli.command({
       await uploadConnectionIcons(definition, connectionIconUploadUrls);
 
       const {
+        key,
         display: { label },
       } = definition;
-      // Tell user that their publish was successful and can use components list to view status
-      writeCommandStatus(
-        `Successfully submitted ${label} (v${versionNumber})! The publish should finish processing shortly.`,
-      );
-      return context.ok(
-        { submitted: true, label, versionNumber },
-        {
-          cta: {
-            commands: [
-              {
-                command: "components list",
-                description: "Check component publication status",
-              },
-            ],
+      const cta = {
+        commands: [
+          {
+            command: "components list",
+            description: "Check whether the new version has finished processing",
+            options: { search: key },
           },
-        },
-      );
+        ],
+      };
+
+      if (!wait) {
+        writeCommandStatus(
+          `Successfully submitted ${label} (v${versionNumber})! The publish should finish processing shortly.`,
+        );
+        return context.ok({ componentId, label, versionNumber, available: false }, { cta });
+      }
+
+      startAction(`Waiting for ${label} (v${versionNumber}) to become available`);
+      const available = await waitForComponentVersion(componentId, wait);
+      if (!available) {
+        stopAction("timed out");
+        return context.error({
+          ...waitTimeout(
+            `${label} (v${versionNumber}) was published and is still processing after ${wait.timeoutSeconds} seconds.`,
+          ),
+          cta,
+        });
+      }
+      stopAction();
+      writeCommandStatus(`Successfully published ${label} (v${versionNumber})!`);
+      return context.ok({ componentId, label, versionNumber, available: true }, { cta });
     });
   },
   alias: { comment: "c" },

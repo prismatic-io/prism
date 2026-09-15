@@ -82,6 +82,7 @@ export const publishDefinition = async (
     };
   } = {},
 ): Promise<{
+  componentId: string;
   iconUploadUrl: string;
   packageUploadUrl: string;
   sourceUploadUrl?: string;
@@ -160,7 +161,7 @@ export const publishDefinition = async (
   if (!iconUploadUrl || !packageUploadUrl || !component) {
     throw new Error("Component publish returned incomplete upload information");
   }
-  const { versionNumber } = component;
+  const { id: componentId, versionNumber } = component;
 
   const uploadUrls: Record<string, { iconUploadUrl?: string; avatarIconUploadUrl?: string }> = {};
 
@@ -186,6 +187,7 @@ export const publishDefinition = async (
   });
 
   return {
+    componentId,
     iconUploadUrl,
     packageUploadUrl,
     sourceUploadUrl: sourceUploadUrl ?? undefined,
