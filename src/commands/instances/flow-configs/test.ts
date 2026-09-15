@@ -1,8 +1,14 @@
 import { Args, Flags } from "@oclif/core";
 import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { gql, gqlRequest } from "../../../graphql.js";
-import { type LogNode, SectionLabelResolver } from "../../../utils/integration/flows.js";
 import { ux } from "../../../utils/ux.js";
+
+interface LogNode {
+  [index: string]: unknown;
+  timestamp: string;
+  severity: string;
+  message: string;
+}
 
 interface FetchLogsResult {
   logs: LogNode[];
@@ -88,19 +94,15 @@ export default class TestCommand extends PrismaticBaseCommand {
     const { flags } = await this.parse(TestCommand);
 
     let nextCursor: string | undefined;
-    const sectionLabels = new SectionLabelResolver(executionId);
-
     while (true) {
       await ux.wait(500);
 
-      const result = await this.fetchLogs(executionId, nextCursor);
+      const result: any = await this.fetchLogs(executionId, nextCursor);
       if (result === undefined) continue;
 
       const { logs, cursor, executionComplete } = result;
 
       nextCursor = cursor;
-
-      await sectionLabels.resolve(logs);
 
       ux.table(
         logs,
@@ -109,12 +111,7 @@ export default class TestCommand extends PrismaticBaseCommand {
           severity: {
             minWidth: 12,
           },
-          message: {
-            get: (row) => {
-              const sectionName = sectionLabels.sectionName(row);
-              return sectionName ? `[${sectionName}] ${row.message}` : row.message;
-            },
-          },
+          message: {},
         },
         { ...flags, "no-header": true },
       );
@@ -140,7 +137,6 @@ export default class TestCommand extends PrismaticBaseCommand {
                 timestamp
                 severity
                 message
-                sectionId
               }
               cursor
             }

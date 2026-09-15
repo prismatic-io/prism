@@ -16,7 +16,6 @@ import {
   type IntegrationFlow,
   isCniExecutionComplete,
   resolveFlow,
-  SectionLabelResolver,
 } from "../../../utils/integration/flows.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
 import { getIntegrationSystemInstance } from "../../../utils/integration/query.js";
@@ -462,7 +461,6 @@ prism integrations:flows:test ${flowArg} ${flagString}
     } = await this.parse(TestFlowCommand);
 
     let nextCursor: string | undefined;
-    const sectionLabels = new SectionLabelResolver(executionId);
 
     while (true) {
       await ux.wait(getAdaptivePollIntervalMs(this.startTime));
@@ -473,11 +471,9 @@ prism integrations:flows:test ${flowArg} ${flagString}
       const { logs, cursor } = result;
       nextCursor = cursor;
 
-      await sectionLabels.resolve(logs);
-
       if (jsonl) {
-        logs.forEach((log) => {
-          this.log(JSON.stringify({ ...log, sectionName: sectionLabels.sectionName(log) }));
+        logs.forEach((result) => {
+          this.log(JSON.stringify(result));
         });
       } else {
         ux.table(
@@ -488,12 +484,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
               get: (row) => `LOG_${row.severity}`,
               minWidth: 15,
             },
-            message: {
-              get: (row) => {
-                const sectionName = sectionLabels.sectionName(row);
-                return sectionName ? `[${sectionName}] ${row.message}` : row.message;
-              },
-            },
+            message: {},
           },
           {
             "no-header": true,
@@ -503,10 +494,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
 
       if (resultFilePath) {
         for (const log of logs) {
-          await fs.appendFile(
-            resultFilePath,
-            JSON.stringify({ ...log, sectionName: sectionLabels.sectionName(log) }),
-          );
+          await fs.appendFile(resultFilePath, JSON.stringify(log));
         }
       }
 

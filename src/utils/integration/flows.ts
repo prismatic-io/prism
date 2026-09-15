@@ -1,8 +1,6 @@
 import inquirer from "inquirer";
 import type { GetExecutionLogsQuery } from "../../graphql/executions/getExecutionLogs.generated.js";
 import GET_EXECUTION_LOGS from "../../graphql/executions/getExecutionLogs.graphql";
-import type { GetExecutionSectionsQuery } from "../../graphql/executions/getExecutionSections.generated.js";
-import GET_EXECUTION_SECTIONS from "../../graphql/executions/getExecutionSections.graphql";
 import type { GetExecutionStepResultsQuery } from "../../graphql/executions/getExecutionStepResults.generated.js";
 import GET_EXECUTION_STEP_RESULTS from "../../graphql/executions/getExecutionStepResults.graphql";
 import type { IsCniExecutionCompleteQuery } from "../../graphql/executions/isCniExecutionComplete.generated.js";
@@ -50,7 +48,6 @@ export interface LogNode {
   timestamp: string;
   severity: string;
   message: string;
-  sectionId?: string | null;
 }
 
 export interface FetchLogsResult {
@@ -67,58 +64,6 @@ export async function getExecutionLogs(executionId: string, nextCursor?: string)
       nextCursor,
     },
   });
-}
-
-export async function getExecutionSections(executionId: string, sectionIds: string[]) {
-  return await gqlRequest<GetExecutionSectionsQuery>({
-    document: GET_EXECUTION_SECTIONS,
-    variables: {
-      executionId,
-      sectionIds,
-    },
-  });
-}
-
-/**
- * Resolves ExecutionSection labels for logs tailed during a single execution, caching
- * results so each section's label is only fetched once. Sections may not have mirrored
- * to Postgres yet by the time their logs arrive, so unresolved ids are retried on the
- * next call to `resolve`.
- */
-export class SectionLabelResolver {
-  private readonly labels = new Map<string, string>();
-
-  constructor(private readonly executionId: string) {}
-
-  async resolve(logs: LogNode[]): Promise<void> {
-    const unresolvedSectionIds = [
-      ...new Set(
-        logs.flatMap((log) =>
-          log.sectionId && !this.labels.has(log.sectionId) ? [log.sectionId] : [],
-        ),
-      ),
-    ];
-    if (unresolvedSectionIds.length === 0) return;
-
-    try {
-      const { executionSections } = await getExecutionSections(
-        this.executionId,
-        unresolvedSectionIds,
-      );
-      for (const node of executionSections.nodes) {
-        if (node?.sectionId) {
-          this.labels.set(node.sectionId, node.label);
-        }
-      }
-    } catch (err) {
-      console.error(`There was an error fetching execution section labels:\n${err}`);
-    }
-  }
-
-  /** The resolved section label for a log, falling back to its raw section id, or null if it's outside any section. */
-  sectionName(log: LogNode): string | null {
-    return log.sectionId ? (this.labels.get(log.sectionId) ?? log.sectionId) : null;
-  }
 }
 
 export interface StepResultNode {

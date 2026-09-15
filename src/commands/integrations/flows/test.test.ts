@@ -1,9 +1,8 @@
 import { graphql, HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { getStdout, TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
+import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
 import type { GetExecutionLogsQuery } from "../../../graphql/executions/getExecutionLogs.generated.js";
-import type { GetExecutionSectionsQuery } from "../../../graphql/executions/getExecutionSections.generated.js";
 import type { IsCniExecutionCompleteQuery } from "../../../graphql/executions/isCniExecutionComplete.generated.js";
 import type { GetIntegrationFlowsQuery } from "../../../graphql/integrations/getIntegrationFlows.generated.js";
 import type { GetIntegrationSystemInstanceQuery } from "../../../graphql/integrations/getIntegrationSystemInstance.generated.js";
@@ -49,12 +48,7 @@ const buildGetIntegrationFlowsResponse = (
 });
 
 const buildGetExecutionLogsResponse = (
-  logs: Array<{
-    timestamp: string;
-    severity: LogSeverityLevel;
-    message: string;
-    sectionId?: string | null;
-  }>,
+  logs: Array<{ timestamp: string; severity: LogSeverityLevel; message: string }>,
   cursor?: string,
 ): { data: GetExecutionLogsQuery } => ({
   data: {
@@ -63,16 +57,6 @@ const buildGetExecutionLogsResponse = (
         node: log,
         cursor: cursor ?? `cursor-${index}`,
       })),
-    },
-  },
-});
-
-const buildGetExecutionSectionsResponse = (
-  sections: Array<{ sectionId: string; label: string }>,
-): { data: GetExecutionSectionsQuery } => ({
-  data: {
-    executionSections: {
-      nodes: sections,
     },
   },
 });
@@ -186,105 +170,6 @@ describe("buildFlagString", () => {
         resultFilePath: "out.jsonl",
       }),
     ).toBe("--tail-logs --sync -r=out.jsonl");
-  });
-});
-
-describe("--tail-logs section tagging", () => {
-  const testFlowUrl = "https://hooks.example.com/trigger/test-flow-section";
-  const sectionId = "section-abc-123";
-
-  const setupMocks = (sections: Array<{ sectionId: string; label: string }>) => {
-    server.use(
-      api.query("GetExecutionLogs", () =>
-        HttpResponse.json(
-          buildGetExecutionLogsResponse([
-            {
-              timestamp: new Date().toISOString(),
-              severity: LogSeverityLevel.Info,
-              message: "Log inside a section",
-              sectionId,
-            },
-          ]),
-        ),
-      ),
-      api.query("GetExecutionSections", () =>
-        HttpResponse.json(buildGetExecutionSectionsResponse(sections)),
-      ),
-      api.query("IsCniExecutionComplete", () =>
-        HttpResponse.json(buildIsCniExecutionCompleteResponse(2)),
-      ),
-      http.post(testFlowUrl, () =>
-        HttpResponse.json(
-          { executionId: "exec-123" },
-          { headers: { "prismatic-executionid": "exec-123" } },
-        ),
-      ),
-    );
-  };
-
-  it("tags a log line with its resolved section label", async () => {
-    setupMocks([{ sectionId, label: "My Section" }]);
-
-    await TestFlowCommand.run(["--flow-url", testFlowUrl, "--tail-logs", "--cni-auto-end"]);
-
-    expect(getStdout()).toContain("[My Section] Log inside a section");
-  });
-
-  it("falls back to the raw section id when the label hasn't mirrored to Postgres yet", async () => {
-    setupMocks([]);
-
-    await TestFlowCommand.run(["--flow-url", testFlowUrl, "--tail-logs", "--cni-auto-end"]);
-
-    expect(getStdout()).toContain(`[${sectionId}] Log inside a section`);
-  });
-
-  it("includes the raw sectionId and resolved sectionName in jsonl output", async () => {
-    setupMocks([{ sectionId, label: "My Section" }]);
-
-    await TestFlowCommand.run([
-      "--flow-url",
-      testFlowUrl,
-      "--tail-logs",
-      "--cni-auto-end",
-      "--jsonl",
-    ]);
-
-    expect(getStdout()).toContain(`"sectionId":"${sectionId}"`);
-    expect(getStdout()).toContain(`"sectionName":"My Section"`);
-  });
-
-  it("does not query execution sections when no log carries a sectionId", async () => {
-    let sectionsQueried = false;
-    server.use(
-      api.query("GetExecutionLogs", () =>
-        HttpResponse.json(
-          buildGetExecutionLogsResponse([
-            {
-              timestamp: new Date().toISOString(),
-              severity: LogSeverityLevel.Info,
-              message: "Log outside any section",
-            },
-          ]),
-        ),
-      ),
-      api.query("GetExecutionSections", () => {
-        sectionsQueried = true;
-        return HttpResponse.json(buildGetExecutionSectionsResponse([]));
-      }),
-      api.query("IsCniExecutionComplete", () =>
-        HttpResponse.json(buildIsCniExecutionCompleteResponse(2)),
-      ),
-      http.post(testFlowUrl, () =>
-        HttpResponse.json(
-          { executionId: "exec-123" },
-          { headers: { "prismatic-executionid": "exec-123" } },
-        ),
-      ),
-    );
-
-    await TestFlowCommand.run(["--flow-url", testFlowUrl, "--tail-logs", "--cni-auto-end"]);
-
-    expect(sectionsQueried).toBe(false);
   });
 });
 
