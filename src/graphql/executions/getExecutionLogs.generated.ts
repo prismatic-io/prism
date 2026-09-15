@@ -17,6 +17,7 @@ export type GetExecutionLogsQuery = {
         timestamp: any;
         severity: Types.LogSeverityLevel;
         message: string;
+        sectionId?: any | null;
       } | null;
     } | null>;
   };
