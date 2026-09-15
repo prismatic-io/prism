@@ -59,6 +59,12 @@ const additiveAgentInputNames = new Set([
   "tenant-id",
 ]);
 const additivePublishWaitNames = new Set(["wait", "wait-timeout"]);
+const centralizedOptionNames: Record<string, string[]> = {
+  "components:publish": ["confirm"],
+  "integrations:flows:listen": ["no-prompt"],
+  "integrations:import": ["confirm"],
+  "me:token:revoke": ["confirm"],
+};
 const additiveOptionNames = new Set([
   ...additivePaginationNames,
   ...additiveAgentInputNames,
@@ -171,7 +177,11 @@ describe("legacy command contract", () => {
       }
       expect(
         Object.keys(command.contract.options).filter((name) => !additiveOptionNames.has(name)),
-      ).toEqual(Object.keys(legacy.flags).filter((name) => !globalNames.has(name)));
+      ).toEqual(
+        Object.keys(legacy.flags).filter(
+          (name) => !globalNames.has(name) && !centralizedOptionNames[id]?.includes(name),
+        ),
+      );
 
       for (const [name, field] of Object.entries(command.contract.options)) {
         if (additiveOptionNames.has(name)) continue;
@@ -416,9 +426,6 @@ describe("command separators and agent mode", () => {
       "--no-header",
       "--no-truncate",
     ]);
-    expect(() =>
-      normalizeCommandArguments(["integrations:flows:listen", "--no-no-prompt"]),
-    ).toThrow("Unknown option");
   });
 
   it("supports explicit enable and disable flags with explicit precedence", () => {

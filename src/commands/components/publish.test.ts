@@ -71,7 +71,7 @@ describe("components publish", () => {
     mockWaitForComponentVersion.mockResolvedValue(true);
     const statusSpy = vi.spyOn(diagnostics, "writeCommandStatus").mockImplementation(() => {});
 
-    const result = await runCommand(PublishCommand, ["--no-confirm"]);
+    const result = await runCommand(PublishCommand, []);
 
     expect(mockWaitForComponentVersion).toHaveBeenCalledWith("comp_1", { timeoutSeconds: 300 });
     expect(result).toEqual({
@@ -87,7 +87,7 @@ describe("components publish", () => {
     mockSubmitted();
     vi.spyOn(diagnostics, "writeCommandStatus").mockImplementation(() => {});
 
-    const result = await runCommand(PublishCommand, ["--no-confirm", "--no-wait"]);
+    const result = await runCommand(PublishCommand, ["--no-wait"]);
 
     expect(mockWaitForComponentVersion).not.toHaveBeenCalled();
     expect(result).toEqual({
@@ -103,9 +103,7 @@ describe("components publish", () => {
     mockWaitForComponentVersion.mockResolvedValue(false);
     vi.spyOn(diagnostics, "writeCommandStatus").mockImplementation(() => {});
 
-    await expect(
-      runCommand(PublishCommand, ["--no-confirm", "--wait-timeout", "10"]),
-    ).rejects.toMatchObject({
+    await expect(runCommand(PublishCommand, ["--wait-timeout", "10"])).rejects.toMatchObject({
       code: "WAIT_TIMEOUT",
       message: expect.stringMatching(
         /Example \(v7\) was published and is still processing after 10 seconds/,

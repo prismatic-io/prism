@@ -1,14 +1,16 @@
 import readline from "node:readline";
 import inquirer from "inquirer";
 import { commandGlobals, isAgentExecution, writeCommandStatus } from "../command.js";
+import { ConfirmationRequiredError } from "../errors.js";
+
+const canPrompt = (): boolean => !isAgentExecution() && process.stdin.isTTY === true;
 
 export const confirm = async (message: string): Promise<boolean> => {
-  if (isAgentExecution()) {
-    if (commandGlobals().yes === true) return true;
-    throw Object.assign(
-      new Error(`Confirmation required: ${message} Re-run with --yes to approve this operation.`),
-      { exitCode: 2 },
-    );
+  if (commandGlobals().yes === true) return true;
+  if (!canPrompt()) {
+    throw new ConfirmationRequiredError({
+      message: `Confirmation required: ${message} Re-run with --yes to approve this operation.`,
+    });
   }
   const { value } = await inquirer.prompt<{ value: boolean }>([
     { type: "confirm", name: "value", message, default: false },
@@ -18,12 +20,11 @@ export const confirm = async (message: string): Promise<boolean> => {
 
 export const pressAnyKey = async (message: string): Promise<void> => {
   writeCommandStatus(message);
-  if (isAgentExecution()) {
-    if (commandGlobals().yes === true) return;
-    throw Object.assign(
-      new Error(`Interactive continuation required: ${message} Re-run with --yes to continue.`),
-      { exitCode: 2 },
-    );
+  if (commandGlobals().yes === true) return;
+  if (!canPrompt()) {
+    throw new ConfirmationRequiredError({
+      message: `Interactive continuation required: ${message} Re-run with --yes to continue.`,
+    });
   }
   await new Promise<void>((resolve) => {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
