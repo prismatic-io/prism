@@ -1,20 +1,19 @@
 import { Cli, z } from "incur";
-import { writeCommandStatus } from "../../../command.js";
-import { CommandFailedError } from "../../../errors.js";
-import type { ListComponentActions2Query } from "../../../graphql/operations/listComponentActions2.generated.js";
-import { ListComponentActions2Document as LIST_COMPONENT_ACTIONS2 } from "../../../graphql/operations/listComponentActions2.generated.js";
-import { gqlRequest } from "../../../graphql.js";
+import { listMembers } from "../../../utils/component/catalog.js";
+import { requestFailure } from "../../../utils/failure.js";
+import { nextPageCta } from "../../../utils/pagination.js";
 import {
   paginationFlags,
   printTable,
   tableFlags,
   tableOutputSchema,
 } from "../../../utils/table.js";
+import { memberColumns } from "../members.js";
+import { componentKeyArg, toSelector, versionOption, visibilityOptions } from "../schemas.js";
 
-type DataSourceNode =
-  ListComponentActions2Query["components"]["nodes"][number]["actions"]["nodes"][number];
 export default Cli.command({
   outputPolicy: "agent-only",
+  description: "List Data Sources that Components implement",
   output: tableOutputSchema(
     [
       "id",
@@ -22,115 +21,77 @@ export default Cli.command({
       "label",
       "description",
       "dataSourceType",
+      "isDetailDataSource",
       "detailDataSource",
-      "componentid",
-      "componentkey",
+      "componentKey",
+      "componentVersion",
+      "public",
     ],
     true,
   ),
-  description: "List Data Sources that Components implement",
   examples: [
+    { description: "List data sources of the Slack component:", args: { componentKey: "slack" } },
     {
-      description: "Get data sources related to the Salesforce component:",
+      description: "List only picklist data sources:",
       args: { componentKey: "salesforce" },
+      options: { type: "picklist" },
     },
   ],
+  args: z.object({ componentKey: componentKeyArg("to show data sources for") }),
   options: z.object({
     ...tableFlags(),
     ...paginationFlags(),
-    public: z
-      .boolean()
-      .optional()
-      .describe(
-        "Show data sources for the public component with the given key. Use this flag when you have a private component with the same key as a public component.",
-      ),
-    private: z
-      .boolean()
-      .optional()
-      .describe(
-        "Show data sources for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
-      ),
-  }),
-  args: z.object({
-    componentKey: z
+    ...visibilityOptions("data sources"),
+    ...versionOption(),
+    search: z
       .string()
-      .describe("The key of the component to show data sources for (e.g. 'salesforce')"),
+      .optional()
+      .describe("Full-text search across data source labels and descriptions"),
+    type: z
+      .string()
+      .optional()
+      .describe("Only list data sources that produce this type (for example picklist or jsonform)"),
   }),
+  alias: { search: "s" },
   async run(context) {
-    const {
-      options: flags,
-      args: { componentKey },
-    } = context;
-
-    let dataSources: DataSourceNode[] = [];
-    let componentId: string;
-    let hasNextPage = true;
-    let cursor: string | null = flags.after ?? "";
-    let finalPageInfo = {
-      hasNextPage: false,
-      endCursor: null as string | null,
-    };
-
-    while (hasNextPage) {
-      const {
-        components: {
-          nodes: [component],
-        },
-      }: ListComponentActions2Query = await gqlRequest({
-        document: LIST_COMPONENT_ACTIONS2,
-        variables: {
-          after: cursor,
+    const { options: flags, args } = context;
+    try {
+      const { component, items, pageInfo } = await listMembers(
+        toSelector(args.componentKey, flags),
+        {
+          kind: "dataSource",
+          search: flags.search,
+          dataSourceType: flags.type,
+          after: flags.after,
           first: flags.first,
-          componentKey,
-          public: flags.public ? true : flags.private ? false : null,
+          all: flags.all === true || !context.agent,
         },
-      });
-      if (!component) {
-        writeCommandStatus(
-          "The key you provided is not valid. Please run 'prism components:list -x' and identify a valid component key.",
-        );
-        throw new CommandFailedError({
-          message: "Exited with status 1",
-        });
-      }
-      dataSources = [...dataSources, ...component.actions.nodes];
-      componentId = component.id;
-      cursor = component.actions.pageInfo.endCursor;
-      finalPageInfo = component.actions.pageInfo;
-      hasNextPage =
-        component.actions.pageInfo.hasNextPage && (flags.all === true || !context.agent);
+      );
+      const result = printTable(
+        items,
+        memberColumns(component, {
+          dataSourceType: { header: "Type" },
+          isDetailDataSource: { extended: true },
+          detailDataSource: {
+            extended: true,
+            get: ({ detailDataSource }) => detailDataSource?.key ?? "",
+          },
+        }),
+        { ...flags },
+      );
+      return context.ok(
+        { ...result, pageInfo },
+        nextPageCta(
+          "components data-sources list",
+          { componentKey: args.componentKey },
+          flags,
+          pageInfo,
+          context.agent,
+          "Fetch the next page of data sources",
+        ),
+      );
+    } catch (error) {
+      return context.error(requestFailure(error, "COMPONENT_DATA_SOURCES_LIST_FAILED", true));
     }
-
-    const result = printTable(
-      dataSources,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
-        },
-        key: {
-          minWidth: 10,
-          extended: true,
-        },
-        label: {},
-        description: {},
-        dataSourceType: { header: "Type" },
-        detailDataSource: {
-          header: "Detail Data Source",
-          extended: true,
-          get: ({ detailDataSource }) => detailDataSource?.label || "",
-        },
-        componentid: {
-          get: () => componentId,
-          extended: true,
-        },
-        componentkey: {
-          get: () => componentKey,
-          extended: true,
-        },
-      },
-      { ...flags },
-    );
-    return { ...result, pageInfo: finalPageInfo };
   },
 });

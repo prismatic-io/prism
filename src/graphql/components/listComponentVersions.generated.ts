@@ -6,74 +6,56 @@ export type Incremental<T> =
   | { [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never };
 
 import type { TypedDocumentNode as DocumentNode } from "@graphql-typed-document-node/core";
-import type * as Types from "../schema.generated.js";
-export type ActionDataSourceType =
-  /** Boolean */
-  | "BOOLEAN"
-  /** Code */
-  | "CODE"
-  /** Connection */
-  | "CONNECTION"
-  /** Credential */
-  | "CREDENTIAL"
-  /** Date */
-  | "DATE"
-  /** Jsonform */
-  | "JSONFORM"
-  /** Number */
-  | "NUMBER"
-  /** Objectfieldmap */
-  | "OBJECTFIELDMAP"
-  /** Objectselection */
-  | "OBJECTSELECTION"
-  /** Picklist */
-  | "PICKLIST"
-  /** Schedule */
-  | "SCHEDULE"
-  /** String */
-  | "STRING"
-  /** Timestamp */
-  | "TIMESTAMP";
-
-export type ListComponentActions2QueryVariables = Exact<{
-  componentKey?: string | null | undefined;
+export type ListComponentVersionsQueryVariables = Exact<{
+  key: string;
+  public?: boolean | null | undefined;
   after?: string | null | undefined;
   first?: number | null | undefined;
-  public?: boolean | null | undefined;
 }>;
 
-export type ListComponentActions2Query = {
+export type ListComponentVersionsQuery = {
   components: {
     nodes: Array<{
       id: string;
       key: string;
-      actions: {
+      public: boolean;
+      versionNumber: number;
+      versionSequenceId: string | null;
+      versions: {
         nodes: Array<{
           id: string;
-          key: string;
-          label: string;
-          description: string;
-          dataSourceType: Types.ActionDataSourceType | null;
-          detailDataSource: { label: string } | null;
+          versionNumber: number | null;
+          publishedAt: string;
+          comment: string | null;
+          isAvailable: boolean | null;
+          publishedBy: { name: string; email: string } | null;
         }>;
         pageInfo: { hasNextPage: boolean; endCursor: string | null };
-      };
+      } | null;
     }>;
   };
 };
 
-export const ListComponentActions2Document = {
+export const ListComponentVersionsDocument = {
   kind: "Document",
   definitions: [
     {
       kind: "OperationDefinition",
       operation: "query",
-      name: { kind: "Name", value: "listComponentActions2" },
+      name: { kind: "Name", value: "listComponentVersions" },
       variableDefinitions: [
         {
           kind: "VariableDefinition",
-          variable: { kind: "Variable", name: { kind: "Name", value: "componentKey" } },
-          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+          variable: { kind: "Variable", name: { kind: "Name", value: "key" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+          },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "public" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "Boolean" } },
         },
         {
           kind: "VariableDefinition",
@@ -84,11 +66,6 @@ export const ListComponentActions2Document = {
           kind: "VariableDefinition",
           variable: { kind: "Variable", name: { kind: "Name", value: "first" } },
           type: { kind: "NamedType", name: { kind: "Name", value: "Int" } },
-        },
-        {
-          kind: "VariableDefinition",
-          variable: { kind: "Variable", name: { kind: "Name", value: "public" } },
-          type: { kind: "NamedType", name: { kind: "Name", value: "Boolean" } },
         },
       ],
       selectionSet: {
@@ -101,7 +78,7 @@ export const ListComponentActions2Document = {
               {
                 kind: "Argument",
                 name: { kind: "Name", value: "key" },
-                value: { kind: "Variable", name: { kind: "Name", value: "componentKey" } },
+                value: { kind: "Variable", name: { kind: "Name", value: "key" } },
               },
               {
                 kind: "Argument",
@@ -120,20 +97,13 @@ export const ListComponentActions2Document = {
                     selections: [
                       { kind: "Field", name: { kind: "Name", value: "id" } },
                       { kind: "Field", name: { kind: "Name", value: "key" } },
+                      { kind: "Field", name: { kind: "Name", value: "public" } },
+                      { kind: "Field", name: { kind: "Name", value: "versionNumber" } },
+                      { kind: "Field", name: { kind: "Name", value: "versionSequenceId" } },
                       {
                         kind: "Field",
-                        name: { kind: "Name", value: "actions" },
+                        name: { kind: "Name", value: "versions" },
                         arguments: [
-                          {
-                            kind: "Argument",
-                            name: { kind: "Name", value: "isTrigger" },
-                            value: { kind: "BooleanValue", value: false },
-                          },
-                          {
-                            kind: "Argument",
-                            name: { kind: "Name", value: "isDataSource" },
-                            value: { kind: "BooleanValue", value: true },
-                          },
                           {
                             kind: "Argument",
                             name: { kind: "Name", value: "after" },
@@ -143,6 +113,25 @@ export const ListComponentActions2Document = {
                             kind: "Argument",
                             name: { kind: "Name", value: "first" },
                             value: { kind: "Variable", name: { kind: "Name", value: "first" } },
+                          },
+                          {
+                            kind: "Argument",
+                            name: { kind: "Name", value: "orderBy" },
+                            value: {
+                              kind: "ObjectValue",
+                              fields: [
+                                {
+                                  kind: "ObjectField",
+                                  name: { kind: "Name", value: "field" },
+                                  value: { kind: "EnumValue", value: "VERSION_NUMBER" },
+                                },
+                                {
+                                  kind: "ObjectField",
+                                  name: { kind: "Name", value: "direction" },
+                                  value: { kind: "EnumValue", value: "DESC" },
+                                },
+                              ],
+                            },
                           },
                         ],
                         selectionSet: {
@@ -155,20 +144,18 @@ export const ListComponentActions2Document = {
                                 kind: "SelectionSet",
                                 selections: [
                                   { kind: "Field", name: { kind: "Name", value: "id" } },
-                                  { kind: "Field", name: { kind: "Name", value: "key" } },
-                                  { kind: "Field", name: { kind: "Name", value: "label" } },
-                                  { kind: "Field", name: { kind: "Name", value: "description" } },
+                                  { kind: "Field", name: { kind: "Name", value: "versionNumber" } },
+                                  { kind: "Field", name: { kind: "Name", value: "publishedAt" } },
+                                  { kind: "Field", name: { kind: "Name", value: "comment" } },
+                                  { kind: "Field", name: { kind: "Name", value: "isAvailable" } },
                                   {
                                     kind: "Field",
-                                    name: { kind: "Name", value: "dataSourceType" },
-                                  },
-                                  {
-                                    kind: "Field",
-                                    name: { kind: "Name", value: "detailDataSource" },
+                                    name: { kind: "Name", value: "publishedBy" },
                                     selectionSet: {
                                       kind: "SelectionSet",
                                       selections: [
-                                        { kind: "Field", name: { kind: "Name", value: "label" } },
+                                        { kind: "Field", name: { kind: "Name", value: "name" } },
+                                        { kind: "Field", name: { kind: "Name", value: "email" } },
                                       ],
                                     },
                                   },
@@ -199,4 +186,4 @@ export const ListComponentActions2Document = {
       },
     },
   ],
-} as unknown as DocumentNode<ListComponentActions2Query, ListComponentActions2QueryVariables>;
+} as unknown as DocumentNode<ListComponentVersionsQuery, ListComponentVersionsQueryVariables>;

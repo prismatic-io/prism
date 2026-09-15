@@ -1,0 +1,57 @@
+query listComponentMembers(
+  $key: String!
+  $public: Boolean
+  $versionNumber: Int
+  $allVersions: Boolean
+  $isTrigger: Boolean
+  $isDataSource: Boolean
+  $dataSourceType: String
+  $search: String
+  $after: String
+  $first: Int
+) {
+  components(key: $key, public: $public, versionNumber: $versionNumber, allVersions: $allVersions) {
+    nodes {
+      id
+      key
+      public
+      versionNumber
+      actions(
+        isTrigger: $isTrigger
+        isDataSource: $isDataSource
+        dataSourceType: $dataSourceType
+        searchTerms_Fulltext: $search
+        after: $after
+        first: $first
+        orderBy: { field: LABEL, direction: ASC }
+      ) {
+        totalCount
+        nodes {
+          id
+          key
+          label
+          description
+          important
+          isTrigger
+          isCommonTrigger
+          isPollingTrigger
+          scheduleSupport
+          synchronousResponseSupport
+          batchSupport
+          isDataSource
+          dataSourceType
+          isDetailDataSource
+          detailDataSource {
+            key
+          }
+          allowsBranching
+          terminateExecution
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
