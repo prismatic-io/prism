@@ -4,11 +4,11 @@ import {
   canonical,
   digest,
   mustSucceed,
+  type Row,
   runCli,
   sorted,
   successfulCli,
   verifyIdentity,
-  type Row,
 } from "./cli.js";
 
 const manifest = JSON.parse(

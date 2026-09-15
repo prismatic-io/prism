@@ -1,7 +1,7 @@
-import { NotFoundError } from "../../errors.js";
 import { Cli, z } from "incur";
 import { writeCommandStatus } from "../../command.js";
 import { deleteProfile } from "../../config.js";
+import { NotFoundError } from "../../errors.js";
 import { warningsOutput } from "../../output.js";
 
 export default Cli.command({

@@ -1,8 +1,8 @@
-import { getWorkingDirectory } from "../../../command-context.js";
 import { outputFile } from "fs-extra";
 import { minBy } from "lodash-es";
 import path from "path";
 import { Project, ScriptKind, type SourceFile } from "ts-morph";
+import { getWorkingDirectory } from "../../../command-context.js";
 import {
   type Action,
   type Component,

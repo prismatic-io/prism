@@ -1,17 +1,17 @@
+import { Cli, z } from "incur";
+import { writeCommandStatus } from "../../../command.js";
+import { CommandFailedError } from "../../../errors.js";
 import {
   ListComponentTriggersDocument as LIST_COMPONENT_TRIGGERS,
   type ListComponentTriggersQuery,
 } from "../../../graphql/operations/listComponentTriggers.generated.js";
-import { writeCommandStatus } from "../../../command.js";
 import { gqlRequest } from "../../../graphql.js";
 import {
   paginationFlags,
-  tableOutputSchema,
-  tableFlags,
   printTable,
+  tableFlags,
+  tableOutputSchema,
 } from "../../../utils/table.js";
-import { z, Cli } from "incur";
-import { CommandFailedError } from "../../../errors.js";
 
 type TriggerNode =
   ListComponentTriggersQuery["components"]["nodes"][number]["actions"]["nodes"][number];

@@ -2,9 +2,9 @@ import { LegacyToolchain } from "./legacy.js";
 import { ModernToolchain } from "./modern.js";
 import type { Toolchain, ToolchainName } from "./types.js";
 
-export type { Toolchain, ToolchainName } from "./types.js";
 export { LegacyToolchain } from "./legacy.js";
 export { ModernToolchain } from "./modern.js";
+export type { Toolchain, ToolchainName } from "./types.js";
 
 export const TOOLCHAIN_NAMES = ["modern", "legacy"] as const satisfies readonly ToolchainName[];
 

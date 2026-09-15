@@ -1,7 +1,7 @@
+import { Cli, z } from "incur";
 import { CreateOrganizationUserDocument as CREATE_ORGANIZATION_USER } from "../../../graphql/operations/createOrganizationUser.generated.js";
 import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ userId: z.string() }).extend(warningsOutput),
   description: "Create a User for your Organization",

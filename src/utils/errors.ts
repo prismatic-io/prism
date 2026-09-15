@@ -11,4 +11,5 @@ export function handleError({ message, err }: HandleErrorProps): never {
 
   throw new Error(message);
 }
+
 import { writeCommandOutput } from "../command.js";

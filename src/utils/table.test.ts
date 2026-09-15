@@ -1,7 +1,7 @@
-import { runCommand } from "../test-command.js";
 import { describe, expect, it, vi } from "vitest";
-import { loadYaml } from "./serialize.js";
 import { applyCommandPolicy } from "../command.js";
+import { runCommand } from "../test-command.js";
+import { loadYaml } from "./serialize.js";
 import { type ColumnsConfig, printTable, tableFlags, tableOutputSchema } from "./table.js";
 
 type Row = {

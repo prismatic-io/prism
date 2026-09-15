@@ -1,4 +1,3 @@
-import { getWorkingDirectory } from "../command-context.js";
 import ejs from "ejs";
 import { copyFile, mkdirp, outputFile, readJson } from "fs-extra";
 import { camelCase, merge, startCase } from "lodash-es";
@@ -6,9 +5,10 @@ import path from "path";
 import prettier from "prettier";
 import striptags from "striptags";
 import { fileURLToPath } from "url";
+import { z } from "zod";
+import { getWorkingDirectory } from "../command-context.js";
 import { exists, walkDir } from "../fs.js";
 import { fetch } from "../utils/http.js";
-import { z } from "zod";
 
 export const pascalCase = (str: string) => startCase(camelCase(str)).replace(/ /g, "");
 

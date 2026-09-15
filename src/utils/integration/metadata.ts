@@ -1,9 +1,9 @@
-import { getWorkingDirectory } from "../../command-context.js";
 import { resolve } from "node:path";
-import { exists, fs } from "../../fs.js";
-import { writeCommandOutput } from "../../command.js";
-import { isQuiet } from "../../runtime.js";
 import { z } from "zod";
+import { writeCommandOutput } from "../../command.js";
+import { getWorkingDirectory } from "../../command-context.js";
+import { exists, fs } from "../../fs.js";
+import { isQuiet } from "../../runtime.js";
 
 interface PrismMetadataOptions {
   fromDist?: boolean;

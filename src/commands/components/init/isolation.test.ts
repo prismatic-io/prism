@@ -1,8 +1,8 @@
-import { withWorkingDirectory } from "../../../command-context.js";
-import { mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, it } from "vitest";
+import { withWorkingDirectory } from "../../../command-context.js";
 import { generateComponent } from "./component.js";
 
 it("generates independent component scaffolds concurrently without changing cwd", async () => {

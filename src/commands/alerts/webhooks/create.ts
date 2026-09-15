@@ -1,7 +1,7 @@
+import { Cli, z } from "incur";
 import { CreateAlertWebhookDocument as CREATE_ALERT_WEBHOOK } from "../../../graphql/operations/createAlertWebhook.generated.js";
 import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ alertWebhookId: z.string() }).extend(warningsOutput),
   description: "Create an Alert Webhook",

@@ -5,8 +5,8 @@ import chalk from "chalk";
 import { z } from "incur";
 import { startCase } from "lodash-es";
 import { orderBy } from "natural-orderby";
-import { dumpYaml } from "./serialize.js";
 import { isAgentExecution, writeCommandOutput } from "../command.js";
+import { dumpYaml } from "./serialize.js";
 
 export type ColumnDef<T> = {
   header?: string;

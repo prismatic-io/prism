@@ -1,8 +1,8 @@
+import { Cli, z } from "incur";
 import { parseJsonOrUndefined } from "../../fields.js";
 import { UpdateIntegrationDocument as UPDATE_INTEGRATION } from "../../graphql/operations/updateIntegration.generated.js";
 import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ integrationId: z.string() }).extend(warningsOutput),
   description: "Update an Integration's name or description",

@@ -1,9 +1,9 @@
-import { customerFailure } from "./errors.js";
-import { nonBlank } from "./schemas.js";
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import { DeleteCustomerDocument as DELETE_CUSTOMER } from "../../graphql/operations/deleteCustomer.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
+import { customerFailure } from "./errors.js";
+import { nonBlank } from "./schemas.js";
 
 export default Cli.command({
   output: z

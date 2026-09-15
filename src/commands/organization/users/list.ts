@@ -1,3 +1,4 @@
+import { Cli, z } from "incur";
 import {
   ListOrganizationUsersDocument as LIST_ORGANIZATION_USERS,
   type ListOrganizationUsersQuery,
@@ -5,11 +6,11 @@ import {
 import { gqlRequest, requireResource } from "../../../graphql.js";
 import {
   paginationFlags,
-  tableOutputSchema,
-  tableFlags,
   printTable,
+  tableFlags,
+  tableOutputSchema,
 } from "../../../utils/table.js";
-import { z, Cli } from "incur";
+
 type OrganizationUserNode = NonNullable<
   ListOrganizationUsersQuery["organization"]
 >["users"]["nodes"][number];

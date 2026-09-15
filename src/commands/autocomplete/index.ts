@@ -1,5 +1,5 @@
+import { Cli, z } from "incur";
 import { writeCommandOutput } from "../../command.js";
-import { z, Cli } from "incur";
 import { ValidationError } from "../../errors.js";
 
 const zshInstructions = `

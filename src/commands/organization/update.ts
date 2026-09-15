@@ -1,7 +1,7 @@
+import { Cli, z } from "incur";
 import { UpdateOrganizationDocument as UPDATE_ORGANIZATION } from "../../graphql/operations/updateOrganization.generated.js";
 import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ organizationId: z.string() }).extend(warningsOutput),
   description: "Update your Organization",

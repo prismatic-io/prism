@@ -1,4 +1,3 @@
-import { ValidationError } from "../../errors.js";
 import { Cli, z } from "incur";
 import {
   fetchUserTenants,
@@ -9,6 +8,7 @@ import {
 } from "../../auth.js";
 import { writeCommandStatus } from "../../command.js";
 import { getProfileAuthContext, saveProfileCredentials } from "../../context.js";
+import { ValidationError } from "../../errors.js";
 import { whoAmI } from "../../utils/user/query.js";
 
 export default Cli.command({

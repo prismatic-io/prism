@@ -1,9 +1,10 @@
-import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
 import { promises as fs } from "fs";
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import * as path from "path";
 import { parseAndGenerate } from "wsdl-tsclient";
 import { writeCommandStatus } from "../../../command.js";
+import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
+import { CommandFailedError } from "../../../errors.js";
 import { generate } from "../../../generate/index.js";
 import { updatePackageJson } from "../../../generate/util.js";
 import { warningsOutput } from "../../../output.js";
@@ -15,7 +16,6 @@ import {
 } from "../../../utils/toolchain/index.js";
 import { generateComponent } from "./component.js";
 import { generateFormats } from "./formats.js";
-import { CommandFailedError } from "../../../errors.js";
 
 export default Cli.command({
   output: z.object({

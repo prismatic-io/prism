@@ -1,16 +1,16 @@
-import { ValidationError } from "./errors.js";
 import { Cli, Completions, Formatter, Parser, type z } from "incur";
 import packageJson from "../package.json" with { type: "json" };
 import {
   assertMutationAllowed,
+  commandMiddleware,
+  commandVars,
   encodePassthroughArgument,
+  environmentOptions,
+  globalOptions,
   runWithMcpTransport,
   schemaFieldName,
-  globalOptions,
-  environmentOptions,
-  commandVars,
-  commandMiddleware,
 } from "./command.js";
+import { ValidationError } from "./errors.js";
 import { Commands } from "./index.js";
 
 const topicDescriptions: Record<string, string> = {

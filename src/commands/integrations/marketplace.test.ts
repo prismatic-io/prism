@@ -1,5 +1,5 @@
-import { runCommand } from "../../test-command.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { runCommand } from "../../test-command.js";
 import MarketplaceCommand from "./marketplace.js";
 
 const mockGqlRequest = vi.fn();

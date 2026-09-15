@@ -1,5 +1,5 @@
-import { resolve } from "node:path";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { resolve } from "node:path";
 import type { AuthContext } from "./context.js";
 
 // One instance per invocation, shared by its asynchronous work only.

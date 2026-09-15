@@ -1,6 +1,6 @@
 import { getReasonPhrase, StatusCodes } from "http-status-codes";
-import type { ClientError } from "./graphql.js";
 import { Errors } from "incur";
+import type { ClientError } from "./graphql.js";
 
 type CommandErrorOptions = Omit<Errors.IncurError.Options, "code" | "exitCode">;
 

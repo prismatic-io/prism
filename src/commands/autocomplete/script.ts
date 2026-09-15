@@ -1,4 +1,4 @@
-import { Completions, z, Cli } from "incur";
+import { Cli, Completions, z } from "incur";
 import { writeCommandOutput } from "../../command.js";
 import { ValidationError } from "../../errors.js";
 

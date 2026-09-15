@@ -1,32 +1,32 @@
-import { getWorkingDirectory, withWorkingDirectory } from "../../command-context.js";
-import { ImportIntegrationDocument as IMPORT_INTEGRATION } from "../../graphql/operations/importIntegration.generated.js";
-import { CommitAvatarUpload2Document as COMMIT_AVATAR_UPLOAD2 } from "../../graphql/operations/commitAvatarUpload2.generated.js";
-import { SetInstanceApiKeysDocument as SET_INSTANCE_API_KEYS } from "../../graphql/operations/setInstanceApiKeys.generated.js";
-import { Component4Document as COMPONENT4 } from "../../graphql/operations/component4.generated.js";
-import { Integration2Document as INTEGRATION2 } from "../../graphql/operations/integration2.generated.js";
-import chardet from "chardet";
 import { createRequire } from "node:module";
+import chardet from "chardet";
+import { resolve } from "path";
+import { writeCommandOutput } from "../../command.js";
+import { getWorkingDirectory, withWorkingDirectory } from "../../command-context.js";
+import { CommandFailedError } from "../../errors.js";
+import { exists, fs } from "../../fs.js";
+import { CommitAvatarUpload2Document as COMMIT_AVATAR_UPLOAD2 } from "../../graphql/operations/commitAvatarUpload2.generated.js";
+import { Component4Document as COMPONENT4 } from "../../graphql/operations/component4.generated.js";
+import { ImportIntegrationDocument as IMPORT_INTEGRATION } from "../../graphql/operations/importIntegration.generated.js";
+import { Integration2Document as INTEGRATION2 } from "../../graphql/operations/integration2.generated.js";
+import { SetInstanceApiKeysDocument as SET_INSTANCE_API_KEYS } from "../../graphql/operations/setInstanceApiKeys.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { uploadAvatar } from "../../utils/avatar.js";
-import { exists, fs } from "../../fs.js";
-import { resolve } from "path";
-import { getPackageEntrypointDirectory } from "../import.js";
-import {
-  publishDefinition as publishComponentDefinition,
-  uploadFile,
-  uploadConnectionIcons,
-} from "../component/publish.js";
 import {
   type ComponentDefinition,
   createComponentPackage,
   validateDefinition,
 } from "../component/index.js";
-import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
-import { loadYaml } from "../serialize.js";
-import { writeCommandOutput } from "../../command.js";
-import type { IntegrationObjectFromYAML } from "./types.js";
+import {
+  publishDefinition as publishComponentDefinition,
+  uploadConnectionIcons,
+  uploadFile,
+} from "../component/publish.js";
+import { getPackageEntrypointDirectory } from "../import.js";
 import { startAction, stopAction } from "../progress.js";
-import { CommandFailedError } from "../../errors.js";
+import { loadYaml } from "../serialize.js";
+import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
+import type { IntegrationObjectFromYAML } from "./types.js";
 
 const require = createRequire(import.meta.url);
 

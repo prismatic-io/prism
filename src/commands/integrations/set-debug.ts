@@ -1,4 +1,4 @@
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import { warningsOutput } from "../../output.js";
 import { getPrismMetadata } from "../../utils/integration/metadata.js";
 import { setGlobalDebugOnSystemInstance } from "../../utils/integration/mutate.js";

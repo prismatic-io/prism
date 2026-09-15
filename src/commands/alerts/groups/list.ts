@@ -1,13 +1,13 @@
+import { Cli, z } from "incur";
 import type { ListAlertGroupsQuery } from "../../../graphql/alerts/listAlertGroups.generated.js";
 import { ListAlertGroupsDocument as LIST_ALERT_GROUPS } from "../../../graphql/alerts/listAlertGroups.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import {
   paginationFlags,
-  tableOutputSchema,
-  tableFlags,
   printTable,
+  tableFlags,
+  tableOutputSchema,
 } from "../../../utils/table.js";
-import { z, Cli } from "incur";
 
 type AlertGroupNode = ListAlertGroupsQuery["alertGroups"]["nodes"][number];
 

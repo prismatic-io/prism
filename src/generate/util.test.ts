@@ -1,7 +1,7 @@
-import { promises as fs } from "fs";
-import { describe, expect, it, vi } from "vitest";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { promises as fs } from "fs";
+import { describe, expect, it, vi } from "vitest";
 import { createDescription, updatePackageJson } from "./util.js";
 
 describe("dependency version lookup", () => {

@@ -1,6 +1,6 @@
-import { runCommand } from "../../test-command.js";
 import { describe, expect, it, vi } from "vitest";
 import { getAuthContext } from "../../context.js";
+import { runCommand } from "../../test-command.js";
 import PrintTokenCommand from "./token.js";
 
 describe("me:token", () => {

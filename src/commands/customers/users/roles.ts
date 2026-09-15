@@ -1,9 +1,9 @@
-import { customerRoleRowSchema } from "../schemas.js";
-import { customerFailure } from "../errors.js";
-import { tableFlags, printTable } from "../../../utils/table.js";
+import { Cli, z } from "incur";
 import { ListCustomerRolesDocument as LIST_CUSTOMER_ROLES } from "../../../graphql/operations/listCustomerRoles.generated.js";
 import { gqlRequest } from "../../../graphql.js";
-import { z, Cli } from "incur";
+import { printTable, tableFlags } from "../../../utils/table.js";
+import { customerFailure } from "../errors.js";
+import { customerRoleRowSchema } from "../schemas.js";
 export default Cli.command({
   outputPolicy: "agent-only",
   output: z.object({ items: z.array(customerRoleRowSchema) }),

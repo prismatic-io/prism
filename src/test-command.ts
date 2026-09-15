@@ -1,11 +1,11 @@
 import "./index.js";
 import { Cli, type z } from "incur";
 import {
-  preparedCommand,
   commandMiddleware,
   commandVars,
   environmentOptions,
   globalOptions,
+  preparedCommand,
 } from "./command.js";
 
 /** Exercise native parsing and middleware; never provide a synthetic handler context. */
