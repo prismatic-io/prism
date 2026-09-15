@@ -6,6 +6,7 @@ import { getAuthenticatedContext } from "./auth.js";
 import { writeCommandStatus } from "./command.js";
 import { isPrintRequestsEnabled } from "./runtime.js";
 import { fetch } from "./utils/http.js";
+import { CommandFailedError, NotFoundError } from "./errors.js";
 
 interface GQLRequest<TData, TVariables = Record<string, unknown>> {
   document: string | TypedDocumentNode<TData, TVariables>;
@@ -95,7 +96,14 @@ const formatError = (field: string, messages: string[]) => {
 
 export const requireResource = <T>(value: T | null | undefined, name: string): T => {
   if (value === null || value === undefined) {
-    throw Object.assign(new Error(`${name} not found`), { code: "NOT_FOUND", exitCode: 1 });
+    throw new NotFoundError({ message: `${name} not found` });
+  }
+  return value;
+};
+
+export const requireOperationResult = <T>(value: T | null | undefined, message: string): T => {
+  if (value === null || value === undefined) {
+    throw new CommandFailedError({ message });
   }
   return value;
 };

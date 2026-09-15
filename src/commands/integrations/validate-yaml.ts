@@ -4,7 +4,9 @@ import chalk from "chalk";
 import { exists, readStdin } from "../../fs.js";
 import { gqlRequest } from "../../graphql.js";
 import { extractYAMLFromPath } from "../../utils/integration/import.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
+import { CommandFailedError, ValidationError } from "../../errors.js";
+
 export default Cli.command({
   output: z.object({ valid: z.literal(true), path: z.string() }),
   description: "Validate a YAML integration definition without importing it",
@@ -27,20 +29,16 @@ export default Cli.command({
       definition = await readStdin();
     } else {
       if (!(await exists(args.path))) {
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
+        throw new ValidationError({
           message: `Cannot find definition file at specified path "${args.path}"`,
-          exitCode: 2,
         });
       }
       definition = await extractYAMLFromPath(args.path);
     }
 
     if (!definition.trim()) {
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new ValidationError({
         message: "YAML definition is empty",
-        exitCode: 2,
       });
     }
 
@@ -56,17 +54,13 @@ export default Cli.command({
         writeCommandStatus(`${chalk.green("✓ ")}Integration YAML is valid`);
         return { valid: true as const, path: args.path };
       } else {
-        throw new Errors.IncurError({
-          code: "COMMAND_FAILED",
+        throw new CommandFailedError({
           message: "Validation failed",
-          exitCode: 1,
         });
       }
     } catch (error) {
-      throw new Errors.IncurError({
-        code: "COMMAND_FAILED",
+      throw new CommandFailedError({
         message: `Validation failed: ${error instanceof Error ? error.message : String(error)}`,
-        exitCode: 1,
       });
     }
   },

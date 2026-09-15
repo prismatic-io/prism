@@ -1,3 +1,4 @@
+import { ValidationError } from "./errors.js";
 import { Cli, Completions, Formatter, Parser, type z } from "incur";
 import packageJson from "../package.json" with { type: "json" };
 import {
@@ -425,10 +426,7 @@ const assertCommandArity = (argv: string[], agent: boolean) => {
     seen.add(field.name);
     if (field.takesValue && !token.includes("=")) {
       if (index + 1 >= values.length) {
-        throw Object.assign(new Error(`Missing value for flag: ${name}`), {
-          code: "VALIDATION_ERROR",
-          exitCode: 2,
-        });
+        throw new ValidationError({ message: `Missing value for flag: ${name}` });
       }
       index += 1;
     }
@@ -456,7 +454,7 @@ const assertCommandArity = (argv: string[], agent: boolean) => {
       options: command.options,
     });
   } catch (error) {
-    if (error instanceof Error) Object.assign(error, { code: "VALIDATION_ERROR", exitCode: 2 });
+    if (error instanceof Error) throw new ValidationError({ message: error.message });
     throw error;
   }
 };

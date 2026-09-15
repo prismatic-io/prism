@@ -11,7 +11,10 @@ import { gqlRequest } from "./graphql.js";
 import { runCommandInput } from "./test-command.js";
 import { fetch } from "./utils/http.js";
 
-vi.mock(import("./graphql.js"), () => ({ gqlRequest: vi.fn() }));
+vi.mock(import("./graphql.js"), async (original) => ({
+  ...(await original()),
+  gqlRequest: vi.fn(),
+}));
 vi.mock(import("./utils/http.js"), () => ({ fetch: vi.fn(), createFetch: vi.fn() }));
 
 const context = (agent = true) => ({

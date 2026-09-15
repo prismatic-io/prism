@@ -8,6 +8,7 @@ import striptags from "striptags";
 import { fileURLToPath } from "url";
 import { exists, walkDir } from "../fs.js";
 import { fetch } from "../utils/http.js";
+import { z } from "zod";
 
 export const pascalCase = (str: string) => startCase(camelCase(str)).replace(/ /g, "");
 
@@ -71,6 +72,8 @@ export const templateDirectory = async (
   );
 };
 
+const packageVersionSchema = z.object({ version: z.string().trim().min(1) });
+
 const updateDependencies = async (dependencies: Record<string, string>) => {
   const promises = Object.entries(dependencies).map(async ([name, version]) => {
     try {
@@ -78,7 +81,7 @@ const updateDependencies = async (dependencies: Record<string, string>) => {
         const packageUrl = new URL("https://registry.npmjs.org");
         packageUrl.pathname = `/${name}/latest`;
         const response = await fetch(packageUrl.toString());
-        const data = (await response.json()) as any;
+        const data = packageVersionSchema.parse(await response.json());
         return [name, data.version];
       }
     } catch {

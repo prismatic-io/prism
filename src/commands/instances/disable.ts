@@ -1,7 +1,7 @@
 import { DisableInstanceDocument as DISABLE_INSTANCE } from "../../graphql/operations/disableInstance.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ instanceId: z.string() }).extend(warningsOutput),
   description: "Disable an Instance",
@@ -20,13 +20,10 @@ export default Cli.command({
       },
     });
 
-    const resourceId = result.updateInstance?.instance?.id;
-    if (resourceId == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Instance was not disabled",
-        exitCode: 2,
-      });
+    const resourceId = requireOperationResult(
+      result.updateInstance?.instance?.id,
+      "Instance was not disabled",
+    );
     return context.ok(
       { instanceId: resourceId },
       {

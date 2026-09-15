@@ -1,7 +1,7 @@
 import { CreateOrganizationUserDocument as CREATE_ORGANIZATION_USER } from "../../../graphql/operations/createOrganizationUser.generated.js";
-import { gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ userId: z.string() }).extend(warningsOutput),
   description: "Create a User for your Organization",
@@ -30,13 +30,10 @@ export default Cli.command({
         role,
       },
     });
-    const requiredValue1 = result.createOrganizationUser?.user?.id;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Organization user was not created",
-        exitCode: 2,
-      });
+    const requiredValue1 = requireOperationResult(
+      result.createOrganizationUser?.user?.id,
+      "Organization user was not created",
+    );
 
     return {
       userId: requiredValue1,

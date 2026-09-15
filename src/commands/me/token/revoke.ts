@@ -1,8 +1,9 @@
 import { confirm as confirmPrompt } from "../../../utils/prompts.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 import { revokeRefreshToken } from "../../../auth.js";
 import { writeCommandStatus, writeCommandOutput } from "../../../command.js";
 import { warningsOutput } from "../../../output.js";
+import { CommandFailedError } from "../../../errors.js";
 
 export default Cli.command({
   output: z.object({
@@ -27,10 +28,8 @@ export default Cli.command({
         "This will revoke all refresh tokens for the current user. Continue? (yes/no)",
       );
       if (!shouldContinue) {
-        throw new Errors.IncurError({
-          code: "COMMAND_FAILED",
+        throw new CommandFailedError({
           message: "Operation canceled",
-          exitCode: 1,
         });
       }
     }

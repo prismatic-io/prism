@@ -1,8 +1,8 @@
 import { parseJsonOrUndefined } from "../../../fields.js";
 import { CreateAlertMonitorDocument as CREATE_ALERT_MONITOR } from "../../../graphql/operations/createAlertMonitor.generated.js";
-import { gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ alertMonitorId: z.string() }).extend(warningsOutput),
   description:
@@ -69,13 +69,10 @@ export default Cli.command({
         users,
       },
     });
-    const requiredValue1 = result.createAlertMonitor?.alertMonitor?.id;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Alert monitor was not created",
-        exitCode: 2,
-      });
+    const requiredValue1 = requireOperationResult(
+      result.createAlertMonitor?.alertMonitor?.id,
+      "Alert monitor was not created",
+    );
 
     return {
       alertMonitorId: requiredValue1,

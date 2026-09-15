@@ -10,7 +10,8 @@ import {
   tableFlags,
   printTable,
 } from "../../../utils/table.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
+import { CommandFailedError } from "../../../errors.js";
 
 type TriggerNode =
   ListComponentTriggersQuery["components"]["nodes"][number]["actions"]["nodes"][number];
@@ -87,10 +88,8 @@ export default Cli.command({
         writeCommandStatus(
           "The key you provided is not valid. Please run 'prism components:list -x' and identify a valid component key.",
         );
-        throw new Errors.IncurError({
-          code: "COMMAND_FAILED",
+        throw new CommandFailedError({
           message: "Exited with status 1",
-          exitCode: 1,
         });
       }
       triggers = [...triggers, ...component.actions.nodes];

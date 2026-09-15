@@ -1,7 +1,7 @@
 import { PublishIntegrationDocument as PUBLISH_INTEGRATION } from "../../graphql/operations/publishIntegration.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ integrationId: z.string() }).extend(warningsOutput),
   description: "Publish a version of an Integration for use in Instances",
@@ -51,13 +51,10 @@ export default Cli.command({
       },
     });
 
-    const resourceId = result.publishIntegration?.integration?.id;
-    if (resourceId == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Integration was not published",
-        exitCode: 2,
-      });
+    const resourceId = requireOperationResult(
+      result.publishIntegration?.integration?.id,
+      "Integration was not published",
+    );
     return context.ok(
       { integrationId: resourceId },
       {

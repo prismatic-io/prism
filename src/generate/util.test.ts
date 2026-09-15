@@ -1,6 +1,35 @@
 import { promises as fs } from "fs";
-import { describe, expect, it } from "vitest";
-import { createDescription } from "./util.js";
+import { describe, expect, it, vi } from "vitest";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { createDescription, updatePackageJson } from "./util.js";
+
+describe("dependency version lookup", () => {
+  it.each([
+    [{ version: "1.2.3" }, "1.2.3"],
+    [{ error: "Not found" }, "*"],
+    [{ version: 123 }, "*"],
+    [{ version: "" }, "*"],
+    [null, "*"],
+  ])("preserves a usable dependency version for registry response %j", async (response, version) => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify(response))));
+    const directory = await fs.mkdtemp(path.join(tmpdir(), "prism-package-version-"));
+    const packagePath = path.join(directory, "package.json");
+    try {
+      await updatePackageJson({
+        path: packagePath,
+        dependencies: { example: "*", pinned: "2.0.0" },
+      });
+      expect(JSON.parse(await fs.readFile(packagePath, "utf8")).dependencies).toEqual({
+        example: version,
+        pinned: "2.0.0",
+      });
+      expect(fetch).toHaveBeenCalledOnce();
+    } finally {
+      await fs.rm(directory, { recursive: true, force: true });
+    }
+  });
+});
 
 const getComplexDescription = async () =>
   (await fs.readFile("src/generate/fixtures/complex_description.txt")).toString();

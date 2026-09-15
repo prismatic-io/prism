@@ -1,8 +1,8 @@
 import { parseJsonOrUndefined } from "../../fields.js";
 import { CreateInstanceDocument as CREATE_INSTANCE } from "../../graphql/operations/createInstance.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ instanceId: z.string() }).extend(warningsOutput),
   description: "Create an Instance",
@@ -57,13 +57,10 @@ export default Cli.command({
       },
     });
 
-    const resourceId = result.createInstance?.instance?.id;
-    if (resourceId == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Instance was not created",
-        exitCode: 2,
-      });
+    const resourceId = requireOperationResult(
+      result.createInstance?.instance?.id,
+      "Instance was not created",
+    );
     return context.ok(
       { instanceId: resourceId },
       {

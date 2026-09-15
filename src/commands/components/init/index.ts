@@ -1,6 +1,6 @@
 import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
 import { promises as fs } from "fs";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 import * as path from "path";
 import { parseAndGenerate } from "wsdl-tsclient";
 import { writeCommandStatus } from "../../../command.js";
@@ -15,6 +15,7 @@ import {
 } from "../../../utils/toolchain/index.js";
 import { generateComponent } from "./component.js";
 import { generateFormats } from "./formats.js";
+import { CommandFailedError } from "../../../errors.js";
 
 export default Cli.command({
   output: z.object({
@@ -85,17 +86,13 @@ export default Cli.command({
     if (!VALID_NAME_REGEX.test(name)) {
       const regexUrl = new URL("https://regex101.com");
       regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
-      throw new Errors.IncurError({
-        code: "COMMAND_FAILED",
+      throw new CommandFailedError({
         message: `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
-        exitCode: 1,
       });
     }
     if (wsdlPath && !wsdlPath?.includes(".wsdl")) {
-      throw new Errors.IncurError({
-        code: "COMMAND_FAILED",
+      throw new CommandFailedError({
         message: "If a WSDL is provided it must have an extension of '.wsdl'",
-        exitCode: 1,
       });
     }
     writeCommandStatus(`Creating component directory for "${name}"...`);

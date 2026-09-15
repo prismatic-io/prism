@@ -1,6 +1,6 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import { decode } from "@msgpack/msgpack";
-import { Errors, z, Cli } from "incur";
+import { z, Cli } from "incur";
 import inquirer from "inquirer";
 import { commandSignal } from "../../../command.js";
 import { exists, fs } from "../../../fs.js";
@@ -14,6 +14,7 @@ import { fetch } from "../../../utils/http.js";
 import { type IntegrationFlow, resolveFlow } from "../../../utils/integration/flows.js";
 import { runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
+import { ValidationError } from "../../../errors.js";
 
 const DEFAULT_TIMEOUT_SECONDS = 1200;
 const DEFAULT_OUTPUT_DIR = "./payloads";
@@ -87,9 +88,7 @@ export default Cli.command({
     const triggerType = getTriggerType(flow.trigger);
     if (triggerType === "POLLING" && prompt !== false) {
       if (context.agent)
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
-          exitCode: 2,
+        throw new ValidationError({
           message: "Agent mode requires --no-prompt for polling flows",
         });
       const { confirm } = await inquirer.prompt({

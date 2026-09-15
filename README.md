@@ -111,6 +111,38 @@ to register the MCP server, or `prism --mcp` to run it directly. `prism completi
 `prism completions zsh` print shell hooks; existing `autocomplete` entry points remain available.
 
 
+### Error codes
+
+Command failures expose a machine-readable `error.code` and a human-readable message.
+Use `--json --full-output` to inspect the result envelope. Usage errors detected before command
+execution expose `code` and `message` directly.
+
+- `VALIDATION_ERROR` means the command input is invalid (exit code 2).
+- `NOT_FOUND` means a requested resource does not exist (exit code 1).
+- `COMMAND_FAILED` means execution failed, including an operation that returned no expected
+  result (exit code 1).
+
+Incur accepts string error codes through `Errors.IncurError` and `context.error()`; it does not
+require an enum or a separate exception class for each code. Prism also has specific codes such
+as `AUTHENTICATION_REQUIRED`, `READ_ONLY`, and the customer command failure codes. Consumers
+should handle unknown codes as failures, since the set can grow.
+
+For command implementations, use `requireResource` for resource lookups and
+`requireOperationResult` for required operation results. These shared guards keep codes and exit
+statuses consistent. For other common failures, use `ValidationError`, `CommandFailedError`, or
+`NotFoundError` from `src/errors.ts`. These incur-compatible classes own their codes and exit
+statuses; callers supply the message and optional hint, cause, or retryability:
+
+```ts
+throw new ValidationError({ message: "An integration ID is required" });
+```
+
+Use `context.error(error.toResult())` for native error results, adding follow-up suggestions
+alongside the result when needed. Add a new code when it lets
+callers take a different recovery action;
+query versus mutation alone does not establish that distinction. A missing mutation result
+does not prove the server made no changes, so the result guard leaves `retryable` false.
+
 ## What is Prismatic?
 
 Prismatic is the leading embedded iPaaS, enabling B2B SaaS teams to ship product integrations faster and with less dev time. The only embedded iPaaS that empowers both developers and non-developers with tools for the complete integration lifecycle, Prismatic includes low-code and code-native building options, deployment and management tooling, and self-serve customer tools.

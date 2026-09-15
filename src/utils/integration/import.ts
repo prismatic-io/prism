@@ -26,7 +26,7 @@ import { loadYaml } from "../serialize.js";
 import { writeCommandOutput } from "../../command.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
 import { startAction, stopAction } from "../progress.js";
-import { Errors } from "incur";
+import { CommandFailedError } from "../../errors.js";
 
 const require = createRequire(import.meta.url);
 
@@ -169,10 +169,8 @@ export const importCodeNativeIntegration = async (
           }
 
           if (allKeysForFlow.length === 0) {
-            throw new Errors.IncurError({
-              code: "COMMAND_FAILED",
+            throw new CommandFailedError({
               message: `Flow "${flow.name}" requires customer API keys but none were provided. Use --test-api-key to specify keys in the format flowName="API_KEY".`,
-              exitCode: 1,
             });
           }
         }
@@ -389,20 +387,16 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
   const directory = await getPackageEntrypointDirectory("Code Native Integration");
   const entrypointPath = resolve(directory, "index.js");
   if (!(await exists(entrypointPath)))
-    throw new Errors.IncurError({
-      code: "COMMAND_FAILED",
+    throw new CommandFailedError({
       message:
         "Failed to find 'index.js' entrypoint file. Is the current path a Code Native Integration?",
-      exitCode: 1,
     });
   const { default: componentDefinition }: CodeNativeIntegrationEntrypoint = require(entrypointPath);
 
   if (!componentDefinition?.codeNativeIntegrationYAML) {
-    throw new Errors.IncurError({
-      code: "COMMAND_FAILED",
+    throw new CommandFailedError({
       message:
         "Failed to find Code Native Integration definition in 'index.js' entrypoint file. Is the current path a Code Native Integration?",
-      exitCode: 1,
     });
   }
 

@@ -1,8 +1,8 @@
 import { parseJsonOrUndefined } from "../../fields.js";
 import { UpdateIntegrationDocument as UPDATE_INTEGRATION } from "../../graphql/operations/updateIntegration.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ integrationId: z.string() }).extend(warningsOutput),
   description: "Update an Integration's name or description",
@@ -37,13 +37,10 @@ export default Cli.command({
       },
     });
 
-    const resourceId = result.updateIntegration?.integration?.id;
-    if (resourceId == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Integration was not updated",
-        exitCode: 2,
-      });
+    const resourceId = requireOperationResult(
+      result.updateIntegration?.integration?.id,
+      "Integration was not updated",
+    );
     return context.ok(
       { integrationId: resourceId },
       {

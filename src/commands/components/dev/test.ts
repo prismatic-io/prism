@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { getPackageEntrypointDirectory } from "../../../utils/import.js";
 import type serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import dotenv from "dotenv";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 import inquirer, { type Answers, type Question } from "inquirer";
 import { kebabCase, snakeCase, upperCase } from "lodash-es";
 import open from "open";
@@ -42,6 +42,7 @@ import { whoAmI } from "../../../utils/user/query.js";
 import { startAction, stopAction } from "../../../utils/progress.js";
 import { pressAnyKey } from "../../../utils/prompts.js";
 import { hyperlink } from "../../../utils/terminal.js";
+import { ValidationError, CommandFailedError } from "../../../errors.js";
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -256,10 +257,8 @@ export default Cli.command({
 
       const { name } = await whoAmI();
       if (!name) {
-        throw new Errors.IncurError({
-          code: "COMMAND_FAILED",
+        throw new CommandFailedError({
           message: "Failed to determine the name of the currently logged in user.",
-          exitCode: 1,
         });
       }
 
@@ -306,10 +305,8 @@ export default Cli.command({
         if (context.agent) {
           const selected = actionKey ? actions[actionKey] : undefined;
           if (!selected) {
-            throw new Errors.IncurError({
-              code: "VALIDATION_ERROR",
+            throw new ValidationError({
               message: `Unknown action key: ${actionKey}`,
-              exitCode: 2,
             });
           }
           action = selected;
@@ -358,10 +355,8 @@ export default Cli.command({
             }
             const selected = connections.find(({ key }) => key === connectionKey);
             if (!selected) {
-              throw new Errors.IncurError({
-                code: "VALIDATION_ERROR",
+              throw new ValidationError({
                 message: `Unknown connection key: ${connectionKey}`,
-                exitCode: 2,
               });
             }
             connection = selected;
@@ -496,10 +491,8 @@ const parseInputObject = (raw: string | undefined, flag: string): Record<string,
     if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error();
     return value;
   } catch {
-    throw new Errors.IncurError({
-      code: "VALIDATION_ERROR",
+    throw new ValidationError({
       message: `${flag} must be a JSON object`,
-      exitCode: 2,
     });
   }
 };

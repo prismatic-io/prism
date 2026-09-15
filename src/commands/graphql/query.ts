@@ -7,8 +7,9 @@ import {
 } from "../../command.js";
 import { gqlRequest } from "../../graphql.js";
 import { dumpYaml } from "../../utils/serialize.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 import { printTable } from "../../utils/table.js";
+import { ValidationError, CommandFailedError } from "../../errors.js";
 
 const variablesSchema = z.record(z.string(), z.unknown());
 
@@ -142,21 +143,17 @@ export default Cli.command({
       queryString = args.query;
     } else {
       if (process.stdin.isTTY) {
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
+        throw new ValidationError({
           message:
             "No query provided. Please provide a query as an argument, use --file, or pipe via stdin.",
-          exitCode: 2,
         });
       }
       queryString = await readStdin();
     }
 
     if (!queryString.trim()) {
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new ValidationError({
         message: "Query string is empty",
-        exitCode: 2,
       });
     }
 
@@ -164,10 +161,8 @@ export default Cli.command({
     try {
       mutates = hasMutationOperation(queryString);
     } catch (error) {
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new ValidationError({
         message: `Invalid GraphQL document: ${error instanceof Error ? error.message : String(error)}`,
-        exitCode: 2,
       });
     }
     if (mutates) assertMutationAllowed(context);
@@ -177,10 +172,8 @@ export default Cli.command({
       try {
         variables = await readVariables(flags.variables);
       } catch (error) {
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
+        throw new ValidationError({
           message: `Failed to parse variables: ${error instanceof Error ? error.message : String(error)}`,
-          exitCode: 2,
         });
       }
     }
@@ -192,10 +185,8 @@ export default Cli.command({
         variables,
       });
     } catch (error) {
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new CommandFailedError({
         message: `GraphQL query failed: ${error instanceof Error ? error.message : String(error)}`,
-        exitCode: 2,
       });
     }
 
@@ -209,10 +200,8 @@ export default Cli.command({
 
       case "table": {
         if (!flags.columns) {
-          throw new Errors.IncurError({
-            code: "VALIDATION_ERROR",
+          throw new ValidationError({
             message: "Table output requires --columns flag. Specify comma-separated field paths.",
-            exitCode: 2,
           });
         }
         const columns = flags.columns.split(",").map((c: string) => c.trim());
