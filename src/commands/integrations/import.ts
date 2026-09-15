@@ -3,6 +3,7 @@ import { writeCommandOutput, writeCommandStatus } from "../../command.js";
 import { CommandFailedError, ValidationError } from "../../errors.js";
 import { exists } from "../../fs.js";
 import { warningsOutput } from "../../output.js";
+import { resolveWaitOptions, waitOptions } from "../../utils/availability.js";
 import {
   compareConfigVars,
   extractYAMLFromPath,
@@ -51,6 +52,12 @@ export default Cli.command({
       .boolean()
       .default(true)
       .describe("Interactively confirm the import when using --replace"),
+    wait: waitOptions.wait.describe(
+      "Wait for the Code Native Integration package to become available before importing the definition (use --no-wait to import immediately)",
+    ),
+    "wait-timeout": waitOptions["wait-timeout"].describe(
+      "Seconds to wait for the Code Native Integration package to become available",
+    ),
   }),
   async run(context) {
     const {
@@ -64,6 +71,7 @@ export default Cli.command({
         confirm,
       },
     } = context;
+    const wait = resolveWaitOptions(context.options);
 
     if (path && !(await exists(path))) {
       throw new ValidationError({
@@ -131,7 +139,7 @@ There will be no way to restore the existing draft. If you wish to save it, eith
       ? // A path was specified, so assume we're importing a YAML Integration.
         await importYamlIntegration(path, integrationId, iconPath, replace)
       : // No path was specified, so assume the current directory is a Code Native Integration and import it.
-        await importCodeNativeIntegration(integrationId, replace, testApiKey);
+        await importCodeNativeIntegration(integrationId, replace, testApiKey, wait);
 
     writeCommandStatus(integrationImportId);
 

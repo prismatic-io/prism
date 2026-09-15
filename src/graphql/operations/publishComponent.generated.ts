@@ -100,6 +100,8 @@ export type ComponentDefinitionInput = {
   documentationUrl?: string | null | undefined;
   /** Specifies whether the Component is for a Code Native Integration. */
   forCodeNativeIntegration?: boolean | null | undefined;
+  /** Whether this Component defines a configuration init function. */
+  hasConfigurationInit?: boolean | null | undefined;
   /** A string that uniquely identifies the Component. */
   key: string;
   /** Specifies whether the Component is publicly available or whether it's private to the Organization. */
