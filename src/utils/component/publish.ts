@@ -135,6 +135,8 @@ export const publishDefinition = async (
 
   const connectionDefinitions = connections || [];
 
+  const serverFunctionDefinitions = rest.serverFunctionDefinitions ?? [];
+
   // Initiate start of the publish procedure by sending config data and receive back presigned s3 URL
   const result = await gqlRequest({
     document: gql`
@@ -144,6 +146,7 @@ export const publishDefinition = async (
         $triggers: [TriggerDefinitionInput]
         $dataSources: [DataSourceDefinitionInput]
         $connections: [ConnectionDefinitionInput]
+        $serverFunctions: [ServerFunctionDefinitionInput]
         $comment: String
         $customer: ID
         $attributes: String
@@ -155,6 +158,7 @@ export const publishDefinition = async (
             triggers: $triggers
             dataSources: $dataSources
             connections: $connections
+            serverFunctions: $serverFunctions
             comment: $comment
             customer: $customer
             attributes: $attributes
@@ -190,6 +194,7 @@ export const publishDefinition = async (
       triggers: triggerDefinitions,
       dataSources: dataSourceDefinitions,
       connections: connectionDefinitions,
+      serverFunctions: serverFunctionDefinitions,
       comment,
       customer,
       attributes: attributes ? JSON.stringify(attributes) : undefined,
