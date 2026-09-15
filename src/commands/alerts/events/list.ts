@@ -2,12 +2,6 @@ import { tableOutputSchema, tableFlags, printTable } from "../../../utils/table.
 import { ListAlertEventsDocument as LIST_ALERT_EVENTS } from "../../../graphql/operations/listAlertEvents.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import { z, Cli } from "incur";
-type AlertEvent = {
-  createdAt: unknown;
-  details: unknown;
-  id: unknown;
-  monitor: { name: unknown };
-};
 
 export default Cli.command({
   outputPolicy: "agent-only",
@@ -40,7 +34,7 @@ export default Cli.command({
           extended: true,
         },
         name: {
-          get: (row: AlertEvent) => row.monitor.name,
+          get: (row) => row.monitor.name,
           header: "Name",
         },
         createdAt: {

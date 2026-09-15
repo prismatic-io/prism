@@ -1,3 +1,4 @@
+import { ValidationError } from "../../errors.js";
 import { Cli, z } from "incur";
 import {
   fetchUserTenants,
@@ -63,12 +64,12 @@ export default Cli.command({
         ? activeTenants.find((tenant) => tenant.tenantId === tenantId)
         : undefined;
     if (tenantId !== undefined && !requestedTenant) {
-      return context.error({
-        code: "VALIDATION_ERROR",
-        retryable: false,
-        message: `Tenant '${tenantId}' is not available to this profile.`,
-        exitCode: 2,
-      });
+      return context.error(
+        new ValidationError({
+          retryable: false,
+          message: `Tenant '${tenantId}' is not available to this profile.`,
+        }).toResult(),
+      );
     }
 
     if (
@@ -94,12 +95,12 @@ export default Cli.command({
     }
 
     if (context.agent && !requestedTenant) {
-      return context.error({
-        code: "VALIDATION_ERROR",
-        retryable: false,
-        message: "Agent mode requires --tenant-id when more than one tenant is available.",
-        exitCode: 2,
-      });
+      return context.error(
+        new ValidationError({
+          retryable: false,
+          message: "Agent mode requires --tenant-id when more than one tenant is available.",
+        }).toResult(),
+      );
     }
     const selectedTenantId =
       requestedTenant?.tenantId ??

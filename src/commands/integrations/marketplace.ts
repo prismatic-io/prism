@@ -1,7 +1,7 @@
 import { UpdateMarketplaceConfigurationDocument as UPDATE_MARKETPLACE_CONFIGURATION } from "../../graphql/operations/updateMarketplaceConfiguration.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ integrationId: z.string() }).extend(warningsOutput),
   description: "Make a version of an Integration available in the Marketplace",
@@ -46,13 +46,10 @@ export default Cli.command({
       },
     });
 
-    const resourceId = result.updateIntegrationMarketplaceConfiguration?.integration?.id;
-    if (resourceId == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Integration marketplace configuration was not updated",
-        exitCode: 2,
-      });
+    const resourceId = requireOperationResult(
+      result.updateIntegrationMarketplaceConfiguration?.integration?.id,
+      "Integration marketplace configuration was not updated",
+    );
     return context.ok(
       { integrationId: resourceId },
       {

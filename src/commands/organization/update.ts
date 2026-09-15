@@ -1,7 +1,7 @@
 import { UpdateOrganizationDocument as UPDATE_ORGANIZATION } from "../../graphql/operations/updateOrganization.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ organizationId: z.string() }).extend(warningsOutput),
   description: "Update your Organization",
@@ -19,13 +19,10 @@ export default Cli.command({
         name,
       },
     });
-    const requiredValue1 = result.updateOrganization?.organization?.id;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Organization was not updated",
-        exitCode: 2,
-      });
+    const requiredValue1 = requireOperationResult(
+      result.updateOrganization?.organization?.id,
+      "Organization was not updated",
+    );
 
     return {
       organizationId: requiredValue1,

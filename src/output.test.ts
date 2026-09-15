@@ -21,7 +21,10 @@ import { getAuthContext } from "./context.js";
 import { gqlRequest } from "./graphql.js";
 import { warningsOutput } from "./output.js";
 
-vi.mock(import("./graphql.js"), () => ({ gqlRequest: vi.fn() }));
+vi.mock(import("./graphql.js"), async (original) => ({
+  ...(await original()),
+  gqlRequest: vi.fn(),
+}));
 
 const context = (agent: boolean) => ({
   agent,

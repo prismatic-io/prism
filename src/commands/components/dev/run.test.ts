@@ -6,7 +6,28 @@ import { gqlRequest } from "../../../graphql.js";
 import { runCommand } from "../../../test-command.js";
 import RunCommand from "./run.js";
 
-vi.mock("../../../graphql.js", () => ({ gqlRequest: vi.fn() }));
+vi.mock("../../../graphql.js", async (original) => ({
+  ...(await original()),
+  gqlRequest: vi.fn(),
+}));
+
+it.each([
+  ["integrationId", "integration", "Integration"],
+  ["instanceId", "instance", "Instance"],
+])("reports a missing %s as NOT_FOUND", async (flag, field, label) => {
+  vi.mocked(gqlRequest).mockResolvedValue({ [field]: null });
+  await expect(
+    runCommand(RunCommand, [
+      "--agent",
+      "--yes",
+      `--${flag}`,
+      "missing",
+      "--connectionKey",
+      "connection",
+      process.execPath,
+    ]),
+  ).rejects.toMatchObject({ code: "NOT_FOUND", exitCode: 1, message: `${label} not found` });
+});
 
 it.each([
   JSON.stringify({ session: "session-value" }),

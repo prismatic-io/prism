@@ -1,7 +1,9 @@
 import { CommitAvatarUploadDocument as COMMIT_AVATAR_UPLOAD } from "../../graphql/operations/commitAvatarUpload.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
+import { ValidationError } from "../../errors.js";
+
 export default Cli.command({
   output: z.object({ organizationId: z.string() }).extend(warningsOutput),
   description: "Update your Organization Avatar URL",
@@ -15,10 +17,8 @@ export default Cli.command({
     } = context;
     const requiredValue2 = avatarUrl;
     if (requiredValue2 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new ValidationError({
         message: "--avatarUrl is required to update the avatar",
-        exitCode: 2,
       });
 
     const result = await gqlRequest({
@@ -28,13 +28,10 @@ export default Cli.command({
         avatarUrl: requiredValue2,
       },
     });
-    const requiredValue1 = result.updateOrganization?.organization?.id;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Organization avatar was not updated",
-        exitCode: 2,
-      });
+    const requiredValue1 = requireOperationResult(
+      result.updateOrganization?.organization?.id,
+      "Organization avatar was not updated",
+    );
 
     return {
       organizationId: requiredValue1,

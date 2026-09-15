@@ -1,7 +1,7 @@
 import { CreateAlertWebhookDocument as CREATE_ALERT_WEBHOOK } from "../../../graphql/operations/createAlertWebhook.generated.js";
-import { gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ alertWebhookId: z.string() }).extend(warningsOutput),
   description: "Create an Alert Webhook",
@@ -32,13 +32,10 @@ export default Cli.command({
         payloadTemplate,
       },
     });
-    const requiredValue1 = result.createAlertWebhook?.alertWebhook?.id;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Alert webhook was not created",
-        exitCode: 2,
-      });
+    const requiredValue1 = requireOperationResult(
+      result.createAlertWebhook?.alertWebhook?.id,
+      "Alert webhook was not created",
+    );
 
     return {
       alertWebhookId: requiredValue1,

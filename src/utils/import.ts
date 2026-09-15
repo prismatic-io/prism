@@ -1,7 +1,7 @@
 import { getWorkingDirectory } from "../command-context.js";
 import { resolve } from "path";
 import { exists } from "../fs.js";
-import { Errors } from "incur";
+import { CommandFailedError } from "../errors.js";
 
 /**
  * Finds the package root directory by searching upward for package.json.
@@ -15,10 +15,8 @@ export const findPackageRoot = async (packageType: string): Promise<string> => {
   while (!(await exists(resolve(currentPath, "package.json")))) {
     const parentPath = resolve(currentPath, "..");
     if (parentPath === currentPath) {
-      throw new Errors.IncurError({
-        code: "COMMAND_FAILED",
+      throw new CommandFailedError({
         message: `Failed to find 'package.json' file. Is the current path a ${packageType}?`,
-        exitCode: 1,
       });
     }
     currentPath = parentPath;
@@ -31,10 +29,8 @@ export const seekPackageDistDirectory = async (packageType: string): Promise<str
   const packageRoot = await findPackageRoot(packageType);
 
   if (!(await exists(resolve(packageRoot, "dist")))) {
-    throw new Errors.IncurError({
-      code: "COMMAND_FAILED",
+    throw new CommandFailedError({
       message: `Failed to find 'dist' folder. Is the current path a ${packageType}?`,
-      exitCode: 1,
     });
   }
 

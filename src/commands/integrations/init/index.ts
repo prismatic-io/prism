@@ -1,6 +1,6 @@
 import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
 import fs from "fs/promises";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 import { camelCase } from "lodash-es";
 import path from "path";
 import { v4 as uuid4 } from "uuid";
@@ -14,6 +14,7 @@ import {
   getToolchain,
   TOOLCHAIN_NAMES,
 } from "../../../utils/toolchain/index.js";
+import { CommandFailedError } from "../../../errors.js";
 
 const CLEANABLE_TEMPLATES = [
   "src/client.ts",
@@ -66,10 +67,8 @@ export default Cli.command({
     if (!VALID_NAME_REGEX.test(name)) {
       const regexUrl = new URL("https://regex101.com");
       regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
-      throw new Errors.IncurError({
-        code: "COMMAND_FAILED",
+      throw new CommandFailedError({
         message: `'${name}' contains invalid characters. Please select an integration name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
-        exitCode: 1,
       });
     }
 

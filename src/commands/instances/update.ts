@@ -1,8 +1,8 @@
 import { DeployInstance2Document as DEPLOY_INSTANCE2 } from "../../graphql/operations/deployInstance2.generated.js";
 import { UpdateInstanceDocument as UPDATE_INSTANCE } from "../../graphql/operations/updateInstance.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ instanceId: z.string() }).extend(warningsOutput),
   description: "Update an Instance",
@@ -37,13 +37,10 @@ export default Cli.command({
     });
 
     if (!deploy) {
-      const resourceId = result.updateInstance?.instance?.id;
-      if (resourceId == null)
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
-          message: "Instance was not updated",
-          exitCode: 2,
-        });
+      const resourceId = requireOperationResult(
+        result.updateInstance?.instance?.id,
+        "Instance was not updated",
+      );
       return context.ok(
         { instanceId: resourceId },
         {
@@ -67,13 +64,10 @@ export default Cli.command({
       },
     });
 
-    const resourceId = deployResult.deployInstance?.instance?.id;
-    if (resourceId == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Instance was not deployed",
-        exitCode: 2,
-      });
+    const resourceId = requireOperationResult(
+      deployResult.deployInstance?.instance?.id,
+      "Instance was not deployed",
+    );
     return context.ok(
       { instanceId: resourceId },
       {

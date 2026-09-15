@@ -1,7 +1,8 @@
-import { Cli, Errors, z } from "incur";
+import { Cli, z } from "incur";
 import { logout } from "../auth.js";
 import { writeCommandOutput, writeCommandStatus } from "../command.js";
 import { deleteAuthProfile, getProfileAuthContext, hasEnvironmentCredentials } from "../context.js";
+import { CommandFailedError } from "../errors.js";
 
 export default Cli.command({
   output: z.object({
@@ -34,10 +35,8 @@ export default Cli.command({
       const environmentHint = environmentCredentialsActive
         ? " Environment credentials remain active until you unset PRISM_ACCESS_TOKEN and PRISM_REFRESH_TOKEN."
         : "";
-      throw new Errors.IncurError({
-        code: "COMMAND_FAILED",
+      throw new CommandFailedError({
         message: `Profile '${profileName}' does not exist.${environmentHint}`,
-        exitCode: 1,
       });
     }
     writeCommandStatus(`Logged out of '${profileName}'.`);

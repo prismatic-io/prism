@@ -52,19 +52,6 @@ export async function getIntegrationFlows(integrationId: string): Promise<Integr
   return (await getIntegrationFlowsPage(integrationId, { all: true })).flows;
 }
 
-export interface LogNode {
-  [index: string]: unknown;
-  timestamp: string;
-  severity: string;
-  message: string;
-}
-
-export interface FetchLogsResult {
-  logs: LogNode[];
-  cursor: string | undefined;
-  executionComplete?: boolean;
-}
-
 export async function getExecutionLogs(executionId: string, nextCursor?: string) {
   return await gqlRequest({
     document: GET_EXECUTION_LOGS,
@@ -73,13 +60,6 @@ export async function getExecutionLogs(executionId: string, nextCursor?: string)
       nextCursor,
     },
   });
-}
-
-export interface StepResultNode {
-  [index: string]: unknown;
-  stepName: string;
-  endedAt: string;
-  resultsUrl: string;
 }
 
 export async function getExecutionStepResults(executionId: string, nextCursor?: string) {

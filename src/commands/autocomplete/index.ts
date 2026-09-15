@@ -1,5 +1,6 @@
 import { writeCommandOutput } from "../../command.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
+import { ValidationError } from "../../errors.js";
 
 const zshInstructions = `
 Setup Instructions for PRISM CLI Autocomplete ---
@@ -86,11 +87,9 @@ export default Cli.command({
     if (refreshCache) return { instructions: "", refreshed: true };
     const selectedShell = shell ?? (process.env.SHELL?.endsWith("bash") ? "bash" : "zsh");
     if (selectedShell === "powershell") {
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new ValidationError({
         message:
           "PowerShell completion is not supported in CLIs using colon as the topic separator.\nSee: https://oclif.io/docs/topic_separator",
-        exitCode: 2,
       });
     }
     const instructions = selectedShell === "bash" ? bashInstructions : zshInstructions;

@@ -1,8 +1,8 @@
 import { parseJsonOrUndefined } from "../../../fields.js";
 import { CreateAlertGroupDocument as CREATE_ALERT_GROUP } from "../../../graphql/operations/createAlertGroup.generated.js";
-import { gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ alertGroupId: z.string() }).extend(warningsOutput),
   description: "Create an Alert Group",
@@ -37,13 +37,10 @@ export default Cli.command({
         webhooks,
       },
     });
-    const requiredValue1 = result.createAlertGroup?.alertGroup?.id;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Alert group was not created",
-        exitCode: 2,
-      });
+    const requiredValue1 = requireOperationResult(
+      result.createAlertGroup?.alertGroup?.id,
+      "Alert group was not created",
+    );
 
     return {
       alertGroupId: requiredValue1,

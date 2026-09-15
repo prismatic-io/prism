@@ -1,3 +1,4 @@
+import { NotFoundError } from "../../errors.js";
 import { Cli, z } from "incur";
 import { writeCommandStatus } from "../../command.js";
 import { deleteProfile } from "../../config.js";
@@ -22,11 +23,8 @@ export default Cli.command({
     const result = await deleteProfile(name);
     if (!result.deleted) {
       return context.error({
-        code: "NOT_FOUND",
-        retryable: false,
+        ...new NotFoundError({ message: `Profile '${name}' does not exist.` }).toResult(),
         cta: { commands: [{ command: "profiles list", description: "List available profiles" }] },
-        message: `Profile '${name}' does not exist.`,
-        exitCode: 1,
       });
     }
 

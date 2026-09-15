@@ -1,7 +1,7 @@
 import { GenerateSigningKeyDocument as GENERATE_SIGNING_KEY } from "../../../graphql/operations/generateSigningKey.generated.js";
-import { gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { Cli, z, Errors } from "incur";
+import { Cli, z } from "incur";
 
 export default Cli.command({
   output: z.object({ privateKey: z.string() }).extend(warningsOutput),
@@ -11,13 +11,10 @@ export default Cli.command({
     const result = await gqlRequest({
       document: GENERATE_SIGNING_KEY,
     });
-    const requiredValue1 = result.createOrganizationSigningKey?.result?.privateKey;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Signing key was not generated",
-        exitCode: 2,
-      });
+    const requiredValue1 = requireOperationResult(
+      result.createOrganizationSigningKey?.result?.privateKey,
+      "Signing key was not generated",
+    );
     return {
       privateKey: requiredValue1,
     };

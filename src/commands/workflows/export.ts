@@ -1,8 +1,8 @@
 import { ExportWorkflowDocument as EXPORT_WORKFLOW } from "../../graphql/operations/exportWorkflow.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireResource, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
 import { dumpYaml, loadYaml } from "../../utils/serialize.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ definition: z.string() }).extend(warningsOutput),
   description: "Export an embedded workflow or workflow template YAML definition",
@@ -27,13 +27,8 @@ export default Cli.command({
       document: EXPORT_WORKFLOW,
       variables: { workflow, useLatestComponentVersions: latest },
     });
-    const definition = result.workflow?.definition;
-    if (definition == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Workflow was not found or has no definition",
-        exitCode: 2,
-      });
+    const resource = requireResource(result.workflow, "Workflow");
+    const definition = requireOperationResult(resource.definition, "Workflow has no definition");
     return { definition: dumpYaml(loadYaml(definition)) };
   },
   alias: { "latest-components": "l" },

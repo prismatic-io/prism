@@ -1,7 +1,7 @@
 import { ForkIntegrationDocument as FORK_INTEGRATION } from "../../graphql/operations/forkIntegration.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ integrationId: z.string() }).extend(warningsOutput),
   description: "Fork an Integration",
@@ -27,13 +27,10 @@ export default Cli.command({
       },
     });
 
-    const resourceId = result.forkIntegration?.integration?.id;
-    if (resourceId == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Integration was not forked",
-        exitCode: 2,
-      });
+    const resourceId = requireOperationResult(
+      result.forkIntegration?.integration?.id,
+      "Integration was not forked",
+    );
     return context.ok(
       { integrationId: resourceId },
       {

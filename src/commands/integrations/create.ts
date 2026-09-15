@@ -1,7 +1,7 @@
 import { CreateIntegrationDocument as CREATE_INTEGRATION } from "../../graphql/operations/createIntegration.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ integrationId: z.string() }).extend(warningsOutput),
   description: "Create an Integration",
@@ -27,13 +27,10 @@ export default Cli.command({
       },
     });
 
-    const resourceId = result.createIntegration?.integration?.id;
-    if (resourceId == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Integration was not created",
-        exitCode: 2,
-      });
+    const resourceId = requireOperationResult(
+      result.createIntegration?.integration?.id,
+      "Integration was not created",
+    );
     return context.ok(
       { integrationId: resourceId },
       {

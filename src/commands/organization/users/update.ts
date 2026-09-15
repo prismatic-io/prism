@@ -1,7 +1,7 @@
 import { UpdateUserDocument as UPDATE_USER } from "../../../graphql/operations/updateUser.generated.js";
-import { gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ userId: z.string() }).extend(warningsOutput),
   description: "Update a User",
@@ -37,13 +37,10 @@ export default Cli.command({
             : z.enum(["true", "false"]).parse(darkModeOsSync) === "true",
       },
     });
-    const requiredValue1 = result.updateUser?.user?.id;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Organization user was not updated",
-        exitCode: 2,
-      });
+    const requiredValue1 = requireOperationResult(
+      result.updateUser?.user?.id,
+      "Organization user was not updated",
+    );
 
     return {
       userId: requiredValue1,

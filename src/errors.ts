@@ -1,5 +1,38 @@
 import { getReasonPhrase, StatusCodes } from "http-status-codes";
 import type { ClientError } from "./graphql.js";
+import { Errors } from "incur";
+
+type CommandErrorOptions = Omit<Errors.IncurError.Options, "code" | "exitCode">;
+
+abstract class CommandError extends Errors.IncurError {
+  // Native result envelopes spread their inputs; Error.message is not enumerable.
+  toResult() {
+    return {
+      code: this.code,
+      message: this.message,
+      exitCode: this.exitCode,
+      retryable: this.retryable,
+    };
+  }
+}
+
+export class ValidationError extends CommandError {
+  constructor(options: CommandErrorOptions) {
+    super({ ...options, code: "VALIDATION_ERROR", exitCode: 2 });
+  }
+}
+
+export class CommandFailedError extends CommandError {
+  constructor(options: CommandErrorOptions) {
+    super({ ...options, code: "COMMAND_FAILED", exitCode: 1 });
+  }
+}
+
+export class NotFoundError extends CommandError {
+  constructor(options: CommandErrorOptions) {
+    super({ ...options, code: "NOT_FOUND", exitCode: 1 });
+  }
+}
 
 const isError = (error: unknown): error is Error =>
   Boolean(error) && typeof error === "object" && error !== null && "message" in error;

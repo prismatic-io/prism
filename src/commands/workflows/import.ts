@@ -1,8 +1,8 @@
 import { ImportWorkflowDocument as IMPORT_WORKFLOW } from "../../graphql/operations/importWorkflow.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
 import { extractYAMLFromPath } from "../../utils/integration/import.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ workflowId: z.string() }).extend(warningsOutput),
   description: "Import an embedded workflow or workflow template YAML definition",
@@ -31,13 +31,10 @@ export default Cli.command({
       document: IMPORT_WORKFLOW,
       variables: { definition, customer, workflow },
     });
-    const requiredValue1 = result.importWorkflow?.workflow?.id;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Workflow was not imported",
-        exitCode: 2,
-      });
+    const requiredValue1 = requireOperationResult(
+      result.importWorkflow?.workflow?.id,
+      "Workflow was not imported",
+    );
 
     return {
       workflowId: requiredValue1,

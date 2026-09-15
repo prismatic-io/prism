@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { ImportPublicKeyDocument as IMPORT_PUBLIC_KEY } from "../../../graphql/operations/importPublicKey.generated.js";
-import { gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ signingKeyId: z.string() }).extend(warningsOutput),
   description:
@@ -28,13 +28,10 @@ export default Cli.command({
       document: IMPORT_PUBLIC_KEY,
       variables: { publicKey },
     });
-    const requiredValue1 = result.importOrganizationSigningKey?.organizationSigningKey?.id;
-    if (requiredValue1 == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Signing key was not imported",
-        exitCode: 2,
-      });
+    const requiredValue1 = requireOperationResult(
+      result.importOrganizationSigningKey?.organizationSigningKey?.id,
+      "Signing key was not imported",
+    );
 
     return {
       signingKeyId: requiredValue1,

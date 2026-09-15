@@ -1,7 +1,7 @@
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 import { writeCommandStatus, writeCommandOutput } from "../../../command.js";
 import { ConvertToCniDocument as CONVERT_TO_CNI } from "../../../graphql/operations/ConvertToCNI.generated.js";
-import { gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
 import { startAction, stopAction } from "../../../utils/progress.js";
 
@@ -53,14 +53,10 @@ export default Cli.command({
 
       stopAction();
 
-      const conversionResult =
-        result.convertLowCodeIntegration?.convertLowCodeIntegrationFormResult;
-      if (conversionResult == null)
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
-          message: "Integration conversion returned no result",
-          exitCode: 2,
-        });
+      const conversionResult = requireOperationResult(
+        result.convertLowCodeIntegration?.convertLowCodeIntegrationFormResult,
+        "Integration conversion returned no result",
+      );
       const { url, conversionErrors } = conversionResult;
 
       if (conversionErrors && conversionErrors.length > 0) {

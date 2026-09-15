@@ -11,7 +11,8 @@ import {
   loadCodeNativeIntegrationEntryPoint,
 } from "../../utils/integration/import.js";
 import { openIntegration } from "../../utils/integration/open.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
+import { CommandFailedError, ValidationError } from "../../errors.js";
 
 export default Cli.command({
   output: z.object({ integrationId: z.string() }).extend(warningsOutput),
@@ -65,24 +66,18 @@ export default Cli.command({
     } = context;
 
     if (path && !(await exists(path))) {
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new ValidationError({
         message: `Cannot find definition file at specified path "${path}"`,
-        exitCode: 2,
       });
     }
     if (iconPath && !(await exists(iconPath))) {
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new ValidationError({
         message: `Cannot find icon file at specified path "${iconPath}"`,
-        exitCode: 2,
       });
     }
     if (replace && !integrationId) {
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new ValidationError({
         message: "An integrationId is required when using the replace flag",
-        exitCode: 2,
       });
     }
 
@@ -104,10 +99,8 @@ export default Cli.command({
         if (confirm) {
           const shouldContinue = await confirmPrompt("Continue? (yes/no)");
           if (!shouldContinue) {
-            throw new Errors.IncurError({
-              code: "COMMAND_FAILED",
+            throw new CommandFailedError({
               message: "Import canceled",
-              exitCode: 1,
             });
           }
         }
@@ -127,10 +120,8 @@ There will be no way to restore the existing draft. If you wish to save it, eith
       if (confirm) {
         const shouldContinue = await confirmPrompt("Continue? (yes/no)");
         if (!shouldContinue) {
-          throw new Errors.IncurError({
-            code: "COMMAND_FAILED",
+          throw new CommandFailedError({
             message: "Import canceled",
-            exitCode: 1,
           });
         }
       }

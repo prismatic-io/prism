@@ -1,7 +1,7 @@
 import { MarkAvailabilityDocument as MARK_AVAILABILITY } from "../../graphql/operations/markAvailability.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ integrationId: z.string() }).extend(warningsOutput),
   description: "Mark an Integration version as available or unavailable",
@@ -25,13 +25,10 @@ export default Cli.command({
       },
     });
 
-    const resourceId = result.updateIntegrationVersionAvailability?.integration?.id;
-    if (resourceId == null)
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
-        message: "Integration availability was not updated",
-        exitCode: 2,
-      });
+    const resourceId = requireOperationResult(
+      result.updateIntegrationVersionAvailability?.integration?.id,
+      "Integration availability was not updated",
+    );
     return context.ok(
       { integrationId: resourceId },
       {

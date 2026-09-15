@@ -3,12 +3,14 @@ import { resolve } from "node:path";
 import { exists, fs } from "../../fs.js";
 import { writeCommandOutput } from "../../command.js";
 import { isQuiet } from "../../runtime.js";
+import { z } from "zod";
 
 interface PrismMetadataOptions {
   fromDist?: boolean;
 }
 
 const CNI_METADATA_RELATIVE_PATH = ".spectral/prism.json";
+const metadataSchema = z.record(z.string(), z.string());
 
 function getPrefix(fromDist = false) {
   return fromDist ? "../" : "./";
@@ -28,8 +30,7 @@ export async function getPrismMetadata(
   }
 
   try {
-    const parsed = JSON.parse(await fs.readFile(metadataPath, { encoding: "utf-8" }));
-    return parsed;
+    return metadataSchema.parse(JSON.parse(await fs.readFile(metadataPath, { encoding: "utf-8" })));
   } catch (e) {
     writeCommandOutput(`Failed to parse metadata at ${metadataPath} ${e}`, "stderr");
     return {};

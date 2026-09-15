@@ -67,6 +67,20 @@ describe("metadata utils", () => {
       expect(result).toEqual({});
       expect(stderrSpy).toHaveBeenCalled();
     });
+
+    it.each([
+      null,
+      [],
+      "metadata",
+      { integrationId: 123 },
+      { integrationId: {} },
+    ])("ignores metadata with an invalid shape: %j", async (value) => {
+      mockExists.mockResolvedValue(true);
+      mockReadFile.mockResolvedValue(JSON.stringify(value));
+
+      await expect(withWorkingDirectory(projectDirectory, getPrismMetadata)).resolves.toEqual({});
+      expect(stderrSpy).toHaveBeenCalled();
+    });
   });
 
   describe("writePrismMetadata", () => {

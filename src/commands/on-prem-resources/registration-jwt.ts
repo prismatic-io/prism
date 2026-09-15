@@ -1,8 +1,10 @@
 import { CreateOnPremiseResourceJwtDocument as CREATE_ON_PREMISE_RESOURCE_JWT } from "../../graphql/operations/createOnPremiseResourceJWT.generated.js";
 import { RotateOnPremiseResourceJwtDocument as ROTATE_ON_PREMISE_RESOURCE_JWT } from "../../graphql/operations/rotateOnPremiseResourceJWT.generated.js";
-import { gqlRequest } from "../../graphql.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
+import { ValidationError } from "../../errors.js";
+
 const onlyWhenOrgUser = "Only valid for Organization users.";
 
 export default Cli.command({
@@ -36,10 +38,8 @@ export default Cli.command({
     if (rotate) {
       const requiredValue3 = resourceId;
       if (requiredValue3 == null)
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
+        throw new ValidationError({
           message: "--rotate requires --resourceId",
-          exitCode: 2,
         });
       const result = await gqlRequest({
         document: ROTATE_ON_PREMISE_RESOURCE_JWT,
@@ -49,13 +49,10 @@ export default Cli.command({
           orgOnly,
         },
       });
-      const requiredValue2 = result.rotateOnPremiseResourceJWT?.result?.jwt;
-      if (requiredValue2 == null)
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
-          message: "On-premise resource JWT was not rotated",
-          exitCode: 2,
-        });
+      const requiredValue2 = requireOperationResult(
+        result.rotateOnPremiseResourceJWT?.result?.jwt,
+        "On-premise resource JWT was not rotated",
+      );
 
       return {
         token: requiredValue2,
@@ -69,13 +66,10 @@ export default Cli.command({
           orgOnly,
         },
       });
-      const requiredValue1 = result.createOnPremiseResourceJWT?.result?.jwt;
-      if (requiredValue1 == null)
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
-          message: "On-premise resource JWT was not created",
-          exitCode: 2,
-        });
+      const requiredValue1 = requireOperationResult(
+        result.createOnPremiseResourceJWT?.result?.jwt,
+        "On-premise resource JWT was not created",
+      );
 
       return {
         token: requiredValue1,

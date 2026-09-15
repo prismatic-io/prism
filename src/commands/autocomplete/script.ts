@@ -1,5 +1,6 @@
-import { Completions, z, Cli, Errors } from "incur";
+import { Completions, z, Cli } from "incur";
 import { writeCommandOutput } from "../../command.js";
+import { ValidationError } from "../../errors.js";
 
 export default Cli.command({
   outputPolicy: "agent-only",
@@ -14,18 +15,14 @@ export default Cli.command({
     } = context;
     if (!shell) return { script: "" };
     if (shell === "powershell") {
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new ValidationError({
         message:
           "PowerShell completion is not supported in CLIs using colon as the topic separator.\nSee: https://oclif.io/docs/topic_separator",
-        exitCode: 2,
       });
     }
     if (shell !== "bash" && shell !== "zsh")
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new ValidationError({
         message: `Unsupported shell: ${shell}`,
-        exitCode: 2,
       });
     const script = Completions.register(shell, "prism");
     writeCommandOutput(script);

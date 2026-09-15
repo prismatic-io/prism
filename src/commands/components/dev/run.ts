@@ -1,20 +1,20 @@
-import { IntegrationDocument as INTEGRATION } from "../../../graphql/operations/integration.generated.js";
-import { InstanceDocument as INSTANCE } from "../../../graphql/operations/instance.generated.js";
+import {
+  IntegrationDocument as INTEGRATION,
+  type IntegrationQuery,
+} from "../../../graphql/operations/integration.generated.js";
+import {
+  InstanceDocument as INSTANCE,
+  type InstanceQuery,
+} from "../../../graphql/operations/instance.generated.js";
 import { commandSignal } from "../../../command.js";
-import { gqlRequest } from "../../../graphql.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
 import { spawnProcess, streamProcess } from "../../../utils/process.js";
-import { z, Cli, Errors } from "incur";
+import { z, Cli } from "incur";
+import { CommandFailedError, ValidationError } from "../../../errors.js";
 
-interface ConfigVariable {
-  requiredConfigVariable: {
-    key: string;
-    connectionTemplate?: {
-      inputFieldTemplates: { nodes: { inputField: { key: string }; value: string | null }[] };
-    } | null;
-  };
-  inputs: { nodes: { name: string; value: string }[] } | null;
-  meta: unknown;
-}
+type ConfigVariable =
+  | NonNullable<IntegrationQuery["integration"]>["testConfigVariables"]["nodes"][number]
+  | NonNullable<InstanceQuery["instance"]>["configVariables"]["nodes"][number];
 
 export default Cli.command({
   output: z.discriminatedUnion("type", [
@@ -57,11 +57,9 @@ prism components dev run --instanceId INSTANCE_ID -c "Slack Connection" -- yarn 
     } = context;
 
     if (!argv?.length) {
-      throw new Errors.IncurError({
-        code: "VALIDATION_ERROR",
+      throw new ValidationError({
         message:
           "A command to run must be supplied after a double dash (--) delimiter. See examples in this command's help for details.",
-        exitCode: 2,
       });
     }
 
@@ -75,21 +73,12 @@ prism components dev run --instanceId INSTANCE_ID -c "Slack Connection" -- yarn 
           id: integrationId,
         },
       });
-      const requiredValue2 = result.integration?.testConfigVariables.nodes;
-      if (requiredValue2 == null)
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
-          message: "Integration was not found",
-          exitCode: 2,
-        });
-
-      configVariables = requiredValue2;
+      configVariables = requireResource(result.integration, "Integration").testConfigVariables
+        .nodes;
     } else {
       if (!instanceId)
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
+        throw new ValidationError({
           message: "Either integrationId or instanceId is required",
-          exitCode: 2,
         });
       // Get the config variable from an instance
       const result = await gqlRequest({
@@ -98,15 +87,7 @@ prism components dev run --instanceId INSTANCE_ID -c "Slack Connection" -- yarn 
           id: instanceId,
         },
       });
-      const requiredValue1 = result.instance?.configVariables.nodes;
-      if (requiredValue1 == null)
-        throw new Errors.IncurError({
-          code: "VALIDATION_ERROR",
-          message: "Instance was not found",
-          exitCode: 2,
-        });
-
-      configVariables = requiredValue1;
+      configVariables = requireResource(result.instance, "Instance").configVariables.nodes;
     }
 
     const [connection] = configVariables.filter(
@@ -114,10 +95,8 @@ prism components dev run --instanceId INSTANCE_ID -c "Slack Connection" -- yarn 
     );
 
     if (!connection) {
-      throw new Errors.IncurError({
-        code: "COMMAND_FAILED",
+      throw new CommandFailedError({
         message: "Failed to find active connection with that name.",
-        exitCode: 1,
       });
     }
 
@@ -125,13 +104,12 @@ prism components dev run --instanceId INSTANCE_ID -c "Slack Connection" -- yarn 
 
     // Combine templated connection field values with the test instance's field values
     const fields = {
-      ...requiredConfigVariable.connectionTemplate?.inputFieldTemplates.nodes.reduce<
-        Record<string, unknown>
-      >((result, { inputField, value }) => ({ ...result, [inputField.key]: value }), {}),
-      ...(inputs?.nodes ?? []).reduce<Record<string, unknown>>(
-        (result, { name, value }) => ({ ...result, [name]: value }),
-        {},
+      ...Object.fromEntries(
+        requiredConfigVariable.connectionTemplate?.inputFieldTemplates.nodes.map(
+          ({ inputField, value }) => [inputField.key, value],
+        ) ?? [],
       ),
+      ...Object.fromEntries((inputs?.nodes ?? []).map(({ name, value }) => [name, value])),
     };
 
     const value = JSON.stringify({
