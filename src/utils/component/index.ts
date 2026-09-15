@@ -17,9 +17,17 @@ type LegacyDefinition = {
   };
 };
 
+export interface ServerFunctionDefinition {
+  key: string;
+  display: { label: string; description: string };
+  inputSchema: string;
+  outputSchema: string;
+}
+
 /** Keys newer Spectral versions emit that the pinned type does not yet declare. */
 type ForwardDefinition = {
   hasConfigurationInit?: boolean;
+  serverFunctionDefinitions?: ServerFunctionDefinition[];
 };
 
 /**
