@@ -54,10 +54,6 @@ export default Cli.command({
       .describe(
         'Provide test API keys for flows in the format flowName="API_KEY". Can be specified multiple times.',
       ),
-    confirm: z
-      .boolean()
-      .default(true)
-      .describe("Interactively confirm the import when using --replace"),
     ...waitOptions({
       until: "the imported Code Native Integration is ready to run",
       otherwise: "the definition is imported",
@@ -72,7 +68,6 @@ export default Cli.command({
         open,
         replace,
         "test-api-key": testApiKey,
-        confirm,
       },
     } = context;
     const wait = resolveWaitOptions(context.options);
@@ -108,13 +103,11 @@ export default Cli.command({
           "stderr",
         );
 
-        if (confirm) {
-          const shouldContinue = await confirmPrompt("Continue? (yes/no)");
-          if (!shouldContinue) {
-            throw new CommandFailedError({
-              message: "Import canceled",
-            });
-          }
+        const shouldContinue = await confirmPrompt("Continue? (yes/no)");
+        if (!shouldContinue) {
+          throw new CommandFailedError({
+            message: "Import canceled",
+          });
         }
       }
     }
@@ -129,13 +122,11 @@ There will be no way to restore the existing draft. If you wish to save it, eith
         "stderr",
       );
 
-      if (confirm) {
-        const shouldContinue = await confirmPrompt("Continue? (yes/no)");
-        if (!shouldContinue) {
-          throw new CommandFailedError({
-            message: "Import canceled",
-          });
-        }
+      const shouldContinue = await confirmPrompt("Continue? (yes/no)");
+      if (!shouldContinue) {
+        throw new CommandFailedError({
+          message: "Import canceled",
+        });
       }
     }
 

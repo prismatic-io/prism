@@ -43,7 +43,6 @@ export default Cli.command({
   examples: [{ description: "Publish a component after building it with npm run build:" }],
   options: z.object({
     comment: z.string().optional().describe("Comment about changes in this Publish"),
-    confirm: z.boolean().default(true).describe("Interactively confirm publish"),
     "check-signature": z
       .boolean()
       .default(true)
@@ -82,7 +81,6 @@ export default Cli.command({
     const {
       options: {
         comment,
-        confirm,
         "check-signature": checkSignature,
         "skip-on-signature-match": skipOnSignatureMatch,
         customer: flagCustomer,
@@ -139,7 +137,7 @@ export default Cli.command({
         }
       }
 
-      const shouldPublish = await confirmPublish(definition, confirm);
+      const shouldPublish = await confirmPublish(definition);
       if (!shouldPublish) {
         return { success: true as const, messages: ["Publishing cancelled."] };
       }

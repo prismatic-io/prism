@@ -408,7 +408,7 @@ describe("ListenCommand", () => {
         "flow-poll-123",
         "--timeout",
         "5",
-        "--no-prompt",
+        "--yes",
       ]);
 
       expect(fs.writeFile).toHaveBeenCalled();
@@ -557,7 +557,7 @@ describe("ListenCommand", () => {
   });
 });
 
-it("rejects agent polling without --no-prompt before enabling remote listening", async () => {
+it("rejects agent polling without --yes before enabling remote listening", async () => {
   server.listen({ onUnhandledRequest: "error" });
   const mutation = vi.fn();
   server.use(
@@ -574,13 +574,12 @@ it("rejects agent polling without --no-prompt before enabling remote listening",
   await expect(
     runCommand(ListenCommand, [
       "--agent",
-      "--yes",
       "--integration-id",
       "integration-id",
       "--flow-id",
       "polling-id",
     ]),
-  ).rejects.toThrow("--no-prompt");
+  ).rejects.toThrow("--yes");
   expect(mutation).not.toHaveBeenCalled();
   server.close();
 });
