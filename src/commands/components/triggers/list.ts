@@ -1,129 +1,102 @@
 import { Cli, z } from "incur";
-import { writeCommandStatus } from "../../../command.js";
-import { CommandFailedError } from "../../../errors.js";
-import {
-  ListComponentTriggersDocument as LIST_COMPONENT_TRIGGERS,
-  type ListComponentTriggersQuery,
-} from "../../../graphql/operations/listComponentTriggers.generated.js";
-import { gqlRequest } from "../../../graphql.js";
+import { listMembers } from "../../../utils/component/catalog.js";
+import { requestFailure } from "../../../utils/failure.js";
+import { nextPageCta } from "../../../utils/pagination.js";
 import {
   paginationFlags,
   printTable,
   tableFlags,
   tableOutputSchema,
 } from "../../../utils/table.js";
-
-type TriggerNode =
-  ListComponentTriggersQuery["components"]["nodes"][number]["actions"]["nodes"][number];
+import { memberColumns } from "../members.js";
+import { componentKeyArg, toSelector, versionOption, visibilityOptions } from "../schemas.js";
 
 export default Cli.command({
   outputPolicy: "agent-only",
+  description: "List Triggers that Components implement",
   output: tableOutputSchema(
-    ["id", "key", "label", "description", "componentid", "componentkey"],
+    [
+      "id",
+      "key",
+      "label",
+      "description",
+      "isCommonTrigger",
+      "isPollingTrigger",
+      "scheduleSupport",
+      "synchronousResponseSupport",
+      "batchSupport",
+      "componentKey",
+      "componentVersion",
+      "public",
+    ],
     true,
   ),
-  description: "List Triggers that Components implement",
   examples: [
     {
-      description: "Get the ID of the Webhook trigger of the Webhook Triggers component by key:",
+      description: "List triggers of the Universal Webhook component:",
       args: { componentKey: "webhook-triggers" },
-      options: { columns: "id", filter: "key=^webhook$", header: false },
     },
     {
-      description: "Get triggers related to the Management Triggers component:",
-      args: { componentKey: "management-triggers" },
+      description: "Search the triggers of a component by keyword:",
+      args: { componentKey: "salesforce" },
+      options: { search: "record" },
     },
   ],
+  args: z.object({ componentKey: componentKeyArg("to show triggers for") }),
   options: z.object({
     ...tableFlags(),
     ...paginationFlags(),
-    public: z
-      .boolean()
-      .optional()
-      .describe(
-        "Show actions for the public component with the given key. Use this flag when you have a private component with the same key as a public component.",
-      ),
-    private: z
-      .boolean()
-      .optional()
-      .describe(
-        "Show actions for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
-      ),
-  }),
-  args: z.object({
-    componentKey: z
+    ...visibilityOptions("actions"),
+    ...versionOption(),
+    search: z
       .string()
-      .describe("The key of the component to show triggers for (e.g. 'salesforce')"),
+      .optional()
+      .describe("Full-text search across trigger labels and descriptions"),
   }),
+  alias: { search: "s" },
   async run(context) {
-    const {
-      options: flags,
-      args: { componentKey },
-    } = context;
-
-    let triggers: TriggerNode[] = [];
-    let componentId: string;
-    let hasNextPage = true;
-    let cursor: string | null = flags.after ?? "";
-    let finalPageInfo = {
-      hasNextPage: false,
-      endCursor: null as string | null,
-    };
-
-    while (hasNextPage) {
-      const {
-        components: {
-          nodes: [component],
-        },
-      }: ListComponentTriggersQuery = await gqlRequest({
-        document: LIST_COMPONENT_TRIGGERS,
-        variables: {
-          after: cursor,
+    const { options: flags, args } = context;
+    try {
+      const { component, items, pageInfo } = await listMembers(
+        toSelector(args.componentKey, flags),
+        {
+          kind: "trigger",
+          search: flags.search,
+          after: flags.after,
           first: flags.first,
-          componentKey,
-          public: flags.public ? true : flags.private ? false : null,
+          all: flags.all === true || !context.agent,
         },
-      });
-      if (!component) {
-        writeCommandStatus(
-          "The key you provided is not valid. Please run 'prism components:list -x' and identify a valid component key.",
-        );
-        throw new CommandFailedError({
-          message: "Exited with status 1",
-        });
-      }
-      triggers = [...triggers, ...component.actions.nodes];
-      componentId = component.id;
-      cursor = component.actions.pageInfo.endCursor;
-      finalPageInfo = component.actions.pageInfo;
-      hasNextPage =
-        component.actions.pageInfo.hasNextPage && (flags.all === true || !context.agent);
+      );
+      const result = printTable(
+        items,
+        memberColumns(component, {
+          isCommonTrigger: {
+            extended: true,
+            get: ({ isCommonTrigger }) => isCommonTrigger ?? false,
+          },
+          isPollingTrigger: {
+            extended: true,
+            get: ({ isPollingTrigger }) => isPollingTrigger ?? false,
+          },
+          scheduleSupport: { extended: true },
+          synchronousResponseSupport: { extended: true },
+          batchSupport: { extended: true },
+        }),
+        { ...flags },
+      );
+      return context.ok(
+        { ...result, pageInfo },
+        nextPageCta(
+          "components triggers list",
+          { componentKey: args.componentKey },
+          flags,
+          pageInfo,
+          context.agent,
+          "Fetch the next page of triggers",
+        ),
+      );
+    } catch (error) {
+      return context.error(requestFailure(error, "COMPONENT_TRIGGERS_LIST_FAILED", true));
     }
-
-    const result = printTable(
-      triggers,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
-        },
-        key: {
-          minWidth: 10,
-          extended: true,
-        },
-        label: {},
-        description: {},
-        componentid: {
-          get: () => componentId,
-          extended: true,
-        },
-        componentkey: {
-          get: () => componentKey,
-          extended: true,
-        },
-      },
-      { ...flags },
-    );
-    return { ...result, pageInfo: finalPageInfo };
   },
 });
