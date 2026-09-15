@@ -12,11 +12,11 @@ import { ux } from "../../../utils/ux.js";
 import {
   type FetchLogsResult,
   getExecutionLogs,
-  getExecutionSections,
   getExecutionStepResults,
   type IntegrationFlow,
   isCniExecutionComplete,
   resolveFlow,
+  SectionLabelResolver,
 } from "../../../utils/integration/flows.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
 import { getIntegrationSystemInstance } from "../../../utils/integration/query.js";
@@ -462,7 +462,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
     } = await this.parse(TestFlowCommand);
 
     let nextCursor: string | undefined;
-    const sectionLabels = new Map<string, string>();
+    const sectionLabels = new SectionLabelResolver(executionId);
 
     while (true) {
       await ux.wait(getAdaptivePollIntervalMs(this.startTime));
@@ -473,23 +473,11 @@ prism integrations:flows:test ${flowArg} ${flagString}
       const { logs, cursor } = result;
       nextCursor = cursor;
 
-      const unresolvedSectionIds = [
-        ...new Set(
-          logs.flatMap((log) =>
-            log.sectionId && !sectionLabels.has(log.sectionId) ? [log.sectionId] : [],
-          ),
-        ),
-      ];
-      if (unresolvedSectionIds.length > 0) {
-        await this.refreshSectionLabels(executionId, unresolvedSectionIds, sectionLabels);
-      }
-
-      const resolveSectionName = (log: LogNode): string | null =>
-        log.sectionId ? (sectionLabels.get(log.sectionId) ?? log.sectionId) : null;
+      await sectionLabels.resolve(logs);
 
       if (jsonl) {
         logs.forEach((log) => {
-          this.log(JSON.stringify({ ...log, sectionName: resolveSectionName(log) }));
+          this.log(JSON.stringify({ ...log, sectionName: sectionLabels.sectionName(log) }));
         });
       } else {
         ux.table(
@@ -502,7 +490,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
             },
             message: {
               get: (row) => {
-                const sectionName = resolveSectionName(row);
+                const sectionName = sectionLabels.sectionName(row);
                 return sectionName ? `[${sectionName}] ${row.message}` : row.message;
               },
             },
@@ -517,7 +505,7 @@ prism integrations:flows:test ${flowArg} ${flagString}
         for (const log of logs) {
           await fs.appendFile(
             resultFilePath,
-            JSON.stringify({ ...log, sectionName: resolveSectionName(log) }),
+            JSON.stringify({ ...log, sectionName: sectionLabels.sectionName(log) }),
           );
         }
       }
@@ -595,25 +583,6 @@ prism integrations:flows:test ${flowArg} ${flagString}
     const lastEdge = edges[edges.length - 1];
     const cursor = lastEdge?.cursor;
     return { logs, cursor };
-  }
-
-  private async refreshSectionLabels(
-    executionId: string,
-    sectionIds: string[],
-    sectionLabels: Map<string, string>,
-  ) {
-    try {
-      const { executionSections } = await getExecutionSections(executionId, sectionIds);
-      for (const node of executionSections.nodes) {
-        if (node?.sectionId) {
-          sectionLabels.set(node.sectionId, node.label);
-        }
-      }
-    } catch (err) {
-      // Sections may not have mirrored to Postgres yet; fall back to raw
-      // section ids and retry resolution on the next poll.
-      console.error(`There was an error fetching execution section labels:\n${err}`);
-    }
   }
 
   private async fetchStepResults(executionId: string, nextCursor?: string) {

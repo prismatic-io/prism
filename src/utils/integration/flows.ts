@@ -79,6 +79,48 @@ export async function getExecutionSections(executionId: string, sectionIds: stri
   });
 }
 
+/**
+ * Resolves ExecutionSection labels for logs tailed during a single execution, caching
+ * results so each section's label is only fetched once. Sections may not have mirrored
+ * to Postgres yet by the time their logs arrive, so unresolved ids are retried on the
+ * next call to `resolve`.
+ */
+export class SectionLabelResolver {
+  private readonly labels = new Map<string, string>();
+
+  constructor(private readonly executionId: string) {}
+
+  async resolve(logs: LogNode[]): Promise<void> {
+    const unresolvedSectionIds = [
+      ...new Set(
+        logs.flatMap((log) =>
+          log.sectionId && !this.labels.has(log.sectionId) ? [log.sectionId] : [],
+        ),
+      ),
+    ];
+    if (unresolvedSectionIds.length === 0) return;
+
+    try {
+      const { executionSections } = await getExecutionSections(
+        this.executionId,
+        unresolvedSectionIds,
+      );
+      for (const node of executionSections.nodes) {
+        if (node?.sectionId) {
+          this.labels.set(node.sectionId, node.label);
+        }
+      }
+    } catch (err) {
+      console.error(`There was an error fetching execution section labels:\n${err}`);
+    }
+  }
+
+  /** The resolved section label for a log, falling back to its raw section id, or null if it's outside any section. */
+  sectionName(log: LogNode): string | null {
+    return log.sectionId ? (this.labels.get(log.sectionId) ?? log.sectionId) : null;
+  }
+}
+
 export interface StepResultNode {
   [index: string]: unknown;
   stepName: string;
