@@ -58,7 +58,12 @@ const additiveAgentInputNames = new Set([
   "connection-inputs",
   "tenant-id",
 ]);
-const additiveOptionNames = new Set([...additivePaginationNames, ...additiveAgentInputNames]);
+const additivePublishWaitNames = new Set(["wait", "wait-timeout"]);
+const additiveOptionNames = new Set([
+  ...additivePaginationNames,
+  ...additiveAgentInputNames,
+  ...additivePublishWaitNames,
+]);
 const sample = (field: Field): unknown => {
   if (field.options?.length) return field.multiple ? [field.options[0]] : field.options[0];
   if (field.kind === "boolean") return true;

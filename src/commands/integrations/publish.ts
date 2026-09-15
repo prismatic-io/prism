@@ -1,9 +1,19 @@
 import { Cli, z } from "incur";
+import { CommandFailedError } from "../../errors.js";
+import { IntegrationDraftVersionDocument as INTEGRATION_DRAFT_VERSION } from "../../graphql/operations/integrationDraftVersion.generated.js";
 import { PublishIntegrationDocument as PUBLISH_INTEGRATION } from "../../graphql/operations/publishIntegration.generated.js";
-import { gqlRequest, requireOperationResult } from "../../graphql.js";
+import { gqlRequest, requireOperationResult, requireResource } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
+import {
+  resolveWaitOptions,
+  waitForIntegrationVersion,
+  waitOptions,
+} from "../../utils/availability.js";
+import { startAction, stopAction } from "../../utils/progress.js";
 export default Cli.command({
-  output: z.object({ integrationId: z.string() }).extend(warningsOutput),
+  output: z
+    .object({ integrationId: z.string(), versionNumber: z.number(), available: z.boolean() })
+    .extend(warningsOutput),
   description: "Publish a version of an Integration for use in Instances",
   args: z.object({
     integration: z.string().describe("ID of an integration to publish"),
@@ -26,12 +36,14 @@ export default Cli.command({
       .string()
       .optional()
       .describe("URL to the pull request that modified this integration version"),
+    ...waitOptions,
   }),
   async run(context) {
     const {
       args: { integration },
       options: { comment, commitHash, commitUrl, repoUrl, pullRequestUrl },
     } = context;
+    const wait = resolveWaitOptions(context.options);
 
     const didProvideAttributes =
       Boolean(commitHash) || Boolean(repoUrl) || Boolean(pullRequestUrl) || Boolean(commitUrl);
@@ -41,6 +53,16 @@ export default Cli.command({
       repoUrl,
       pullRequestUrl,
     };
+
+    const { versionNumber } = requireResource(
+      (
+        await gqlRequest({
+          document: INTEGRATION_DRAFT_VERSION,
+          variables: { integrationId: integration },
+        })
+      ).integration,
+      "Integration",
+    );
 
     const result = await gqlRequest({
       document: PUBLISH_INTEGRATION,
@@ -55,20 +77,31 @@ export default Cli.command({
       result.publishIntegration?.integration?.id,
       "Integration was not published",
     );
-    return context.ok(
-      { integrationId: resourceId },
-      {
-        cta: {
-          commands: [
-            {
-              command: "integrations flows list",
-              description: "Inspect this integration's flows",
-              args: { integration: resourceId },
-            },
-          ],
+
+    const cta = {
+      commands: [
+        {
+          command: "integrations versions",
+          description: "List this integration's versions",
+          args: { integration: resourceId },
         },
-      },
-    );
+      ],
+    };
+
+    if (!wait) {
+      return context.ok({ integrationId: resourceId, versionNumber, available: false }, { cta });
+    }
+
+    startAction(`Waiting for version ${versionNumber} to become available`);
+    const available = await waitForIntegrationVersion(resourceId, versionNumber, wait);
+    if (!available) {
+      stopAction("timed out");
+      throw new CommandFailedError({
+        message: `Version ${versionNumber} was published but is still processing after ${wait.timeoutSeconds} seconds. Check 'integrations versions' or re-run with --no-wait.`,
+      });
+    }
+    stopAction();
+    return context.ok({ integrationId: resourceId, versionNumber, available: true }, { cta });
   },
   alias: { comment: "c" },
 });

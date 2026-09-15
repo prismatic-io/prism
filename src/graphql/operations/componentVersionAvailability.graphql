@@ -1,0 +1,6 @@
+query componentVersionAvailability($id: ID!) {
+  component(id: $id) {
+    id
+    versionIsAvailable
+  }
+}

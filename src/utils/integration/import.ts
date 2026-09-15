@@ -6,12 +6,12 @@ import { getWorkingDirectory, withWorkingDirectory } from "../../command-context
 import { CommandFailedError } from "../../errors.js";
 import { exists, fs } from "../../fs.js";
 import { CommitAvatarUpload2Document as COMMIT_AVATAR_UPLOAD2 } from "../../graphql/operations/commitAvatarUpload2.generated.js";
-import { Component4Document as COMPONENT4 } from "../../graphql/operations/component4.generated.js";
 import { ImportIntegrationDocument as IMPORT_INTEGRATION } from "../../graphql/operations/importIntegration.generated.js";
 import { Integration2Document as INTEGRATION2 } from "../../graphql/operations/integration2.generated.js";
 import { SetInstanceApiKeysDocument as SET_INSTANCE_API_KEYS } from "../../graphql/operations/setInstanceApiKeys.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { uploadAvatar } from "../../utils/avatar.js";
+import { type WaitOptions, waitForComponentVersion } from "../availability.js";
 import {
   type ComponentDefinition,
   createComponentPackage,
@@ -142,6 +142,7 @@ export const importCodeNativeIntegration = async (
   integrationId?: string,
   replace?: boolean,
   testApiKeyFlags?: string[],
+  wait?: WaitOptions,
 ): Promise<string> => {
   return withWorkingDirectory(
     await getPackageEntrypointDirectory("Code Native Integration"),
@@ -178,23 +179,25 @@ export const importCodeNativeIntegration = async (
 
       const packagePath = await createComponentPackage();
 
-      const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls, versionNumber } =
+      const { componentId, iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
         await publishComponentDefinition(componentDefinition, {
           forCodeNativeIntegration: true,
         });
 
       startAction("Uploading package for Code Native Integration");
       await uploadFile(packagePath, packageUploadUrl);
-      const uploaded = await waitForCodeNativeComponentAvailable(
-        componentDefinition.key,
-        versionNumber,
-      );
-      if (uploaded) {
+      stopAction();
+
+      if (wait) {
+        startAction("Waiting for the Code Native Integration package to become available");
+        const available = await waitForComponentVersion(componentId, wait);
+        if (!available) {
+          stopAction("timed out");
+          throw new CommandFailedError({
+            message: `The Code Native Integration package is still processing after ${wait.timeoutSeconds} seconds. Retry the import once it is available, or re-run with --no-wait to import immediately.`,
+          });
+        }
         stopAction();
-      } else {
-        stopAction(
-          "Package still processing for Code Native Integration, it will likely be available in a few minutes.",
-        );
       }
 
       startAction("Importing definition for Code Native Integration into Prismatic");
@@ -405,38 +408,6 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
     componentDefinition: componentDefinition,
     publishingMetadata: componentDefinition.publishingMetadata,
   };
-};
-
-export const waitForCodeNativeComponentAvailable = async (
-  componentKey: string,
-  versionNumber: number,
-  attemptNumber = 0,
-  maximumAttempts = 10,
-): Promise<boolean> => {
-  // Wait until component becomes available
-  const results = await gqlRequest({
-    document: COMPONENT4,
-    variables: {
-      componentKey,
-      versionNumber,
-    },
-  });
-
-  if (results.components.nodes.length > 0) {
-    return true;
-  } else if (attemptNumber < maximumAttempts) {
-    // Wait 1 second and try again.
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return waitForCodeNativeComponentAvailable(
-      componentKey,
-      versionNumber,
-      attemptNumber + 1,
-      maximumAttempts,
-    );
-  }
-
-  // Component is still not ready, so bail out.
-  return false;
 };
 
 export const getIntegrationDefinition = async (integrationId: string): Promise<string> => {

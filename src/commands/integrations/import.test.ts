@@ -96,7 +96,9 @@ configPages:
 
       await runCommand(ImportCommand, []);
 
-      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, undefined);
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, undefined, {
+        timeoutSeconds: 300,
+      });
       expect(logSpy).toHaveBeenCalledWith("imported-cni-id");
     });
 
@@ -106,9 +108,37 @@ configPages:
 
       await runCommand(ImportCommand, ["--test-api-key", 'myFlow="key123"']);
 
-      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, [
-        'myFlow="key123"',
-      ]);
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(
+        undefined,
+        false,
+        ['myFlow="key123"'],
+        { timeoutSeconds: 300 },
+      );
+    });
+
+    it("should skip waiting for the package when --no-wait is provided", async () => {
+      const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
+      vi.spyOn(diagnostics, "writeCommandStatus").mockImplementation(() => {});
+
+      await runCommand(ImportCommand, ["--no-wait"]);
+
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(
+        undefined,
+        false,
+        undefined,
+        undefined,
+      );
+    });
+
+    it("should pass a custom wait timeout to Code Native import", async () => {
+      const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
+      vi.spyOn(diagnostics, "writeCommandStatus").mockImplementation(() => {});
+
+      await runCommand(ImportCommand, ["--wait-timeout", "45"]);
+
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, undefined, {
+        timeoutSeconds: 45,
+      });
     });
   });
 
