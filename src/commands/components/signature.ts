@@ -1,6 +1,6 @@
-import { withWorkingDirectory } from "../../command-context.js";
-import { getPackageEntrypointDirectory } from "../../utils/import.js";
 import crypto from "crypto";
+import { Cli, z } from "incur";
+import { withWorkingDirectory } from "../../command-context.js";
 import { fs } from "../../fs.js";
 import { warningsOutput } from "../../output.js";
 import {
@@ -9,7 +9,7 @@ import {
   validateDefinition,
 } from "../../utils/component/index.js";
 import { getPackageSignatureFromApi } from "../../utils/component/signature.js";
-import { z, Cli } from "incur";
+import { getPackageEntrypointDirectory } from "../../utils/import.js";
 
 export default Cli.command({
   output: z.object({ signature: z.string() }).extend(warningsOutput),

@@ -1,8 +1,8 @@
+import { Cli, z } from "incur";
 import type { ListIntegrationsQuery } from "../../graphql/integrations/listIntegrations.generated.js";
 import { ListIntegrationsDocument as LIST_INTEGRATIONS } from "../../graphql/integrations/listIntegrations.generated.js";
 import { gqlRequest } from "../../graphql.js";
-import { paginationFlags, tableOutputSchema, tableFlags, printTable } from "../../utils/table.js";
-import { z, Cli } from "incur";
+import { paginationFlags, printTable, tableFlags, tableOutputSchema } from "../../utils/table.js";
 
 type IntegrationNode = ListIntegrationsQuery["integrations"]["nodes"][number];
 

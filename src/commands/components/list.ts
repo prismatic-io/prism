@@ -1,9 +1,9 @@
-import { ListComponentsDocument as LIST_COMPONENTS } from "../../graphql/operations/listComponents.generated.js";
-import type { ListComponentsQuery } from "../../graphql/operations/listComponents.generated.js";
 import dayjs from "dayjs";
+import { Cli, z } from "incur";
+import type { ListComponentsQuery } from "../../graphql/operations/listComponents.generated.js";
+import { ListComponentsDocument as LIST_COMPONENTS } from "../../graphql/operations/listComponents.generated.js";
 import { gqlRequest } from "../../graphql.js";
-import { paginationFlags, tableOutputSchema, tableFlags, printTable } from "../../utils/table.js";
-import { z, Cli } from "incur";
+import { paginationFlags, printTable, tableFlags, tableOutputSchema } from "../../utils/table.js";
 
 type ComponentNode = ListComponentsQuery["components"]["nodes"][number];
 

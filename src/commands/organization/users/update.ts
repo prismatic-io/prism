@@ -1,7 +1,7 @@
+import { Cli, z } from "incur";
 import { UpdateUserDocument as UPDATE_USER } from "../../../graphql/operations/updateUser.generated.js";
 import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ userId: z.string() }).extend(warningsOutput),
   description: "Update a User",

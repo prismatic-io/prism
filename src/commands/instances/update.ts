@@ -1,8 +1,8 @@
+import { Cli, z } from "incur";
 import { DeployInstance2Document as DEPLOY_INSTANCE2 } from "../../graphql/operations/deployInstance2.generated.js";
 import { UpdateInstanceDocument as UPDATE_INSTANCE } from "../../graphql/operations/updateInstance.generated.js";
 import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ instanceId: z.string() }).extend(warningsOutput),
   description: "Update an Instance",

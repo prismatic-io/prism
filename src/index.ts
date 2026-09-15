@@ -1,5 +1,4 @@
-import AutocompleteCommand from "./commands/autocomplete/index.js";
-import AutocompleteScriptCommand from "./commands/autocomplete/script.js";
+import { prepareCommand } from "./command.js";
 import AlertsEventsListCommand from "./commands/alerts/events/list.js";
 import AlertsGroupsCreateCommand from "./commands/alerts/groups/create.js";
 import AlertsGroupsDeleteCommand from "./commands/alerts/groups/delete.js";
@@ -12,6 +11,8 @@ import AlertsTriggersListCommand from "./commands/alerts/triggers/list.js";
 import AlertsWebhooksCreateCommand from "./commands/alerts/webhooks/create.js";
 import AlertsWebhooksDeleteCommand from "./commands/alerts/webhooks/delete.js";
 import AlertsWebhooksListCommand from "./commands/alerts/webhooks/list.js";
+import AutocompleteCommand from "./commands/autocomplete/index.js";
+import AutocompleteScriptCommand from "./commands/autocomplete/script.js";
 import ComponentsActionsListCommand from "./commands/components/actions/list.js";
 import ComponentsDataSourcesListCommand from "./commands/components/data-sources/list.js";
 import ComponentsDeleteCommand from "./commands/components/delete.js";
@@ -91,7 +92,6 @@ import ProfilesUseCommand from "./commands/profiles/use.js";
 import TranslationsListCommand from "./commands/translations/list.js";
 import WorkflowsExportCommand from "./commands/workflows/export.js";
 import WorkflowsImportCommand from "./commands/workflows/import.js";
-import { prepareCommand } from "./command.js";
 
 export const Commands = {
   autocomplete: prepareCommand(AutocompleteCommand, {}),

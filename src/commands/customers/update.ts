@@ -1,9 +1,9 @@
-import { customerFailure } from "./errors.js";
-import { nonBlank } from "./schemas.js";
+import { Cli, z } from "incur";
 import { UpdateCustomerDocument as UPDATE_CUSTOMER } from "../../graphql/operations/updateCustomer.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli } from "incur";
+import { customerFailure } from "./errors.js";
+import { nonBlank } from "./schemas.js";
 
 export default Cli.command({
   output: z.object({ customerId: nonBlank }).extend(warningsOutput),

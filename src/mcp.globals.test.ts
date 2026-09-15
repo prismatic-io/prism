@@ -1,14 +1,14 @@
 import { Cli, Mcp, z } from "incur";
 import { describe, expect, it, vi } from "vitest";
+import { parseMcpLaunchGlobals } from "./cli.js";
 import {
+  applyCommandPolicy,
   commandMiddleware,
   commandVars,
-  applyCommandPolicy,
   environmentOptions,
   globalOptions,
 } from "./command.js";
-import { getMcpGlobals, runWithMcpTransport, type McpGlobals } from "./compatibility.js";
-import { parseMcpLaunchGlobals } from "./cli.js";
+import { getMcpGlobals, type McpGlobals, runWithMcpTransport } from "./compatibility.js";
 import { getRuntimeState } from "./runtime.js";
 
 const makeTool = () => {

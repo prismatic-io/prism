@@ -1,10 +1,10 @@
-import { ExecutionResultsDocument as EXECUTION_RESULTS } from "../../graphql/operations/executionResults.generated.js";
 import { decode } from "@msgpack/msgpack";
 import { extension } from "mime-types";
+import { writeCommandOutput } from "../../command.js";
 import { fs } from "../../fs.js";
+import { ExecutionResultsDocument as EXECUTION_RESULTS } from "../../graphql/operations/executionResults.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
-import { writeCommandOutput } from "../../command.js";
 
 export interface DeserializeResult {
   data: unknown;

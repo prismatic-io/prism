@@ -1,7 +1,7 @@
-import { tableOutputSchema, tableFlags, printTable } from "../../../utils/table.js";
+import { Cli, z } from "incur";
 import { ListOrganizationSigningKeysDocument as LIST_ORGANIZATION_SIGNING_KEYS } from "../../../graphql/operations/listOrganizationSigningKeys.generated.js";
 import { gqlRequest, requireResource } from "../../../graphql.js";
-import { z, Cli } from "incur";
+import { printTable, tableFlags, tableOutputSchema } from "../../../utils/table.js";
 export default Cli.command({
   outputPolicy: "agent-only",
   output: tableOutputSchema(["id", "privateKeyPreview", "publicKey", "issuedAt", "imported"]),

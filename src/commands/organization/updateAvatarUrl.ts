@@ -1,8 +1,8 @@
+import { Cli, z } from "incur";
+import { ValidationError } from "../../errors.js";
 import { CommitAvatarUploadDocument as COMMIT_AVATAR_UPLOAD } from "../../graphql/operations/commitAvatarUpload.generated.js";
 import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli } from "incur";
-import { ValidationError } from "../../errors.js";
 
 export default Cli.command({
   output: z.object({ organizationId: z.string() }).extend(warningsOutput),

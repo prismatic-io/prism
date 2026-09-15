@@ -1,17 +1,17 @@
-import { getWorkingDirectory } from "../../command-context.js";
-import { confirm as confirmPrompt } from "../prompts.js";
 import { resolve } from "node:path";
-import { Component2Document as COMPONENT2 } from "../../graphql/operations/component2.generated.js";
-import { PublishComponentDocument as PUBLISH_COMPONENT } from "../../graphql/operations/publishComponent.generated.js";
-import type { PublishComponentMutationVariables } from "../../graphql/operations/publishComponent.generated.js";
 import crypto from "crypto";
 import mimetypes from "mime-types";
 import { extname } from "path";
+import { writeCommandStatus } from "../../command.js";
+import { getWorkingDirectory } from "../../command-context.js";
 import { fs } from "../../fs.js";
+import { Component2Document as COMPONENT2 } from "../../graphql/operations/component2.generated.js";
+import type { PublishComponentMutationVariables } from "../../graphql/operations/publishComponent.generated.js";
+import { PublishComponentDocument as PUBLISH_COMPONENT } from "../../graphql/operations/publishComponent.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
+import { confirm as confirmPrompt } from "../prompts.js";
 import type { ComponentDefinition } from "./index.js";
-import { writeCommandStatus } from "../../command.js";
 
 const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {
   actions: true,

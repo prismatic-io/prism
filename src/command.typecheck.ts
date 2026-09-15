@@ -1,4 +1,4 @@
-import { Cli, z, middleware } from "incur";
+import { Cli, middleware, z } from "incur";
 import type { commandVars, environmentOptions, globalOptions } from "./command.js";
 
 // This function is never executed. Unlike *.test.ts, this file is included by

@@ -1,9 +1,9 @@
+import { Cli, z } from "incur";
+import { ValidationError } from "../../errors.js";
 import { CreateOnPremiseResourceJwtDocument as CREATE_ON_PREMISE_RESOURCE_JWT } from "../../graphql/operations/createOnPremiseResourceJWT.generated.js";
 import { RotateOnPremiseResourceJwtDocument as ROTATE_ON_PREMISE_RESOURCE_JWT } from "../../graphql/operations/rotateOnPremiseResourceJWT.generated.js";
 import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli } from "incur";
-import { ValidationError } from "../../errors.js";
 
 const onlyWhenOrgUser = "Only valid for Organization users.";
 

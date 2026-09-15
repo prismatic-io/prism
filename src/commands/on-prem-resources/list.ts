@@ -1,8 +1,8 @@
+import { Cli, z } from "incur";
 import type { ListOnPremiseResourcesQuery } from "../../graphql/onPremResources/listOnPremiseResources.generated.js";
 import { ListOnPremiseResourcesDocument as LIST_ON_PREMISE_RESOURCES } from "../../graphql/onPremResources/listOnPremiseResources.generated.js";
 import { gqlRequest } from "../../graphql.js";
-import { paginationFlags, tableOutputSchema, tableFlags, printTable } from "../../utils/table.js";
-import { z, Cli } from "incur";
+import { paginationFlags, printTable, tableFlags, tableOutputSchema } from "../../utils/table.js";
 
 type OnPremiseResourceNode = ListOnPremiseResourcesQuery["onPremiseResources"]["nodes"][number];
 

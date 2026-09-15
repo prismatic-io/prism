@@ -1,4 +1,3 @@
-import { runCommand } from "./test-command.js";
 import { graphql, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
@@ -9,6 +8,7 @@ import FlowConfigs from "./commands/instances/flow-configs/list.js";
 import Versions from "./commands/integrations/versions/index.js";
 import SigningKeys from "./commands/organization/signingKeys/list.js";
 import OrganizationUsers from "./commands/organization/users/list.js";
+import { runCommand } from "./test-command.js";
 
 const api = graphql.link(`${TEST_PRISMATIC_URL}/api`);
 const server = setupServer();

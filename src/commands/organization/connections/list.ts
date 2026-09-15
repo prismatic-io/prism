@@ -1,7 +1,8 @@
-import { tableOutputSchema, tableFlags, printTable } from "../../../utils/table.js";
+import { Cli, z } from "incur";
 import { AvailableConnectionsDocument as AVAILABLE_CONNECTIONS } from "../../../graphql/operations/availableConnections.generated.js";
 import { gqlRequest } from "../../../graphql.js";
-import { z, Cli } from "incur";
+import { printTable, tableFlags, tableOutputSchema } from "../../../utils/table.js";
+
 type AvailableConnection = {
   connection: { component: { key: string | null } | null } | null;
   customer: { externalId: string | null; name: string } | null;

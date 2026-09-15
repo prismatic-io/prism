@@ -1,13 +1,13 @@
+import { Cli, z } from "incur";
 import type { ListAlertWebhooksQuery } from "../../../graphql/alerts/listAlertWebhooks.generated.js";
 import { ListAlertWebhooksDocument as LIST_ALERT_WEBHOOKS } from "../../../graphql/alerts/listAlertWebhooks.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import {
   paginationFlags,
-  tableOutputSchema,
-  tableFlags,
   printTable,
+  tableFlags,
+  tableOutputSchema,
 } from "../../../utils/table.js";
-import { z, Cli } from "incur";
 
 type AlertWebhookNode = ListAlertWebhooksQuery["alertWebhooks"]["nodes"][number];
 

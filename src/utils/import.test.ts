@@ -1,10 +1,10 @@
-import { withWorkingDirectory } from "../command-context.js";
-import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, it } from "vitest";
-import { getPackageEntrypointDirectory } from "./import.js";
+import { withWorkingDirectory } from "../command-context.js";
 import { loadEntrypoint } from "./component/index.js";
+import { getPackageEntrypointDirectory } from "./import.js";
 
 it("loads concurrent component definitions from ambient directories without changing cwd", async () => {
   const originalDirectory = process.cwd();

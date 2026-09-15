@@ -1,11 +1,8 @@
-import { withWorkingDirectory } from "../command-context.js";
-import { runWithEnvironment } from "../runtime.js";
-import { runCommand } from "../test-command.js";
-import { Cli } from "incur";
 import { mkdtemp, readFile, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Cli } from "incur";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   applyCommandPolicy,
@@ -14,6 +11,9 @@ import {
   environmentOptions,
   globalOptions,
 } from "../command.js";
+import { withWorkingDirectory } from "../command-context.js";
+import { runWithEnvironment } from "../runtime.js";
+import { runCommand } from "../test-command.js";
 import { spawnProcess, streamProcess } from "./process.js";
 
 const temporaryDirectories: string[] = [];

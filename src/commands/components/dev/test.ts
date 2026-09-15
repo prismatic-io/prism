@@ -1,16 +1,16 @@
-import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
-import { getRuntimeEnvironment, runWithEnvironment } from "../../../runtime.js";
 import { resolve } from "node:path";
-import { getPackageEntrypointDirectory } from "../../../utils/import.js";
 import type serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import dotenv from "dotenv";
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import inquirer, { type Answers, type Question } from "inquirer";
 import { kebabCase, snakeCase, upperCase } from "lodash-es";
 import open from "open";
 import { promisify } from "util";
 import { requireInteractiveInput, writeCommandStatus } from "../../../command.js";
+import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
+import { CommandFailedError, ValidationError } from "../../../errors.js";
 import { exists, fs } from "../../../fs.js";
+import { getRuntimeEnvironment, runWithEnvironment } from "../../../runtime.js";
 import { deleteComponentByKey } from "../../../utils/component/deleteByKey.js";
 import {
   createComponentPackage,
@@ -28,6 +28,7 @@ import {
   printFinalStepResults,
   writeFinalStepResults,
 } from "../../../utils/execution/stepResults.js";
+import { getPackageEntrypointDirectory } from "../../../utils/import.js";
 import {
   buildComponentTestHarnessIntegration,
   type ComponentTestInfo,
@@ -38,11 +39,10 @@ import { importDefinition } from "../../../utils/integration/import.js";
 import { deleteIntegration, runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { pollForActiveConfigVarState } from "../../../utils/integration/query.js";
 import { spawnProcess } from "../../../utils/process.js";
-import { whoAmI } from "../../../utils/user/query.js";
 import { startAction, stopAction } from "../../../utils/progress.js";
 import { pressAnyKey } from "../../../utils/prompts.js";
 import { hyperlink } from "../../../utils/terminal.js";
-import { ValidationError, CommandFailedError } from "../../../errors.js";
+import { whoAmI } from "../../../utils/user/query.js";
 
 const setTimeoutPromise = promisify(setTimeout);
 

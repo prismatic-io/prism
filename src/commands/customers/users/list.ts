@@ -1,13 +1,14 @@
-import { customerUserRowSchema, pageInfoSchema, nonBlank } from "../schemas.js";
-import { checkPageCursor, nextPageOptions } from "../pagination.js";
-import { customerFailure } from "../errors.js";
+import { Cli, z } from "incur";
 import {
   ListCustomerUsersDocument as LIST_CUSTOMER_USERS,
   type ListCustomerUsersQuery,
 } from "../../../graphql/customers/listCustomerUsers.generated.js";
 import { gqlRequest, requireResource } from "../../../graphql.js";
-import { paginationFlags, tableFlags, printTable } from "../../../utils/table.js";
-import { z, Cli } from "incur";
+import { paginationFlags, printTable, tableFlags } from "../../../utils/table.js";
+import { customerFailure } from "../errors.js";
+import { checkPageCursor, nextPageOptions } from "../pagination.js";
+import { customerUserRowSchema, nonBlank, pageInfoSchema } from "../schemas.js";
+
 type CustomerUserNode = NonNullable<ListCustomerUsersQuery["customer"]>["users"]["nodes"][number];
 
 const isCustomerUserNode = (node: CustomerUserNode | null): node is CustomerUserNode =>

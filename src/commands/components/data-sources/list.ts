@@ -1,15 +1,15 @@
-import { ListComponentActions2Document as LIST_COMPONENT_ACTIONS2 } from "../../../graphql/operations/listComponentActions2.generated.js";
-import type { ListComponentActions2Query } from "../../../graphql/operations/listComponentActions2.generated.js";
+import { Cli, z } from "incur";
 import { writeCommandStatus } from "../../../command.js";
+import { CommandFailedError } from "../../../errors.js";
+import type { ListComponentActions2Query } from "../../../graphql/operations/listComponentActions2.generated.js";
+import { ListComponentActions2Document as LIST_COMPONENT_ACTIONS2 } from "../../../graphql/operations/listComponentActions2.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import {
   paginationFlags,
-  tableOutputSchema,
-  tableFlags,
   printTable,
+  tableFlags,
+  tableOutputSchema,
 } from "../../../utils/table.js";
-import { z, Cli } from "incur";
-import { CommandFailedError } from "../../../errors.js";
 
 type DataSourceNode =
   ListComponentActions2Query["components"]["nodes"][number]["actions"]["nodes"][number];

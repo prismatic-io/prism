@@ -1,8 +1,8 @@
-import { runCommand } from "../../test-command.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import * as diagnostics from "../../command.js";
+import { runCommand } from "../../test-command.js";
 import type { ComponentDefinition } from "../../utils/component/index.js";
 import * as prompts from "../../utils/prompts.js";
-import * as diagnostics from "../../command.js";
 import ImportCommand from "./import.js";
 
 vi.mock(import("../../fs.js"), () => ({

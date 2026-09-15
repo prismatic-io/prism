@@ -1,7 +1,7 @@
-import { PollExecutionDocument as POLL_EXECUTION } from "../../graphql/operations/pollExecution.generated.js";
-import { LogsDocument as LOGS } from "../../graphql/operations/logs.generated.js";
 import chalk from "chalk";
 import { promisify } from "util";
+import { LogsDocument as LOGS } from "../../graphql/operations/logs.generated.js";
+import { PollExecutionDocument as POLL_EXECUTION } from "../../graphql/operations/pollExecution.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { formatTimestamp } from "../date.js";
 import { printTable } from "../table.js";

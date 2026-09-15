@@ -1,7 +1,7 @@
+import { Cli, z } from "incur";
 import { GenerateSigningKeyDocument as GENERATE_SIGNING_KEY } from "../../../graphql/operations/generateSigningKey.generated.js";
 import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { Cli, z } from "incur";
 
 export default Cli.command({
   output: z.object({ privateKey: z.string() }).extend(warningsOutput),

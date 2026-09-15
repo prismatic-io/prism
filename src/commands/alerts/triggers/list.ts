@@ -1,7 +1,7 @@
-import { tableOutputSchema, tableFlags, printTable } from "../../../utils/table.js";
+import { Cli, z } from "incur";
 import { ListAlertTriggersDocument as LIST_ALERT_TRIGGERS } from "../../../graphql/operations/listAlertTriggers.generated.js";
 import { gqlRequest } from "../../../graphql.js";
-import { z, Cli } from "incur";
+import { printTable, tableFlags, tableOutputSchema } from "../../../utils/table.js";
 export default Cli.command({
   outputPolicy: "agent-only",
   output: tableOutputSchema(["id", "name"]),

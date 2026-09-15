@@ -1,7 +1,7 @@
+import { Cli, z } from "incur";
 import { MarkAvailabilityDocument as MARK_AVAILABILITY } from "../../graphql/operations/markAvailability.generated.js";
 import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ integrationId: z.string() }).extend(warningsOutput),
   description: "Mark an Integration version as available or unavailable",

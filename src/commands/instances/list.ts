@@ -1,8 +1,8 @@
+import { Cli, z } from "incur";
 import type { ListInstancesQuery } from "../../graphql/instances/listInstances.generated.js";
 import { ListInstancesDocument as LIST_INSTANCES } from "../../graphql/instances/listInstances.generated.js";
 import { gqlRequest } from "../../graphql.js";
-import { paginationFlags, tableOutputSchema, tableFlags, printTable } from "../../utils/table.js";
-import { z, Cli } from "incur";
+import { paginationFlags, printTable, tableFlags, tableOutputSchema } from "../../utils/table.js";
 
 type InstanceNode = ListInstancesQuery["instances"]["nodes"][number];
 
