@@ -28,6 +28,12 @@ export class CommandFailedError extends CommandError {
   }
 }
 
+export class ConfirmationRequiredError extends CommandError {
+  constructor(options: CommandErrorOptions) {
+    super({ ...options, code: "CONFIRMATION_REQUIRED", exitCode: 2 });
+  }
+}
+
 export class NotFoundError extends CommandError {
   constructor(options: CommandErrorOptions) {
     super({ ...options, code: "NOT_FOUND", exitCode: 1 });

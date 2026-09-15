@@ -12,26 +12,14 @@ export default Cli.command({
     ...warningsOutput,
   }),
   description: "Revoke all refresh tokens for your user",
-  options: z.object({
-    confirm: z
-      .boolean()
-      .default(true)
-      .describe("Prompt for confirmation before revoking tokens. Use --no-confirm to skip."),
-  }),
-  async run(context) {
-    const {
-      options: { confirm },
-    } = context;
-
-    if (confirm) {
-      const shouldContinue = await confirmPrompt(
-        "This will revoke all refresh tokens for the current user. Continue? (yes/no)",
-      );
-      if (!shouldContinue) {
-        throw new CommandFailedError({
-          message: "Operation canceled",
-        });
-      }
+  async run() {
+    const shouldContinue = await confirmPrompt(
+      "This will revoke all refresh tokens for the current user. Continue? (yes/no)",
+    );
+    if (!shouldContinue) {
+      throw new CommandFailedError({
+        message: "Operation canceled",
+      });
     }
 
     const source = await revokeRefreshToken();

@@ -1,9 +1,7 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import { decode } from "@msgpack/msgpack";
 import { Cli, z } from "incur";
-import inquirer from "inquirer";
 import { commandSignal } from "../../../command.js";
-import { ValidationError } from "../../../errors.js";
 import { exists, fs } from "../../../fs.js";
 import { GetExecutionsDocument as GET_EXECUTIONS } from "../../../graphql/executions/getExecutions.generated.js";
 import { GetPolledExecutionDocument as GET_POLLED_EXECUTION } from "../../../graphql/executions/getPolledExecution.generated.js";
@@ -15,6 +13,7 @@ import { fetch } from "../../../utils/http.js";
 import { type IntegrationFlow, resolveFlow } from "../../../utils/integration/flows.js";
 import { runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { getAdaptivePollIntervalMs } from "../../../utils/polling.js";
+import { confirm as confirmPrompt } from "../../../utils/prompts.js";
 
 const DEFAULT_TIMEOUT_SECONDS = 1200;
 const DEFAULT_OUTPUT_DIR = "./payloads";
@@ -41,11 +40,6 @@ export const listenFlagsSchema = z
       .positive()
       .default(DEFAULT_TIMEOUT_SECONDS)
       .describe("Timeout in seconds to stop listening."),
-    prompt: z
-      .boolean()
-      .optional()
-      .describe("Prompt before polling (use --no-prompt to poll automatically).")
-      .meta({ cli: { legacyName: "no-prompt" } }),
     reset: z
       .boolean()
       .optional()
@@ -68,7 +62,6 @@ export default Cli.command({
       "flow-name": flowNameFlag,
       output,
       timeout,
-      prompt,
       reset,
     } = context.options;
     const signal = commandSignal();
@@ -86,17 +79,8 @@ export default Cli.command({
     });
     const flowId = flow.id;
     const triggerType = getTriggerType(flow.trigger);
-    if (triggerType === "POLLING" && prompt !== false) {
-      if (context.agent)
-        throw new ValidationError({
-          message: "Agent mode requires --no-prompt for polling flows",
-        });
-      const { confirm } = await inquirer.prompt({
-        type: "confirm",
-        name: "confirm",
-        message: "Initiate poll?",
-      });
-      if (!confirm) {
+    if (triggerType === "POLLING") {
+      if (!(await confirmPrompt("Initiate poll?"))) {
         yield { type: "completed", integrationId, flowId, status: "listening-disabled" };
         return;
       }
