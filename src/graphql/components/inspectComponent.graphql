@@ -1,0 +1,89 @@
+fragment CatalogMemberSummary on Action {
+  id
+  key
+  label
+  description
+}
+
+query inspectComponent(
+  $key: String!
+  $public: Boolean
+  $versionNumber: Int
+  $allVersions: Boolean
+) {
+  components(key: $key, public: $public, versionNumber: $versionNumber, allVersions: $allVersions) {
+    nodes {
+      id
+      key
+      label
+      description
+      public
+      category
+      documentationUrl
+      signature
+      labels
+      forCodeNativeIntegration
+      versionNumber
+      versionIsLatest
+      versionIsAvailable
+      versionCreatedAt
+      versionComment
+      customer {
+        id
+        name
+        externalId
+      }
+      actions(
+        isTrigger: false
+        isDataSource: false
+        first: 100
+        orderBy: { field: LABEL, direction: ASC }
+      ) {
+        totalCount
+        nodes {
+          ...CatalogMemberSummary
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+      triggers: actions(isTrigger: true, first: 100, orderBy: { field: LABEL, direction: ASC }) {
+        totalCount
+        nodes {
+          ...CatalogMemberSummary
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+      dataSources: actions(
+        isDataSource: true
+        first: 100
+        orderBy: { field: LABEL, direction: ASC }
+      ) {
+        totalCount
+        nodes {
+          ...CatalogMemberSummary
+          dataSourceType
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+      connections {
+        totalCount
+        nodes {
+          id
+          key
+          label
+          default
+          oauth2Type
+          onPremiseAvailable
+        }
+      }
+    }
+  }
+}

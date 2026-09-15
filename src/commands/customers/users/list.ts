@@ -1,6 +1,6 @@
 import { customerUserRowSchema, pageInfoSchema, nonBlank } from "../schemas.js";
-import { checkPageCursor, nextPageOptions } from "../pagination.js";
-import { customerFailure } from "../errors.js";
+import { checkPageCursor, nextPageOptions } from "../../../utils/pagination.js";
+import { requestFailure } from "../../../utils/failure.js";
 import {
   ListCustomerUsersDocument as LIST_CUSTOMER_USERS,
   type ListCustomerUsersQuery,
@@ -89,7 +89,7 @@ export default Cli.command({
           : undefined,
       );
     } catch (error) {
-      return context.error(customerFailure(error, "CUSTOMER_USERS_LIST_FAILED", true));
+      return context.error(requestFailure(error, "CUSTOMER_USERS_LIST_FAILED", true));
     }
   },
 });

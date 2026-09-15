@@ -1,4 +1,4 @@
-import { customerFailure } from "../errors.js";
+import { requestFailure } from "../../../utils/failure.js";
 import { nonBlank } from "../schemas.js";
 import { UpdateUserDocument as UPDATE_USER } from "../../../graphql/operations/updateUser.generated.js";
 import { gqlRequest } from "../../../graphql.js";
@@ -84,7 +84,7 @@ export default Cli.command({
       );
     } catch (error) {
       return context.error({
-        ...customerFailure(error, "CUSTOMER_USERS_UPDATE_FAILED"),
+        ...requestFailure(error, "CUSTOMER_USERS_UPDATE_FAILED"),
         cta: {
           commands: [
             {
