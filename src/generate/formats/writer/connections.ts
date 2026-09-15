@@ -1,5 +1,6 @@
 import { OAuth2Type } from "@prismatic-io/spectral";
 import { sortBy } from "lodash-es";
+import path from "path";
 import {
   type CodeBlockWriter,
   type Project,
@@ -10,7 +11,6 @@ import {
   type VariableDeclarationStructure,
 } from "ts-morph";
 import { type Connection, type ConnectionInput, cleanIdentifier, escapeText } from "../utils.js";
-import path from "path";
 
 const writeInput = (
   writer: CodeBlockWriter,

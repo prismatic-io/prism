@@ -4,9 +4,9 @@ import { URL } from "url";
 import { z } from "zod";
 import { getAuthenticatedContext } from "./auth.js";
 import { writeCommandStatus } from "./command.js";
+import { CommandFailedError, NotFoundError } from "./errors.js";
 import { isPrintRequestsEnabled } from "./runtime.js";
 import { fetch } from "./utils/http.js";
-import { CommandFailedError, NotFoundError } from "./errors.js";
 
 interface GQLRequest<TData, TVariables = Record<string, unknown>> {
   document: string | TypedDocumentNode<TData, TVariables>;

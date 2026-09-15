@@ -1,13 +1,13 @@
+import { Cli, z } from "incur";
 import type { ListAlertMonitorsQuery } from "../../../graphql/alerts/listAlertMonitors.generated.js";
 import { ListAlertMonitorsDocument as LIST_ALERT_MONITORS } from "../../../graphql/alerts/listAlertMonitors.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import {
   paginationFlags,
-  tableOutputSchema,
-  tableFlags,
   printTable,
+  tableFlags,
+  tableOutputSchema,
 } from "../../../utils/table.js";
-import { z, Cli } from "incur";
 
 type AlertMonitorNode = ListAlertMonitorsQuery["alertMonitors"]["nodes"][number];
 

@@ -1,11 +1,11 @@
-import { customerRowSchema, pageInfoSchema } from "./schemas.js";
-import { checkPageCursor, nextPageOptions } from "./pagination.js";
-import { customerFailure } from "./errors.js";
+import { Cli, z } from "incur";
 import type { ListCustomersQuery } from "../../graphql/customers/listCustomers.generated.js";
 import { ListCustomersDocument as LIST_CUSTOMERS } from "../../graphql/customers/listCustomers.generated.js";
 import { gqlRequest } from "../../graphql.js";
-import { paginationFlags, tableFlags, printTable } from "../../utils/table.js";
-import { z, Cli } from "incur";
+import { paginationFlags, printTable, tableFlags } from "../../utils/table.js";
+import { customerFailure } from "./errors.js";
+import { checkPageCursor, nextPageOptions } from "./pagination.js";
+import { customerRowSchema, pageInfoSchema } from "./schemas.js";
 
 type CustomerNode = ListCustomersQuery["customers"]["nodes"][number];
 

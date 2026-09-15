@@ -1,14 +1,14 @@
-import { Cli, Errors, Mcp, z, middleware } from "incur";
+import { Cli, Errors, Mcp, middleware, z } from "incur";
 import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import {
+  applyCommandPolicy,
   assertMutationAllowed,
   commandMiddleware,
   commandVars,
   commandWarnings,
-  applyCommandPolicy,
-  prepareCommand,
   environmentOptions,
   globalOptions,
+  prepareCommand,
   writeCommandOutput,
 } from "./command.js";
 import { getRuntimeState, isPrintRequestsEnabled, isQuiet } from "./runtime.js";

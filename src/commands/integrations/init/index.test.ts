@@ -1,10 +1,10 @@
-import { runCommand } from "../../../test-command.js";
 import { existsSync } from "node:fs";
 import { mkdir, rm } from "node:fs/promises";
 import { readFile } from "fs-extra";
 import path from "path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { walkDir } from "../../../fs.js";
+import { runCommand } from "../../../test-command.js";
 import { TOOLCHAIN_NAMES } from "../../../utils/toolchain/index.js";
 import InitializeIntegration from "./index.js";
 

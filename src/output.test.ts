@@ -1,14 +1,13 @@
-import { runCommandInput } from "./test-command.js";
 import { execFileSync } from "node:child_process";
 import { Cli, z } from "incur";
 import { describe, expect, it, vi } from "vitest";
 import { getStdout } from "../vitest.setup.js";
 import {
   applyCommandPolicy,
-  globalOptions,
-  environmentOptions,
-  commandVars,
   commandMiddleware,
+  commandVars,
+  environmentOptions,
+  globalOptions,
   writeCommandOutput,
 } from "./command.js";
 import CreateCustomer from "./commands/customers/create.js";
@@ -20,6 +19,7 @@ import ExportWorkflow from "./commands/workflows/export.js";
 import { getAuthContext } from "./context.js";
 import { gqlRequest } from "./graphql.js";
 import { warningsOutput } from "./output.js";
+import { runCommandInput } from "./test-command.js";
 
 vi.mock(import("./graphql.js"), async (original) => ({
   ...(await original()),

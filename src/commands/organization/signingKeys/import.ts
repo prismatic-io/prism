@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
+import { Cli, z } from "incur";
 import { ImportPublicKeyDocument as IMPORT_PUBLIC_KEY } from "../../../graphql/operations/importPublicKey.generated.js";
 import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ signingKeyId: z.string() }).extend(warningsOutput),
   description:

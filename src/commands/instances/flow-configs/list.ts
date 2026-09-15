@@ -1,3 +1,4 @@
+import { Cli, z } from "incur";
 import {
   ListInstanceFlowConfigsDocument as LIST_INSTANCE_FLOW_CONFIGS,
   type ListInstanceFlowConfigsQuery,
@@ -5,11 +6,11 @@ import {
 import { gqlRequest, requireResource } from "../../../graphql.js";
 import {
   paginationFlags,
-  tableOutputSchema,
-  tableFlags,
   printTable,
+  tableFlags,
+  tableOutputSchema,
 } from "../../../utils/table.js";
-import { z, Cli } from "incur";
+
 type InstanceFlowConfigNode = NonNullable<
   ListInstanceFlowConfigsQuery["instance"]
 >["flowConfigs"]["nodes"][number];

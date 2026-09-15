@@ -1,7 +1,7 @@
+import { Cli, z } from "incur";
 import { DeployInstanceDocument as DEPLOY_INSTANCE } from "../../graphql/operations/deployInstance.generated.js";
 import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ instanceId: z.string() }).extend(warningsOutput),
   description: "Deploy an Instance",

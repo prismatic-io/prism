@@ -1,11 +1,11 @@
+import { Cli, z } from "incur";
 import { getIntegrationFlowsPage } from "../../../utils/integration/flows.js";
 import {
   paginationFlags,
-  tableOutputSchema,
-  tableFlags,
   printTable,
+  tableFlags,
+  tableOutputSchema,
 } from "../../../utils/table.js";
-import { z, Cli } from "incur";
 
 export default Cli.command({
   outputPolicy: "agent-only",

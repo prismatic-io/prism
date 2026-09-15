@@ -1,9 +1,9 @@
-import { getWorkingDirectory } from "../../../command-context.js";
 import { copy } from "fs-extra";
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import { camelCase } from "lodash-es";
 import path, { extname } from "path";
 import { writeCommandStatus } from "../../../command.js";
+import { getWorkingDirectory } from "../../../command-context.js";
 import { read } from "../../../generate/formats/readers/openapi/index.js";
 import { write } from "../../../generate/formats/writer/index.js";
 import { template } from "../../../generate/util.js";

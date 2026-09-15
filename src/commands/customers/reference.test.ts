@@ -1,10 +1,10 @@
 import { Mcp } from "incur";
 import { describe, expect, it, vi } from "vitest";
 import { serve } from "../../cli.js";
-import { Commands } from "../../index.js";
-import { ClientError, gqlRequest } from "../../graphql.js";
 import { commandMiddleware, commandVars, environmentOptions } from "../../command.js";
 import { runWithMcpTransport } from "../../compatibility.js";
+import { ClientError, gqlRequest } from "../../graphql.js";
+import { Commands } from "../../index.js";
 
 vi.mock(import("../../graphql.js"), async (original) => ({
   ...(await original()),

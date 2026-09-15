@@ -1,4 +1,5 @@
 import inquirer from "inquirer";
+import { requireInteractiveInput } from "../../command.js";
 import { GetExecutionLogsDocument as GET_EXECUTION_LOGS } from "../../graphql/executions/getExecutionLogs.generated.js";
 import { GetExecutionStepResultsDocument as GET_EXECUTION_STEP_RESULTS } from "../../graphql/executions/getExecutionStepResults.generated.js";
 import { IsCniExecutionCompleteDocument as IS_CNI_EXECUTION_COMPLETE } from "../../graphql/executions/isCniExecutionComplete.generated.js";
@@ -6,7 +7,6 @@ import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getInt
 import { GetIntegrationFlowsDocument as GET_INTEGRATION_FLOWS } from "../../graphql/integrations/getIntegrationFlows.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { handleError } from "../errors.js";
-import { requireInteractiveInput } from "../../command.js";
 export type IntegrationFlow = NonNullable<
   GetIntegrationFlowsQuery["integration"]
 >["flows"]["nodes"][number];

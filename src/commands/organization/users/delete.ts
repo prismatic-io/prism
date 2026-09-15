@@ -1,4 +1,4 @@
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import { DeleteUserDocument as DELETE_USER } from "../../../graphql/operations/deleteUser.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";

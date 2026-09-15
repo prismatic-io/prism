@@ -1,8 +1,8 @@
+import { Cli, z } from "incur";
 import { parseJsonOrUndefined } from "../../../fields.js";
 import { CreateAlertMonitorDocument as CREATE_ALERT_MONITOR } from "../../../graphql/operations/createAlertMonitor.generated.js";
 import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ alertMonitorId: z.string() }).extend(warningsOutput),
   description:

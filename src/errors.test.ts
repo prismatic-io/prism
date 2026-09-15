@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { processError, ValidationError, CommandFailedError, NotFoundError } from "./errors.js";
 import { Errors } from "incur";
+import { describe, expect, it } from "vitest";
+import { CommandFailedError, NotFoundError, processError, ValidationError } from "./errors.js";
 import { ClientError } from "./graphql.js";
 
 describe.each([

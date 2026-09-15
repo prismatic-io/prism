@@ -1,7 +1,7 @@
-import { getWorkingDirectory } from "../command-context.js";
 import { resolve } from "path";
-import { exists } from "../fs.js";
+import { getWorkingDirectory } from "../command-context.js";
 import { CommandFailedError } from "../errors.js";
+import { exists } from "../fs.js";
 
 /**
  * Finds the package root directory by searching upward for package.json.

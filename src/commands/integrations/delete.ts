@@ -1,4 +1,4 @@
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import { DeleteIntegrationDocument as DELETE_INTEGRATION } from "../../graphql/operations/deleteIntegration.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";

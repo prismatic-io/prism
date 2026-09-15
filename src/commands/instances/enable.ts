@@ -1,7 +1,7 @@
+import { Cli, z } from "incur";
 import { EnableInstanceDocument as ENABLE_INSTANCE } from "../../graphql/operations/enableInstance.generated.js";
 import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ instanceId: z.string() }).extend(warningsOutput),
   description: "Enable an Instance",

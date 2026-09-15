@@ -1,8 +1,8 @@
 import type {
-  MarketplaceTranslationsQuery,
   IntegrationTranslationFragment,
+  MarketplaceTranslationsQuery,
 } from "../../graphql/translations/marketplaceTranslations.generated.js";
-import type { Step, Flow, IntegrationSchema, Branch } from "../../types.js";
+import type { Branch, Flow, IntegrationSchema, Step } from "../../types.js";
 
 import { loadYaml } from "../serialize.js";
 
@@ -139,4 +139,5 @@ export const processIntegrationsForTranslations = (
   }
   return Object.fromEntries(processedProperties.entries());
 };
+
 import { writeCommandOutput } from "../../command.js";

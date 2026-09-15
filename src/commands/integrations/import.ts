@@ -1,5 +1,6 @@
-import { confirm as confirmPrompt } from "../../utils/prompts.js";
-import { writeCommandStatus, writeCommandOutput } from "../../command.js";
+import { Cli, z } from "incur";
+import { writeCommandOutput, writeCommandStatus } from "../../command.js";
+import { CommandFailedError, ValidationError } from "../../errors.js";
 import { exists } from "../../fs.js";
 import { warningsOutput } from "../../output.js";
 import {
@@ -11,8 +12,7 @@ import {
   loadCodeNativeIntegrationEntryPoint,
 } from "../../utils/integration/import.js";
 import { openIntegration } from "../../utils/integration/open.js";
-import { z, Cli } from "incur";
-import { CommandFailedError, ValidationError } from "../../errors.js";
+import { confirm as confirmPrompt } from "../../utils/prompts.js";
 
 export default Cli.command({
   output: z.object({ integrationId: z.string() }).extend(warningsOutput),

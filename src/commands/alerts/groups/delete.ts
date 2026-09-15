@@ -1,4 +1,4 @@
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import { DeleteAlertGroupDocument as DELETE_ALERT_GROUP } from "../../../graphql/operations/deleteAlertGroup.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";

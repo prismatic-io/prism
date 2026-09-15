@@ -1,4 +1,4 @@
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import { getAccessToken } from "../../auth.js";
 import { writeCommandStatus } from "../../command.js";
 import { getAuthContext } from "../../context.js";

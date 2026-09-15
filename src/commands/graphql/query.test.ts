@@ -1,7 +1,7 @@
-import { runCommand } from "../../test-command.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { runWithMcpTransport } from "../../command.js";
 import { gqlRequest } from "../../graphql.js";
+import { runCommand } from "../../test-command.js";
 import GraphqlQueryCommand, { hasMutationOperation } from "./query.js";
 
 vi.mock("../../graphql.js", () => ({

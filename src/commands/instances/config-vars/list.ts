@@ -1,3 +1,4 @@
+import { Cli, z } from "incur";
 import {
   ListInstanceConfigVariablesDocument as LIST_INSTANCE_CONFIG_VARIABLES,
   type ListInstanceConfigVariablesQuery,
@@ -5,11 +6,11 @@ import {
 import { gqlRequest, requireResource } from "../../../graphql.js";
 import {
   paginationFlags,
-  tableOutputSchema,
-  tableFlags,
   printTable,
+  tableFlags,
+  tableOutputSchema,
 } from "../../../utils/table.js";
-import { z, Cli } from "incur";
+
 type InstanceConfigVariableNode = NonNullable<
   ListInstanceConfigVariablesQuery["instance"]
 >["configVariables"]["nodes"][number];

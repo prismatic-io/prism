@@ -1,7 +1,7 @@
+import { Cli, z } from "incur";
 import { UpdateMarketplaceConfigurationDocument as UPDATE_MARKETPLACE_CONFIGURATION } from "../../graphql/operations/updateMarketplaceConfiguration.generated.js";
 import { gqlRequest, requireOperationResult } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { z, Cli } from "incur";
 export default Cli.command({
   output: z.object({ integrationId: z.string() }).extend(warningsOutput),
   description: "Make a version of an Integration available in the Marketplace",

@@ -1,5 +1,5 @@
+import { Cli, z } from "incur";
 import { openIntegration } from "../../utils/integration/open.js";
-import { z, Cli } from "incur";
 
 export default Cli.command({
   output: z.object({ integrationId: z.string(), opened: z.literal(true) }),

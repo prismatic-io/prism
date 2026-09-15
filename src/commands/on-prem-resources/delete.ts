@@ -1,4 +1,4 @@
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import { DeleteOnPremiseResourceDocument as DELETE_ON_PREMISE_RESOURCE } from "../../graphql/operations/deleteOnPremiseResource.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";

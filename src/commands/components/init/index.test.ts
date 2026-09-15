@@ -1,4 +1,3 @@
-import { runCommand } from "../../../test-command.js";
 import { existsSync } from "node:fs";
 import { mkdir, readdir } from "node:fs/promises";
 import { readFile } from "fs-extra";
@@ -6,6 +5,7 @@ import { kebabCase } from "lodash-es";
 import path from "path";
 import { describe, expect, it } from "vitest";
 import { walkDir } from "../../../fs";
+import { runCommand } from "../../../test-command.js";
 import { TOOLCHAIN_NAMES } from "../../../utils/toolchain";
 import InitializeComponent from ".";
 

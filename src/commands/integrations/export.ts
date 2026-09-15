@@ -1,10 +1,10 @@
+import { Cli, z } from "incur";
 import { warningsOutput } from "../../output.js";
 import {
   exportDefinition,
   INTEGRATION_DEFINITION_VERSION,
 } from "../../utils/integration/export.js";
 import { dumpYaml } from "../../utils/serialize.js";
-import { z, Cli } from "incur";
 
 export default Cli.command({
   output: z.object({ definition: z.string() }).extend(warningsOutput),

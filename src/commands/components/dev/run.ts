@@ -1,16 +1,16 @@
-import {
-  IntegrationDocument as INTEGRATION,
-  type IntegrationQuery,
-} from "../../../graphql/operations/integration.generated.js";
+import { Cli, z } from "incur";
+import { commandSignal } from "../../../command.js";
+import { CommandFailedError, ValidationError } from "../../../errors.js";
 import {
   InstanceDocument as INSTANCE,
   type InstanceQuery,
 } from "../../../graphql/operations/instance.generated.js";
-import { commandSignal } from "../../../command.js";
+import {
+  IntegrationDocument as INTEGRATION,
+  type IntegrationQuery,
+} from "../../../graphql/operations/integration.generated.js";
 import { gqlRequest, requireResource } from "../../../graphql.js";
 import { spawnProcess, streamProcess } from "../../../utils/process.js";
-import { z, Cli } from "incur";
-import { CommandFailedError, ValidationError } from "../../../errors.js";
 
 type ConfigVariable =
   | NonNullable<IntegrationQuery["integration"]>["testConfigVariables"]["nodes"][number]

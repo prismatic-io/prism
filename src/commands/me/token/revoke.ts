@@ -1,9 +1,9 @@
-import { confirm as confirmPrompt } from "../../../utils/prompts.js";
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import { revokeRefreshToken } from "../../../auth.js";
-import { writeCommandStatus, writeCommandOutput } from "../../../command.js";
-import { warningsOutput } from "../../../output.js";
+import { writeCommandOutput, writeCommandStatus } from "../../../command.js";
 import { CommandFailedError } from "../../../errors.js";
+import { warningsOutput } from "../../../output.js";
+import { confirm as confirmPrompt } from "../../../utils/prompts.js";
 
 export default Cli.command({
   output: z.object({

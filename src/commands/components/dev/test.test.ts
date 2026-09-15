@@ -1,12 +1,12 @@
-import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { describe, expect, it, vi } from "vitest";
 import { withWorkingDirectory } from "../../../command-context.js";
 import { getRuntimeEnvironment } from "../../../runtime.js";
-import { whoAmI } from "../../../utils/user/query.js";
 import { runCommand } from "../../../test-command.js";
-import { describe, expect, it, vi } from "vitest";
 import { spawnProcess } from "../../../utils/process.js";
+import { whoAmI } from "../../../utils/user/query.js";
 import Command from "./test.js";
 
 vi.mock(import("../../../utils/process.js"), () => ({

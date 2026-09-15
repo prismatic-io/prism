@@ -1,9 +1,7 @@
-import { getWorkingDirectory, withWorkingDirectory } from "../../command-context.js";
-import { confirm as confirmPrompt } from "../../utils/prompts.js";
 import { resolve } from "node:path";
-import { getPackageEntrypointDirectory } from "../../utils/import.js";
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import { writeCommandStatus } from "../../command.js";
+import { getWorkingDirectory, withWorkingDirectory } from "../../command-context.js";
 import { warningsOutput } from "../../output.js";
 import {
   createComponentPackage,
@@ -18,6 +16,8 @@ import {
   uploadConnectionIcons,
   uploadFile,
 } from "../../utils/component/publish.js";
+import { getPackageEntrypointDirectory } from "../../utils/import.js";
+import { confirm as confirmPrompt } from "../../utils/prompts.js";
 import { whoAmI } from "../../utils/user/query.js";
 
 export default Cli.command({

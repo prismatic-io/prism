@@ -1,7 +1,7 @@
-import { getWorkingDirectory } from "../command-context.js";
-import { getRuntimeEnvironment } from "../runtime.js";
 import { type Output, x } from "tinyexec";
 import { commandSignal, isAgentExecution, writeCommandOutput } from "../command.js";
+import { getWorkingDirectory } from "../command-context.js";
+import { getRuntimeEnvironment } from "../runtime.js";
 
 const diagnosticLimit = 8192;
 const childDiagnostic = (

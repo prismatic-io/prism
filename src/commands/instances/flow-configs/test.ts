@@ -1,5 +1,5 @@
 import { setTimeout as sleep } from "node:timers/promises";
-import { z, Cli } from "incur";
+import { Cli, z } from "incur";
 import { commandSignal } from "../../../command.js";
 import { ListInstanceTestLogsDocument as LIST_INSTANCE_TEST_LOGS } from "../../../graphql/operations/listInstanceTestLogs.generated.js";
 import { TestInstanceFlowConfigDocument as TEST_INSTANCE_FLOW_CONFIG } from "../../../graphql/operations/testInstanceFlowConfig.generated.js";

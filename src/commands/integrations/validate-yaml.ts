@@ -1,11 +1,11 @@
-import { ValidateIntegrationSchemaDocument as VALIDATE_INTEGRATION_SCHEMA } from "../../graphql/operations/validateIntegrationSchema.generated.js";
-import { writeCommandStatus } from "../../command.js";
 import chalk from "chalk";
+import { Cli, z } from "incur";
+import { writeCommandStatus } from "../../command.js";
+import { CommandFailedError, ValidationError } from "../../errors.js";
 import { exists, readStdin } from "../../fs.js";
+import { ValidateIntegrationSchemaDocument as VALIDATE_INTEGRATION_SCHEMA } from "../../graphql/operations/validateIntegrationSchema.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { extractYAMLFromPath } from "../../utils/integration/import.js";
-import { z, Cli } from "incur";
-import { CommandFailedError, ValidationError } from "../../errors.js";
 
 export default Cli.command({
   output: z.object({ valid: z.literal(true), path: z.string() }),
