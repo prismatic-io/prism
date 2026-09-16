@@ -5,7 +5,6 @@ import path from "path";
 import { v4 as uuid4 } from "uuid";
 import { writeCommandStatus } from "../../../command.js";
 import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
-import { getPrismaticUrl } from "../../../context.js";
 import { CommandFailedError } from "../../../errors.js";
 import { template, updatePackageJson } from "../../../generate/util.js";
 import { warningsOutput } from "../../../output.js";
@@ -76,7 +75,6 @@ export default Cli.command({
     await fs.mkdir(directory);
 
     return withWorkingDirectory(directory, async () => {
-      const registryUrl = new URL("/packages/npm", await getPrismaticUrl()).toString();
       const templateContext = {
         integration: { name, description: "Prism-generated Integration", key: camelCase(name) },
         flow: {
@@ -89,10 +87,6 @@ export default Cli.command({
           dataSource: {
             stableKey: uuid4(),
           },
-        },
-        registry: {
-          url: registryUrl,
-          scope: "@component-manifests",
         },
       };
 
@@ -119,7 +113,6 @@ export default Cli.command({
         path.join("src", "markdown.d.ts"),
         path.join(".spectral", "index.ts"),
         ".env.testing",
-        ".npmrc",
         "documentation.md",
         "package.json",
       ];

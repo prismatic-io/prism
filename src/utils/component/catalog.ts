@@ -569,3 +569,14 @@ export async function listVersions(
   if (!component) throw pickComponent([], selector);
   return { component, items: page.items, pageInfo: page.pageInfo };
 }
+
+export async function identifyComponent(
+  selector: Omit<ComponentSelector, "version">,
+): Promise<ComponentIdentity> {
+  const { components }: ListComponentVersionsQuery = await gqlRequest({
+    document: LIST_COMPONENT_VERSIONS,
+    variables: { key: selector.key, public: selector.public ?? null, after: null, first: 1 },
+  });
+  const { id, key, public: isPublic, versionNumber } = pickComponent(components.nodes, selector);
+  return { id, key, public: isPublic, versionNumber };
+}

@@ -1,7 +1,8 @@
 import { camelCase, isEmpty, startCase } from "lodash-es";
 import type { OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
 import type { WriterFunction } from "ts-morph";
-import { type Action, cleanIdentifier, type Input, stripUndefined } from "../../utils.js";
+import { cleanIdentifier } from "../../../../utils/identifier.js";
+import { type Action, type Input, stripUndefined } from "../../utils.js";
 import { getInputs } from "./inputs.js";
 import { toGroupTag } from "./util.js";
 

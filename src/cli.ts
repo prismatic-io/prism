@@ -31,6 +31,7 @@ const topicDescriptions: Record<string, string> = {
   graphql: "Execute GraphQL queries against the Prismatic API",
   instances: "Manage Instances",
   integrations: "Manage and import Integrations",
+  "integrations:manifests": "Generate component manifests for Code Native Integrations",
   logs: "Search and inspect Prismatic log data",
   "logs:severities": "Manage log severity levels",
   "on-prem-resources": "Manage on-premise resources",

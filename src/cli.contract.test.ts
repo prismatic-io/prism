@@ -103,6 +103,8 @@ const additiveCommandIds = new Set([
   "executions:list",
   "executions:logs",
   "executions:steps",
+  "integrations:manifests:add",
+  "integrations:manifests:list",
   "logs:list",
 ]);
 const sample = (field: Field): unknown => {

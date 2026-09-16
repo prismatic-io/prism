@@ -60,6 +60,7 @@ const nativeFieldSchemas = {
   enabled: z.boolean(),
   triggered: z.boolean(),
   imported: z.boolean(),
+  registered: z.boolean(),
   available: z.boolean(),
   isDefault: z.boolean(),
   isAvailable: z.boolean(),

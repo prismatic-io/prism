@@ -10,7 +10,8 @@ import {
   VariableDeclarationKind,
   type VariableDeclarationStructure,
 } from "ts-morph";
-import { type Connection, type ConnectionInput, cleanIdentifier, escapeText } from "../utils.js";
+import { cleanIdentifier } from "../../../utils/identifier.js";
+import { type Connection, type ConnectionInput, escapeText } from "../utils.js";
 
 const writeInput = (
   writer: CodeBlockWriter,

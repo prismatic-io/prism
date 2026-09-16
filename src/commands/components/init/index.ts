@@ -134,9 +134,6 @@ export default Cli.command({
         scripts: {
           build: toolchain.scripts.build,
           publish: "npm run build && prism components:publish",
-          "generate:manifest": "npm run build && npx @prismatic-io/spectral component-manifest",
-          "generate:manifest:dev":
-            "npm run build && npx @prismatic-io/spectral component-manifest --skip-signature-verify",
           test: toolchain.scripts.test,
           lint: toolchain.scripts.lint,
           typecheck: toolchain.scripts.typecheck,
