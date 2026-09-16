@@ -53,12 +53,9 @@ export const checkPackageSignature = async (
   return existingSignature === packageSignature;
 };
 
-export const confirmPublish = async (
-  { display: { label, description } }: ComponentDefinition,
-  confirm = true,
-): Promise<boolean> => {
-  if (!confirm) return true;
-
+export const confirmPublish = async ({
+  display: { label, description },
+}: ComponentDefinition): Promise<boolean> => {
   writeCommandStatus([label, "-", description].map(String).join(" "));
 
   return await confirmPrompt(`Would you like to publish ${label}? (y/N)`);

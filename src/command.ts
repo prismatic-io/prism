@@ -9,8 +9,14 @@ import {
   getMcpGlobals,
   isMcpTransport,
 } from "./compatibility.js";
+import { ConfirmationRequiredError } from "./errors.js";
 import { prepareCta } from "./output.js";
-import { getRuntimeEnvironment, type RuntimeState, runWithRuntimeState } from "./runtime.js";
+import {
+  getRuntimeEnvironment,
+  isQuiet,
+  type RuntimeState,
+  runWithRuntimeState,
+} from "./runtime.js";
 
 export { environmentOptions, globalOptions } from "./command-schemas.js";
 export {
@@ -108,10 +114,10 @@ export const writeCommandOutput = (value: string, stream: "stdout" | "stderr" = 
     (stream === "stderr" ? process.stderr : process.stdout).write(`${value}\n`);
 };
 export const writeCommandStatus = (value: string) => {
-  if (!isAgentExecution()) process.stderr.write(`${value}\n`);
+  if (!isAgentExecution() && !isQuiet()) process.stderr.write(`${value}\n`);
 };
 export const writeCommandProgress = (value: string) => {
-  if (!isAgentExecution()) process.stderr.write(value);
+  if (!isAgentExecution() && !isQuiet()) process.stderr.write(value);
 };
 export const requireInteractiveInput = (message: string) => {
   if (isAgentExecution())
@@ -427,10 +433,8 @@ export const assertMutationAllowed = (context: MutationContext): void => {
     });
   }
   if (context.agent && context.globals.yes !== true) {
-    throw new Errors.IncurError({
+    throw new ConfirmationRequiredError({
       message: "This command can modify state. Approve with --yes, or context.yes=true in MCP.",
-      code: "CONFIRMATION_REQUIRED",
-      exitCode: 2,
     });
   }
 };
