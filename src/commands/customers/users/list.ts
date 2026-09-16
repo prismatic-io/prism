@@ -4,9 +4,9 @@ import {
   type ListCustomerUsersQuery,
 } from "../../../graphql/customers/listCustomerUsers.generated.js";
 import { gqlRequest, requireResource } from "../../../graphql.js";
+import { requestFailure } from "../../../utils/failure.js";
+import { checkPageCursor, nextPageOptions } from "../../../utils/pagination.js";
 import { paginationFlags, printTable, tableFlags } from "../../../utils/table.js";
-import { customerFailure } from "../errors.js";
-import { checkPageCursor, nextPageOptions } from "../pagination.js";
 import { customerUserRowSchema, nonBlank, pageInfoSchema } from "../schemas.js";
 
 type CustomerUserNode = NonNullable<ListCustomerUsersQuery["customer"]>["users"]["nodes"][number];
@@ -90,7 +90,7 @@ export default Cli.command({
           : undefined,
       );
     } catch (error) {
-      return context.error(customerFailure(error, "CUSTOMER_USERS_LIST_FAILED", true));
+      return context.error(requestFailure(error, "CUSTOMER_USERS_LIST_FAILED", true));
     }
   },
 });

@@ -1,8 +1,8 @@
 import { Cli, z } from "incur";
 import { ListCustomerRolesDocument as LIST_CUSTOMER_ROLES } from "../../../graphql/operations/listCustomerRoles.generated.js";
 import { gqlRequest } from "../../../graphql.js";
+import { requestFailure } from "../../../utils/failure.js";
 import { printTable, tableFlags } from "../../../utils/table.js";
-import { customerFailure } from "../errors.js";
 import { customerRoleRowSchema } from "../schemas.js";
 export default Cli.command({
   outputPolicy: "agent-only",
@@ -32,7 +32,7 @@ export default Cli.command({
         { ...flags },
       );
     } catch (error) {
-      return context.error(customerFailure(error, "CUSTOMER_ROLES_LIST_FAILED", true));
+      return context.error(requestFailure(error, "CUSTOMER_ROLES_LIST_FAILED", true));
     }
   },
 });

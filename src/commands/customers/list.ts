@@ -2,9 +2,9 @@ import { Cli, z } from "incur";
 import type { ListCustomersQuery } from "../../graphql/customers/listCustomers.generated.js";
 import { ListCustomersDocument as LIST_CUSTOMERS } from "../../graphql/customers/listCustomers.generated.js";
 import { gqlRequest } from "../../graphql.js";
+import { requestFailure } from "../../utils/failure.js";
+import { checkPageCursor, nextPageOptions } from "../../utils/pagination.js";
 import { paginationFlags, printTable, tableFlags } from "../../utils/table.js";
-import { customerFailure } from "./errors.js";
-import { checkPageCursor, nextPageOptions } from "./pagination.js";
 import { customerRowSchema, pageInfoSchema } from "./schemas.js";
 
 type CustomerNode = ListCustomersQuery["customers"]["nodes"][number];
@@ -76,7 +76,7 @@ export default Cli.command({
           : undefined,
       );
     } catch (error) {
-      return context.error(customerFailure(error, "CUSTOMER_LIST_FAILED", true));
+      return context.error(requestFailure(error, "CUSTOMER_LIST_FAILED", true));
     }
   },
 });

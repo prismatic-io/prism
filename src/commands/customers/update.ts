@@ -2,7 +2,7 @@ import { Cli, z } from "incur";
 import { UpdateCustomerDocument as UPDATE_CUSTOMER } from "../../graphql/operations/updateCustomer.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { warningsOutput } from "../../output.js";
-import { customerFailure } from "./errors.js";
+import { requestFailure } from "../../utils/failure.js";
 import { nonBlank } from "./schemas.js";
 
 export default Cli.command({
@@ -87,7 +87,7 @@ export default Cli.command({
       );
     } catch (error) {
       return context.error({
-        ...customerFailure(error, "CUSTOMER_UPDATE_FAILED"),
+        ...requestFailure(error, "CUSTOMER_UPDATE_FAILED"),
         cta: {
           commands: [
             {

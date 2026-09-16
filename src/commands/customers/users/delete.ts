@@ -2,7 +2,7 @@ import { Cli, z } from "incur";
 import { DeleteUserDocument as DELETE_USER } from "../../../graphql/operations/deleteUser.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
-import { customerFailure } from "../errors.js";
+import { requestFailure } from "../../../utils/failure.js";
 import { nonBlank } from "../schemas.js";
 
 export default Cli.command({
@@ -56,7 +56,7 @@ export default Cli.command({
       );
     } catch (error) {
       return context.error({
-        ...customerFailure(error, "CUSTOMER_USERS_DELETE_FAILED"),
+        ...requestFailure(error, "CUSTOMER_USERS_DELETE_FAILED"),
         cta: {
           commands: [
             {
