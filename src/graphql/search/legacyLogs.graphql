@@ -1,0 +1,61 @@
+query legacyLogs(
+  $first: Int
+  $after: String
+  $timestampGte: DateTime
+  $timestampLte: DateTime
+  $executionResult: ID
+  $instance: ID
+  $customer: ID
+  $integration: ID
+  $flow: ID
+  $flowConfig: ID
+  $severity: Int
+  $message: String
+  $logType: String
+  $logTypes: [String]
+  $isTestExecution: Boolean
+  $instanceType: InstanceType
+  $orderBy: LogOrder
+) {
+  logs(
+    first: $first
+    after: $after
+    timestamp_Gte: $timestampGte
+    timestamp_Lte: $timestampLte
+    executionResult: $executionResult
+    instance: $instance
+    customer: $customer
+    integration: $integration
+    flow: $flow
+    flowConfig: $flowConfig
+    severity: $severity
+    message_Icontains: $message
+    logType: $logType
+    logType_In: $logTypes
+    isTestExecution: $isTestExecution
+    instanceType: $instanceType
+    orderBy: $orderBy
+  ) {
+    totalCount
+    nodes {
+      id
+      timestamp
+      severity
+      message
+      logType
+      stepName
+      loopStepName
+      loopStepIndex
+      executionResultId
+      instanceId
+      instanceName
+      customerName
+      integrationName
+      flowName
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

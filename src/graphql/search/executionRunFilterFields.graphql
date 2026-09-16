@@ -1,0 +1,21 @@
+query executionRunFilterFields(
+  $integrationId: ID
+  $customerId: ID
+  $instanceId: ID
+  $startedAtGte: DateTime
+  $startedAtLte: DateTime
+  $keySearch: String
+) {
+  executionRunFilterFields(
+    integrationId: $integrationId
+    customerId: $customerId
+    instanceId: $instanceId
+    startedAtGte: $startedAtGte
+    startedAtLte: $startedAtLte
+    keySearch: $keySearch
+  ) {
+    keyPath
+    dataType
+    operators
+  }
+}

@@ -1,0 +1,55 @@
+query legacyExecutionResult($id: ID!) {
+  executionResult(id: $id) {
+    id
+    status
+    resultType
+    invokeType
+    startedAt
+    endedAt
+    queuedAt
+    resumedAt
+    stepCount
+    error
+    isTestExecution
+    isLre
+    usesBatching
+    instanceType
+    retryCount
+    maxRetryCount
+    retryNextAt
+    allowUpdate
+    requestPayloadUrl
+    retryForExecution {
+      id
+    }
+    replayForExecution {
+      id
+    }
+    instance {
+      id
+      name
+      customer {
+        id
+        name
+        externalId
+      }
+    }
+    integration {
+      id
+      name
+      versionSequenceId
+    }
+    flow {
+      id
+      name
+      stableKey
+    }
+    lineage {
+      invokedBy {
+        execution {
+          id
+        }
+      }
+    }
+  }
+}
