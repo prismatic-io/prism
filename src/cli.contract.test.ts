@@ -59,6 +59,34 @@ const additiveAgentInputNames = new Set([
   "tenant-id",
 ]);
 const additiveOptionNames = new Set([...additivePaginationNames, ...additiveAgentInputNames]);
+const additiveCommandOptions: Record<string, Set<string>> = {
+  "components:list": new Set([
+    "category",
+    "dataSourceType",
+    "fulltext",
+    "hasActions",
+    "hasConnections",
+    "hasDataSources",
+    "hasTriggers",
+    "private",
+    "public",
+  ]),
+  "components:actions:list": new Set(["search", "version"]),
+  "components:data-sources:list": new Set(["search", "type", "version"]),
+  "components:triggers:list": new Set(["search", "version"]),
+};
+const isAdditiveOption = (id: string, name: string) =>
+  additiveOptionNames.has(name) || additiveCommandOptions[id]?.has(name) === true;
+const additiveCommandIds = new Set([
+  "components:actions:get",
+  "components:connections:get",
+  "components:connections:list",
+  "components:data-sources:get",
+  "components:get",
+  "components:search",
+  "components:triggers:get",
+  "components:versions",
+]);
 const sample = (field: Field): unknown => {
   if (field.options?.length) return field.multiple ? [field.options[0]] : field.options[0];
   if (field.kind === "boolean") return true;
@@ -139,9 +167,10 @@ describe("legacy command contract", () => {
   it("contains exactly the same public command IDs", () => {
     expect(
       Object.keys(Commands)
-        .filter((id) => !id.startsWith("autocomplete"))
+        .filter((id) => !id.startsWith("autocomplete") && !additiveCommandIds.has(id))
         .sort(),
     ).toEqual(Object.keys(legacyManifest.commands).sort());
+    for (const id of additiveCommandIds) expect(Commands[id], id).toBeDefined();
     expect(Commands.autocomplete).toBeDefined();
     expect(Commands["autocomplete:script"]).toBeDefined();
   });
@@ -165,11 +194,11 @@ describe("legacy command contract", () => {
         expect(field.default).toEqual(old?.default);
       }
       expect(
-        Object.keys(command.contract.options).filter((name) => !additiveOptionNames.has(name)),
+        Object.keys(command.contract.options).filter((name) => !isAdditiveOption(id, name)),
       ).toEqual(Object.keys(legacy.flags).filter((name) => !globalNames.has(name)));
 
       for (const [name, field] of Object.entries(command.contract.options)) {
-        if (additiveOptionNames.has(name)) continue;
+        if (isAdditiveOption(id, name)) continue;
         const old = legacy.flags[name];
         expect(old, `${id} --${name} existed in the legacy manifest`).toBeDefined();
         // Legacy assigned -n to both --flow-name and --no-prompt. The latter was
@@ -374,6 +403,7 @@ describe("command separators and agent mode", () => {
       "components:actions:list",
       "components:data-sources:list",
       "components:triggers:list",
+      "components:versions",
       "integrations:flows:list",
     ];
 

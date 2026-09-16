@@ -1,4 +1,4 @@
-import { customerFailure } from "./errors.js";
+import { requestFailure } from "../../utils/failure.js";
 import { nonBlank } from "./schemas.js";
 import { z, Cli } from "incur";
 import { DeleteCustomerDocument as DELETE_CUSTOMER } from "../../graphql/operations/deleteCustomer.generated.js";
@@ -56,7 +56,7 @@ export default Cli.command({
       );
     } catch (error) {
       return context.error({
-        ...customerFailure(error, "CUSTOMER_DELETE_FAILED"),
+        ...requestFailure(error, "CUSTOMER_DELETE_FAILED"),
         cta: {
           commands: [
             {

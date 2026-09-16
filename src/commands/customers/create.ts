@@ -1,4 +1,4 @@
-import { customerFailure } from "./errors.js";
+import { requestFailure } from "../../utils/failure.js";
 import { nonBlank } from "./schemas.js";
 import { CreateCustomerDocument as CREATE_CUSTOMER } from "../../graphql/operations/createCustomer.generated.js";
 import { gqlRequest } from "../../graphql.js";
@@ -73,7 +73,7 @@ export default Cli.command({
       );
     } catch (error) {
       return context.error({
-        ...customerFailure(error, "CUSTOMER_CREATE_FAILED"),
+        ...requestFailure(error, "CUSTOMER_CREATE_FAILED"),
         cta: {
           commands: [
             {

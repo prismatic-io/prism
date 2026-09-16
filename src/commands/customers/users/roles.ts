@@ -1,5 +1,5 @@
 import { customerRoleRowSchema } from "../schemas.js";
-import { customerFailure } from "../errors.js";
+import { requestFailure } from "../../../utils/failure.js";
 import { tableFlags, printTable } from "../../../utils/table.js";
 import { ListCustomerRolesDocument as LIST_CUSTOMER_ROLES } from "../../../graphql/operations/listCustomerRoles.generated.js";
 import { gqlRequest } from "../../../graphql.js";
@@ -32,7 +32,7 @@ export default Cli.command({
         { ...flags },
       );
     } catch (error) {
-      return context.error(customerFailure(error, "CUSTOMER_ROLES_LIST_FAILED", true));
+      return context.error(requestFailure(error, "CUSTOMER_ROLES_LIST_FAILED", true));
     }
   },
 });

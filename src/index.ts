@@ -12,17 +12,25 @@ import AlertsTriggersListCommand from "./commands/alerts/triggers/list.js";
 import AlertsWebhooksCreateCommand from "./commands/alerts/webhooks/create.js";
 import AlertsWebhooksDeleteCommand from "./commands/alerts/webhooks/delete.js";
 import AlertsWebhooksListCommand from "./commands/alerts/webhooks/list.js";
+import ComponentsActionsGetCommand from "./commands/components/actions/get.js";
 import ComponentsActionsListCommand from "./commands/components/actions/list.js";
+import ComponentsConnectionsGetCommand from "./commands/components/connections/get.js";
+import ComponentsConnectionsListCommand from "./commands/components/connections/list.js";
+import ComponentsDataSourcesGetCommand from "./commands/components/data-sources/get.js";
 import ComponentsDataSourcesListCommand from "./commands/components/data-sources/list.js";
 import ComponentsDeleteCommand from "./commands/components/delete.js";
+import ComponentsGetCommand from "./commands/components/get.js";
 import ComponentsDevRunCommand from "./commands/components/dev/run.js";
 import ComponentsDevTestCommand from "./commands/components/dev/test.js";
 import ComponentsInitComponentCommand from "./commands/components/init/component.js";
 import ComponentsInitCommand from "./commands/components/init/index.js";
 import ComponentsListCommand from "./commands/components/list.js";
 import ComponentsPublishCommand from "./commands/components/publish.js";
+import ComponentsSearchCommand from "./commands/components/search.js";
 import ComponentsSignatureCommand from "./commands/components/signature.js";
+import ComponentsTriggersGetCommand from "./commands/components/triggers/get.js";
 import ComponentsTriggersListCommand from "./commands/components/triggers/list.js";
+import ComponentsVersionsCommand from "./commands/components/versions.js";
 import CustomersCreateCommand from "./commands/customers/create.js";
 import CustomersDeleteCommand from "./commands/customers/delete.js";
 import CustomersListCommand from "./commands/customers/list.js";
@@ -103,7 +111,10 @@ export const Commands = {
   }),
   logout: prepareCommand(LogoutCommand, { mutates: true, authContext: "profile" as const }),
   "components:delete": prepareCommand(ComponentsDeleteCommand, { mutates: true }),
+  "components:get": prepareCommand(ComponentsGetCommand, {}),
   "components:list": prepareCommand(ComponentsListCommand, {}),
+  "components:search": prepareCommand(ComponentsSearchCommand, {}),
+  "components:versions": prepareCommand(ComponentsVersionsCommand, {}),
   "components:publish": prepareCommand(ComponentsPublishCommand, { mutates: true }),
   "customers:create": prepareCommand(CustomersCreateCommand, { mutates: true }),
   "customers:delete": prepareCommand(CustomersDeleteCommand, { mutates: true }),
@@ -156,7 +167,11 @@ export const Commands = {
   "alerts:webhooks:create": prepareCommand(AlertsWebhooksCreateCommand, { mutates: true }),
   "alerts:webhooks:delete": prepareCommand(AlertsWebhooksDeleteCommand, { mutates: true }),
   "alerts:webhooks:list": prepareCommand(AlertsWebhooksListCommand, {}),
+  "components:actions:get": prepareCommand(ComponentsActionsGetCommand, {}),
   "components:actions:list": prepareCommand(ComponentsActionsListCommand, {}),
+  "components:connections:get": prepareCommand(ComponentsConnectionsGetCommand, {}),
+  "components:connections:list": prepareCommand(ComponentsConnectionsListCommand, {}),
+  "components:data-sources:get": prepareCommand(ComponentsDataSourcesGetCommand, {}),
   "components:data-sources:list": prepareCommand(ComponentsDataSourcesListCommand, {}),
   "components:dev:run": prepareCommand(ComponentsDevRunCommand, { mutates: true }),
   "components:dev:test": prepareCommand(ComponentsDevTestCommand, { mutates: true }),
@@ -166,6 +181,7 @@ export const Commands = {
   }),
   "components:init": prepareCommand(ComponentsInitCommand, { mutates: true }),
   "components:signature": prepareCommand(ComponentsSignatureCommand, {}),
+  "components:triggers:get": prepareCommand(ComponentsTriggersGetCommand, {}),
   "components:triggers:list": prepareCommand(ComponentsTriggersListCommand, {}),
   "customers:users:create": prepareCommand(CustomersUsersCreateCommand, { mutates: true }),
   "customers:users:delete": prepareCommand(CustomersUsersDeleteCommand, { mutates: true }),
