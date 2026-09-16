@@ -1,0 +1,7 @@
+query executionRunPayloadUrl($id: ID!) {
+  executionRun(id: $id) {
+    id
+    hasStoredPayload
+    payloadUrl
+  }
+}

@@ -1,0 +1,9 @@
+query stackCapabilities {
+  authenticatedUser {
+    org {
+      stackCapabilities {
+        supportsAoss
+      }
+    }
+  }
+}

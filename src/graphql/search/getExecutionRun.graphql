@@ -1,0 +1,57 @@
+query getExecutionRun($id: ID!) {
+  executionRun(id: $id) {
+    id
+    status
+    resultType
+    invokeType
+    startedAt
+    endedAt
+    queuedAt
+    resumedAt
+    durationMs
+    stepCount
+    error
+    errorStepName
+    instanceId
+    instanceName
+    instanceType
+    customerId
+    customerName
+    customerExternalId
+    integrationId
+    integrationName
+    integrationVersionSequenceId
+    flowId
+    flowName
+    flowStableId
+    flowConfigId
+    isTestExecution
+    isReplay
+    isCodeNative
+    usesBatching
+    fromPreprocessFlow
+    retryAttemptNumber
+    retryForExecutionId
+    allowUpdate
+    payload
+    payloadTruncated
+    hasStoredPayload
+    lineage {
+      invokedBy {
+        execution {
+          id
+        }
+      }
+    }
+    stepBuckets(bucketSize: 100) {
+      index
+      startedAt
+      endedAt
+      count
+      failedCount
+      totalDurationMs
+      firstLabel
+      lastLabel
+    }
+  }
+}

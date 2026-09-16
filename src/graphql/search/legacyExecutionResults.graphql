@@ -1,0 +1,91 @@
+fragment LegacyExecutionRow on InstanceExecutionResult {
+  id
+  status
+  resultType
+  invokeType
+  startedAt
+  endedAt
+  queuedAt
+  resumedAt
+  stepCount
+  error
+  isTestExecution
+  retryCount
+  allowUpdate
+  retryForExecution {
+    id
+  }
+  replayForExecution {
+    id
+  }
+  instance {
+    id
+    name
+    customer {
+      id
+      name
+      externalId
+    }
+  }
+  integration {
+    id
+    name
+  }
+  flow {
+    id
+    name
+  }
+}
+
+query legacyExecutionResults(
+  $first: Int
+  $after: String
+  $startedAtGte: DateTime
+  $startedAtLte: DateTime
+  $id: ID
+  $instance: ID
+  $customer: ID
+  $integration: ID
+  $flow: ID
+  $status: ExecutionStatus
+  $resultTypes: [String]
+  $invokeTypes: [String]
+  $isTestExecution: Boolean
+  $instanceType: InstanceType
+  $integrationVersionSequenceId: UUID
+  $endedAtIsNull: Boolean
+  $errorIsNull: Boolean
+  $retryForExecutionIsNull: Boolean
+  $orderBy: InstanceExecutionResultOrder
+) {
+  executionResults(
+    first: $first
+    after: $after
+    startedAt_Gte: $startedAtGte
+    startedAt_Lte: $startedAtLte
+    id: $id
+    instance: $instance
+    instance_Customer: $customer
+    instance_Integration: $integration
+    flowConfig_Flow: $flow
+    status: $status
+    resultType_In: $resultTypes
+    invokeType_In: $invokeTypes
+    isTestExecution: $isTestExecution
+    instanceType: $instanceType
+    integration_VersionSequenceId: $integrationVersionSequenceId
+    endedAt_Isnull: $endedAtIsNull
+    error_Isnull: $errorIsNull
+    retryForExecution_Isnull: $retryForExecutionIsNull
+    orderBy: $orderBy
+  ) {
+    totalCount
+    nodes {
+      ...LegacyExecutionRow
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

@@ -97,6 +97,13 @@ const additiveCommandIds = new Set([
   "components:search",
   "components:triggers:get",
   "components:versions",
+  "executions:count",
+  "executions:fields",
+  "executions:get",
+  "executions:list",
+  "executions:logs",
+  "executions:steps",
+  "logs:list",
 ]);
 const sample = (field: Field): unknown => {
   if (field.options?.length) return field.multiple ? [field.options[0]] : field.options[0];
@@ -418,7 +425,11 @@ describe("command separators and agent mode", () => {
       "components:data-sources:list",
       "components:triggers:list",
       "components:versions",
+      "executions:list",
+      "executions:logs",
+      "executions:steps",
       "integrations:flows:list",
+      "logs:list",
     ];
 
     for (const id of paginatedCommands) {
@@ -431,6 +442,8 @@ describe("command separators and agent mode", () => {
         Commands[id].output?.safeParse({
           items: [],
           pageInfo: { hasNextPage: true, endCursor: "next-page" },
+          engine: "search",
+          totalCount: null,
         }).success,
         id,
       ).toBe(true);

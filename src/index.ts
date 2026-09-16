@@ -41,7 +41,13 @@ import CustomersUsersDeleteCommand from "./commands/customers/users/delete.js";
 import CustomersUsersListCommand from "./commands/customers/users/list.js";
 import CustomersUsersRolesCommand from "./commands/customers/users/roles.js";
 import CustomersUsersUpdateCommand from "./commands/customers/users/update.js";
+import ExecutionsCountCommand from "./commands/executions/count.js";
+import ExecutionsFieldsCommand from "./commands/executions/fields.js";
+import ExecutionsGetCommand from "./commands/executions/get.js";
+import ExecutionsListCommand from "./commands/executions/list.js";
+import ExecutionsLogsCommand from "./commands/executions/logs.js";
 import ExecutionsStepResultGetCommand from "./commands/executions/step-result/get.js";
+import ExecutionsStepsCommand from "./commands/executions/steps.js";
 import GraphqlQueryCommand from "./commands/graphql/query.js";
 import InstancesConfigVarsListCommand from "./commands/instances/config-vars/list.js";
 import InstancesCreateCommand from "./commands/instances/create.js";
@@ -75,6 +81,7 @@ import IntegrationsVersionsCommand from "./commands/integrations/versions/index.
 import LoginCommand from "./commands/login/index.js";
 import LoginSwitchCommand from "./commands/login/switch.js";
 import LogoutCommand from "./commands/logout.js";
+import LogsListCommand from "./commands/logs/list.js";
 import LogsSeveritiesListCommand from "./commands/logs/severities/list.js";
 import MeCommand from "./commands/me/index.js";
 import MeTokenRevokeCommand from "./commands/me/token/revoke.js";
@@ -188,7 +195,13 @@ export const Commands = {
   "customers:users:list": prepareCommand(CustomersUsersListCommand, {}),
   "customers:users:roles": prepareCommand(CustomersUsersRolesCommand, {}),
   "customers:users:update": prepareCommand(CustomersUsersUpdateCommand, { mutates: true }),
+  "executions:count": prepareCommand(ExecutionsCountCommand, {}),
+  "executions:fields": prepareCommand(ExecutionsFieldsCommand, {}),
+  "executions:get": prepareCommand(ExecutionsGetCommand, {}),
+  "executions:list": prepareCommand(ExecutionsListCommand, {}),
+  "executions:logs": prepareCommand(ExecutionsLogsCommand, {}),
   "executions:step-result:get": prepareCommand(ExecutionsStepResultGetCommand, { mutates: true }),
+  "executions:steps": prepareCommand(ExecutionsStepsCommand, {}),
   "instances:config-vars:list": prepareCommand(InstancesConfigVarsListCommand, {}),
   "instances:flow-configs:list": prepareCommand(InstancesFlowConfigsListCommand, {}),
   "instances:flow-configs:test": prepareCommand(InstancesFlowConfigsTestCommand, { mutates: true }),
@@ -198,6 +211,7 @@ export const Commands = {
   "integrations:flows:test": prepareCommand(IntegrationsFlowsTestCommand, { mutates: true }),
   "integrations:init": prepareCommand(IntegrationsInitCommand, { mutates: true }),
   "integrations:versions": prepareCommand(IntegrationsVersionsCommand, {}),
+  "logs:list": prepareCommand(LogsListCommand, {}),
   "logs:severities:list": prepareCommand(LogsSeveritiesListCommand, {}),
   "me:token:revoke": prepareCommand(MeTokenRevokeCommand, { mutates: true }),
   "organization:connections:list": prepareCommand(OrganizationConnectionsListCommand, {}),
