@@ -1,6 +1,6 @@
 import { load } from "js-yaml";
 
-// Published Prism 10 prints the token scalar; native incur prints a named token result.
+// Human mode prints the token scalar; agent mode prints a named token result.
 let input = "";
 for await (const chunk of process.stdin) input += chunk;
 const result = load(input);

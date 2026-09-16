@@ -71,6 +71,8 @@ import IntegrationsForkCommand from "./commands/integrations/fork.js";
 import IntegrationsImportCommand from "./commands/integrations/import.js";
 import IntegrationsInitCommand from "./commands/integrations/init/index.js";
 import IntegrationsListCommand from "./commands/integrations/list.js";
+import IntegrationsManifestsAddCommand from "./commands/integrations/manifests/add.js";
+import IntegrationsManifestsListCommand from "./commands/integrations/manifests/list.js";
 import IntegrationsMarketplaceCommand from "./commands/integrations/marketplace.js";
 import IntegrationsOpenCommand from "./commands/integrations/open.js";
 import IntegrationsPublishCommand from "./commands/integrations/publish.js";
@@ -210,6 +212,8 @@ export const Commands = {
   "integrations:flows:listen": prepareCommand(IntegrationsFlowsListenCommand, { mutates: true }),
   "integrations:flows:test": prepareCommand(IntegrationsFlowsTestCommand, { mutates: true }),
   "integrations:init": prepareCommand(IntegrationsInitCommand, { mutates: true }),
+  "integrations:manifests:add": prepareCommand(IntegrationsManifestsAddCommand, { mutates: true }),
+  "integrations:manifests:list": prepareCommand(IntegrationsManifestsListCommand, {}),
   "integrations:versions": prepareCommand(IntegrationsVersionsCommand, {}),
   "logs:list": prepareCommand(LogsListCommand, {}),
   "logs:severities:list": prepareCommand(LogsSeveritiesListCommand, {}),

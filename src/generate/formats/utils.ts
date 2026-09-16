@@ -8,29 +8,8 @@ import type {
   InputFieldDefinition,
   StructuredObjectInputField,
 } from "@prismatic-io/spectral";
-import { camelCase } from "lodash-es";
-import { toWords } from "number-to-words";
 import stripTags from "striptags";
 import type { WriterFunction } from "ts-morph";
-
-const keywordReplacements: Record<string, string> = {
-  default: "defaultValue",
-  public: "isPublic",
-  protected: "isProtected",
-  private: "isPrivate",
-  interface: "anInterface",
-  context: "ctx",
-  data: "aData",
-  case: "aCase",
-  void: "voidOperation",
-};
-
-/** Convert key to a "safe key" or "clean identifier". Specifically avoiding Javascript/Typescript keywords
- * and invalid syntax (such as hyphenated identifiers or leading numbers).
- */
-export const cleanIdentifier = (key: string): string =>
-  keywordReplacements[key] ??
-  camelCase(key.replace(/^([0-9])(.+)?$/, (_, num, rest = "") => `${toWords(num)}${rest}`));
 
 export const stripUndefined = <T extends Record<string, any>>(data: T): T =>
   Object.entries(data ?? {}).reduce<T>((result, [key, value]) => {

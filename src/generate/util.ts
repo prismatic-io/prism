@@ -77,7 +77,7 @@ const packageVersionSchema = z.object({ version: z.string().trim().min(1) });
 const updateDependencies = async (dependencies: Record<string, string>) => {
   const promises = Object.entries(dependencies).map(async ([name, version]) => {
     try {
-      if (version === "*" && !name.includes("@component-manifests")) {
+      if (version === "*") {
         const packageUrl = new URL("https://registry.npmjs.org");
         packageUrl.pathname = `/${name}/latest`;
         const response = await fetch(packageUrl.toString());

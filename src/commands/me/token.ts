@@ -1,9 +1,10 @@
 import { Cli, z } from "incur";
 import { getAccessToken } from "../../auth.js";
-import { writeCommandStatus } from "../../command.js";
+import { writeCommandOutput } from "../../command.js";
 import { getAuthContext } from "../../context.js";
 import { warningsOutput } from "../../output.js";
 export default Cli.command({
+  outputPolicy: "agent-only",
   output: z.object({
     ...warningsOutput,
     token: z.string().nullable(),
@@ -20,7 +21,7 @@ export default Cli.command({
 
     const token =
       tokenType === "access" ? await getAccessToken() : (await getAuthContext()).refreshToken;
-    writeCommandStatus(token ?? "");
+    writeCommandOutput(token ?? "");
     return { token: token ?? null, type: tokenType };
   },
   alias: { type: "t" },
