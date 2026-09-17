@@ -2392,7 +2392,7 @@ exports[`component generation tests > legacy - wsdl - countryinfoservice > shoul
 "
 `;
 
-exports[`component generation tests > legacy - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-legacy/countryInfoService.wsdl 1`] = `
+exports[`component generation tests > legacy - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-legacy/assets/countryInfoService.wsdl 1`] = `
 "<?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="http://www.oorsprong.org/websamples.countryinfo" name="CountryInfoService" targetNamespace="http://www.oorsprong.org/websamples.countryinfo">
   <types>
@@ -5850,15 +5850,7 @@ exports[`component generation tests > legacy - wsdl - numberconversion > should 
 "
 `;
 
-exports[`component generation tests > legacy - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-legacy/jest.config.js 1`] = `
-"module.exports = {
-  preset: "ts-jest",
-  testEnvironment: "node",
-};
-"
-`;
-
-exports[`component generation tests > legacy - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-legacy/numberConversion.wsdl 1`] = `
+exports[`component generation tests > legacy - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-legacy/assets/numberConversion.wsdl 1`] = `
 "<?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="http://www.dataaccess.com/webservicesserver/" name="NumberConversion" targetNamespace="http://www.dataaccess.com/webservicesserver/">
   <types>
@@ -5969,6 +5961,14 @@ exports[`component generation tests > legacy - wsdl - numberconversion > should 
     </port>
   </service>
 </definitions>"
+`;
+
+exports[`component generation tests > legacy - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-legacy/jest.config.js 1`] = `
+"module.exports = {
+  preset: "ts-jest",
+  testEnvironment: "node",
+};
+"
 `;
 
 exports[`component generation tests > legacy - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-legacy/numberconversion/client.ts 1`] = `
@@ -8951,40 +8951,7 @@ exports[`component generation tests > modern - wsdl - countryinfoservice > shoul
 "
 `;
 
-exports[`component generation tests > modern - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern/biome.json 1`] = `
-"{
-  "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
-  "files": {
-    "includes": ["**", "!**/dist", "!**/node_modules"]
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 100
-  },
-  "assist": {
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
-    }
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "preset": "recommended",
-      "suspicious": {
-        "noExplicitAny": "off",
-        "noTsIgnore": "off"
-      }
-    }
-  }
-}
-"
-`;
-
-exports[`component generation tests > modern - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern/countryInfoService.wsdl 1`] = `
+exports[`component generation tests > modern - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern/assets/countryInfoService.wsdl 1`] = `
 "<?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="http://www.oorsprong.org/websamples.countryinfo" name="CountryInfoService" targetNamespace="http://www.oorsprong.org/websamples.countryinfo">
   <types>
@@ -9964,6 +9931,39 @@ exports[`component generation tests > modern - wsdl - countryinfoservice > shoul
     </port>
   </service>
 </definitions>"
+`;
+
+exports[`component generation tests > modern - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern/biome.json 1`] = `
+"{
+  "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
+  "files": {
+    "includes": ["**", "!**/dist", "!**/node_modules"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noTsIgnore": "off"
+      }
+    }
+  }
+}
+"
 `;
 
 exports[`component generation tests > modern - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern/countryinfoservice/client.ts 1`] = `
@@ -12474,40 +12474,7 @@ exports[`component generation tests > modern - wsdl - numberconversion > should 
 "
 `;
 
-exports[`component generation tests > modern - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern/biome.json 1`] = `
-"{
-  "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
-  "files": {
-    "includes": ["**", "!**/dist", "!**/node_modules"]
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 100
-  },
-  "assist": {
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
-    }
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "preset": "recommended",
-      "suspicious": {
-        "noExplicitAny": "off",
-        "noTsIgnore": "off"
-      }
-    }
-  }
-}
-"
-`;
-
-exports[`component generation tests > modern - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern/numberConversion.wsdl 1`] = `
+exports[`component generation tests > modern - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern/assets/numberConversion.wsdl 1`] = `
 "<?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:tns="http://www.dataaccess.com/webservicesserver/" name="NumberConversion" targetNamespace="http://www.dataaccess.com/webservicesserver/">
   <types>
@@ -12618,6 +12585,39 @@ exports[`component generation tests > modern - wsdl - numberconversion > should 
     </port>
   </service>
 </definitions>"
+`;
+
+exports[`component generation tests > modern - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern/biome.json 1`] = `
+"{
+  "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
+  "files": {
+    "includes": ["**", "!**/dist", "!**/node_modules"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noTsIgnore": "off"
+      }
+    }
+  }
+}
+"
 `;
 
 exports[`component generation tests > modern - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern/numberconversion/client.ts 1`] = `

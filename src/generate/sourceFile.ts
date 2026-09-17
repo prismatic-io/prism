@@ -48,14 +48,13 @@ const initializeWSDL = ({
   componentProject,
   actionFile,
 }: ProjectStructure): string => {
-  const wsdlProjectLocation = path.join(projectRoot, `${projectTemplateName}.wsdl`);
+  const wsdlProjectLocation = path.join(projectRoot, "assets", `${projectTemplateName}.wsdl`);
 
-  // Copy the wsdl used for generation to the project root
   copyTemplateFileToProject(
     componentProject,
     projectRoot,
     projectTemplatePath,
-    `${projectTemplateName}.wsdl`,
+    path.join("assets", `${projectTemplateName}.wsdl`),
   );
 
   actionFile.addImportDeclaration({
