@@ -35,6 +35,7 @@
     "check-format": "biome format .",
     "test": "bun run clean-test-temp && vitest run",
     "test:snapshots": "bun run clean-test-temp && vitest run --update",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "codegen:clean": "find src -name '*.generated.ts' -delete",
     "codegen": "bun run codegen:clean && export GRAPHQL_AUTH_KEY=$(prism me:token) && export PRISMATIC_URL=$(echo $PRISMATIC_URL) && graphql-codegen --config codegen.ts && bun run format"
   },

@@ -18,6 +18,7 @@
     "src/commands/components/temp",
     "src/commands/components/init/temp",
     "templates",
-    "**/*.test.ts"
+    "**/*.test.ts",
+    "**/*.e2e.ts"
   ]
 }

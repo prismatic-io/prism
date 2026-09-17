@@ -19,6 +19,10 @@ run = "bun run lint"
 description = "Run tests"
 run = "bun run test"
 
+[tasks."test:e2e"]
+description = "Install, type check, lint, and build generated scaffolds"
+run = "bun run test:e2e"
+
 [tasks."test:node20"]
 description = "Run tests against Node 20 (minimum supported runtime)"
 run = "MISE_NODE_VERSION=20 mise run test"

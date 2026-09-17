@@ -84,6 +84,7 @@ exports[`integrations:init > legacy toolchain > clean scaffold generation > shou
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  passWithNoTests: true,
 };
 
 `;
@@ -389,6 +390,7 @@ exports[`integrations:init > legacy toolchain > scaffold generation > should mat
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  passWithNoTests: true,
 };
 
 `;
@@ -1072,6 +1074,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    passWithNoTests: true,
   },
 });
 
@@ -1539,6 +1542,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    passWithNoTests: true,
   },
 });
 

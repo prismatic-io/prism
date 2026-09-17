@@ -19,6 +19,7 @@ exports[`component generation tests > legacy - openApi - nested-objects > should
 "module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  passWithNoTests: true,
 };
 "
 `;
@@ -378,6 +379,7 @@ exports[`component generation tests > legacy - openApi - petstore-expanded > sho
 "module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  passWithNoTests: true,
 };
 "
 `;
@@ -912,6 +914,7 @@ exports[`component generation tests > legacy - openApi - petstore-expanded-uuid-
 "module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  passWithNoTests: true,
 };
 "
 `;
@@ -1455,6 +1458,7 @@ exports[`component generation tests > legacy - openApi - todo-api > should match
 "module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  passWithNoTests: true,
 };
 "
 `;
@@ -5109,6 +5113,7 @@ exports[`component generation tests > legacy - wsdl - countryinfoservice > shoul
 "module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  passWithNoTests: true,
 };
 "
 `;
@@ -5967,6 +5972,7 @@ exports[`component generation tests > legacy - wsdl - numberconversion > should 
 "module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
+  passWithNoTests: true,
 };
 "
 `;
@@ -6715,6 +6721,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    passWithNoTests: true,
   },
 });
 "
@@ -7314,6 +7321,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    passWithNoTests: true,
   },
 });
 "
@@ -7922,6 +7930,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    passWithNoTests: true,
   },
 });
 "
@@ -8922,6 +8931,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    passWithNoTests: true,
   },
 });
 "
@@ -12445,6 +12455,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    passWithNoTests: true,
   },
 });
 "
@@ -12977,6 +12988,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    passWithNoTests: true,
   },
 });
 "
