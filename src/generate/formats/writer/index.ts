@@ -109,16 +109,20 @@ const writeTests = (
 };
 
 const writeClient = (project: Project, baseUrl: string, connections: Connection[]): SourceFile => {
+  const hasConnections = connections.length > 0;
   const file = project.createSourceFile(
     path.join("src", "client.ts"),
     (writer) =>
       writer
-        .writeLine(`import { Connection, ConnectionError, util } from "@prismatic-io/spectral";`)
+        .writeLine(
+          `import { Connection, ${hasConnections ? "ConnectionError, " : ""}util } from "@prismatic-io/spectral";`,
+        )
         .writeLine(
           `import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/dist/clients/http";`,
         )
-        .writeLine(
-          `import { ${connections.map(({ key }) => key).join(", ")} } from "./connections";`,
+        .conditionalWriteLine(
+          hasConnections,
+          () => `import { ${connections.map(({ key }) => key).join(", ")} } from "./connections";`,
         )
         .blankLine()
         .writeLine(`export const baseUrl = "${baseUrl}";`)
@@ -158,17 +162,18 @@ const writeClient = (project: Project, baseUrl: string, connections: Connection[
         .writeLine(
           "export const createClient = async (connection: Connection): Promise<HttpClient> => {",
         )
-        .writeLine(
-          `if (![${connections
-            .map(({ key }) => `${key}.key`)
-            .join(", ")}].includes(connection.key)) {`,
+        .conditionalWriteLine(
+          hasConnections,
+          () =>
+            `if (![${connections.map(({ key }) => `${key}.key`).join(", ")}].includes(connection.key)) {`,
         )
-        .writeLine(
+        .conditionalWriteLine(
+          hasConnections,
           // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
           "throw new ConnectionError(connection, `Received unexpected connection type: ${connection.key}`);",
         )
-        .writeLine("}")
-        .blankLine()
+        .conditionalWriteLine(hasConnections, "}")
+        .conditionalBlankLine(hasConnections)
         .writeLine("const client = createHttpClient({")
         .writeLine("baseUrl,")
         .writeLine("headers: {")

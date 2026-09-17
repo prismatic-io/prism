@@ -112,6 +112,7 @@ exports[`integrations:init > legacy toolchain > clean scaffold generation > shou
   "devDependencies": {
     "@prismatic-io/eslint-config-spectral": "2.1.0",
     "@types/jest": "29.5.14",
+    "@types/node": "^22.0.0",
     "copy-webpack-plugin": "14.0.0",
     "dotenv": "^17.2.2",
     "eslint": "^8.57.1",
@@ -295,7 +296,9 @@ exports[`integrations:init > legacy toolchain > clean scaffold generation > shou
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "types": ["node", "jest"],
+    "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
 }
@@ -414,6 +417,7 @@ exports[`integrations:init > legacy toolchain > scaffold generation > should mat
   "devDependencies": {
     "@prismatic-io/eslint-config-spectral": "2.1.0",
     "@types/jest": "29.5.14",
+    "@types/node": "^22.0.0",
     "copy-webpack-plugin": "14.0.0",
     "dotenv": "^17.2.2",
     "eslint": "^8.57.1",
@@ -705,7 +709,9 @@ exports[`integrations:init > legacy toolchain > scaffold generation > should mat
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "types": ["node", "jest"],
+    "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
 }
@@ -847,6 +853,7 @@ exports[`integrations:init > modern toolchain > clean scaffold generation > shou
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
+    "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
     "tsdown": "0.22.3",
     "typescript": "6.0.3",
@@ -1025,7 +1032,8 @@ exports[`integrations:init > modern toolchain > clean scaffold generation > shou
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
+    "isolatedModules": true,
     "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
@@ -1204,6 +1212,7 @@ exports[`integrations:init > modern toolchain > scaffold generation > should mat
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
+    "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
     "tsdown": "0.22.3",
     "typescript": "6.0.3",
@@ -1490,7 +1499,8 @@ exports[`integrations:init > modern toolchain > scaffold generation > should mat
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
+    "isolatedModules": true,
     "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]

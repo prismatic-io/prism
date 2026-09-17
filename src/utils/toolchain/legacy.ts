@@ -25,6 +25,7 @@ export class LegacyToolchain extends Toolchain {
   readonly devDependencies = {
     "@prismatic-io/eslint-config-spectral": "2.1.0",
     "@types/jest": "29.5.14",
+    "@types/node": "^22.0.0",
     "copy-webpack-plugin": "14.0.0",
     dotenv: "^17.2.2",
     eslint: "^8.57.1",

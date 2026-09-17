@@ -1,6 +1,7 @@
 import fs from "fs";
 import { readFile } from "fs-extra";
 import path from "path";
+import { Project } from "ts-morph";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { walkDir } from "../../../fs.js";
 import { TOOLCHAIN_NAMES } from "../../../utils/toolchain/index.js";
@@ -22,6 +23,15 @@ expect.addSnapshotSerializer({
     return normalized;
   },
 });
+
+const expectTypeChecks = (projectRoot: string): void => {
+  const project = new Project({
+    tsConfigFilePath: path.join(projectRoot, "tsconfig.json"),
+    compilerOptions: { ignoreDeprecations: "6.0" },
+  });
+  const diagnostics = project.getPreEmitDiagnostics();
+  expect(project.formatDiagnosticsWithColorAndContext(diagnostics)).toStrictEqual("");
+};
 
 describe("integrations:init", () => {
   const basePath = process.env.PWD ?? process.cwd();
@@ -65,6 +75,8 @@ describe("integrations:init", () => {
               const contents = await readFile(target, "utf-8");
               expect(contents).toMatchSnapshot(target.split(path.sep).join("/"));
             }
+
+            expectTypeChecks(path.join(tempPath, integrationName));
           },
           GENERATION_TIMEOUT_SECONDS,
         );
@@ -102,6 +114,8 @@ describe("integrations:init", () => {
               const snapshotName = `clean-${target}`.split(path.sep).join("/");
               expect(contents).toMatchSnapshot(snapshotName);
             }
+
+            expectTypeChecks(path.join(tempPath, cleanIntegrationName));
           },
           GENERATION_TIMEOUT_SECONDS,
         );

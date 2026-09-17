@@ -2,6 +2,7 @@ import fs from "fs";
 import { readFile } from "fs-extra";
 import { kebabCase } from "lodash-es";
 import path from "path";
+import { Project } from "ts-morph";
 import { describe, expect, it } from "vitest";
 import { walkDir } from "../../../fs";
 import { TOOLCHAIN_NAMES } from "../../../utils/toolchain";
@@ -55,6 +56,15 @@ describe("component generation tests", () => {
           },
           COMPONENT_GENERATION_TIMEOUT,
         );
+
+        it("should type check", () => {
+          const project = new Project({
+            tsConfigFilePath: path.join(tempPath, projectName, "tsconfig.json"),
+            compilerOptions: { ignoreDeprecations: "6.0" },
+          });
+          const diagnostics = project.getPreEmitDiagnostics();
+          expect(project.formatDiagnosticsWithColorAndContext(diagnostics)).toStrictEqual("");
+        });
 
         it("should match scaffolding snapshots", async () => {
           process.chdir(tempPath);
