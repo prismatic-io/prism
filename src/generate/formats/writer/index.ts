@@ -97,7 +97,7 @@ const writeTests = (
       .block(() => {
         writer.conditionalWriteLine(Boolean(connectionKey), "connection,");
         Object.entries(inputs).forEach(([key, input]) => {
-          const value = `${(input as Input).default}`;
+          const value = JSON.stringify((input as Input).default) ?? "undefined";
           writer.conditionalWriteLine(key !== "connection", `${key}: ${value},`);
         });
       })
@@ -110,80 +110,59 @@ const writeTests = (
   return file;
 };
 
+// These helpers return TypeScript source for the generated client's HTTP options.
+const renderApiKeyOptions = ({ in: location, name }: NonNullable<Connection["apiKey"]>): string => {
+  const value = "util.types.toString(connection.fields.apiKey)";
+  switch (location) {
+    case "query":
+      return `params: { ${JSON.stringify(name)}: ${value} }`;
+    case "cookie":
+      return `headers: { Cookie: ${JSON.stringify(`${name}=`)} + encodeURIComponent(${value}) }`;
+    case "header":
+      return `headers: { ${JSON.stringify(name)}: ${value} }`;
+  }
+};
+
+const renderAuthenticationOptions = (connection: Connection): string => {
+  if (connection.apiKey) return renderApiKeyOptions(connection.apiKey);
+
+  if (connection.oauth2Type) {
+    return 'headers: { Authorization: "Bearer " + util.types.toString(connection.token?.access_token) }';
+  }
+
+  if ("username" in connection.inputs) {
+    const username = "util.types.toString(connection.fields.username)";
+    const password = "util.types.toString(connection.fields.password)";
+    const credentials = `Buffer.from(${username} + ":" + ${password}).toString("base64")`;
+    return `headers: { Authorization: "Basic " + ${credentials} }`;
+  }
+
+  return 'headers: { Authorization: "Bearer " + util.types.toString(connection.fields.apiKey) }';
+};
+
+const renderClientCase = (connection: Connection): string => {
+  const options = renderAuthenticationOptions(connection);
+  return `case ${JSON.stringify(connection.key)}: return createHttpClient({ baseUrl, responseType: "json", ${options} });`;
+};
+
 const writeClient = (project: Project, baseUrl: string, connections: Connection[]): SourceFile => {
-  const file = project.createSourceFile(
+  const branches = connections.map(renderClientCase);
+  return project.createSourceFile(
     path.join("src", "client.ts"),
-    (writer) =>
-      writer
-        .writeLine(`import { Connection, ConnectionError, util } from "@prismatic-io/spectral";`)
-        .writeLine(
-          `import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/dist/clients/http";`,
-        )
-        .writeLine(
-          `import { ${connections.map(({ key }) => key).join(", ")} } from "./connections";`,
-        )
-        .blankLine()
-        .writeLine(`export const baseUrl = "${baseUrl}";`)
-        .blankLine()
-        .writeLine(
-          "const toAuthorizationHeaders = (connection: Connection): { Authorization: string } => {",
-        )
-        .writeLine("const accessToken = util.types.toString(connection.token?.access_token);")
-        .writeLine("if (accessToken) {")
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-        .writeLine("return { Authorization: `Bearer ${accessToken}` };")
-        .writeLine("}")
-        .blankLine()
-        .writeLine("const apiKey = util.types.toString(connection.fields?.apiKey);")
-        .writeLine("if (apiKey) {")
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-        .writeLine("return { Authorization: `Bearer ${apiKey}` };")
-        .writeLine("}")
-        .blankLine()
-        .writeLine("const username = util.types.toString(connection.fields?.username);")
-        .writeLine("const password = util.types.toString(connection.fields?.password);")
-        .writeLine("if (username && password) {")
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-        .writeLine('const encoded = Buffer.from(`${username}:${password}`).toString("base64");')
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-        .writeLine("return { Authorization: `Basic ${encoded}` };")
-        .writeLine("}")
-        .blankLine()
-        .writeLine("throw new Error(")
-        .writeLine(
-          // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-          "`Failed to guess at authorization parameters for Connection: ${connection.key}`",
-        )
-        .writeLine(");")
-        .writeLine("};")
-        .blankLine()
-        .writeLine(
-          "export const createClient = async (connection: Connection): Promise<HttpClient> => {",
-        )
-        .writeLine(
-          `if (![${connections
-            .map(({ key }) => `${key}.key`)
-            .join(", ")}].includes(connection.key)) {`,
-        )
-        .writeLine(
-          // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-          "throw new ConnectionError(connection, `Received unexpected connection type: ${connection.key}`);",
-        )
-        .writeLine("}")
-        .blankLine()
-        .writeLine("const client = createHttpClient({")
-        .writeLine("baseUrl,")
-        .writeLine("headers: {")
-        .writeLine("...toAuthorizationHeaders(connection),")
-        .writeLine(`Accept: "application/json",`)
-        .writeLine("},")
-        .writeLine(`responseType: "json",`)
-        .writeLine("});")
-        .writeLine("return client;")
-        .writeLine("};"),
+    `
+import { Buffer } from "node:buffer";
+import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
+import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/dist/clients/http";
+export const baseUrl = ${JSON.stringify(baseUrl)};
+export const createClient = async (connection?: Connection): Promise<HttpClient> => {
+  if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
+  switch (connection.key) {
+    ${branches.join("\n")}
+    default: throw new ConnectionError(connection, "Received unexpected connection type: " + connection.key);
+  }
+};`,
     { scriptKind: ScriptKind.TS },
   );
-  return file;
 };
 
 const writeDocumentationFiles = (

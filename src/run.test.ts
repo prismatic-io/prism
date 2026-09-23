@@ -208,20 +208,29 @@ describe("native incur entrypoints", () => {
 });
 
 describe("native installation safety", () => {
-  it.each(["mcp", "skills", "skill"])("guards %s add before any installation", async (route) => {
+  describe.each(["mcp", "skills", "skill"])("%s add", (route) => {
     const env = { HOME: "/tmp", PATH: process.env.PATH };
-    const unapproved = await runCli(["--agent", route, "add"], env);
-    expect(unapproved.status).toBe(2);
-    expect(unapproved.stdout).toContain("CONFIRMATION_REQUIRED");
-    const readOnly = await runCli(["--agent", "--yes", route, "--read-only", "add"], env);
-    expect(readOnly.status).toBe(2);
-    expect(readOnly.stdout).toContain("READ_ONLY");
-    const envReadOnly = await runCli(["--agent", "--yes", route, "add"], {
-      ...env,
-      PRISM_READ_ONLY: "true",
+
+    it("requires approval before installation", async () => {
+      const result = await runCli(["--agent", route, "add"], env);
+      expect(result.status).toBe(2);
+      expect(result.stdout).toContain("CONFIRMATION_REQUIRED");
     });
-    expect(envReadOnly.status).toBe(2);
-    expect(envReadOnly.stdout).toContain("READ_ONLY");
+
+    it("blocks installation with the read-only flag", async () => {
+      const result = await runCli(["--agent", "--yes", route, "--read-only", "add"], env);
+      expect(result.status).toBe(2);
+      expect(result.stdout).toContain("READ_ONLY");
+    });
+
+    it("blocks installation with read-only environment configuration", async () => {
+      const result = await runCli(["--agent", "--yes", route, "add"], {
+        ...env,
+        PRISM_READ_ONLY: "true",
+      });
+      expect(result.status).toBe(2);
+      expect(result.stdout).toContain("READ_ONLY");
+    });
   });
 
   it("does not treat a native command option value as approval", async () => {
