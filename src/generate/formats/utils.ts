@@ -73,6 +73,8 @@ export type ConnectionInput = ConnectionInputDefinition;
 export type Connection = ConnectionDefinition & {
   /** Ordering priority for this Connection. Lower values will be earlier in the preferred Connection sequence. */
   orderPriority: number;
+  /** API key placement from an OpenAPI security scheme (generation metadata only). */
+  apiKey?: { in: "header" | "query" | "cookie"; name: string };
 };
 
 export type Component = Pick<ComponentDefinition<false, any>, "display">;

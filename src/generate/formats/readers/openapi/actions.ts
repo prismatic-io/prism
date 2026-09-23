@@ -13,6 +13,8 @@ const buildPerformFunction = (
   pathInputs: Input[],
   queryInputs: Input[],
   bodyInputs: Input[],
+  hasConnection: boolean,
+  binaryContentType?: string,
 ): WriterFunction => {
   const destructureNames = [...headerInputs, ...pathInputs, ...queryInputs, ...bodyInputs]
     .map(({ key }) => key)
@@ -29,7 +31,7 @@ const buildPerformFunction = (
       pathTemplate,
     )
     // Update placeholder to interpolation syntax
-    .replace(/{([^}]+)}/g, (_, match) => `\${${match}}`);
+    .replace(/{([^}]+)}/g, (_, match) => `\${encodeURIComponent(String(${match}))}`);
 
   // Query param inputs need to be converted to the upstream key expectations.
   const queryMapping = queryInputs
@@ -41,26 +43,35 @@ const buildPerformFunction = (
     key === upstreamKey ? key : `"${upstreamKey}": ${key}`,
   );
 
-  const includesConfig = !isEmpty(queryMapping) || !isEmpty(headerMapping);
+  const config = [
+    !isEmpty(queryMapping) && `params: { ${queryMapping} }`,
+    (!isEmpty(headerMapping) || binaryContentType) &&
+      `headers: { ${[headerMapping, binaryContentType && `Accept: ${JSON.stringify(binaryContentType)}`].filter(Boolean).join(", ")} }`,
+    binaryContentType && 'responseType: "arraybuffer"',
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   return (writer) =>
     writer
-      .writeLine(`async (context, { connection, ${destructureNames} }) => {`)
+      .writeLine(
+        `async (context, { ${[hasConnection && "connection", destructureNames].filter(Boolean).join(", ")} }) => {`,
+      )
       .blankLineIfLastNot()
-      .writeLine("const client = await createClient(connection);")
+      .writeLine(`const client = await createClient(${hasConnection ? "connection" : ""});`)
       .write("const {data} = await client.")
       .write(verb)
       .write("(`")
       .write(path)
       .write("`")
       .conditionalWrite(["post", "put", "patch"].includes(verb), () => `, { ${bodyMapping} }`)
-      .conditionalWrite(includesConfig, () => ", { ")
-      .conditionalWrite(!isEmpty(queryMapping), () => `params: { ${queryMapping} }`)
-      .conditionalWrite(!isEmpty(queryMapping) && !isEmpty(headerMapping), () => ", ")
-      .conditionalWrite(!isEmpty(headerMapping), () => `headers: { ${headerMapping} }`)
-      .conditionalWrite(includesConfig, () => " } ")
+      .conditionalWrite(Boolean(config), () => `, { ${config} }`)
       .write(");")
-      .writeLine("return {data};")
+      .writeLine(
+        binaryContentType
+          ? `return { data, contentType: ${JSON.stringify(binaryContentType)} };`
+          : "return {data};",
+      )
       .writeLine("}");
 };
 
@@ -69,7 +80,26 @@ const buildAction = (
   verb: string,
   operation: OpenAPIV3.OperationObject | OpenAPIV3_1.OperationObject,
   sharedParameters: (OpenAPIV3.ParameterObject | OpenAPIV3_1.ParameterObject)[] = [],
+  security: OpenAPIV3.SecurityRequirementObject[] = [],
 ): Action => {
+  const effectiveSecurity = operation.security ?? security;
+  const hasConnection = effectiveSecurity.some((option) => Object.keys(option).length > 0);
+  const authRequired =
+    effectiveSecurity.length > 0 &&
+    !effectiveSecurity.some((option) => Object.keys(option).length === 0);
+  const binaryContentType = Object.entries(operation.responses ?? {})
+    .filter(([status]) => /^2[0-9X]{2}$/i.test(status))
+    .flatMap(([, response]) =>
+      "content" in response
+        ? (Object.entries(response.content ?? {}) as [
+            string,
+            OpenAPIV3.MediaTypeObject | OpenAPIV3_1.MediaTypeObject,
+          ][])
+        : [],
+    )
+    .find(
+      ([, media]) => media.schema && "format" in media.schema && media.schema.format === "binary",
+    )?.[0];
   const operationName = cleanIdentifier(operation.operationId || `${verb} ${path}`);
 
   const { headerInputs, pathInputs, queryInputs, bodyInputs } = getInputs(
@@ -92,10 +122,27 @@ const buildAction = (
       description: operation.summary ?? operation.description ?? "TODO: Description",
     },
     inputs: {
-      connection: { label: "Connection", type: "connection", required: true },
+      ...(hasConnection
+        ? {
+            connection: {
+              label: "Connection",
+              type: "connection" as const,
+              required: authRequired,
+            },
+          }
+        : {}),
       ...inputs,
     },
-    perform: buildPerformFunction(path, verb, headerInputs, pathInputs, queryInputs, bodyInputs),
+    perform: buildPerformFunction(
+      path,
+      verb,
+      headerInputs,
+      pathInputs,
+      queryInputs,
+      bodyInputs,
+      hasConnection,
+      binaryContentType,
+    ),
   });
   return action;
 };
@@ -115,6 +162,7 @@ const httpVerbs = new Set<string>([
 export const operationsToActions = (
   path: string,
   operations: OpenAPIV3.PathItemObject | OpenAPIV3_1.PathItemObject,
+  security: OpenAPIV3.SecurityRequirementObject[] = [],
 ): Action[] => {
   // TODO: Figure out how to refine types down to V3+ and also how to
   // filter out Reference types throughout.
@@ -124,5 +172,5 @@ export const operationsToActions = (
   )[];
   return Object.entries(operations)
     .filter(([verb]) => httpVerbs.has(verb))
-    .map<Action>(([verb, op]) => buildAction(path, verb, op as any, sharedParameters));
+    .map<Action>(([verb, op]) => buildAction(path, verb, op as any, sharedParameters, security));
 };

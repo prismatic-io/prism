@@ -832,6 +832,7 @@ exports[`integrations:init > modern toolchain > clean scaffold generation > shou
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
+    "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
     "tsdown": "0.22.3",
     "typescript": "6.0.3",
@@ -1010,7 +1011,7 @@ exports[`integrations:init > modern toolchain > clean scaffold generation > shou
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
     "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
@@ -1184,6 +1185,7 @@ exports[`integrations:init > modern toolchain > scaffold generation > should mat
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
+    "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
     "tsdown": "0.22.3",
     "typescript": "6.0.3",
@@ -1470,7 +1472,7 @@ exports[`integrations:init > modern toolchain > scaffold generation > should mat
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
     "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]

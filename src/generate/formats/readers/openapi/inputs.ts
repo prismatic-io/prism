@@ -157,8 +157,9 @@ const getProperties = (
   schema: OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject,
 ): Record<string, OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject> => {
   return merge(
+    {},
     schema.properties ?? {},
-    ...(schema.allOf ?? []).map((v) => (v as any).properties), // FIXME: any usage
+    ...(schema.allOf ?? []).map((v) => getProperties(v as OpenAPIV3.SchemaObject)),
   ) as Record<string, OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject>;
 };
 
@@ -166,7 +167,11 @@ const buildBodyInputs = (
   schema: OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject,
   seenKeys: Set<string>,
 ): Input[] => {
-  const requiredKeys = new Set(schema.required ?? []);
+  const requiredIn = (value: OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject): string[] => [
+    ...(value.required ?? []),
+    ...(value.allOf ?? []).flatMap((part) => ("$ref" in part ? [] : requiredIn(part))),
+  ];
+  const requiredKeys = new Set(requiredIn(schema));
   const properties = getProperties(schema);
 
   return Object.entries(properties)
