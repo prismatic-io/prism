@@ -38,7 +38,6 @@ describe("publishDefinition", () => {
     const serverFunctions = [{ key: "inspect", connections: ["instance.api"] }];
     await publishDefinition({
       ...definition,
-      hasConfigurationInit: true,
       configurationInit: { connections: ["instance.api"] },
       serverFunctionDefinitions: serverFunctions,
     });

@@ -19,7 +19,6 @@ type LegacyDefinition = {
 
 /** Keys newer Spectral versions emit that the pinned type does not yet declare. */
 type ForwardDefinition = {
-  hasConfigurationInit?: boolean;
   configurationInit?: { connections?: string[] };
   serverFunctionDefinitions?: Array<{
     key: string;
