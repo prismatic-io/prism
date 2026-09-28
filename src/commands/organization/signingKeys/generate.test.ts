@@ -39,7 +39,7 @@ describe("organization:signing-keys:generate", () => {
     await expect(runCommand(Command, ["--agent", "--yes"])).resolves.toEqual({ privateKey });
   });
 
-  it("writes the private key to an owner-only file and returns only its path", async () => {
+  it("writes the private key to a file and returns only its path", async () => {
     const privateKeyFile = join(directory, "key.pem");
     const result = await runCommand(Command, [
       "--agent",
@@ -50,6 +50,12 @@ describe("organization:signing-keys:generate", () => {
     expect(result).toEqual({ privateKeyFile });
     expect(JSON.stringify(result)).not.toContain("PRIVATE KEY");
     expect(await readFile(privateKeyFile, "utf8")).toBe(privateKey);
+  });
+
+  // Windows does not apply POSIX permission bits.
+  it.runIf(process.platform !== "win32")("makes the private key file owner-only", async () => {
+    const privateKeyFile = join(directory, "key.pem");
+    await runCommand(Command, ["--agent", "--yes", "--private-key-file", privateKeyFile]);
     expect((await stat(privateKeyFile)).mode & 0o777).toBe(0o600);
   });
 
