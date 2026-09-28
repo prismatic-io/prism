@@ -85,6 +85,7 @@ const additiveCommandOptions: Record<string, Set<string>> = {
   "components:actions:list": new Set(["search", "version"]),
   "components:data-sources:list": new Set(["search", "type", "version"]),
   "components:triggers:list": new Set(["search", "version"]),
+  "organization:signing-keys:generate": new Set(["private-key-file"]),
 };
 const isAdditiveOption = (id: string, name: string) =>
   additiveOptionNames.has(name) || additiveCommandOptions[id]?.has(name) === true;
