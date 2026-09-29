@@ -96,6 +96,8 @@ import OrganizationSigningKeysDeleteCommand from "./commands/organization/signin
 import OrganizationSigningKeysGenerateCommand from "./commands/organization/signingKeys/generate.js";
 import OrganizationSigningKeysImportCommand from "./commands/organization/signingKeys/import.js";
 import OrganizationSigningKeysListCommand from "./commands/organization/signingKeys/list.js";
+import OrganizationThemeGetCommand from "./commands/organization/theme/get.js";
+import OrganizationThemeUpdateCommand from "./commands/organization/theme/update.js";
 import OrganizationUpdateCommand from "./commands/organization/update.js";
 import OrganizationUpdateAvatarUrlCommand from "./commands/organization/updateAvatarUrl.js";
 import OrganizationUsersCreateCommand from "./commands/organization/users/create.js";
@@ -229,6 +231,8 @@ export const Commands = {
     mutates: true,
   }),
   "organization:signing-keys:list": prepareCommand(OrganizationSigningKeysListCommand, {}),
+  "organization:theme:get": prepareCommand(OrganizationThemeGetCommand, {}),
+  "organization:theme:update": prepareCommand(OrganizationThemeUpdateCommand, { mutates: true }),
   "organization:users:create": prepareCommand(OrganizationUsersCreateCommand, { mutates: true }),
   "organization:users:delete": prepareCommand(OrganizationUsersDeleteCommand, { mutates: true }),
   "organization:users:list": prepareCommand(OrganizationUsersListCommand, {}),

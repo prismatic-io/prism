@@ -1,0 +1,20 @@
+query getTheme {
+  theme {
+    colors(first: 500) {
+      totalCount
+      nodes {
+        type
+        value
+        variant
+      }
+    }
+    properties(first: 500) {
+      totalCount
+      nodes {
+        type
+        value
+        variant
+      }
+    }
+  }
+}

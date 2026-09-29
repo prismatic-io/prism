@@ -109,6 +109,8 @@ const additiveCommandIds = new Set([
   "integrations:manifests:add",
   "integrations:manifests:list",
   "logs:list",
+  "organization:theme:get",
+  "organization:theme:update",
 ]);
 const sample = (field: Field): unknown => {
   if (field.options?.length) return field.multiple ? [field.options[0]] : field.options[0];
