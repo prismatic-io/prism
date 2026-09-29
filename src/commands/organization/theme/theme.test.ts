@@ -144,6 +144,29 @@ describe("organization:theme:update", () => {
     expect(updates).toHaveLength(0);
   });
 
+  it("returns a removed property to the default without touching other variants", async () => {
+    await update("--variant", "embedded-light", "--remove-property", "border-radius");
+    expect(updates[0].properties).toEqual([
+      { type: "border_radius", value: "4", variant: "light" },
+    ]);
+    expect(updates[0].colors).toEqual(colors);
+  });
+
+  it.each([
+    [
+      ["--color", "primary=#4f46e5", "--remove-color", "primary"],
+      /color "primary" cannot be both set and removed/,
+    ],
+    [
+      ["--border-radius", "8", "--remove-property", "border_radius"],
+      /property "border_radius" cannot be both set and removed/,
+    ],
+    [["--remove-property", "shadow"], /Unknown theme property "shadow"/],
+  ])("rejects %j before writing", async (argv, message) => {
+    await expect(update("--variant", "embedded-light", ...argv)).rejects.toThrow(message);
+    expect(updates).toHaveLength(0);
+  });
+
   it("refuses to write when the theme could not be read in full", async () => {
     theme = { colors, properties, totalColors: colors.length + 1 };
     await expect(
