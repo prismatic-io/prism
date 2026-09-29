@@ -111,7 +111,7 @@ export const GetThemeDocument = {
                     {
                       kind: "Argument",
                       name: { kind: "Name", value: "first" },
-                      value: { kind: "IntValue", value: "500" },
+                      value: { kind: "IntValue", value: "100" },
                     },
                   ],
                   selectionSet: {
@@ -140,7 +140,7 @@ export const GetThemeDocument = {
                     {
                       kind: "Argument",
                       name: { kind: "Name", value: "first" },
-                      value: { kind: "IntValue", value: "500" },
+                      value: { kind: "IntValue", value: "100" },
                     },
                   ],
                   selectionSet: {
