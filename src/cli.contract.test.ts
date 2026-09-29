@@ -85,9 +85,12 @@ const additiveCommandOptions: Record<string, Set<string>> = {
   "components:actions:list": new Set(["search", "version"]),
   "components:data-sources:list": new Set(["search", "type", "version"]),
   "components:triggers:list": new Set(["search", "version"]),
+  "organization:signing-keys:generate": new Set(["private-key-file"]),
 };
 const isAdditiveOption = (id: string, name: string) =>
   additiveOptionNames.has(name) || additiveCommandOptions[id]?.has(name) === true;
+// Descriptions that keep their legacy text and append guidance.
+const extendedDescriptionIds = new Set(["organization:signing-keys:generate"]);
 const additiveCommandIds = new Set([
   "components:actions:get",
   "components:connections:get",
@@ -200,7 +203,9 @@ describe("legacy command contract", () => {
     if (!legacy) continue;
 
     it(`${id} preserves its description, arguments, options, aliases, and defaults`, () => {
-      expect(command.description).toBe(legacy.description);
+      if (extendedDescriptionIds.has(id))
+        expect(command.description?.startsWith(`${legacy.description}\n`)).toBe(true);
+      else expect(command.description).toBe(legacy.description);
       const addedPassthroughArgs = id === "components:dev:run" ? ["command"] : [];
       expect(Object.keys(command.contract.args)).toEqual([
         ...Object.keys(legacy.args),
