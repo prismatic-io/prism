@@ -22,6 +22,7 @@ export const themeColorTypes = [
   "designer_shell",
   "neutral",
 ] as const;
+export const themePropertyTypes = ["border_radius", "disable_elevation"] as const;
 export const themeVariants = ["light", "dark", "embedded-light", "embedded-dark"] as const;
 export const maxBorderRadius = 100;
 
@@ -45,6 +46,21 @@ export const normalizeColorType = (type: string) => {
   if (!(themeColorTypes as readonly string[]).includes(normalized))
     throw invalid(`Unknown theme color "${type}". Use one of: ${themeColorTypes.join(", ")}.`);
   return normalized;
+};
+
+export const normalizePropertyType = (type: string) => {
+  const normalized = type.trim().toLowerCase().replaceAll("-", "_");
+  if (!(themePropertyTypes as readonly string[]).includes(normalized))
+    throw invalid(
+      `Unknown theme property "${type}". Use one of: ${themePropertyTypes.join(", ")}.`,
+    );
+  return normalized;
+};
+
+/** Reject a type that one request both sets and removes. */
+export const assertNoConflicts = (kind: string, set: string[], removed: string[]) => {
+  const conflict = set.find((type) => removed.includes(type));
+  if (conflict) throw invalid(`The ${kind} "${conflict}" cannot be both set and removed.`);
 };
 
 /** Parse `type=value` color assignments, rejecting values the API would reject. */

@@ -3,9 +3,11 @@ import { UpdateThemeDocument as UPDATE_THEME } from "../../../graphql/operations
 import { gqlRequest } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
 import {
+  assertNoConflicts,
   describeTheme,
   maxBorderRadius,
   normalizeColorType,
+  normalizePropertyType,
   parseColorAssignments,
   readTheme,
   type ThemeProperty,
@@ -42,6 +44,10 @@ export default Cli.command({
       .array(z.string())
       .optional()
       .describe("return a color type to Prismatic's default; repeatable"),
+    removeProperty: z
+      .array(z.string())
+      .optional()
+      .describe("return border_radius or disable_elevation to Prismatic's default; repeatable"),
     borderRadius: z.coerce
       .number()
       .int()
@@ -70,11 +76,13 @@ export default Cli.command({
       variant,
       color = [],
       removeColor = [],
+      removeProperty = [],
       borderRadius,
       disableElevation,
     } = context.options;
     const colors = parseColorAssignments(color);
     const removed = removeColor.map(normalizeColorType);
+    const removedProperties = removeProperty.map(normalizePropertyType);
     const properties = [
       ...(borderRadius === undefined
         ? []
@@ -83,19 +91,32 @@ export default Cli.command({
         ? []
         : [{ type: "disable_elevation", value: disableElevation }]),
     ];
-    if (!colors.length && !removed.length && !properties.length)
+    assertNoConflicts(
+      "color",
+      colors.map(({ type }) => type),
+      removed,
+    );
+    assertNoConflicts(
+      "property",
+      properties.map(({ type }) => type),
+      removedProperties,
+    );
+    if (!colors.length && !removed.length && !properties.length && !removedProperties.length)
       throw new Errors.IncurError({
         code: "VALIDATION_ERROR",
         exitCode: 2,
         message:
-          "Name at least one --color, --remove-color, --border-radius, or --disable-elevation.",
+          "Name at least one --color, --remove-color, --border-radius, --disable-elevation, or --remove-property.",
       });
 
     // updateTheme replaces the whole theme, so send every existing entry with this variant's changes.
     const apiVariant = toApiVariant(variant);
     const current = await readTheme();
     const replacedColors = new Set([...colors.map(({ type }) => type), ...removed]);
-    const replacedProperties = new Set(properties.map(({ type }) => type));
+    const replacedProperties = new Set([
+      ...properties.map(({ type }) => type),
+      ...removedProperties,
+    ]);
     const next = {
       colors: [
         ...current.colors.filter(
