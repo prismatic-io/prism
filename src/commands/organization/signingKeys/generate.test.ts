@@ -35,8 +35,15 @@ afterEach(async () => {
 afterAll(() => server.close());
 
 describe("organization:signing-keys:generate", () => {
-  it("returns the private key without --private-key-file", async () => {
-    await expect(runCommand(Command, ["--agent", "--yes"])).resolves.toEqual({ privateKey });
+  it("prints the private key outside agent mode", async () => {
+    await expect(runCommand(Command, ["--no-agent"])).resolves.toEqual({ privateKey });
+  });
+
+  it("refuses to print the private key in agent mode before generating a key", async () => {
+    await expect(runCommand(Command, ["--agent", "--yes"])).rejects.toMatchObject({
+      code: "PRIVATE_KEY_FILE_REQUIRED",
+    });
+    expect(generated).toBe(0);
   });
 
   it("writes the private key to a file and returns only its path", async () => {

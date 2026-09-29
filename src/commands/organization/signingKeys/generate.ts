@@ -1,5 +1,6 @@
 import { open, rm } from "node:fs/promises";
-import { Cli, z } from "incur";
+import { Cli, Errors, z } from "incur";
+import { isCommandTransportExecution } from "../../../command.js";
 import { GenerateSigningKeyDocument as GENERATE_SIGNING_KEY } from "../../../graphql/operations/generateSigningKey.generated.js";
 import { gqlRequest, requireOperationResult } from "../../../graphql.js";
 import { warningsOutput } from "../../../output.js";
@@ -20,7 +21,7 @@ export default Cli.command({
     })
     .extend(warningsOutput),
   description:
-    "Generate an embedded marketplace signing key.\nThe RSA public key is saved in Prismatic, and the private key is returned and immediately removed from Prismatic. Once the private key is returned, it cannot be retrieved again.",
+    "Generate an embedded marketplace signing key.\nThe RSA public key is saved in Prismatic, and the private key is returned and immediately removed from Prismatic. Once the private key is returned, it cannot be retrieved again.\nPrints the private key unless --private-key-file writes it to a file; agent mode requires --private-key-file.",
   hint: "Use --private-key-file to write the private key to a new file readable only by you instead of printing it.",
   examples: [
     {
@@ -36,7 +37,17 @@ export default Cli.command({
   }),
   async run(context) {
     const privateKeyFile = context.options["private-key-file"];
-    if (!privateKeyFile) return { privateKey: await generateSigningKey() };
+    if (!privateKeyFile) {
+      // An agent's command output lands in its transcript and logs.
+      if (context.agent || isCommandTransportExecution())
+        throw new Errors.IncurError({
+          code: "PRIVATE_KEY_FILE_REQUIRED",
+          exitCode: 2,
+          message:
+            "Agent mode does not print private signing keys. Retry with --private-key-file <path> to write the key to a new file readable only by you.",
+        });
+      return { privateKey: await generateSigningKey() };
+    }
 
     // Claim the file before generating: the private key cannot be retrieved again,
     // so an unwritable or existing path must fail while nothing has changed.
