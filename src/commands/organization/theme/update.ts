@@ -11,7 +11,7 @@ import {
   type ThemeProperty,
   toApiVariant,
   variantOption,
-} from "./theme.js";
+} from "./values.js";
 
 const entries = z.record(z.string(), z.string());
 const toPropertyInput = ({ type, value, variant }: ThemeProperty) => ({
@@ -29,26 +29,27 @@ export default Cli.command({
       properties: entries,
     })
     .extend(warningsOutput),
-  description:
-    "Update one variant of your Organization's theme.\nOnly the colors and properties you name change; the rest of the theme, including other variants, is kept. Use embedded-light or embedded-dark to style embedded screens for your customers.",
+  description: "Update colors and properties for one theme variant, keeping the rest of the theme",
   options: z.object({
-    variant: variantOption.describe("theme variant to update"),
+    variant: variantOption.describe(
+      "variant to update: embedded-light and embedded-dark style embedded screens for your customers",
+    ),
     color: z
       .array(z.string())
       .optional()
       .describe("set a color as type=value, such as primary=#4f46e5; repeatable"),
-    "remove-color": z
+    removeColor: z
       .array(z.string())
       .optional()
       .describe("return a color type to Prismatic's default; repeatable"),
-    "border-radius": z.coerce
+    borderRadius: z.coerce
       .number()
       .int()
       .min(0)
       .max(maxBorderRadius)
       .optional()
       .describe(`corner radius in pixels, 0 to ${maxBorderRadius}`),
-    "disable-elevation": z
+    disableElevation: z
       .enum(["true", "false"])
       .optional()
       .describe("remove drop shadows when true"),
@@ -59,15 +60,19 @@ export default Cli.command({
       options: {
         variant: "embedded-light",
         color: ["primary=#4f46e5", "link_color=#4338ca"],
-        "border-radius": 8,
+        borderRadius: 8,
       },
     },
   ],
   hint: "Run `prism organization theme get` first to see current values. Theme changes apply to every customer immediately.",
   async run(context) {
-    const { variant, color = [], "remove-color": removeColor = [] } = context.options;
-    const borderRadius = context.options["border-radius"];
-    const disableElevation = context.options["disable-elevation"];
+    const {
+      variant,
+      color = [],
+      removeColor = [],
+      borderRadius,
+      disableElevation,
+    } = context.options;
     const colors = parseColorAssignments(color);
     const removed = removeColor.map(normalizeColorType);
     const properties = [

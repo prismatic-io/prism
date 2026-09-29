@@ -1,6 +1,6 @@
 import { Cli, z } from "incur";
 import { warningsOutput } from "../../../output.js";
-import { describeTheme, readTheme, variantOption } from "./theme.js";
+import { describeTheme, readTheme, variantOption } from "./values.js";
 
 const entries = z.record(z.string(), z.string());
 
@@ -10,10 +10,13 @@ export default Cli.command({
       variants: z.record(z.string(), z.object({ colors: entries, properties: entries })),
     })
     .extend(warningsOutput),
-  description:
-    "Show your Organization's theme colors and properties.\nVariants: light and dark style your team's Prismatic app; embedded-light and embedded-dark style embedded screens for your customers. Unset values use Prismatic defaults.",
+  description: "Show your organization's theme colors and properties by variant",
   options: z.object({
-    variant: variantOption.optional().describe("only show this theme variant"),
+    variant: variantOption
+      .optional()
+      .describe(
+        "only show this variant: light and dark style your team's Prismatic app, embedded-light and embedded-dark style embedded screens",
+      ),
   }),
   examples: [
     {
