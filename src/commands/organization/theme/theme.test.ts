@@ -6,6 +6,7 @@ import { runCommand } from "../../../test-command.js";
 import GetCommand from "./get.js";
 import UpdateCommand from "./update.js";
 
+const connectionMaxLimit = 100;
 const colors = [
   { type: "primary", value: "#111111", variant: "light" },
   { type: "primary", value: "#222222", variant: "embedded_light" },
@@ -37,8 +38,14 @@ let theme: { colors: typeof colors; properties: typeof properties; totalColors?:
 const updates: Array<{ colors: unknown[]; properties: unknown[] }> = [];
 const api = graphql.link(`${TEST_PRISMATIC_URL}/api`);
 const server = setupServer(
-  api.query("getTheme", () =>
-    HttpResponse.json({
+  api.query("getTheme", ({ query }) => {
+    // The API rejects connection pages above RELAY_CONNECTION_MAX_LIMIT.
+    const pageSizes = [...query.matchAll(/first:\s*(\d+)/g)].map(([, size]) => Number(size));
+    if (pageSizes.some((size) => size > connectionMaxLimit))
+      return HttpResponse.json({
+        errors: [{ message: "exceeds the `first` limit of 100 records" }],
+      });
+    return HttpResponse.json({
       data: {
         theme: {
           colors: {
@@ -51,8 +58,8 @@ const server = setupServer(
           },
         },
       },
-    }),
-  ),
+    });
+  }),
   api.mutation("updateTheme", ({ variables }) => {
     updates.push(variables as (typeof updates)[number]);
     return HttpResponse.json({ data: { updateTheme: { theme: { id: "theme-1" }, errors: [] } } });

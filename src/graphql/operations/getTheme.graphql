@@ -1,6 +1,6 @@
 query getTheme {
   theme {
-    colors(first: 500) {
+    colors(first: 100) {
       totalCount
       nodes {
         type
@@ -8,7 +8,7 @@ query getTheme {
         variant
       }
     }
-    properties(first: 500) {
+    properties(first: 100) {
       totalCount
       nodes {
         type
