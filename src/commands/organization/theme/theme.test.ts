@@ -99,7 +99,7 @@ describe("organization:theme:update", () => {
       "primary=#4f46e5",
       "--color",
       "link-color=rgb(67, 56, 202)",
-      "--border-radius",
+      "--borderRadius",
       "8",
     );
     expect(updates).toHaveLength(1);
@@ -123,7 +123,7 @@ describe("organization:theme:update", () => {
   });
 
   it("returns a removed color to the default without touching other variants", async () => {
-    await update("--variant", "embedded-light", "--remove-color", "accent");
+    await update("--variant", "embedded-light", "--removeColor", "accent");
     expect(updates[0].colors).toEqual(colors.filter(({ type }) => type !== "accent"));
   });
 
