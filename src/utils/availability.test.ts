@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   isComponentVersionAvailable,
+  isIntegrationImportAvailable,
   isIntegrationVersionAvailable,
   pollUntil,
   resolveWaitOptions,
@@ -139,5 +140,37 @@ describe("integration version availability", () => {
     await expect(
       waitForIntegrationVersion("int_1", 4, { timeoutSeconds: 0.02, intervalMs: 5 }),
     ).resolves.toBe(false);
+  });
+});
+
+describe("integration import readiness", () => {
+  afterEach(() => mockGqlRequest.mockReset());
+
+  it.each([
+    { instance: null, ready: false },
+    { instance: { lastDeployedAt: null, deployedVersion: 4, needsDeploy: false }, ready: false },
+    {
+      instance: { lastDeployedAt: "2026-09-30", deployedVersion: 3, needsDeploy: false },
+      ready: false,
+    },
+    {
+      instance: { lastDeployedAt: "2026-09-30", deployedVersion: 4, needsDeploy: true },
+      ready: false,
+    },
+    {
+      instance: { lastDeployedAt: "2026-09-30", deployedVersion: 4, needsDeploy: false },
+      ready: true,
+    },
+  ])("checks deployment of the imported draft: $instance", async ({ instance, ready }) => {
+    mockGqlRequest.mockResolvedValue({
+      integration: { versionNumber: 4, systemInstance: instance },
+    });
+    await expect(isIntegrationImportAvailable("int_1")).resolves.toBe(ready);
+    expect(mockGqlRequest.mock.calls[0][0].variables).toEqual({ integrationId: "int_1" });
+  });
+
+  it("does not treat a missing integration as ready", async () => {
+    mockGqlRequest.mockResolvedValue({ integration: null });
+    await expect(isIntegrationImportAvailable("missing")).resolves.toBe(false);
   });
 });

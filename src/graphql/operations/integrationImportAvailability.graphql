@@ -1,0 +1,10 @@
+query integrationImportAvailability($integrationId: ID!) {
+  integration(id: $integrationId) {
+    versionNumber
+    systemInstance {
+      lastDeployedAt
+      deployedVersion
+      needsDeploy
+    }
+  }
+}

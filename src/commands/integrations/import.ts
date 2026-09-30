@@ -5,7 +5,7 @@ import { exists } from "../../fs.js";
 import { warningsOutput } from "../../output.js";
 import {
   resolveWaitOptions,
-  waitForComponentVersion,
+  waitForIntegrationImport,
   waitOptions,
   waitTimeout,
 } from "../../utils/availability.js";
@@ -55,8 +55,8 @@ export default Cli.command({
         'Provide test API keys for flows in the format flowName="API_KEY". Can be specified multiple times.',
       ),
     ...waitOptions({
-      until: "the imported Code Native Integration is ready to run",
-      otherwise: "the definition is imported",
+      until: "the imported integration's test instance is ready to run",
+      otherwise: "the definition is imported (Code Native component publication is always awaited)",
     }),
   }),
   async run(context) {
@@ -70,6 +70,7 @@ export default Cli.command({
         "test-api-key": testApiKey,
       },
     } = context;
+    const componentWait = { timeoutSeconds: context.options["wait-timeout"] };
     const wait = resolveWaitOptions(context.options);
 
     if (path && !(await exists(path))) {
@@ -130,12 +131,11 @@ There will be no way to restore the existing draft. If you wish to save it, eith
       }
     }
 
-    const { integrationId: integrationImportId, componentId } = path
+    const { integrationId: integrationImportId } = path
       ? {
           integrationId: await importYamlIntegration(path, integrationId, iconPath, replace),
-          componentId: undefined,
         }
-      : await importCodeNativeIntegration(integrationId, replace, testApiKey, wait);
+      : await importCodeNativeIntegration(integrationId, replace, testApiKey, componentWait);
 
     writeCommandStatus(integrationImportId);
 
@@ -153,14 +153,14 @@ There will be no way to restore the existing draft. If you wish to save it, eith
       ],
     };
 
-    if (componentId && wait) {
-      startAction("Waiting for the Code Native Integration package to finish processing");
-      const available = await waitForComponentVersion(componentId, wait);
+    if (wait) {
+      startAction("Waiting for the imported integration's test instance to be ready");
+      const available = await waitForIntegrationImport(integrationImportId, wait);
       if (!available) {
         stopAction("timed out");
         return context.error({
           ...waitTimeout(
-            `The integration was imported but its package is still processing after ${wait.timeoutSeconds} seconds. It can run once processing finishes.`,
+            `The integration was imported but its test instance is not ready after ${wait.timeoutSeconds} seconds.`,
           ),
           cta,
         });
