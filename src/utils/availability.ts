@@ -2,6 +2,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { z } from "incur";
 import { commandSignal } from "../command.js";
 import { ComponentVersionAvailabilityDocument as COMPONENT_VERSION_AVAILABILITY } from "../graphql/operations/componentVersionAvailability.generated.js";
+import { IntegrationImportAvailabilityDocument } from "../graphql/operations/integrationImportAvailability.generated.js";
 import { IntegrationVersionAvailabilityDocument as INTEGRATION_VERSION_AVAILABILITY } from "../graphql/operations/integrationVersionAvailability.generated.js";
 import { gqlRequest } from "../graphql.js";
 
@@ -92,3 +93,19 @@ export const waitForIntegrationVersion = (
   versionNumber: number,
   options: WaitOptions,
 ) => pollUntil(() => isIntegrationVersionAvailable(integrationId, versionNumber), options);
+
+export const isIntegrationImportAvailable = async (integrationId: string): Promise<boolean> => {
+  const { integration } = await gqlRequest({
+    document: IntegrationImportAvailabilityDocument,
+    variables: { integrationId },
+  });
+  const instance = integration?.systemInstance;
+  return Boolean(
+    instance?.lastDeployedAt &&
+      !instance.needsDeploy &&
+      instance.deployedVersion === integration?.versionNumber,
+  );
+};
+
+export const waitForIntegrationImport = (integrationId: string, options: WaitOptions) =>
+  pollUntil(() => isIntegrationImportAvailable(integrationId), options);
