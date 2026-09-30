@@ -12,6 +12,11 @@ import { SetInstanceApiKeysDocument as SET_INSTANCE_API_KEYS } from "../../graph
 import { gqlRequest } from "../../graphql.js";
 import { uploadAvatar } from "../../utils/avatar.js";
 import {
+  DEFAULT_WAIT_TIMEOUT_SECONDS,
+  type WaitOptions,
+  waitForComponentVersion,
+} from "../availability.js";
+import {
   type ComponentDefinition,
   createComponentPackage,
   validateDefinition,
@@ -141,6 +146,7 @@ export const importCodeNativeIntegration = async (
   integrationId?: string,
   replace?: boolean,
   testApiKeyFlags?: string[],
+  waitOptions?: WaitOptions,
 ): Promise<{ integrationId: string; componentId: string }> => {
   return withWorkingDirectory(
     await getPackageEntrypointDirectory("Code Native Integration"),
@@ -184,6 +190,15 @@ export const importCodeNativeIntegration = async (
 
       startAction("Uploading package for Code Native Integration");
       await uploadFile(packagePath, packageUploadUrl);
+      // The definition references the component by key, so the uploaded package must finish
+      // processing before import; otherwise the import fails with "invalid Component key".
+      const timeoutSeconds = waitOptions?.timeoutSeconds ?? DEFAULT_WAIT_TIMEOUT_SECONDS;
+      if (!(await waitForComponentVersion(componentId, { ...waitOptions, timeoutSeconds }))) {
+        stopAction("timed out");
+        throw new CommandFailedError({
+          message: `The Code Native Integration package was still processing after ${timeoutSeconds} seconds, so the definition was not imported. Pass a larger --wait-timeout to wait longer.`,
+        });
+      }
       stopAction();
 
       startAction("Importing definition for Code Native Integration into Prismatic");

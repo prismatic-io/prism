@@ -135,7 +135,7 @@ There will be no way to restore the existing draft. If you wish to save it, eith
           integrationId: await importYamlIntegration(path, integrationId, iconPath, replace),
           componentId: undefined,
         }
-      : await importCodeNativeIntegration(integrationId, replace, testApiKey);
+      : await importCodeNativeIntegration(integrationId, replace, testApiKey, wait);
 
     writeCommandStatus(integrationImportId);
 

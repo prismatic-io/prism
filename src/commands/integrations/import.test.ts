@@ -110,7 +110,9 @@ configPages:
 
       const result = await runCommand(ImportCommand, []);
 
-      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, undefined);
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, undefined, {
+        timeoutSeconds: 300,
+      });
       expect(logSpy).toHaveBeenCalledWith("imported-cni-id");
       expect(mockWaitForComponentVersion).toHaveBeenCalledWith("comp_1", { timeoutSeconds: 300 });
       expect(result).toEqual({ integrationId: "imported-cni-id" });
@@ -123,9 +125,12 @@ configPages:
 
       await runCommand(ImportCommand, ["--test-api-key", 'myFlow="key123"']);
 
-      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, [
-        'myFlow="key123"',
-      ]);
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(
+        undefined,
+        false,
+        ['myFlow="key123"'],
+        { timeoutSeconds: 300 },
+      );
     });
 
     it("returns as soon as the definition is imported with --no-wait", async () => {
