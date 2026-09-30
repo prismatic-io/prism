@@ -1,7 +1,7 @@
-import { ux } from "@oclif/core";
-import type { Component as ComponentDefinitionTemplate } from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import { createRequire } from "node:module";
 import { extname, resolve } from "node:path";
+import { ux } from "@oclif/core";
+import type { Component as ComponentDefinitionTemplate } from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import { exists } from "../../fs.js";
 import { findPackageRoot, seekPackageDistDirectory } from "../import.js";
 import { TOOLCHAIN_CONFIG_OUTPUTS } from "../toolchain/index.js";
@@ -19,7 +19,11 @@ type LegacyDefinition = {
 
 /** Keys newer Spectral versions emit that the pinned type does not yet declare. */
 type ForwardDefinition = {
-  hasConfigurationInit?: boolean;
+  configurationInit?: { connections?: string[] };
+  serverFunctionDefinitions?: Array<{
+    key: string;
+    [key: string]: unknown;
+  }>;
 };
 
 /**
