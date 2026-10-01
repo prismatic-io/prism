@@ -110,7 +110,13 @@ const additiveCommandIds = new Set([
   "integrations:manifests:list",
   "logs:list",
   "organization:theme:get",
-  "organization:theme:update",
+  "organization:theme:color:set",
+  "organization:theme:color:reset",
+  "organization:theme:border-radius:set",
+  "organization:theme:border-radius:reset",
+  "organization:theme:elevation:enable",
+  "organization:theme:elevation:disable",
+  "organization:theme:elevation:reset",
 ]);
 const sample = (field: Field): unknown => {
   if (field.options?.length) return field.multiple ? [field.options[0]] : field.options[0];

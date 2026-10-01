@@ -48,34 +48,17 @@ export const normalizeColorType = (type: string) => {
   return normalized;
 };
 
-export const normalizePropertyType = (type: string) => {
-  const normalized = type.trim().toLowerCase().replaceAll("-", "_");
-  if (!(themePropertyTypes as readonly string[]).includes(normalized))
-    throw invalid(
-      `Unknown theme property "${type}". Use one of: ${themePropertyTypes.join(", ")}.`,
-    );
-  return normalized;
-};
-
-/** Reject a type that one request both sets and removes. */
-export const assertNoConflicts = (kind: string, set: string[], removed: string[]) => {
-  const conflict = set.find((type) => removed.includes(type));
-  if (conflict) throw invalid(`The ${kind} "${conflict}" cannot be both set and removed.`);
-};
-
-/** Parse `type=value` color assignments, rejecting values the API would reject. */
-export const parseColorAssignments = (assignments: string[]) =>
-  assignments.map((assignment) => {
-    const separator = assignment.indexOf("=");
-    if (separator < 1) throw invalid(`Expected --color type=value, received "${assignment}".`);
-    const type = normalizeColorType(assignment.slice(0, separator));
-    const value = assignment.slice(separator + 1).trim();
-    if (!hexColor.test(value) && !rgbColor.test(value))
-      throw invalid(
-        `Color "${type}" must be a hex value such as #4f46e5 or rgb(79, 70, 229), received "${value}".`,
-      );
-    return { type, value };
-  });
+/** Validate an ordinary color argument without assignment syntax. */
+export const colorValue = z
+  .string()
+  .trim()
+  .refine(
+    (value) => hexColor.test(value) || rgbColor.test(value),
+    "Color must be a hex value such as #4f46e5 or rgb(79, 70, 229)",
+  );
+export const colorType = z
+  .enum(themeColorTypes.map((type) => type.replaceAll("_", "-")) as [string, ...string[]])
+  .transform(normalizeColorType);
 
 /** Read the organization theme, refusing a partial read that a write would truncate. */
 export const readTheme = async (): Promise<Theme> => {
