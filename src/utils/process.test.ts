@@ -348,3 +348,28 @@ it("passes ambient child directories and environment overrides concurrently", as
   expect(process.cwd()).toBe(originalDirectory);
   expect(process.env.PRISM_CHILD_TEST_VALUE).toBe(originalValue);
 });
+
+it("protects failed child diagnostics in human and agent commands", async () => {
+  const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyIn0.synthetic_signature";
+  for (const agent of [false, true]) {
+    const command = applyCommandPolicy({
+      run: () =>
+        spawnProcess(
+          [
+            process.execPath,
+            "-e",
+            "console.error({config:{headers:{Authorization:'Bearer '+process.env.PRISM_ACCESS_TOKEN}}}); process.exit(7)",
+          ],
+          { PRISM_ACCESS_TOKEN: token },
+        ),
+    });
+    try {
+      await runCommand(command, agent ? ["--agent"] : []);
+      expect.unreachable("failed child must fail the command");
+    } catch (error) {
+      expect((error as Error).message).toContain("exit code 7");
+      expect((error as Error).message).not.toContain(token);
+      expect((error as Error).message).toContain("[REDACTED]");
+    }
+  }
+});

@@ -25,6 +25,29 @@ afterEach(() => {
 });
 
 describe("native schemas and execution context", () => {
+  it("offers permission recovery only to agents and preserves existing hints", async () => {
+    const command = applyCommandPolicy({
+      run() {
+        throw Object.assign(new Error("Cannot write /project/.vscode/settings.json"), {
+          code: "EACCES",
+        });
+      },
+    });
+    await expect(runCommand(command, ["--agent"])).rejects.toMatchObject({
+      code: "EACCES",
+      hint: "Check filesystem permissions or request sandbox access. Inspect partial output before retrying.",
+    });
+    await expect(runCommand(command, [])).rejects.toHaveProperty("hint", undefined);
+    const existing = applyCommandPolicy({
+      run() {
+        throw new Errors.IncurError({ code: "EPERM", message: "Denied", hint: "Existing advice" });
+      },
+    });
+    await expect(runCommand(existing, ["--agent"])).rejects.toMatchObject({
+      hint: "Existing advice",
+    });
+  });
+
   it("infers handler inputs from native schemas and applies native defaults", async () => {
     const command = applyCommandPolicy({
       args: z.object({ name: z.string() }),
@@ -401,4 +424,32 @@ it("runs command-local native middleware inside the shared execution scope", asy
   );
   await expect(runCommand(command, ["--agent"])).resolves.toEqual({ accepted: true });
   expect(steps).toEqual(["before", "run", "after"]);
+});
+
+it("normalizes circular authenticated errors without serializing their config or cause", async () => {
+  const secret = "opaque-active-token";
+  vi.stubEnv("PRISM_ACCESS_TOKEN", secret);
+  const config: Record<string, unknown> = { headers: { Authorization: `Bearer ${secret}` } };
+  config.self = config;
+  const command = applyCommandPolicy({
+    run: () => {
+      throw Object.assign(new Error(`HTTP 401: Bearer ${secret}`), {
+        config,
+        request: config,
+        cause: config,
+      });
+    },
+  });
+  await expect(runCommand(command, ["--agent"])).rejects.toMatchObject({
+    message: "HTTP 401: Bearer [REDACTED]",
+  });
+});
+
+it("preserves intentionally returned credentials as successful data", async () => {
+  const data = {
+    key: "-----BEGIN PRIVATE KEY-----\nfixture\n-----END PRIVATE KEY-----",
+    token: "eyJfixture.payload.signature",
+  };
+  const command = applyCommandPolicy({ run: () => data });
+  await expect(runCommand(command, ["--agent"])).resolves.toEqual(data);
 });

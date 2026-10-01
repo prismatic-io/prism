@@ -4,7 +4,7 @@ export const globalOptions = z.object({
   printRequests: z.boolean().optional().describe("Print all GraphQL requests that are issued"),
   profile: z.string().optional().describe("Use a profile"),
   quiet: z.boolean().default(false).describe("Reduce helpful notes and text"),
-  readOnly: z.boolean().default(false).describe("Reject commands that can modify remote state"),
+  readOnly: z.boolean().default(false).describe("Reject commands that can modify state"),
   yes: z.boolean().default(false).describe("Approve non-interactive confirmation prompts"),
 });
 

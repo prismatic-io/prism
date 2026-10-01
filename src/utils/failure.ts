@@ -1,8 +1,9 @@
 import { Errors } from "incur";
 import { ClientError } from "../graphql.js";
+import { diagnosticText } from "./diagnostic.js";
 
 export function requestFailure(error: unknown, code: string, readOnly = false) {
-  const message = error instanceof Error ? error.message : "The request failed.";
+  const message = diagnosticText(error instanceof Error ? error.message : "The request failed.");
   if (error instanceof Errors.IncurError)
     return {
       code: error.code,

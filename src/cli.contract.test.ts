@@ -90,7 +90,10 @@ const additiveCommandOptions: Record<string, Set<string>> = {
 const isAdditiveOption = (id: string, name: string) =>
   additiveOptionNames.has(name) || additiveCommandOptions[id]?.has(name) === true;
 // Descriptions that keep their legacy text and append guidance.
-const extendedDescriptionIds = new Set(["organization:signing-keys:generate"]);
+const extendedDescriptionIds = new Set([
+  "organization:signing-keys:generate",
+  "integrations:flows:test",
+]);
 const additiveCommandIds = new Set([
   "components:actions:get",
   "components:connections:get",

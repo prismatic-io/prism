@@ -116,7 +116,7 @@ describe("command defaults and Zod validation integration", () => {
   });
 });
 
-it("uses the authenticated endpoint and token together for a configuration URL", async () => {
+it("uses the authenticated endpoint without exposing credentials in configuration output", async () => {
   server.use(
     api.query("GetIntegrationSystemInstance", () =>
       HttpResponse.json(
@@ -144,11 +144,22 @@ it("uses the authenticated endpoint and token together for a configuration URL",
       expect.objectContaining({
         type: "configuration-required",
         url: expect.stringMatching(
-          /^https:\/\/bound\.example\.com\/configure-instance\/system-instance-123\/\?.*jwt=bound-token/,
+          /^https:\/\/bound\.example\.com\/configure-instance\/system-instance-123\/\?/,
         ),
       }),
     ]),
   );
+  const configuration = events.find((event) => event.type === "configuration-required");
+  expect(configuration?.type).toBe("configuration-required");
+  if (configuration?.type !== "configuration-required")
+    throw new Error("missing configuration link");
+  const url = new URL(configuration.url);
+  expect(url.searchParams.has("jwt")).toBe(false);
+  expect(url.searchParams.has("access_token")).toBe(false);
+  expect(url.searchParams.get("embed")).toBe("true");
+  const serialized = JSON.stringify(events);
+  expect(serialized).not.toContain("bound-token");
+  expect(serialized).not.toContain("query-token");
 });
 
 describe("buildFlagString", () => {
