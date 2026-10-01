@@ -7,7 +7,7 @@
 
 ## Using Prism
 
-Prism requires Node.js 22 or newer and npm.
+Prism requires Node.js 22.18.0 or newer and npm.
 You can download both from the [NodeJS Website](https://nodejs.org/).
 Prism works on MacOS, Linux, Windows and [WSL](https://docs.microsoft.com/en-us/windows/wsl/).
 

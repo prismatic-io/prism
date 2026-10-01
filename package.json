@@ -20,7 +20,7 @@
   },
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.18.0"
   },
   "scripts": {
     "clean": "rm -rf lib && bun run clean-test-temp",
