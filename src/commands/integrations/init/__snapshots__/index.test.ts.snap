@@ -827,6 +827,9 @@ exports[`integrations:init > modern toolchain > clean scaffold generation > shou
     "typecheck": "tsc --noEmit",
     "format": "biome format --write ."
   },
+  "engines": {
+    "node": ">=22.18.0"
+  },
   "dependencies": {
     "@prismatic-io/spectral": "VERSION"
   },
@@ -1179,6 +1182,9 @@ exports[`integrations:init > modern toolchain > scaffold generation > should mat
     "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
     "format": "biome format --write ."
+  },
+  "engines": {
+    "node": ">=22.18.0"
   },
   "dependencies": {
     "@prismatic-io/spectral": "VERSION"

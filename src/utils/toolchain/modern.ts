@@ -16,7 +16,9 @@ export class ModernToolchain extends Toolchain {
     format: "biome format --write .",
   };
 
-  readonly packageJson = {};
+  readonly packageJson = {
+    engines: { node: ">=22.18.0" },
+  };
 
   readonly devDependencies = {
     "@biomejs/biome": "2.5.1",
