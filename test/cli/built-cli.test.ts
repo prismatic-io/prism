@@ -38,6 +38,29 @@ describe("built CLI", () => {
     expect(result.stdout).toMatch(/pageInfo/);
   });
 
+  it.each([
+    "set",
+    "reset",
+  ])("advertises color choices for %s through the deep command schema", (action) => {
+    const result = run("organization", "theme", "color", action, "--schema", "--format", "json");
+    expect(result.status, result.stderr).toBe(0);
+    const type = JSON.parse(result.stdout).args.properties.type;
+    expect(type.type).toBe("string");
+    expect(type.enum).toEqual(
+      expect.arrayContaining([
+        "primary",
+        "neutral",
+        "link_color",
+        "link-color",
+        "icon_color",
+        "icon-color",
+        "designer_shell",
+        "designer-shell",
+      ]),
+    );
+    expect(type.cli.options).toEqual(type.enum);
+  });
+
   it("rejects unexpected positional arguments", () => {
     const result = run("--agent", "profiles:list", "unexpected");
     expect(result.status, result.stderr || result.stdout).toBe(2);

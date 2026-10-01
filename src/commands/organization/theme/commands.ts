@@ -1,7 +1,7 @@
 import { Cli, z } from "incur";
 import { prepareCommand } from "../../../command.js";
 import { changeHint, changeOptions, changeOutput, changeTheme } from "./change.js";
-import { colorType, colorValue, maxBorderRadius } from "./values.js";
+import { colorType, colorValue, maxBorderRadius, normalizeColorType } from "./values.js";
 
 type Change = { collection: "colors" | "properties"; type: string; value?: string };
 
@@ -57,14 +57,14 @@ const groups = {
         type: colorType.describe("color type"),
         value: colorValue.describe("hex or RGB color"),
       }),
-      ({ type, value }) => ({ collection: "colors", type, value }),
+      ({ type, value }) => ({ collection: "colors", type: normalizeColorType(type), value }),
     ),
     reset: action(
       "Remove a custom color to use Prismatic's default",
       z.object({
         type: colorType.describe("color type"),
       }),
-      ({ type }) => ({ collection: "colors", type }),
+      ({ type }) => ({ collection: "colors", type: normalizeColorType(type) }),
     ),
   },
   "border-radius": property(
