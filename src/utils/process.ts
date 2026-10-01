@@ -2,6 +2,7 @@ import { type Output, x } from "tinyexec";
 import { commandSignal, isAgentExecution, writeCommandOutput } from "../command.js";
 import { getWorkingDirectory } from "../command-context.js";
 import { getRuntimeEnvironment } from "../runtime.js";
+import { diagnosticText } from "./diagnostic.js";
 
 const diagnosticLimit = 8192;
 const childDiagnostic = (
@@ -30,7 +31,7 @@ export const spawnProcess = async (
       nodeOptions: {
         env: { ...getRuntimeEnvironment(), ...env },
         cwd: getWorkingDirectory(),
-        stdio: isAgentExecution() ? ["ignore", "pipe", "pipe"] : "inherit",
+        stdio: [isAgentExecution() ? "ignore" : "inherit", "pipe", "pipe"],
       },
     });
   } catch (error) {
@@ -45,16 +46,24 @@ export const spawnProcess = async (
       result.exitCode !== undefined
         ? `exit code ${result.exitCode}`
         : "termination before reporting an exit code";
-    const diagnostics = isAgentExecution()
-      ? childDiagnostic("stdout", result.stdout) + childDiagnostic("stderr", result.stderr)
-      : "";
-    throw new Error(`Command failed with ${status}: ${command} ${args.join(" ")}${diagnostics}`);
+    const diagnostics =
+      childDiagnostic(
+        "stdout",
+        diagnosticText(result.stdout, { ...getRuntimeEnvironment(), ...env }),
+      ) +
+      childDiagnostic(
+        "stderr",
+        diagnosticText(result.stderr, { ...getRuntimeEnvironment(), ...env }),
+      );
+    throw new Error(
+      diagnosticText(`Command failed with ${status}: ${command} ${args.join(" ")}${diagnostics}`, {
+        ...getRuntimeEnvironment(),
+        ...env,
+      }),
+    );
   }
-
-  if (isAgentExecution()) {
-    if (result.stdout) writeCommandOutput(result.stdout);
-    if (result.stderr) writeCommandOutput(result.stderr, "stderr");
-  }
+  if (result.stdout) writeCommandOutput(result.stdout);
+  if (result.stderr) writeCommandOutput(result.stderr, "stderr");
   return result;
 };
 
@@ -181,7 +190,7 @@ export async function* streamProcess(
       });
     if (exitCode !== 0) {
       throw new Error(
-        `Command failed with ${exitCode === null ? `signal ${signalCode ?? "unknown"}` : `exit code ${exitCode}`}: ${command} ${args.join(" ")}${childDiagnostic("stdout", tails.stdout, sizes.stdout > diagnosticLimit)}${childDiagnostic("stderr", tails.stderr, sizes.stderr > diagnosticLimit)}`,
+        `Command failed with ${exitCode === null ? `signal ${signalCode ?? "unknown"}` : `exit code ${exitCode}`}: ${command} ${args.join(" ")}${childDiagnostic("stdout", diagnosticText(tails.stdout, { ...getRuntimeEnvironment(), ...env }), sizes.stdout > diagnosticLimit)}${childDiagnostic("stderr", diagnosticText(tails.stderr, { ...getRuntimeEnvironment(), ...env }), sizes.stderr > diagnosticLimit)}`,
       );
     }
     yield { type: "completed", exitCode: 0 };

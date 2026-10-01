@@ -161,7 +161,8 @@ export const CONFIGURE_INSTANCE_PARAMS = {
 
 export default Cli.command({
   output: executionStreamOutputSchema,
-  description: "Run a test execution of a flow",
+  description:
+    "Run a test execution of a flow\nConfiguration links require an authenticated browser session; CLI credentials are never included.",
   examples: [
     {
       description:
@@ -490,11 +491,8 @@ function parseReplayablePayload(content: string): ReplayablePayload | null {
 }
 
 async function configurationUrl(systemInstanceId: string): Promise<string> {
-  const { accessToken, url: endpoint } = await getAuthenticatedContext();
-  const params = new URLSearchParams({
-    ...CONFIGURE_INSTANCE_PARAMS,
-    ...(accessToken && { jwt: accessToken }),
-  });
+  const { url: endpoint } = await getAuthenticatedContext();
+  const params = new URLSearchParams(CONFIGURE_INSTANCE_PARAMS);
   const url = new URL(`/configure-instance/${encodeURIComponent(systemInstanceId)}/`, endpoint);
   url.search = params.toString();
   return url.toString();

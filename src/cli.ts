@@ -621,8 +621,30 @@ export const serve = async (argv = process.argv.slice(2), environment = process.
     value: !agent,
   });
   try {
+    const route = resolveRoute(normalized);
+    const defaultWithArguments =
+      route.command &&
+      Object.keys(route.command.contract.args).length > 0 &&
+      Object.keys(Commands).some((id) => id.startsWith(`${route.path}:`)) &&
+      !normalized.some((token) =>
+        ["--help", "-h", "--schema", "--llms", "--llms-full"].includes(token),
+      );
+    // Incur only falls back to a default handler at its root, not a nested topic.
+    const target = defaultWithArguments
+      ? Cli.create(`prism ${route.path.replaceAll(":", " ")}`, {
+          ...route.command,
+          globals: globalOptions,
+          env: environmentOptions,
+          vars: commandVars,
+        } as unknown as MountedDefinition & { run: NonNullable<MountedDefinition["run"]> }).use(
+          commandMiddleware,
+        )
+      : cli;
+    const argumentsForTarget = defaultWithArguments
+      ? [...normalized.slice(0, route.start), ...normalized.slice(route.end)]
+      : normalized;
     const invoke = () =>
-      cli.serve(normalized, {
+      target.serve(argumentsForTarget, {
         env: environment,
         exit: (code: number) => {
           process.exitCode = code;

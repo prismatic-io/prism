@@ -17,6 +17,7 @@ import {
   type RuntimeState,
   runWithRuntimeState,
 } from "./runtime.js";
+import { diagnosticText } from "./utils/diagnostic.js";
 
 export { environmentOptions, globalOptions } from "./command-schemas.js";
 export {
@@ -233,6 +234,9 @@ export function applyCommandPolicy<
         if (streaming) throw nativeError(tagged);
         return {
           ...tagged,
+          ...(typeof tagged?.message === "string"
+            ? { message: diagnosticText(tagged.message) }
+            : {}),
           ...(tagged?.cta ? { cta: prepareCta(tagged.cta, context.globals.profile) } : {}),
         } as T;
       }
@@ -360,8 +364,16 @@ export function prepareCommand<
   // incur currently declares `version` only on the former.
   return applyCommandPolicy(definition as unknown as Definition<A, O, R>, policy);
 }
-const nativeError = (error: unknown): Errors.IncurError =>
-  error instanceof Errors.IncurError ? error : new Errors.IncurError(structuredError(error));
+const nativeError = (error: unknown): Errors.IncurError => {
+  const result =
+    error instanceof Errors.IncurError
+      ? Object.assign(error, { message: diagnosticText(error.message) })
+      : new Errors.IncurError(structuredError(error));
+  if (isAgentExecution() && ["EACCES", "EPERM"].includes(result.code) && !result.hint)
+    result.hint =
+      "Check filesystem permissions or request sandbox access. Inspect partial output before retrying.";
+  return result;
+};
 const structuredError = (error: unknown) => {
   const nativeDetails =
     typeof error === "object" && error !== null
@@ -369,10 +381,12 @@ const structuredError = (error: unknown) => {
           ...("retryable" in error && typeof error.retryable === "boolean"
             ? { retryable: error.retryable }
             : {}),
-          ...("hint" in error && typeof error.hint === "string" ? { hint: error.hint } : {}),
+          ...("hint" in error && typeof error.hint === "string"
+            ? { hint: diagnosticText(error.hint) }
+            : {}),
         }
       : {};
-  const message =
+  const message = diagnosticText(
     error instanceof Error
       ? error.message
       : typeof error === "object" &&
@@ -380,7 +394,10 @@ const structuredError = (error: unknown) => {
           "message" in error &&
           typeof error.message === "string"
         ? error.message
-        : String(error);
+        : typeof error === "string"
+          ? error
+          : "The command failed.",
+  );
   const declared =
     typeof error === "object" && error !== null && "code" in error && typeof error.code === "string"
       ? error.code
