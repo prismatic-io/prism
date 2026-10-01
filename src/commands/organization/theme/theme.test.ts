@@ -116,6 +116,31 @@ describe("theme actions", () => {
     expect(result).toMatchObject({ variant: "embedded-light", changed: ["primary"] });
   });
 
+  it.each([
+    "link_color",
+    "link-color",
+    "icon_color",
+    "icon-color",
+    "designer_shell",
+    "designer-shell",
+  ])("accepts %s and writes the API name", async (type) => {
+    await command("color:set", type, "#123", "--variant", "light");
+    expect(updates[0].colors).toContainEqual({
+      type: type.replaceAll("-", "_"),
+      value: "#123",
+      variant: "light",
+    });
+  });
+
+  it.each(["link_color", "link-color"])("resets the reported multiword color %s", async (type) => {
+    theme = {
+      colors: [...colors, { type: "link_color", value: "#123", variant: "light" }],
+      properties,
+    };
+    await command("color:reset", type, "--variant", "light");
+    expect(updates[0].colors).toEqual(colors);
+  });
+
   it("resets a color only in the selected variant", async () => {
     await command("color:reset", "primary", "--variant", "embedded-light");
     expect(updates[0].colors).toEqual(

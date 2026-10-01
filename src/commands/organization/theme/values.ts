@@ -56,9 +56,11 @@ export const colorValue = z
     (value) => hexColor.test(value) || rgbColor.test(value),
     "Color must be a hex value such as #4f46e5 or rgb(79, 70, 229)",
   );
-export const colorType = z
-  .enum(themeColorTypes.map((type) => type.replaceAll("_", "-")) as [string, ...string[]])
-  .transform(normalizeColorType);
+// Keep the enum intact for JSON Schema discovery; normalize only in the handler.
+export const colorType = z.enum([
+  ...themeColorTypes,
+  ...themeColorTypes.filter((type) => type.includes("_")).map((type) => type.replaceAll("_", "-")),
+]);
 
 /** Read the organization theme, refusing a partial read that a write would truncate. */
 export const readTheme = async (): Promise<Theme> => {
