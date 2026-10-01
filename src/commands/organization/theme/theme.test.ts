@@ -3,8 +3,8 @@ import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
 import { runCommand } from "../../../test-command.js";
+import { themeCommands } from "./commands.js";
 import GetCommand from "./get.js";
-import UpdateCommand from "./update.js";
 
 const connectionMaxLimit = 100;
 const colors = [
@@ -14,6 +14,7 @@ const colors = [
   { type: "primary", value: "#444444", variant: "embedded_dark" },
 ];
 const properties = [
+  { type: "disable_elevation", value: "true", variant: null },
   { type: "border_radius", value: "4", variant: "light" },
   { type: "border_radius", value: "6", variant: "embedded_light" },
 ];
@@ -25,11 +26,11 @@ const asApiEnums = ({
 }: {
   type: string;
   value: string;
-  variant: string;
+  variant: string | null;
 }) => ({
   type: type.toUpperCase(),
   value,
-  variant: variant.toUpperCase(),
+  variant: variant?.toUpperCase() ?? null,
 });
 let theme: { colors: typeof colors; properties: typeof properties; totalColors?: number } = {
   colors,
@@ -74,12 +75,14 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
-const update = (...argv: string[]) => runCommand(UpdateCommand, ["--agent", "--yes", ...argv]);
+const command = (name: string, ...argv: string[]) =>
+  runCommand(themeCommands[`organization:theme:${name}`], ["--agent", "--yes", ...argv]);
 
 describe("organization:theme:get", () => {
   it("groups colors and properties by variant", async () => {
     await expect(runCommand(GetCommand, ["--agent"])).resolves.toEqual({
       variants: {
+        all: { colors: {}, properties: { disable_elevation: "true" } },
         light: { colors: { primary: "#111111" }, properties: { border_radius: "4" } },
         "embedded-light": {
           colors: { primary: "#222222", accent: "#333333" },
@@ -97,85 +100,92 @@ describe("organization:theme:get", () => {
   });
 });
 
-describe("organization:theme:update", () => {
-  it("changes only the named entries and resends the rest of the theme", async () => {
-    const result = await update(
-      "--variant",
-      "embedded-light",
-      "--color",
-      "primary=#4f46e5",
-      "--color",
-      "link-color=rgb(67, 56, 202)",
-      "--borderRadius",
-      "8",
-    );
-    expect(updates).toHaveLength(1);
+describe("theme actions", () => {
+  it("sets a color and preserves every other entry, including unscoped properties", async () => {
+    const result = await command("color:set", "primary", "#4f46e5", "--variant", "embedded-light");
     expect(updates[0].colors).toEqual([
-      { type: "primary", value: "#111111", variant: "light" },
-      { type: "accent", value: "#333333", variant: "embedded_light" },
-      { type: "primary", value: "#444444", variant: "embedded_dark" },
+      ...colors.filter((entry) => entry.variant !== "embedded_light" || entry.type !== "primary"),
       { type: "primary", value: "#4f46e5", variant: "embedded_light" },
-      { type: "link_color", value: "rgb(67, 56, 202)", variant: "embedded_light" },
     ]);
-    expect(updates[0].properties).toEqual([
-      { type: "border_radius", value: "4", variant: "light" },
-      { type: "border_radius", value: "8", variant: "embedded_light" },
-    ]);
-    expect(result).toEqual({
-      variant: "embedded-light",
-      changed: ["primary", "link_color", "border_radius"],
-      colors: { accent: "#333333", primary: "#4f46e5", link_color: "rgb(67, 56, 202)" },
-      properties: { border_radius: "8" },
+    expect(updates[0].properties).toEqual(
+      properties.map(({ variant, ...entry }) => ({
+        ...entry,
+        ...(variant === null ? {} : { variant }),
+      })),
+    );
+    expect(result).toMatchObject({ variant: "embedded-light", changed: ["primary"] });
+  });
+
+  it("resets a color only in the selected variant", async () => {
+    await command("color:reset", "primary", "--variant", "embedded-light");
+    expect(updates[0].colors).toEqual(
+      colors.filter((entry) => entry.variant !== "embedded_light" || entry.type !== "primary"),
+    );
+  });
+
+  it.each([0, 100])("sets border radius to %i", async (value) => {
+    await command("border-radius:set", String(value), "--variant", "embedded-light");
+    expect(updates[0].properties).toContainEqual({
+      type: "border_radius",
+      variant: "embedded_light",
+      value: String(value),
     });
-  });
-
-  it("returns a removed color to the default without touching other variants", async () => {
-    await update("--variant", "embedded-light", "--removeColor", "accent");
-    expect(updates[0].colors).toEqual(colors.filter(({ type }) => type !== "accent"));
-  });
-
-  it.each([
-    [["--color", "brand=#4f46e5"], /Unknown theme color "brand"/],
-    [["--color", "primary=indigo"], /must be a hex value/],
-    [["--color", "primary"], /Expected --color type=value/],
-    [[], /Name at least one/],
-  ])("rejects %j before reading or writing the theme", async (argv, message) => {
-    await expect(update("--variant", "embedded-light", ...argv)).rejects.toThrow(message);
-    expect(updates).toHaveLength(0);
-  });
-
-  it("returns a removed property to the default without touching other variants", async () => {
-    await update("--variant", "embedded-light", "--remove-property", "border-radius");
-    expect(updates[0].properties).toEqual([
-      { type: "border_radius", value: "4", variant: "light" },
-    ]);
     expect(updates[0].colors).toEqual(colors);
   });
 
   it.each([
-    [
-      ["--color", "primary=#4f46e5", "--remove-color", "primary"],
-      /color "primary" cannot be both set and removed/,
-    ],
-    [
-      ["--border-radius", "8", "--remove-property", "border_radius"],
-      /property "border_radius" cannot be both set and removed/,
-    ],
-    [["--remove-property", "shadow"], /Unknown theme property "shadow"/],
-  ])("rejects %j before writing", async (argv, message) => {
-    await expect(update("--variant", "embedded-light", ...argv)).rejects.toThrow(message);
+    ["elevation:enable", "false"],
+    ["elevation:disable", "true"],
+  ])("%s explicitly writes %s and preserves the unscoped property", async (name, value) => {
+    await command(name, "--variant", "dark");
+    expect(updates[0].properties).toContainEqual({
+      type: "disable_elevation",
+      value,
+      variant: "dark",
+    });
+    expect(updates[0].properties).toContainEqual({ type: "disable_elevation", value: "true" });
+  });
+
+  it.each([
+    "border-radius:reset",
+    "elevation:reset",
+  ])("%s preserves unrelated properties", async (name) => {
+    await command(name, "--variant", "embedded-light");
+    expect(updates[0].properties).toContainEqual({ type: "disable_elevation", value: "true" });
+    expect(updates[0].properties).toContainEqual({
+      type: "border_radius",
+      value: "4",
+      variant: "light",
+    });
+    if (name === "border-radius:reset")
+      expect(updates[0].properties).not.toContainEqual({
+        type: "border_radius",
+        value: "6",
+        variant: "embedded_light",
+      });
+  });
+
+  it.each([
+    ["color:set", ["primary", "indigo", "--variant", "light"]],
+    ["color:set", ["brand", "#123", "--variant", "light"]],
+    ["color:set", ["primary", "#123"]],
+    ["border-radius:set", ["101", "--variant", "light"]],
+    ["border-radius:set", ["1.5", "--variant", "light"]],
+    ["elevation:enable", ["--variant", "all"]],
+  ])("rejects invalid arguments to %s before writing", async (name, argv) => {
+    await expect(command(name, ...argv)).rejects.toThrow();
     expect(updates).toHaveLength(0);
   });
 
-  it("refuses to write when the theme could not be read in full", async () => {
+  it("refuses to write a partially read theme", async () => {
     theme = { colors, properties, totalColors: colors.length + 1 };
-    await expect(
-      update("--variant", "embedded-light", "--color", "primary=#4f46e5"),
-    ).rejects.toThrow(/cannot be read in full/);
+    await expect(command("color:set", "primary", "#123", "--variant", "light")).rejects.toThrow(
+      /cannot be read in full/,
+    );
     expect(updates).toHaveLength(0);
   });
 
-  it("reports errors the API returns, such as a plan without custom themes", async () => {
+  it("reports API validation errors", async () => {
     server.use(
       api.mutation("updateTheme", () =>
         HttpResponse.json({
@@ -193,20 +203,21 @@ describe("organization:theme:update", () => {
         }),
       ),
     );
-    await expect(
-      update("--variant", "embedded-light", "--color", "primary=#4f46e5"),
-    ).rejects.toThrow(/Custom Theme is not allowed/);
+    await expect(command("color:set", "primary", "#123", "--variant", "light")).rejects.toThrow(
+      /Custom Theme is not allowed/,
+    );
   });
 
-  it("requires approval in agent mode", async () => {
+  it.each(Object.keys(themeCommands))("requires approval in agent mode for %s", async (name) => {
+    const argv = name.endsWith("color:set")
+      ? ["primary", "#123"]
+      : name.endsWith("color:reset")
+        ? ["primary"]
+        : name.endsWith("border-radius:set")
+          ? ["8"]
+          : [];
     await expect(
-      runCommand(UpdateCommand, [
-        "--agent",
-        "--variant",
-        "embedded-light",
-        "--color",
-        "primary=#4f46e5",
-      ]),
+      runCommand(themeCommands[name], ["--agent", ...argv, "--variant", "light"]),
     ).rejects.toMatchObject({ code: "CONFIRMATION_REQUIRED" });
     expect(updates).toHaveLength(0);
   });
