@@ -114,7 +114,7 @@ export type IntegrationObjectFromYAML = {
   description: string;
   definitionVersion: number;
   flows: Array<FlowObjectFromYAML>;
-  configPages: Array<{
+  configPages?: Array<{
     elements: Array<{
       type: string;
       value: string;
@@ -123,6 +123,6 @@ export type IntegrationObjectFromYAML = {
     tagline?: string;
     userLevelConfigured: boolean;
   }>;
-  requiredConfigVars: Array<ConfigVarObjectFromYAML>;
+  requiredConfigVars?: Array<ConfigVarObjectFromYAML>;
   documentation: string;
 };

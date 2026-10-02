@@ -19,7 +19,12 @@ export type GetExecutionLogsQuery = {
   logs: {
     edges: Array<{
       cursor: string;
-      node: { timestamp: string; severity: Types.LogSeverityLevel; message: string };
+      node: {
+        timestamp: string;
+        severity: Types.LogSeverityLevel;
+        sectionId?: string | null;
+        message: string;
+      };
     }>;
   };
 };
@@ -101,6 +106,7 @@ export const GetExecutionLogsDocument = {
                             { kind: "Field", name: { kind: "Name", value: "timestamp" } },
                             { kind: "Field", name: { kind: "Name", value: "severity" } },
                             { kind: "Field", name: { kind: "Name", value: "message" } },
+                            { kind: "Field", name: { kind: "Name", value: "sectionId" } },
                           ],
                         },
                       },

@@ -9,6 +9,7 @@ query GetExecutionLogs($executionId: ID!, $nextCursor: String) {
         timestamp
         severity
         message
+        sectionId
       }
       cursor
     }

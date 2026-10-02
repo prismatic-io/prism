@@ -5,6 +5,7 @@ import { ListInstanceTestLogsDocument as LIST_INSTANCE_TEST_LOGS } from "../../.
 import { TestInstanceFlowConfigDocument as TEST_INSTANCE_FLOW_CONFIG } from "../../../graphql/operations/testInstanceFlowConfig.generated.js";
 import { gqlRequest } from "../../../graphql.js";
 import { type ExecutionEvent, executionEventSchema } from "../../../utils/execution-output.js";
+import { SectionLabelResolver } from "../../../utils/integration/flows.js";
 import { tableFlags } from "../../../utils/table.js";
 
 export default Cli.command({
@@ -33,13 +34,17 @@ export default Cli.command({
     if (!executionId) throw new Error("Flow config test did not create an execution");
     yield { type: "execution", executionId, flowConfigId: flowConfig };
     if (tail) {
+      const sectionLabels = new SectionLabelResolver(executionId);
       let nextCursor: string | undefined;
       while (true) {
         await sleep(500, undefined, { signal });
         const batch = await fetchInstanceLogs(executionId, nextCursor);
         if (!batch) continue;
         nextCursor = batch.cursor;
-        for (const log of batch.logs) {
+        const warning = await sectionLabels.resolve(batch.logs);
+        if (warning) yield { type: "warning", message: warning };
+        for (const node of batch.logs) {
+          const log = { ...node, sectionName: sectionLabels.sectionName(node) };
           const selected = columns?.split(",").map((name) => name.trim().toLowerCase());
           const data = selected
             ? Object.fromEntries(

@@ -20,6 +20,7 @@ const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>>
   dataSources: true,
   display: true,
   documentationUrl: true,
+  configurationInit: true,
   key: true,
   public: true,
   triggers: true,
@@ -62,7 +63,14 @@ export const confirmPublish = async ({
 };
 
 export const publishDefinition = async (
-  { actions, triggers, dataSources, connections, ...rest }: ComponentDefinition,
+  {
+    actions,
+    triggers,
+    dataSources,
+    connections,
+    serverFunctionDefinitions,
+    ...rest
+  }: ComponentDefinition,
   {
     comment,
     customer,
@@ -139,6 +147,7 @@ export const publishDefinition = async (
       triggers: triggerDefinitions,
       dataSources: dataSourceDefinitions,
       connections: connectionDefinitions,
+      serverFunctions: serverFunctionDefinitions,
       comment,
       customer,
       attributes: attributes ? JSON.stringify(attributes) : undefined,
