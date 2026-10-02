@@ -93,7 +93,7 @@ jobs:
       - name: Publish to npm
         run: |
           if [[ "$VERSION" == *preview* ]]; then
-            npm publish --tag preview
+            npm publish --tag "preview-${VERSION%%.*}"
           else
             npm publish
           fi

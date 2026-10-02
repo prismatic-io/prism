@@ -65,3 +65,10 @@ run = """
 gh workflow run release.yml -f bump="$usage_bump"
 echo "Release workflow triggered with bump=$usage_bump"
 """
+
+[tasks."release:preview11"]
+description = "Temporary task: release a Prism 11 preview from next to npm's preview-11 tag"
+run = """
+gh workflow run release.yml --ref next -f bump=preview
+echo "Prism 11 preview release workflow triggered from next"
+"""
