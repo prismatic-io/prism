@@ -56,7 +56,25 @@ beforeEach(async () => {
   state.directory = await mkdtemp(join(tmpdir(), "prism-cni-processing-"));
   await writeFile(
     join(state.directory, "index.js"),
-    'module.exports = { default: { key: "cni-key", display: {}, codeNativeIntegrationYAML: "definition" } };',
+    `module.exports = { default: { key: "cni-key", display: {},
+      actions: { execute: { perform: () => {} } },
+      codeNativeIntegrationYAML: ${JSON.stringify(
+        JSON.stringify({
+          isCodeNative: true,
+          flows: [
+            {
+              name: "Test",
+              steps: [
+                {
+                  isTrigger: true,
+                  action: { key: "webhook", component: { key: "webhook-triggers" } },
+                },
+                { action: { key: "execute", component: { key: "cni-key" } } },
+              ],
+            },
+          ],
+        }),
+      )} } };`,
   );
   state.upload.mockReset().mockResolvedValue(undefined);
   state.gql.mockReset();
@@ -154,7 +172,9 @@ describe("Code Native import waits for component publication", () => {
     expect(state.writeMetadata).not.toHaveBeenCalled();
 
     await vi.advanceTimersByTimeAsync(2000);
-    expect(await completed).toEqual({ value: { integrationId: "integration-1" } });
+    expect(await completed).toEqual({
+      value: { integrationId: "integration-1", componentId: "component-version-7" },
+    });
     expect(events.slice(events.indexOf("available"))).toEqual(
       flags.includes("--no-wait")
         ? ["available", "import"]
@@ -222,7 +242,9 @@ describe("optional integration import readiness", () => {
     await vi.advanceTimersByTimeAsync(118_000);
     expect(settled).toBe(false);
     await vi.advanceTimersByTimeAsync(2000);
-    expect(await completed).toEqual({ value: { integrationId: "integration-1" } });
+    expect(await completed).toEqual({
+      value: { integrationId: "integration-1", componentId: "component-version-7" },
+    });
     expect(events.at(-1)).toBe("integration-ready");
     expect(events.filter((event) => event === "available")).toHaveLength(1);
     expect(vi.getTimerCount()).toBe(0);
@@ -238,7 +260,9 @@ describe("optional integration import readiness", () => {
     await vi.advanceTimersByTimeAsync(118_000);
     expect(events).not.toContain("import");
     await vi.advanceTimersByTimeAsync(2000);
-    expect(await completed).toEqual({ value: { integrationId: "integration-1" } });
+    expect(await completed).toEqual({
+      value: { integrationId: "integration-1", componentId: "component-version-7" },
+    });
     expect(events.slice(-2)).toEqual(["available", "import"]);
     expect(events).not.toContain("integration-processing");
     expect(vi.getTimerCount()).toBe(0);

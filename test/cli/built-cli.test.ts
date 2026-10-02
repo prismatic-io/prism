@@ -65,6 +65,13 @@ describe("built CLI", () => {
     expect(type.cli.options).toEqual(type.enum);
   });
 
+  it("exposes local integration validation through discovery", () => {
+    const result = run("integrations", "validate", "--schema");
+    expect(result.status, result.stderr).toBe(0);
+    for (const field of ["entrypoint", "componentKey", "flowCount", "valid"])
+      expect(result.stdout).toContain(field);
+  });
+
   it("rejects unexpected positional arguments", () => {
     const result = run("--agent", "profiles:list", "unexpected");
     expect(result.status, result.stderr || result.stdout).toBe(2);
