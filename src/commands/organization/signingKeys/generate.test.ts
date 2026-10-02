@@ -71,7 +71,34 @@ describe("organization:signing-keys:generate", () => {
     await writeFile(privateKeyFile, "existing");
     await expect(
       runCommand(Command, ["--agent", "--yes", "--private-key-file", privateKeyFile]),
-    ).rejects.toMatchObject({ code: "EEXIST" });
+    ).rejects.toMatchObject({
+      code: "EEXIST",
+      hint: "No signing key was generated. Retry --private-key-file with a new unused path; preserve the existing file.",
+    });
+    expect(generated).toBe(0);
+    expect(await readFile(privateKeyFile, "utf8")).toBe("existing");
+
+    const freshPath = join(directory, "new-key.pem");
+    await expect(
+      runCommand(Command, ["--agent", "--yes", "--private-key-file", freshPath]),
+    ).resolves.toEqual({ privateKeyFile: freshPath });
+    expect(generated).toBe(1);
+    expect(await readFile(privateKeyFile, "utf8")).toBe("existing");
+  });
+
+  it("preserves the ordinary existing-file error outside agent mode", async () => {
+    const privateKeyFile = join(directory, "key.pem");
+    await writeFile(privateKeyFile, "existing");
+    const error = await runCommand(Command, [
+      "--no-agent",
+      "--private-key-file",
+      privateKeyFile,
+    ]).catch((error: unknown) => error);
+    expect(error).toMatchObject({
+      code: "EEXIST",
+      message: expect.stringContaining("file already exists"),
+    });
+    expect((error as { hint?: string }).hint).toBeUndefined();
     expect(generated).toBe(0);
     expect(await readFile(privateKeyFile, "utf8")).toBe("existing");
   });

@@ -51,7 +51,13 @@ export default Cli.command({
 
     // Claim the file before generating: the private key cannot be retrieved again,
     // so an unwritable or existing path must fail while nothing has changed.
-    const file = await open(privateKeyFile, "wx", 0o600);
+    const file = await open(privateKeyFile, "wx", 0o600).catch((error: NodeJS.ErrnoException) => {
+      if (context.agent && error.code === "EEXIST")
+        Object.assign(error, {
+          hint: "No signing key was generated. Retry --private-key-file with a new unused path; preserve the existing file.",
+        });
+      throw error;
+    });
     let written = false;
     try {
       await file.writeFile(await generateSigningKey());
