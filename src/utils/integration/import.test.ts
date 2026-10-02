@@ -2,6 +2,7 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { temporaryDirectoryTask } from "tempy";
 import { describe, expect, it, vi } from "vitest";
+import { dumpYaml } from "../serialize.js";
 import {
   compareConfigVars,
   getIntegrationDefinition,
@@ -44,6 +45,78 @@ describe("loadCodeNativeIntegrationEntryPoint", () => {
 });
 
 describe("compareConfigVars", () => {
+  const configuration = {
+    instance: { schema: { type: "object" }, version: "instance-v1" },
+    userLevel: { schema: { type: "object" }, version: "user-v1" },
+  };
+  const instanceConnection = { key: "instance.api", dataType: "connection" };
+  const userConnection = { key: "userLevel.api", dataType: "connection" };
+  const legacyPages = [{ elements: [{ type: "configVar", value: instanceConnection.key }] }];
+
+  it.each([
+    {
+      name: "scoped configuration without pages or config vars",
+      current: { configuration },
+      next: { configuration },
+      missing: [],
+    },
+    {
+      name: "unchanged scoped connection declarations",
+      current: { configuration, requiredConfigVars: [instanceConnection, userConnection] },
+      next: { configuration, requiredConfigVars: [instanceConnection, userConnection] },
+      missing: [],
+    },
+    {
+      name: "removed user-level connection declaration",
+      current: { configuration, requiredConfigVars: [instanceConnection, userConnection] },
+      next: { configuration, requiredConfigVars: [instanceConnection] },
+      missing: [userConnection.key],
+    },
+    {
+      name: "additional scoped connection declarations",
+      current: { configuration, requiredConfigVars: [instanceConnection] },
+      next: { configuration, requiredConfigVars: [instanceConnection, userConnection] },
+      missing: [],
+    },
+    {
+      name: "legacy pages replaced by scoped configuration",
+      current: { configPages: legacyPages },
+      next: { configuration, requiredConfigVars: [instanceConnection] },
+      missing: [],
+    },
+    {
+      name: "scoped configuration replaced by legacy pages",
+      current: { configuration, requiredConfigVars: [instanceConnection] },
+      next: { configPages: legacyPages },
+      missing: [],
+    },
+    {
+      name: "removed declared connection not represented on a legacy page",
+      current: {
+        configPages: legacyPages,
+        requiredConfigVars: [instanceConnection, userConnection],
+      },
+      next: { configPages: legacyPages, requiredConfigVars: [instanceConnection] },
+      missing: [userConnection.key],
+    },
+    {
+      name: "an explicitly empty declaration list",
+      current: { configPages: legacyPages, requiredConfigVars: [] },
+      next: { configuration },
+      missing: [],
+    },
+  ])("compares $name", async ({ current, next, missing }) => {
+    await expect(compareConfigVars(dumpYaml(current), dumpYaml(next))).resolves.toEqual(missing);
+  });
+
+  it.each([
+    ["", "name: Next"],
+    ["name: Current", ""],
+  ])("rejects an empty definition", async (current, next) => {
+    await expect(compareConfigVars(current, next)).rejects.toThrow(
+      "Cannot compare config vars against an empty integration definition.",
+    );
+  });
   it("should correctly identify missing config vars", async () => {
     const originalYAML = `
       configPages:

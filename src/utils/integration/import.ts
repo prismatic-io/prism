@@ -431,28 +431,12 @@ export const compareConfigVars = async (current: string, next: string): Promise<
     throw new Error("Cannot compare config vars against an empty integration definition.");
   }
 
-  const requiredMatches: Record<string, boolean> = {};
-  // The current definition contains the absolutely required config vars.
-  currentDef.configPages.forEach((page) => {
-    page.elements.forEach((element) => {
-      requiredMatches[element.value] = false;
-    });
-  });
+  const getConfigVarKeys = ({ requiredConfigVars, configPages }: IntegrationObjectFromYAML) =>
+    requiredConfigVars?.map(({ key }) => key) ??
+    (configPages ?? []).flatMap(({ elements }) => elements.map(({ value }) => value));
 
-  // It's OK for the new integration to have a superset of the required config vars.
-  nextDef.configPages.forEach((page) => {
-    page.elements.forEach((element) => {
-      requiredMatches[element.value] = true;
-    });
-  });
-
-  // Return missing config vars.
-  return (
-    Object.entries(requiredMatches)
-      // biome-ignore lint/correctness/noUnusedFunctionParameters: TODO
-      .filter(([key, match]) => !match)
-      .map(([key]) => key)
-  );
+  const nextKeys = new Set(getConfigVarKeys(nextDef));
+  return [...new Set(getConfigVarKeys(currentDef))].filter((key) => !nextKeys.has(key));
 };
 
 export const extractYAMLFromPath = async (path: string): Promise<string> => {

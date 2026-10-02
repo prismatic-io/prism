@@ -13,7 +13,15 @@ export const executionEventSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("log"),
     executionId: z.string(),
-    data: z.object({ timestamp: z.string(), severity: z.string(), message: z.string() }).partial(),
+    data: z
+      .object({
+        timestamp: z.string(),
+        severity: z.string(),
+        message: z.string(),
+        sectionId: z.string().nullable(),
+        sectionName: z.string().nullable(),
+      })
+      .partial(),
   }),
   z.object({
     type: z.literal("step-result"),

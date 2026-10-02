@@ -1,6 +1,7 @@
 import inquirer from "inquirer";
-import { requireInteractiveInput } from "../../command.js";
+import { commandSignal, requireInteractiveInput } from "../../command.js";
 import { GetExecutionLogsDocument as GET_EXECUTION_LOGS } from "../../graphql/executions/getExecutionLogs.generated.js";
+import { GetExecutionSectionsDocument } from "../../graphql/executions/getExecutionSections.generated.js";
 import { GetExecutionStepResultsDocument as GET_EXECUTION_STEP_RESULTS } from "../../graphql/executions/getExecutionStepResults.generated.js";
 import { IsCniExecutionCompleteDocument as IS_CNI_EXECUTION_COMPLETE } from "../../graphql/executions/isCniExecutionComplete.generated.js";
 import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getIntegrationFlows.generated.js";
@@ -174,4 +175,47 @@ export async function selectFlowPrompt(
   });
 
   return selectedFlow;
+}
+
+/** Labels are cached only for this execution; unmirrored sections are retried. */
+export class SectionLabelResolver {
+  private readonly labels = new Map<string, string>();
+
+  constructor(private readonly executionId: string) {}
+
+  async resolve(logs: ReadonlyArray<{ sectionId?: string | null }>): Promise<string | undefined> {
+    const signal = commandSignal();
+    signal?.throwIfAborted();
+    const sectionIds = [
+      ...new Set(
+        logs.flatMap(({ sectionId }) =>
+          sectionId && !this.labels.has(sectionId) ? [sectionId] : [],
+        ),
+      ),
+    ];
+    if (!sectionIds.length) return;
+    try {
+      // Stay within the API's connection page limit without dropping later sections.
+      for (let offset = 0; offset < sectionIds.length; offset += 100) {
+        signal?.throwIfAborted();
+        const { executionSections } = await gqlRequest({
+          document: GetExecutionSectionsDocument,
+          variables: {
+            executionId: this.executionId,
+            sectionIds: sectionIds.slice(offset, offset + 100),
+          },
+        });
+        for (const node of executionSections.nodes) {
+          if (node?.sectionId) this.labels.set(node.sectionId, node.label);
+        }
+      }
+    } catch (error) {
+      signal?.throwIfAborted();
+      return `There was an error fetching execution section labels: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  }
+
+  sectionName(log: { sectionId?: string | null }): string | null {
+    return log.sectionId ? (this.labels.get(log.sectionId) ?? log.sectionId) : null;
+  }
 }

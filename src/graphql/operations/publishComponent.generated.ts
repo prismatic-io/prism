@@ -313,6 +313,10 @@ export type TriggerDefinitionInput = {
 };
 
 export type PublishComponentMutationVariables = Exact<{
+  serverFunctions?:
+    | Array<Types.ServerFunctionDefinitionInput | null | undefined>
+    | null
+    | undefined;
   definition: Types.ComponentDefinitionInput;
   actions: Array<Types.ActionDefinitionInput | null | undefined> | Types.ActionDefinitionInput;
   triggers?:
@@ -408,6 +412,17 @@ export const PublishComponentDocument = {
         },
         {
           kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "serverFunctions" } },
+          type: {
+            kind: "ListType",
+            type: {
+              kind: "NamedType",
+              name: { kind: "Name", value: "ServerFunctionDefinitionInput" },
+            },
+          },
+        },
+        {
+          kind: "VariableDefinition",
           variable: { kind: "Variable", name: { kind: "Name", value: "comment" } },
           type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
         },
@@ -459,6 +474,11 @@ export const PublishComponentDocument = {
                       kind: "ObjectField",
                       name: { kind: "Name", value: "connections" },
                       value: { kind: "Variable", name: { kind: "Name", value: "connections" } },
+                    },
+                    {
+                      kind: "ObjectField",
+                      name: { kind: "Name", value: "serverFunctions" },
+                      value: { kind: "Variable", name: { kind: "Name", value: "serverFunctions" } },
                     },
                     {
                       kind: "ObjectField",

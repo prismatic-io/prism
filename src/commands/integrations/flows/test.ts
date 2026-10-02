@@ -16,6 +16,7 @@ import {
   type IntegrationFlow,
   isCniExecutionComplete,
   resolveFlow,
+  SectionLabelResolver,
 } from "../../../utils/integration/flows.js";
 import { getPrismMetadata } from "../../../utils/integration/metadata.js";
 import { getIntegrationSystemInstance } from "../../../utils/integration/query.js";
@@ -391,6 +392,7 @@ export default Cli.command({
       };
     const startTime = Date.now();
     const deadline = startTime + (timeout ?? TIMEOUT_SECONDS) * 1000;
+    const sectionLabels = new SectionLabelResolver(executionId);
     let logCursor: string | undefined;
     let stepCursor: string | undefined;
     let completed = false;
@@ -406,9 +408,13 @@ export default Cli.command({
         const edges = result.logs.edges;
         if (edges?.length) {
           logCursor = edges.at(-1)?.cursor;
+          const warning = await sectionLabels.resolve(
+            edges.flatMap((edge) => (edge?.node ? [edge.node] : [])),
+          );
+          if (warning) yield { type: "warning", message: warning };
           for (const edge of edges) {
             if (!edge?.node) continue;
-            const log = edge.node;
+            const log = { ...edge.node, sectionName: sectionLabels.sectionName(edge.node) };
             if (resultFilePath) await fs.appendFile(resultFilePath, `${JSON.stringify(log)}\n`);
             yield { type: "log", executionId, data: log };
           }

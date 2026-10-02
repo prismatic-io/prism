@@ -1,5 +1,8 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { graphql, HttpResponse, http } from "msw";
 import { setupServer } from "msw/node";
+import { temporaryDirectoryTask } from "tempy";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
 import { getAuthenticatedContext } from "../../../auth.js";
@@ -346,7 +349,9 @@ describe("native agent tail output", () => {
       ...(jsonl ? ["--jsonl"] : []),
     ]);
     expect(result).toEqual(
-      expect.arrayContaining([{ type: "log", executionId: "execution-id", data: log }]),
+      expect.arrayContaining([
+        { type: "log", executionId: "execution-id", data: { ...log, sectionName: null } },
+      ]),
     );
     for (const event of result as unknown[])
       expect(TestFlowCommand.output.safeParse(event).success).toBe(true);
@@ -410,4 +415,49 @@ it("returns the named execution ID and typed trigger response in agent mode", as
   );
   for (const event of result as unknown[])
     expect(TestFlowCommand.output.safeParse(event).success).toBe(true);
+});
+
+it("preserves section metadata in native events and result files", async () => {
+  await temporaryDirectoryTask(async (directory) => {
+    const log = {
+      timestamp: "2026-09-08T00:00:00Z",
+      severity: LogSeverityLevel.Info,
+      message: "hello",
+      sectionId: "section-id",
+    };
+    const url = "https://hooks.example.com/section-tail";
+    server.use(
+      http.post(url, () => HttpResponse.json({ executionId: "execution-id" })),
+      api.query("GetExecutionLogs", () => HttpResponse.json(buildGetExecutionLogsResponse([log]))),
+      api.query("GetExecutionSections", ({ variables }) => {
+        expect(variables).toEqual({ executionId: "execution-id", sectionIds: ["section-id"] });
+        return HttpResponse.json({
+          data: {
+            executionSections: { nodes: [{ sectionId: "section-id", label: "Configuration" }] },
+          },
+        });
+      }),
+      api.query("IsCniExecutionComplete", () =>
+        HttpResponse.json(buildIsCniExecutionCompleteResponse(2)),
+      ),
+    );
+    const resultFile = join(directory, "logs.jsonl");
+    const result = await runCommand(TestFlowCommand, [
+      "--agent",
+      "--yes",
+      "--flow-url",
+      url,
+      "--tail-logs",
+      "--cni-auto-end",
+      "--result-file",
+      resultFile,
+    ]);
+    const data = { ...log, sectionName: "Configuration" };
+    expect(result).toEqual(
+      expect.arrayContaining([{ type: "log", executionId: "execution-id", data }]),
+    );
+    expect(JSON.parse((await readFile(resultFile, "utf8")).trim())).toEqual(data);
+    for (const event of result as unknown[])
+      expect(TestFlowCommand.output.parse(event)).toEqual(event);
+  });
 });
