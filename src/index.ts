@@ -78,6 +78,7 @@ import IntegrationsOpenCommand from "./commands/integrations/open.js";
 import IntegrationsPublishCommand from "./commands/integrations/publish.js";
 import IntegrationsSetDebugCommand from "./commands/integrations/set-debug.js";
 import IntegrationsUpdateCommand from "./commands/integrations/update.js";
+import IntegrationsValidateCommand from "./commands/integrations/validate.js";
 import IntegrationsValidateYamlCommand from "./commands/integrations/validate-yaml.js";
 import IntegrationsVersionsCommand from "./commands/integrations/versions/index.js";
 import LoginCommand from "./commands/login/index.js";
@@ -148,6 +149,7 @@ export const Commands = {
   "integrations:publish": prepareCommand(IntegrationsPublishCommand, { mutates: true }),
   "integrations:set-debug": prepareCommand(IntegrationsSetDebugCommand, { mutates: true }),
   "integrations:update": prepareCommand(IntegrationsUpdateCommand, { mutates: true }),
+  "integrations:validate": prepareCommand(IntegrationsValidateCommand, {}),
   "integrations:validate-yaml": prepareCommand(IntegrationsValidateYamlCommand, {}),
   me: prepareCommand(MeCommand, {}),
   "me:token": prepareCommand(MeTokenCommand, {}),

@@ -31,6 +31,7 @@ import { startAction, stopAction } from "../progress.js";
 import { loadYaml } from "../serialize.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
+import { validateCodeNativeDefinition } from "./validate.js";
 
 const require = createRequire(import.meta.url);
 
@@ -384,6 +385,9 @@ interface CodeNativeIntegrationEntrypoint {
 }
 
 export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
+  entrypoint: string;
+  componentKey: string;
+  flowCount: number;
   integrationDefinition: string;
   componentDefinition: ComponentDefinition;
   publishingMetadata?: PublishingMetadata;
@@ -404,7 +408,11 @@ export const loadCodeNativeIntegrationEntryPoint = async (): Promise<{
     });
   }
 
+  const registration = validateCodeNativeDefinition(componentDefinition);
+
   return {
+    ...registration,
+    entrypoint: entrypointPath,
     integrationDefinition: componentDefinition.codeNativeIntegrationYAML,
     componentDefinition: componentDefinition,
     publishingMetadata: componentDefinition.publishingMetadata,

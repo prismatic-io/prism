@@ -46,7 +46,12 @@ export type PaginationFlags = {
 
 export const paginationFlags = () => ({
   after: z.string().optional().describe("Resume listing after this API cursor"),
-  all: z.boolean().optional().describe("Fetch every page instead of returning one resumable page"),
+  all: z
+    .boolean()
+    .optional()
+    .describe(
+      "Fetch every page before applying local table filters, instead of returning one resumable page",
+    ),
   first: z.coerce
     .number()
     .int()
@@ -139,7 +144,9 @@ const allFlags = () => ({
   filter: z
     .string()
     .optional()
-    .describe("filter property by regex, ex: name=^foo (prefix key with - to invert)"),
+    .describe(
+      "Filter fetched rows locally by case-sensitive regex (matches anywhere); use ^ and $ for exact matches, prefix key with - to invert. Format: name=pattern",
+    ),
   header: z
     .boolean()
     .optional()

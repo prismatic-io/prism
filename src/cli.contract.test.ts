@@ -95,6 +95,7 @@ const extendedDescriptionIds = new Set([
   "integrations:flows:test",
 ]);
 const additiveCommandIds = new Set([
+  "integrations:validate",
   "components:actions:get",
   "components:connections:get",
   "components:connections:list",
@@ -239,7 +240,9 @@ describe("legacy command contract", () => {
         }
         expect(field.kind === "boolean" ? "boolean" : "option").toBe(old?.type);
         if (old?.default !== undefined) expect(field.default).toEqual(old.default);
-        if (!name.startsWith("no-")) expect(field.description).toBe(old?.description);
+        // Filter help now explains its unchanged regex and local-pagination semantics.
+        if (!name.startsWith("no-") && name !== "filter")
+          expect(field.description).toBe(old?.description);
         expect(field.multiple ?? false).toBe(old?.multiple ?? false);
         if (id === "customers:users:update" && ["dark-mode", "dark-mode-os-sync"].includes(name)) {
           // These values were already restricted by the handler; the native input schema now advertises them.

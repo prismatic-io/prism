@@ -114,7 +114,7 @@ export const validateDefinition = async (
   }
 
   const connectionIconsValid = await Promise.all(
-    (connections ?? []).map(({ iconPath, avatarIconPath }) => [
+    (connections ?? []).flatMap(({ iconPath, avatarIconPath }) => [
       validateIcon(iconPath),
       validateIcon(avatarIconPath),
     ]),
