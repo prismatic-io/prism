@@ -11,7 +11,7 @@ export type IntegrationDraftVersionQueryVariables = Exact<{
 }>;
 
 export type IntegrationDraftVersionQuery = {
-  integration: { id: string; versionNumber: number } | null;
+  integration: { id: string; versionNumber: number; isCodeNative: boolean } | null;
 };
 
 export const IntegrationDraftVersionDocument = {
@@ -48,6 +48,7 @@ export const IntegrationDraftVersionDocument = {
               kind: "SelectionSet",
               selections: [
                 { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "isCodeNative" } },
                 { kind: "Field", name: { kind: "Name", value: "versionNumber" } },
               ],
             },
