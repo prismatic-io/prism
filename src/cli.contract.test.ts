@@ -95,6 +95,7 @@ const extendedDescriptionIds = new Set([
   "integrations:flows:test",
 ]);
 const additiveCommandIds = new Set([
+  "integrations:validate",
   "components:actions:get",
   "components:connections:get",
   "components:connections:list",

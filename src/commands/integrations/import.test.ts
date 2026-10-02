@@ -36,6 +36,9 @@ configPages:
     ),
     loadCodeNativeIntegrationEntryPoint: vi.fn(() =>
       Promise.resolve({
+        entrypoint: "/project/dist/index.js",
+        componentKey: "cni",
+        flowCount: 1,
         integrationDefinition: `
 configPages:
   - elements:
@@ -107,7 +110,7 @@ configPages:
         timeoutSeconds: 300,
       });
       expect(logSpy).toHaveBeenCalledWith("imported-cni-id");
-      expect(result).toEqual({ integrationId: "imported-cni-id" });
+      expect(result).toEqual({ integrationId: "imported-cni-id", componentId: "comp_1" });
     });
 
     it("should pass test API keys to Code Native import", async () => {

@@ -22,7 +22,9 @@ import { startAction, stopAction } from "../../utils/progress.js";
 import { confirm as confirmPrompt } from "../../utils/prompts.js";
 
 export default Cli.command({
-  output: z.object({ integrationId: z.string() }).extend(warningsOutput),
+  output: z
+    .object({ integrationId: z.string(), componentId: z.string().optional() })
+    .extend(warningsOutput),
   description: "Import an Integration using a YAML definition file or a Code Native Integration",
   options: z.object({
     path: z
@@ -131,12 +133,13 @@ There will be no way to restore the existing draft. If you wish to save it, eith
       }
     }
 
-    const { integrationId: integrationImportId } = path
+    const imported = path
       ? {
           integrationId: await importYamlIntegration(path, integrationId, iconPath, replace),
         }
       : await importCodeNativeIntegration(integrationId, replace, testApiKey, componentWait);
 
+    const { integrationId: integrationImportId } = imported;
     writeCommandStatus(integrationImportId);
 
     if (open) {
@@ -168,7 +171,7 @@ There will be no way to restore the existing draft. If you wish to save it, eith
       stopAction();
     }
 
-    return context.ok({ integrationId: integrationImportId }, { cta });
+    return context.ok(imported, { cta });
   },
   alias: { replace: "r", open: "o", integrationId: "i", path: "p" },
 });
