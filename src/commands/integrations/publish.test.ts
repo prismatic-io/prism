@@ -25,11 +25,11 @@ const operationName = (call: unknown[]) =>
   (call[0] as { document: { definitions: Array<{ name: { value: string } }> } }).document
     .definitions[0].name.value;
 
-const mockPlatform = () =>
+const mockPlatform = (isCodeNative = true) =>
   mockGqlRequest.mockImplementation(({ document }) => {
     const name = document.definitions[0].name.value;
     if (name === "integrationDraftVersion") {
-      return Promise.resolve({ integration: { id: "int_1", versionNumber: 4 } });
+      return Promise.resolve({ integration: { id: "int_1", versionNumber: 4, isCodeNative } });
     }
     if (name === "publishIntegration") {
       return Promise.resolve({ publishIntegration: { integration: { id: "int_1" }, errors: [] } });
@@ -42,6 +42,31 @@ describe("integrations publish", () => {
     vi.restoreAllMocks();
     mockGqlRequest.mockReset();
     mockWaitForIntegrationVersion.mockReset();
+  });
+
+  it.each([
+    false,
+    true,
+  ])("adds agent provenance without losing commit attributes (agent=%s)", async (agent) => {
+    mockPlatform();
+    await runCommand(PublishCommand, [
+      "int_1",
+      "--no-wait",
+      "--commitHash",
+      "abc123",
+      ...(agent ? ["--agent", "--yes"] : []),
+    ]);
+    const attributes = JSON.parse(mockGqlRequest.mock.calls[1][0].variables.attributes);
+    expect(attributes).toEqual({
+      commitHash: "abc123",
+      ...(agent ? { provenance: { modified: "prism-agent" } } : {}),
+    });
+  });
+
+  it("does not collect agent provenance for low-code integrations", async () => {
+    mockPlatform(false);
+    await runCommand(PublishCommand, ["int_1", "--no-wait", "--agent", "--yes"]);
+    expect(mockGqlRequest.mock.calls[1][0].variables.attributes).toBeUndefined();
   });
 
   it("publishes and waits for the new version to become available", async () => {

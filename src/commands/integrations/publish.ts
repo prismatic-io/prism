@@ -46,16 +46,7 @@ export default Cli.command({
     } = context;
     const wait = resolveWaitOptions(context.options);
 
-    const didProvideAttributes =
-      Boolean(commitHash) || Boolean(repoUrl) || Boolean(pullRequestUrl) || Boolean(commitUrl);
-    const attributes = {
-      commitHash,
-      commitUrl,
-      repoUrl,
-      pullRequestUrl,
-    };
-
-    const { versionNumber } = requireResource(
+    const { versionNumber, isCodeNative } = requireResource(
       (
         await gqlRequest({
           document: INTEGRATION_DRAFT_VERSION,
@@ -64,6 +55,21 @@ export default Cli.command({
       ).integration,
       "Integration",
     );
+
+    const provenance = isCodeNative && context.agent ? { modified: "prism-agent" } : undefined;
+    const didProvideAttributes =
+      Boolean(provenance) ||
+      Boolean(commitHash) ||
+      Boolean(repoUrl) ||
+      Boolean(pullRequestUrl) ||
+      Boolean(commitUrl);
+    const attributes = {
+      provenance,
+      commitHash,
+      commitUrl,
+      repoUrl,
+      pullRequestUrl,
+    };
 
     const result = await gqlRequest({
       document: PUBLISH_INTEGRATION,
