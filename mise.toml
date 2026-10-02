@@ -44,13 +44,21 @@ description = "Bump package.json version (set BUMP_TYPE=patch|minor|major|previe
 run = """
 if [ "$BUMP_TYPE" = "preview" ]; then
   CURRENT_VERSION=$(node -p "require('./package.json').version")
-  if [[ "$CURRENT_VERSION" == *-preview.* ]]; then
-    npm version prerelease --preid=preview --no-git-tag-version
-  else
-    npm version "$CURRENT_VERSION-preview.0" --no-git-tag-version
-  fi
+  case "$CURRENT_VERSION" in
+    *-preview.*)
+      BASE_VERSION=${CURRENT_VERSION%%-preview.*}
+      PREVIEW_NUMBER=${CURRENT_VERSION#*-preview.}
+      # Recover versions with a duplicate preview suffix from the old bump task.
+      PREVIEW_NUMBER=${PREVIEW_NUMBER%%-preview.*}
+      case "$PREVIEW_NUMBER" in
+        ''|*[!0-9]*) echo "Invalid preview version: $CURRENT_VERSION" >&2; exit 1 ;;
+      esac
+      npm version "$BASE_VERSION-preview.$((PREVIEW_NUMBER + 1))" --no-git-tag-version
+      ;;
+    *) npm version "$CURRENT_VERSION-preview.0" --no-git-tag-version ;;
+  esac
 else
-  npm version $BUMP_TYPE --no-git-tag-version
+  npm version "$BUMP_TYPE" --no-git-tag-version
 fi
 """
 
