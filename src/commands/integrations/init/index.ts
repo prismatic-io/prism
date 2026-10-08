@@ -29,6 +29,10 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
       command: "<%= config.bin %> <%= command.id %> acme-integration",
     },
     {
+      description: "Initialize an integration with headless configuration:",
+      command: "<%= config.bin %> <%= command.id %> acme-integration --configuration-type headless",
+    },
+    {
       description: "Install dependencies:",
       command: "npm install",
     },
@@ -50,6 +54,11 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
     }),
   };
   static flags = {
+    "configuration-type": Flags.option({
+      options: ["hosted", "headless"] as const,
+      default: "hosted",
+      description: "Configuration experience to scaffold",
+    })(),
     clean: Flags.boolean({
       description: "Generate clean scaffold without example code",
       default: false,
@@ -65,7 +74,7 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
   async run() {
     const {
       args: { name },
-      flags: { clean, toolchain: toolchainName },
+      flags: { clean, toolchain: toolchainName, "configuration-type": configurationType },
     } = await this.parse(InitializeIntegration);
 
     const toolchain = getToolchain(toolchainName);
@@ -100,6 +109,7 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
         url: registryUrl,
         scope: "@component-manifests",
       },
+      configurationType,
     };
 
     const templateSuffix = clean ? ".clean" : "";
@@ -108,6 +118,14 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
         return file;
       }
       const normalizedFile = file.split(path.sep).join("/");
+      if (configurationType === "headless") {
+        if (["src/index.ts", ".spectral/index.ts"].includes(normalizedFile)) {
+          return `${file}.headless.ejs`;
+        }
+        if (["src/flows.ts", "src/flows.test.ts", "src/client.ts"].includes(normalizedFile)) {
+          return `${file}.clean.ejs`;
+        }
+      }
       if (CLEANABLE_TEMPLATES.includes(normalizedFile)) {
         return `${file}${templateSuffix}.ejs`;
       }
@@ -120,7 +138,7 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
       path.join("src", "client.ts"),
       path.join("src", "flows.ts"),
       path.join("src", "flows.test.ts"),
-      path.join("src", "configPages.ts"),
+      path.join("src", configurationType === "headless" ? "configuration.ts" : "configPages.ts"),
       path.join("src", "componentRegistry.ts"),
       path.join("src", "markdown.d.ts"),
       path.join(".spectral", "index.ts"),
@@ -149,6 +167,7 @@ export default class InitializeIntegration extends PrismaticBaseCommand {
       ...toolchain.packageJson,
       dependencies: {
         "@prismatic-io/spectral": "*",
+        ...(configurationType === "headless" ? { zod: "^4.0.0" } : {}),
       },
       devDependencies: toolchain.devDependencies,
     });

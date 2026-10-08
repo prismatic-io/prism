@@ -37,8 +37,50 @@ describe("integrations:init", () => {
     process.chdir(basePath);
   });
 
+  it("rejects unsupported configuration types before creating a directory", async () => {
+    process.chdir(tempPath);
+    const name = "invalid-configuration-type";
+    await expect(
+      InitializeIntegration.run([name, "--configuration-type", "traditional"]),
+    ).rejects.toThrow();
+    expect(fs.existsSync(name)).toBe(false);
+  });
+
   for (const toolchain of TOOLCHAIN_NAMES) {
     describe(`${toolchain} toolchain`, () => {
+      for (const clean of [false, true]) {
+        it(`generates headless configuration with clean=${clean}`, async () => {
+          const name = `headless-${toolchain}-${clean}`;
+          process.chdir(tempPath);
+          try {
+            await InitializeIntegration.run([
+              name,
+              "--toolchain",
+              toolchain,
+              "--configuration-type",
+              "headless",
+              ...(clean ? ["--clean"] : []),
+            ]);
+            const index = await readFile("src/index.ts", "utf-8");
+            const configuration = await readFile("src/configuration.ts", "utf-8");
+            const augmentation = await readFile(".spectral/index.ts", "utf-8");
+            const flows = await readFile("src/flows.ts", "utf-8");
+            const manifest = JSON.parse(await readFile("package.json", "utf-8"));
+            expect(index).toContain("configuration: integrationConfiguration");
+            expect(index).not.toContain("configPages");
+            expect(configuration).toContain('version: "1"');
+            expect(configuration).toContain("configuration: {}");
+            expect(augmentation).toContain("integrationConfiguration: true");
+            expect(flows).not.toContain("./configPages");
+            expect(manifest.dependencies.zod).toBe("^4.0.0");
+            expect(fs.existsSync("src/configPages.ts")).toBe(false);
+          } finally {
+            process.chdir(tempPath);
+            fs.rmSync(path.join(tempPath, name), { recursive: true, force: true });
+          }
+        });
+      }
+
       describe("scaffold generation", () => {
         const integrationName = `test-integration-${toolchain}`;
 

@@ -6059,6 +6059,10 @@
           "command": "<%= config.bin %> <%= command.id %> acme-integration"
         },
         {
+          "description": "Initialize an integration with headless configuration:",
+          "command": "<%= config.bin %> <%= command.id %> acme-integration --configuration-type headless"
+        },
+        {
           "description": "Install dependencies:",
           "command": "npm install"
         },
@@ -6094,6 +6098,18 @@
           "name": "profile",
           "hasDynamicHelp": false,
           "multiple": false,
+          "type": "option"
+        },
+        "configuration-type": {
+          "description": "Configuration experience to scaffold",
+          "name": "configuration-type",
+          "default": "hosted",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "options": [
+            "hosted",
+            "headless"
+          ],
           "type": "option"
         },
         "clean": {
