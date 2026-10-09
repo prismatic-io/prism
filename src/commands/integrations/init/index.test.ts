@@ -70,7 +70,8 @@ describe("integrations:init", () => {
             expect(index).not.toContain("configPages");
             expect(configuration).toContain('version: "1"');
             expect(configuration).toContain("configuration: {}");
-            expect(augmentation).toContain("integrationConfiguration: true");
+            expect(augmentation).not.toContain("Experimental");
+            expect(augmentation).toContain("IntegrationDefinitionConfiguration");
             expect(flows).not.toContain("./configPages");
             expect(manifest.dependencies.zod).toBe("^4.0.0");
             expect(fs.existsSync("src/configPages.ts")).toBe(false);

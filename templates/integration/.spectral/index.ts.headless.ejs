@@ -4,10 +4,6 @@ type Configuration = typeof integrationConfiguration;
 type ComponentRegistry = typeof componentRegistry;
 
 declare module "@prismatic-io/spectral" {
-  interface Experimental {
-    integrationConfiguration: true;
-  }
-
   interface IntegrationDefinitionConfiguration extends Configuration {}
 
   interface IntegrationDefinitionComponentRegistry extends ComponentRegistry {}
