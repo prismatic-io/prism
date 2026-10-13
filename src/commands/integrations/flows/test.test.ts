@@ -461,3 +461,30 @@ it("preserves section metadata in native events and result files", async () => {
       expect(TestFlowCommand.output.parse(event)).toEqual(event);
   });
 });
+
+it.each([
+  "success",
+  42,
+  true,
+  null,
+  ["one", "two"],
+])("preserves synchronous JSON response %j", async (response) => {
+  const url = "https://example.com/synchronous-audit";
+  server.use(
+    http.post(url, () =>
+      HttpResponse.json(response, { headers: { "prismatic-executionid": "execution-id" } }),
+    ),
+  );
+  const result = await runCommand(TestFlowCommand, [
+    "--flow-url",
+    url,
+    "--sync",
+    "--agent",
+    "--yes",
+    "--quiet",
+  ]);
+  expect(result).toEqual([
+    { type: "execution", executionId: "execution-id", response },
+    { type: "completed", executionId: "execution-id", status: "completed" },
+  ]);
+});
