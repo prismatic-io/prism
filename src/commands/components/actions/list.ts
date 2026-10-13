@@ -8,7 +8,7 @@ import {
   tableFlags,
   tableOutputSchema,
 } from "../../../utils/table.js";
-import { memberColumns } from "../members.js";
+import { compatibleMemberColumns } from "../members.js";
 import { componentKeyArg, toSelector, versionOption, visibilityOptions } from "../schemas.js";
 
 export default Cli.command({
@@ -23,6 +23,8 @@ export default Cli.command({
       "important",
       "allowsBranching",
       "terminateExecution",
+      "componentid",
+      "componentkey",
       "componentKey",
       "componentVersion",
       "public",
@@ -64,11 +66,15 @@ export default Cli.command({
       );
       const result = printTable(
         items,
-        memberColumns(component, {
-          important: { extended: true },
-          allowsBranching: { extended: true },
-          terminateExecution: { extended: true },
-        }),
+        compatibleMemberColumns(
+          component,
+          {
+            important: { extended: true },
+            allowsBranching: { extended: true },
+            terminateExecution: { extended: true },
+          },
+          context.agent,
+        ),
         { ...flags },
       );
       return context.ok(

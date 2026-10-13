@@ -42,6 +42,7 @@ query listComponentMembers(
           dataSourceType
           isDetailDataSource
           detailDataSource {
+            label
             key
           }
           allowsBranching

@@ -5,8 +5,10 @@ import { TEST_PRISMATIC_URL } from "../../../vitest.setup.js";
 import { runCommand } from "../../test-command.js";
 import ActionsListCommand from "./actions/list.js";
 import ConnectionsListCommand from "./connections/list.js";
+import DataSourcesListCommand from "./data-sources/list.js";
 import GetCommand from "./get.js";
 import SearchCommand from "./search.js";
+import TriggersListCommand from "./triggers/list.js";
 
 const component = {
   id: "component-1",
@@ -221,6 +223,55 @@ describe("components:connections:list", () => {
           componentKey: "slack",
         },
       ],
+    });
+  });
+});
+
+describe("legacy component member tables", () => {
+  it.each([
+    { command: ActionsListCommand, extra: [] },
+    { command: TriggersListCommand, extra: [] },
+    { command: DataSourcesListCommand, extra: ["dataSourceType", "detailDataSource"] },
+  ])("preserves default and extended keys", async ({ command, extra }) => {
+    const plain = await runCommand(command, ["slack", "--no-agent", "--output", "json"]);
+    expect(Object.keys(plain.items[0])).toEqual([
+      "label",
+      "description",
+      ...extra.filter((key) => key === "dataSourceType"),
+    ]);
+    const extended = await runCommand(command, [
+      "slack",
+      "--no-agent",
+      "--extended",
+      "--output",
+      "json",
+    ]);
+    expect(Object.keys(extended.items[0])).toEqual([
+      "id",
+      "key",
+      "label",
+      "description",
+      ...extra,
+      "componentid",
+      "componentkey",
+    ]);
+    expect(extended.items[0]).toMatchObject({
+      componentid: component.id,
+      componentkey: component.key,
+    });
+    const selected = await runCommand(command, [
+      "slack",
+      "--no-agent",
+      "--columns",
+      "COMPONENTID,COMPONENTKEY,componentKey,componentVersion",
+      "--output",
+      "json",
+    ]);
+    expect(selected.items[0]).toEqual({
+      componentid: component.id,
+      componentkey: component.key,
+      componentKey: component.key,
+      componentVersion: component.versionNumber,
     });
   });
 });

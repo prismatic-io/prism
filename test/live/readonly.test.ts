@@ -53,7 +53,15 @@ async function compare(command: string, args: string[], context: TestContext) {
   records.set(command, oldRows);
   const schema = JSON.parse(await successfulCli(true, [command, "--schema", "--json"]));
   const paginated = Boolean(schema.options?.properties?.all);
-  const agentArgs = [command, ...args, "--agent", "--read-only", "--json"];
+  const memberList = /^components:(actions|triggers|data-sources):list$/.test(command);
+  const agentArgs = [
+    command,
+    ...args,
+    "--agent",
+    "--read-only",
+    "--json",
+    ...(memberList && oldRows.length ? ["--columns", Object.keys(oldRows[0]).join(",")] : []),
+  ];
   const result = JSON.parse(
     await successfulCli(true, [...agentArgs, ...(paginated ? ["--all"] : [])]),
   );
@@ -145,4 +153,32 @@ describe("published list compatibility", () => {
     if (!value) context.skip(`No fixture available from ${source}`);
     await compare(command, [String(value)], context);
   });
+});
+
+// Exercise nonempty public members instead of relying on the first (possibly empty) component.
+it.for([
+  { command: "components:actions:list", key: "http" },
+  { command: "components:triggers:list", key: "webhook-triggers" },
+  { command: "components:data-sources:list", key: "slack" },
+])("$command preserves nonempty public tables", async ({ command, key }, context) => {
+  await compare(command, [key, "--public"], context);
+  expect(records.get(command)?.length).toBeGreaterThan(0);
+  for (const display of [
+    [],
+    ["--columns", "componentid,componentkey,key"],
+    ["--columns", "label,description", "--csv"],
+  ]) {
+    const args = [
+      command,
+      key,
+      "--public",
+      ...display,
+      ...(display.includes("--csv") ? [] : ["--output", "json"]),
+    ];
+    const before = await successfulCli(false, args);
+    const after = await successfulCli(true, args);
+    if (display.includes("--csv"))
+      expect(after.split("\n").sort()).toEqual(before.split("\n").sort());
+    else expect(sorted(JSON.parse(after))).toEqual(sorted(JSON.parse(before)));
+  }
 });
