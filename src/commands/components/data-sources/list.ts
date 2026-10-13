@@ -8,7 +8,7 @@ import {
   tableFlags,
   tableOutputSchema,
 } from "../../../utils/table.js";
-import { memberColumns } from "../members.js";
+import { compatibleMemberColumns } from "../members.js";
 import { componentKeyArg, toSelector, versionOption, visibilityOptions } from "../schemas.js";
 
 export default Cli.command({
@@ -23,6 +23,8 @@ export default Cli.command({
       "dataSourceType",
       "isDetailDataSource",
       "detailDataSource",
+      "componentid",
+      "componentkey",
       "componentKey",
       "componentVersion",
       "public",
@@ -69,14 +71,18 @@ export default Cli.command({
       );
       const result = printTable(
         items,
-        memberColumns(component, {
-          dataSourceType: { header: "Type" },
-          isDetailDataSource: { extended: true },
-          detailDataSource: {
-            extended: true,
-            get: ({ detailDataSource }) => detailDataSource?.key ?? "",
+        compatibleMemberColumns(
+          component,
+          {
+            dataSourceType: { header: "Type" },
+            isDetailDataSource: { extended: true },
+            detailDataSource: {
+              extended: true,
+              get: ({ detailDataSource }) => detailDataSource?.key ?? "",
+            },
           },
-        }),
+          context.agent,
+        ),
         { ...flags },
       );
       return context.ok(

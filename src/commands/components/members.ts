@@ -16,3 +16,41 @@ export const memberColumns = (
   componentVersion: { extended: true, get: () => component.versionNumber },
   public: { extended: true, get: () => component.public },
 });
+
+// Keep script-facing tables stable while exposing catalog details through agent output
+// and explicit --columns selections.
+export const compatibleMemberColumns = (
+  component: ComponentIdentity,
+  extra: ColumnsConfig<MemberRow>,
+  agent: boolean,
+): ColumnsConfig<MemberRow> => {
+  const legacy: ColumnsConfig<MemberRow> = {
+    id: { minWidth: 8, extended: true },
+    key: { minWidth: 10, extended: true },
+    label: {},
+    description: {},
+    ...(extra.dataSourceType ? { dataSourceType: extra.dataSourceType } : {}),
+    ...(extra.detailDataSource
+      ? {
+          detailDataSource: {
+            extended: true,
+            header: "Detail Data Source",
+            get: (row: MemberRow) => row.detailDataSource?.label ?? "",
+          },
+        }
+      : {}),
+    componentid: { extended: true, get: () => component.id },
+    componentkey: { extended: true, get: () => component.key },
+  };
+  const modern = memberColumns(component, extra);
+  const primary = agent ? modern : legacy;
+  const secondary = agent ? legacy : modern;
+  return {
+    ...primary,
+    ...Object.fromEntries(
+      Object.entries(secondary)
+        .filter(([key]) => !(key in primary))
+        .map(([key, column]) => [key, { ...column, hidden: true }]),
+    ),
+  };
+};

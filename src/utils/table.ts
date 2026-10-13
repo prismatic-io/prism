@@ -11,6 +11,7 @@ import { dumpYaml } from "./serialize.js";
 export type ColumnDef<T> = {
   header?: string;
   extended?: boolean;
+  hidden?: boolean;
   minWidth?: number;
   get?: (row: T) => unknown;
 };
@@ -199,7 +200,7 @@ const csvEscape = (cell: string): string =>
 const buildKeyIndex = <T>(columns: ColumnsConfig<T>): Map<string, string> => {
   const index = new Map<string, string>();
   for (const [key, def] of Object.entries(columns)) {
-    index.set(key.toLowerCase(), key);
+    if (!def.hidden || !index.has(key.toLowerCase())) index.set(key.toLowerCase(), key);
     const header = (def.header ?? startCase(key)).toLowerCase();
     if (!index.has(header)) index.set(header, key);
   }
@@ -227,14 +228,14 @@ const pickDisplayColumns = <T>(
       .map((k) => k.trim())
       .filter(Boolean)
       .flatMap((input) => {
-        const key = index.get(input.toLowerCase());
+        const key = Object.hasOwn(columns, input) ? input : index.get(input.toLowerCase());
         if (!key || seen.has(key)) return [];
         seen.add(key);
         const col = all.find((c) => c.key === key);
         return col ? [col] : [];
       });
   }
-  return all.filter((c) => flags.extended || !columns[c.key].extended);
+  return all.filter((c) => !columns[c.key].hidden && (flags.extended || !columns[c.key].extended));
 };
 
 const project = <T>(data: T[], columns: ResolvedColumn<T>[]): Array<Record<string, unknown>> =>

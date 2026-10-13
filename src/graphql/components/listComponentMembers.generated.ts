@@ -92,7 +92,7 @@ export type ListComponentMembersQuery = {
           isDetailDataSource: boolean;
           allowsBranching: boolean;
           terminateExecution: boolean;
-          detailDataSource: { key: string } | null;
+          detailDataSource: { label: string; key: string } | null;
         }>;
         pageInfo: { hasNextPage: boolean; endCursor: string | null };
       };
@@ -311,6 +311,7 @@ export const ListComponentMembersDocument = {
                                     selectionSet: {
                                       kind: "SelectionSet",
                                       selections: [
+                                        { kind: "Field", name: { kind: "Name", value: "label" } },
                                         { kind: "Field", name: { kind: "Name", value: "key" } },
                                       ],
                                     },

@@ -8,7 +8,7 @@ import {
   tableFlags,
   tableOutputSchema,
 } from "../../../utils/table.js";
-import { memberColumns } from "../members.js";
+import { compatibleMemberColumns } from "../members.js";
 import { componentKeyArg, toSelector, versionOption, visibilityOptions } from "../schemas.js";
 
 export default Cli.command({
@@ -25,6 +25,8 @@ export default Cli.command({
       "scheduleSupport",
       "synchronousResponseSupport",
       "batchSupport",
+      "componentid",
+      "componentkey",
       "componentKey",
       "componentVersion",
       "public",
@@ -69,19 +71,23 @@ export default Cli.command({
       );
       const result = printTable(
         items,
-        memberColumns(component, {
-          isCommonTrigger: {
-            extended: true,
-            get: ({ isCommonTrigger }) => isCommonTrigger ?? false,
+        compatibleMemberColumns(
+          component,
+          {
+            isCommonTrigger: {
+              extended: true,
+              get: ({ isCommonTrigger }) => isCommonTrigger ?? false,
+            },
+            isPollingTrigger: {
+              extended: true,
+              get: ({ isPollingTrigger }) => isPollingTrigger ?? false,
+            },
+            scheduleSupport: { extended: true },
+            synchronousResponseSupport: { extended: true },
+            batchSupport: { extended: true },
           },
-          isPollingTrigger: {
-            extended: true,
-            get: ({ isPollingTrigger }) => isPollingTrigger ?? false,
-          },
-          scheduleSupport: { extended: true },
-          synchronousResponseSupport: { extended: true },
-          batchSupport: { extended: true },
-        }),
+          context.agent,
+        ),
         { ...flags },
       );
       return context.ok(
