@@ -367,12 +367,15 @@ export default Cli.command({
         ...(triggerPayload ? { "Content-Type": effectiveContentType } : {}),
       },
     });
-    const responseData = z
+    // Synchronous flows can return any JSON value, including a scalar or null.
+    const responseData: unknown = await response.json();
+    const responseEnvelope = z
       .object({ executionId: z.string().optional() })
-      .passthrough()
-      .parse(await response.json());
+      .safeParse(responseData);
     const executionId =
-      response.headers.get("prismatic-executionid") || responseData.executionId || "";
+      response.headers.get("prismatic-executionid") ||
+      (responseEnvelope.success ? responseEnvelope.data.executionId : undefined) ||
+      "";
     yield {
       type: "execution",
       executionId,
