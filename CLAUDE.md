@@ -117,4 +117,4 @@ All commands inherit these base flags from `PrismaticBaseCommand`:
 
 ## Node Version
 
-Requires Node.js >= 22.18.0 (see `engines` in package.json).
+Requires Node.js >= 22.19.0 (see `engines` in package.json).
