@@ -188,7 +188,6 @@ describe("resource results", () => {
     expect(getStdout()).toBe("");
     await runCommandInput(ExportWorkflow, { ...context(false), args: { workflow: "workflow-1" } });
     expect(getStdout()).toBe("name: Example\n\n");
-    expect(getStdout()).toContain("Example");
   });
 
   it("returns profile identity as fields without exposing authentication credentials", async () => {
