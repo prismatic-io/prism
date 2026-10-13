@@ -47,21 +47,26 @@ const data = {
     pageInfo: { hasNextPage: false, endCursor: null },
   },
 };
+
 let endpoint: string;
 const server = createServer((request, response) => {
   request.resume();
   response.setHeader("Content-Type", "application/json");
   response.end(JSON.stringify({ data }));
 });
+
 beforeAll(async () => {
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
   if (!address || typeof address === "string") throw new Error("Missing server port");
+
   endpoint = `http://127.0.0.1:${address.port}`;
 });
+
 afterAll(async () => {
   await new Promise<void>((resolve) => server.close(() => resolve()));
 });
+
 const run = async (args: string[]) =>
   promisify(execFile)(process.execPath, [entrypoint, ...args], {
     timeout: 30_000,
@@ -75,6 +80,7 @@ const run = async (args: string[]) =>
       NO_PROXY: "127.0.0.1",
     },
   });
+
 const idCases = [
   ["customers:create", "--name", "Fixture"],
   ["customers:update", "resource-id", "--name", "Updated"],
@@ -92,10 +98,12 @@ const idCases = [
   ["alerts:webhooks:create", "-n", "Fixture", "-u", "https://example.invalid", "-p", "{}"],
   ["alerts:monitors:create", "-n", "Fixture", "-i", "instance", "-t", "[]"],
 ];
+
 it.for(idCases)("%j retains a bare ID on human stdout", async (args) => {
   const result = await run(args);
   expect(result.stdout).toBe("resource-id\n");
 });
+
 it.for([
   "customers:delete",
   "instances:delete",
@@ -108,20 +116,24 @@ it.for([
 ])("%s retains silent human success", async (command) => {
   expect((await run([command, "resource-id"])).stdout).toBe("");
 });
+
 it.for(["integrations:export", "workflows:export"])("%s retains pipeable YAML", async (command) => {
   expect((await run([command, "resource-id"])).stdout).toBe(`${definition}\n`);
   expect(JSON.parse((await run([command, "resource-id", "--json"])).stdout)).toEqual({
     definition,
   });
 });
+
 it.for([
   [],
   ["--agent", "--yes"],
 ])("explicit human/agent JSON contains exactly one document: %j", async (mode) => {
   const created = await run(["customers:create", "--name", "Fixture", ...mode, "--json"]);
   expect(JSON.parse(created.stdout)).toMatchObject({ customerId: "resource-id" });
+
   const token = await run(["me:token", ...mode, "--json"]);
   expect(JSON.parse(token.stdout)).toEqual({ token: "synthetic-audit-token", type: "access" });
+
   const list = await run(["customers:list", ...mode, "--json"]);
   expect(JSON.parse(list.stdout).items).toHaveLength(1);
 });
