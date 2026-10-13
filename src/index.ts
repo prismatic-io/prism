@@ -112,6 +112,7 @@ import ProfilesUseCommand from "./commands/profiles/use.js";
 import TranslationsListCommand from "./commands/translations/list.js";
 import WorkflowsExportCommand from "./commands/workflows/export.js";
 import WorkflowsImportCommand from "./commands/workflows/import.js";
+import { instanceEventText, integrationEventText } from "./human-output.js";
 
 export const Commands = {
   autocomplete: prepareCommand(AutocompleteCommand, {}),
@@ -122,35 +123,94 @@ export const Commands = {
     authContext: "profile" as const,
   }),
   logout: prepareCommand(LogoutCommand, { mutates: true, authContext: "profile" as const }),
-  "components:delete": prepareCommand(ComponentsDeleteCommand, { mutates: true }),
+  "components:delete": prepareCommand(ComponentsDeleteCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
   "components:get": prepareCommand(ComponentsGetCommand, {}),
   "components:list": prepareCommand(ComponentsListCommand, {}),
   "components:search": prepareCommand(ComponentsSearchCommand, {}),
   "components:versions": prepareCommand(ComponentsVersionsCommand, {}),
   "components:publish": prepareCommand(ComponentsPublishCommand, { mutates: true }),
-  "customers:create": prepareCommand(CustomersCreateCommand, { mutates: true }),
-  "customers:delete": prepareCommand(CustomersDeleteCommand, { mutates: true }),
+  "customers:create": prepareCommand(CustomersCreateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.customerId,
+  }),
+  "customers:delete": prepareCommand(CustomersDeleteCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
   "customers:list": prepareCommand(CustomersListCommand, {}),
-  "customers:update": prepareCommand(CustomersUpdateCommand, { mutates: true }),
-  "instances:create": prepareCommand(InstancesCreateCommand, { mutates: true }),
-  "instances:delete": prepareCommand(InstancesDeleteCommand, { mutates: true }),
-  "instances:deploy": prepareCommand(InstancesDeployCommand, { mutates: true }),
-  "instances:disable": prepareCommand(InstancesDisableCommand, { mutates: true }),
-  "instances:enable": prepareCommand(InstancesEnableCommand, { mutates: true }),
+  "customers:update": prepareCommand(CustomersUpdateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.customerId,
+  }),
+  "instances:create": prepareCommand(InstancesCreateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.instanceId,
+  }),
+  "instances:delete": prepareCommand(InstancesDeleteCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
+  "instances:deploy": prepareCommand(InstancesDeployCommand, {
+    mutates: true,
+    humanOutput: (data) => data.instanceId,
+  }),
+  "instances:disable": prepareCommand(InstancesDisableCommand, {
+    mutates: true,
+    humanOutput: (data) => data.instanceId,
+  }),
+  "instances:enable": prepareCommand(InstancesEnableCommand, {
+    mutates: true,
+    humanOutput: (data) => data.instanceId,
+  }),
   "instances:list": prepareCommand(InstancesListCommand, {}),
-  "instances:update": prepareCommand(InstancesUpdateCommand, { mutates: true }),
-  "integrations:available": prepareCommand(IntegrationsAvailableCommand, { mutates: true }),
-  "integrations:create": prepareCommand(IntegrationsCreateCommand, { mutates: true }),
-  "integrations:delete": prepareCommand(IntegrationsDeleteCommand, { mutates: true }),
-  "integrations:export": prepareCommand(IntegrationsExportCommand, {}),
-  "integrations:fork": prepareCommand(IntegrationsForkCommand, { mutates: true }),
-  "integrations:import": prepareCommand(IntegrationsImportCommand, { mutates: true }),
+  "instances:update": prepareCommand(InstancesUpdateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.instanceId,
+  }),
+  "integrations:available": prepareCommand(IntegrationsAvailableCommand, {
+    mutates: true,
+    humanOutput: (data) => data.integrationId,
+  }),
+  "integrations:create": prepareCommand(IntegrationsCreateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.integrationId,
+  }),
+  "integrations:delete": prepareCommand(IntegrationsDeleteCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
+  "integrations:export": prepareCommand(IntegrationsExportCommand, {
+    humanOutput: (data) => data.definition,
+  }),
+  "integrations:fork": prepareCommand(IntegrationsForkCommand, {
+    mutates: true,
+    humanOutput: (data) => data.integrationId,
+  }),
+  "integrations:import": prepareCommand(IntegrationsImportCommand, {
+    mutates: true,
+    humanOutput: (data) => data.integrationId,
+  }),
   "integrations:list": prepareCommand(IntegrationsListCommand, {}),
-  "integrations:marketplace": prepareCommand(IntegrationsMarketplaceCommand, { mutates: true }),
+  "integrations:marketplace": prepareCommand(IntegrationsMarketplaceCommand, {
+    mutates: true,
+    humanOutput: (data) => data.integrationId,
+  }),
   "integrations:open": prepareCommand(IntegrationsOpenCommand, { mutates: true }),
-  "integrations:publish": prepareCommand(IntegrationsPublishCommand, { mutates: true }),
-  "integrations:set-debug": prepareCommand(IntegrationsSetDebugCommand, { mutates: true }),
-  "integrations:update": prepareCommand(IntegrationsUpdateCommand, { mutates: true }),
+  "integrations:publish": prepareCommand(IntegrationsPublishCommand, {
+    mutates: true,
+    humanOutput: (data) => data.integrationId,
+  }),
+  "integrations:set-debug": prepareCommand(IntegrationsSetDebugCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
+  "integrations:update": prepareCommand(IntegrationsUpdateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.integrationId,
+  }),
   "integrations:validate": prepareCommand(IntegrationsValidateCommand, {}),
   "integrations:validate-yaml": prepareCommand(IntegrationsValidateYamlCommand, {}),
   me: prepareCommand(MeCommand, {}),
@@ -158,27 +218,60 @@ export const Commands = {
   "profiles:list": prepareCommand(ProfilesListCommand, {}),
   "profiles:use": prepareCommand(ProfilesUseCommand, { mutates: true }),
   "profiles:delete": prepareCommand(ProfilesDeleteCommand, { mutates: true }),
-  "on-prem-resources:delete": prepareCommand(OnPremResourcesDeleteCommand, { mutates: true }),
+  "on-prem-resources:delete": prepareCommand(OnPremResourcesDeleteCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
   "on-prem-resources:list": prepareCommand(OnPremResourcesListCommand, {}),
   "on-prem-resources:registration-jwt": prepareCommand(OnPremResourcesRegistrationCommand, {
     mutates: true,
+    humanOutput: (data) => data.token,
   }),
-  "organization:update": prepareCommand(OrganizationUpdateCommand, { mutates: true }),
+  "organization:update": prepareCommand(OrganizationUpdateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.organizationId,
+  }),
   "organization:updateAvatarUrl": prepareCommand(OrganizationUpdateAvatarUrlCommand, {
     mutates: true,
+    humanOutput: (data) => data.organizationId,
   }),
-  "translations:list": prepareCommand(TranslationsListCommand, { mutates: true }),
+  "translations:list": prepareCommand(TranslationsListCommand, {
+    mutates: true,
+    humanOutput: (data) =>
+      "translations" in data ? JSON.stringify(data.translations, null, 2) : undefined,
+  }),
   "alerts:events:list": prepareCommand(AlertsEventsListCommand, {}),
-  "alerts:groups:create": prepareCommand(AlertsGroupsCreateCommand, { mutates: true }),
-  "alerts:groups:delete": prepareCommand(AlertsGroupsDeleteCommand, { mutates: true }),
+  "alerts:groups:create": prepareCommand(AlertsGroupsCreateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.alertGroupId,
+  }),
+  "alerts:groups:delete": prepareCommand(AlertsGroupsDeleteCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
   "alerts:groups:list": prepareCommand(AlertsGroupsListCommand, {}),
-  "alerts:monitors:clear": prepareCommand(AlertsMonitorsClearCommand, { mutates: true }),
-  "alerts:monitors:create": prepareCommand(AlertsMonitorsCreateCommand, { mutates: true }),
-  "alerts:monitors:delete": prepareCommand(AlertsMonitorsDeleteCommand, { mutates: true }),
+  "alerts:monitors:clear": prepareCommand(AlertsMonitorsClearCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
+  "alerts:monitors:create": prepareCommand(AlertsMonitorsCreateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.alertMonitorId,
+  }),
+  "alerts:monitors:delete": prepareCommand(AlertsMonitorsDeleteCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
   "alerts:monitors:list": prepareCommand(AlertsMonitorsListCommand, {}),
   "alerts:triggers:list": prepareCommand(AlertsTriggersListCommand, {}),
-  "alerts:webhooks:create": prepareCommand(AlertsWebhooksCreateCommand, { mutates: true }),
-  "alerts:webhooks:delete": prepareCommand(AlertsWebhooksDeleteCommand, { mutates: true }),
+  "alerts:webhooks:create": prepareCommand(AlertsWebhooksCreateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.alertWebhookId,
+  }),
+  "alerts:webhooks:delete": prepareCommand(AlertsWebhooksDeleteCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
   "alerts:webhooks:list": prepareCommand(AlertsWebhooksListCommand, {}),
   "components:actions:get": prepareCommand(ComponentsActionsGetCommand, {}),
   "components:actions:list": prepareCommand(ComponentsActionsListCommand, {}),
@@ -193,14 +286,25 @@ export const Commands = {
     hidden: true,
   }),
   "components:init": prepareCommand(ComponentsInitCommand, { mutates: true }),
-  "components:signature": prepareCommand(ComponentsSignatureCommand, {}),
+  "components:signature": prepareCommand(ComponentsSignatureCommand, {
+    humanOutput: (data) => data.signature,
+  }),
   "components:triggers:get": prepareCommand(ComponentsTriggersGetCommand, {}),
   "components:triggers:list": prepareCommand(ComponentsTriggersListCommand, {}),
-  "customers:users:create": prepareCommand(CustomersUsersCreateCommand, { mutates: true }),
-  "customers:users:delete": prepareCommand(CustomersUsersDeleteCommand, { mutates: true }),
+  "customers:users:create": prepareCommand(CustomersUsersCreateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.userId,
+  }),
+  "customers:users:delete": prepareCommand(CustomersUsersDeleteCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
   "customers:users:list": prepareCommand(CustomersUsersListCommand, {}),
   "customers:users:roles": prepareCommand(CustomersUsersRolesCommand, {}),
-  "customers:users:update": prepareCommand(CustomersUsersUpdateCommand, { mutates: true }),
+  "customers:users:update": prepareCommand(CustomersUsersUpdateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.userId,
+  }),
   "executions:count": prepareCommand(ExecutionsCountCommand, {}),
   "executions:fields": prepareCommand(ExecutionsFieldsCommand, {}),
   "executions:get": prepareCommand(ExecutionsGetCommand, {}),
@@ -210,11 +314,17 @@ export const Commands = {
   "executions:steps": prepareCommand(ExecutionsStepsCommand, {}),
   "instances:config-vars:list": prepareCommand(InstancesConfigVarsListCommand, {}),
   "instances:flow-configs:list": prepareCommand(InstancesFlowConfigsListCommand, {}),
-  "instances:flow-configs:test": prepareCommand(InstancesFlowConfigsTestCommand, { mutates: true }),
+  "instances:flow-configs:test": prepareCommand(InstancesFlowConfigsTestCommand, {
+    mutates: true,
+    humanOutput: (event, context) => instanceEventText(event, context.options.columns),
+  }),
   "integrations:convert": prepareCommand(IntegrationConvertCommand, { mutates: true }),
   "integrations:flows:list": prepareCommand(IntegrationsFlowsListCommand, {}),
   "integrations:flows:listen": prepareCommand(IntegrationsFlowsListenCommand, { mutates: true }),
-  "integrations:flows:test": prepareCommand(IntegrationsFlowsTestCommand, { mutates: true }),
+  "integrations:flows:test": prepareCommand(IntegrationsFlowsTestCommand, {
+    mutates: true,
+    humanOutput: (event, context) => integrationEventText(event, context.options.jsonl),
+  }),
   "integrations:init": prepareCommand(IntegrationsInitCommand, { mutates: true }),
   "integrations:manifests:add": prepareCommand(IntegrationsManifestsAddCommand, { mutates: true }),
   "integrations:manifests:list": prepareCommand(IntegrationsManifestsListCommand, {}),
@@ -225,23 +335,40 @@ export const Commands = {
   "organization:connections:list": prepareCommand(OrganizationConnectionsListCommand, {}),
   "organization:signing-keys:delete": prepareCommand(OrganizationSigningKeysDeleteCommand, {
     mutates: true,
+    humanOutput: () => undefined,
   }),
   "organization:signing-keys:generate": prepareCommand(OrganizationSigningKeysGenerateCommand, {
     mutates: true,
+    humanOutput: (data) => data.privateKey,
   }),
   "organization:signing-keys:import": prepareCommand(OrganizationSigningKeysImportCommand, {
     mutates: true,
+    humanOutput: (data) => data.signingKeyId,
   }),
   "organization:signing-keys:list": prepareCommand(OrganizationSigningKeysListCommand, {}),
   ...themeCommands,
   "organization:theme:get": prepareCommand(OrganizationThemeGetCommand, {}),
-  "organization:users:create": prepareCommand(OrganizationUsersCreateCommand, { mutates: true }),
-  "organization:users:delete": prepareCommand(OrganizationUsersDeleteCommand, { mutates: true }),
+  "organization:users:create": prepareCommand(OrganizationUsersCreateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.userId,
+  }),
+  "organization:users:delete": prepareCommand(OrganizationUsersDeleteCommand, {
+    mutates: true,
+    humanOutput: () => undefined,
+  }),
   "organization:users:list": prepareCommand(OrganizationUsersListCommand, {}),
   "organization:users:roles": prepareCommand(OrganizationUsersRolesCommand, {}),
-  "organization:users:update": prepareCommand(OrganizationUsersUpdateCommand, { mutates: true }),
-  "workflows:export": prepareCommand(WorkflowsExportCommand, {}),
-  "workflows:import": prepareCommand(WorkflowsImportCommand, { mutates: true }),
+  "organization:users:update": prepareCommand(OrganizationUsersUpdateCommand, {
+    mutates: true,
+    humanOutput: (data) => data.userId,
+  }),
+  "workflows:export": prepareCommand(WorkflowsExportCommand, {
+    humanOutput: (data) => data.definition,
+  }),
+  "workflows:import": prepareCommand(WorkflowsImportCommand, {
+    mutates: true,
+    humanOutput: (data) => data.workflowId,
+  }),
   "graphql:query": prepareCommand(GraphqlQueryCommand, {}),
 };
 

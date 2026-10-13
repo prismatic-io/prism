@@ -187,7 +187,7 @@ describe("resource results", () => {
     expect(ExportWorkflow.output.safeParse(result).success).toBe(true);
     expect(getStdout()).toBe("");
     await runCommandInput(ExportWorkflow, { ...context(false), args: { workflow: "workflow-1" } });
-    expect(getStdout()).toContain("definition:");
+    expect(getStdout()).toBe("name: Example\n\n");
     expect(getStdout()).toContain("Example");
   });
 
