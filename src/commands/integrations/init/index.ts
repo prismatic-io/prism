@@ -35,6 +35,11 @@ export default Cli.command({
       description: "Initialize a new directory for a Code Native Integration:",
       args: { name: "acme-integration" },
     },
+    {
+      description: "Initialize an integration with headless configuration:",
+      args: { name: "acme-integration" },
+      options: { "configuration-type": "headless" },
+    },
     { description: "Install dependencies:", args: { name: "npm" } },
     { description: "Build the integration:", args: { name: "npm" } },
     { description: "Import the integration into Prismatic:" },
@@ -47,6 +52,10 @@ export default Cli.command({
       ),
   }),
   options: z.object({
+    "configuration-type": z
+      .enum(["hosted", "headless"])
+      .default("hosted")
+      .describe("Configuration experience to scaffold"),
     clean: z.boolean().default(false).describe("Generate clean scaffold without example code"),
     toolchain: z
       .enum(TOOLCHAIN_NAMES)
@@ -58,7 +67,7 @@ export default Cli.command({
   async run(context) {
     const {
       args: { name },
-      options: { clean, toolchain: toolchainName },
+      options: { clean, toolchain: toolchainName, "configuration-type": configurationType },
     } = context;
 
     const toolchain = getToolchain(toolchainName);
@@ -76,6 +85,7 @@ export default Cli.command({
 
     return withWorkingDirectory(directory, async () => {
       const templateContext = {
+        configurationType,
         integration: { name, description: "Prism-generated Integration", key: camelCase(name) },
         flow: {
           stableKey: uuid4(),
@@ -96,6 +106,12 @@ export default Cli.command({
           return file;
         }
         const normalizedFile = file.split(path.sep).join("/");
+        if (configurationType === "headless") {
+          if (["src/index.ts", ".spectral/index.ts"].includes(normalizedFile))
+            return `${file}.headless.ejs`;
+          if (["src/flows.ts", "src/flows.test.ts", "src/client.ts"].includes(normalizedFile))
+            return `${file}.clean.ejs`;
+        }
         if (CLEANABLE_TEMPLATES.includes(normalizedFile)) {
           return `${file}${templateSuffix}.ejs`;
         }
@@ -108,7 +124,7 @@ export default Cli.command({
         path.join("src", "client.ts"),
         path.join("src", "flows.ts"),
         path.join("src", "flows.test.ts"),
-        path.join("src", "configPages.ts"),
+        path.join("src", configurationType === "headless" ? "configuration.ts" : "configPages.ts"),
         path.join("src", "componentRegistry.ts"),
         path.join("src", "markdown.d.ts"),
         path.join(".spectral", "index.ts"),
@@ -140,6 +156,7 @@ export default Cli.command({
         ...toolchain.packageJson,
         dependencies: {
           "@prismatic-io/spectral": "*",
+          ...(configurationType === "headless" ? { zod: "^4.0.0" } : {}),
         },
         devDependencies: toolchain.devDependencies,
       });

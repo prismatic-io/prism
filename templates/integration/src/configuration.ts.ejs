@@ -1,0 +1,16 @@
+import { configuration } from "@prismatic-io/spectral";
+import { z } from "zod";
+
+export const configurationSchema = z.object({});
+
+export const integrationConfiguration = configuration({
+  instance: {
+    schema: configurationSchema,
+    version: "1",
+  },
+  init: {
+    perform: async () => ({
+      configuration: {},
+    }),
+  },
+});
