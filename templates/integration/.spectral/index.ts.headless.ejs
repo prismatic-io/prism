@@ -1,0 +1,10 @@
+import type { integrationConfiguration, componentRegistry } from "../src";
+
+type Configuration = typeof integrationConfiguration;
+type ComponentRegistry = typeof componentRegistry;
+
+declare module "@prismatic-io/spectral" {
+  interface IntegrationDefinitionConfiguration extends Configuration {}
+
+  interface IntegrationDefinitionComponentRegistry extends ComponentRegistry {}
+}

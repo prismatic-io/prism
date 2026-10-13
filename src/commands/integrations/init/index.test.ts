@@ -39,8 +39,55 @@ describe("integrations:init", () => {
     process.chdir(basePath);
   });
 
+  it("rejects unsupported configuration types before creating a directory", async () => {
+    process.chdir(tempPath);
+    await expect(
+      runCommand(InitializeIntegration, [
+        "invalid-configuration-type",
+        "--configuration-type",
+        "traditional",
+      ]),
+    ).rejects.toThrow();
+    expect(existsSync("invalid-configuration-type")).toBe(false);
+  });
+
   for (const toolchain of TOOLCHAIN_NAMES) {
     describe(`${toolchain} toolchain`, () => {
+      for (const clean of [false, true]) {
+        it(`generates headless configuration with clean=${clean}`, async () => {
+          const name = `headless-${toolchain}-${clean}`;
+          process.chdir(tempPath);
+          try {
+            await runCommand(InitializeIntegration, [
+              name,
+              "--toolchain",
+              toolchain,
+              "--configuration-type",
+              "headless",
+              ...(clean ? ["--clean"] : []),
+            ]);
+            const generated = (file: string) => readFile(path.join(tempPath, name, file), "utf-8");
+            const index = await generated("src/index.ts");
+            const configuration = await generated("src/configuration.ts");
+            const augmentation = await generated(".spectral/index.ts");
+            const flows = await generated("src/flows.ts");
+            const manifest = JSON.parse(await generated("package.json"));
+            expect(index).toContain("configuration: integrationConfiguration");
+            expect(index).not.toContain("configPages");
+            expect(configuration).toContain('version: "1"');
+            expect(configuration).toContain("configuration: {}");
+            expect(augmentation).not.toContain("Experimental");
+            expect(augmentation).toContain("IntegrationDefinitionConfiguration");
+            expect(flows).not.toContain("./configPages");
+            expect(manifest.dependencies.zod).toBe("^4.0.0");
+            expect(existsSync(path.join(tempPath, name, "src/configPages.ts"))).toBe(false);
+            expect(process.cwd()).toBe(tempPath);
+          } finally {
+            await rm(path.join(tempPath, name), { recursive: true, force: true });
+          }
+        });
+      }
+
       describe("scaffold generation", () => {
         const integrationName = `test-integration-${toolchain}`;
 
