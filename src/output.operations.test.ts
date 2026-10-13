@@ -35,7 +35,7 @@ describe("named operation results", () => {
     expect(result).toEqual({ customerId: "customer-1", deleted: true });
     expect(DeleteCustomer.output.safeParse(result).success).toBe(true);
     await runCommandInput(DeleteCustomer, { ...context(false), args: { customer: "customer-1" } });
-    expect(getStdout()).toContain("customer-1");
+    expect(getStdout()).toBe("");
     expect(vi.mocked(gqlRequest).mock.lastCall?.[0].variables).toEqual({ id: "customer-1" });
   });
 

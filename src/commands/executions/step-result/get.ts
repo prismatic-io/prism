@@ -1,5 +1,5 @@
 import { Cli, z } from "incur";
-import { writeCommandOutput, writeCommandStatus } from "../../../command.js";
+import { writeCommandOutput } from "../../../command.js";
 import { fs } from "../../../fs.js";
 import { GetStepOutputDetailsDocument as GET_STEP_OUTPUT_DETAILS } from "../../../graphql/operations/getStepOutputDetails.generated.js";
 import { gqlRequest } from "../../../graphql.js";
@@ -11,6 +11,7 @@ import {
 } from "../../../utils/execution/stepResults.js";
 import { fetch } from "../../../utils/http.js";
 export default Cli.command({
+  outputPolicy: "agent-only",
   output: z.union([
     z.object({
       executionId: z.string(),
@@ -93,7 +94,7 @@ export default Cli.command({
           path: outputPath,
         };
       } else {
-        writeCommandStatus(String(outputStr));
+        writeCommandOutput(String(outputStr));
         return {
           executionId,
           stepName,

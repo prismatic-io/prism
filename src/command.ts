@@ -31,6 +31,7 @@ export {
 
 type Execution = {
   agent: boolean;
+  formatExplicit?: boolean;
   globals: z.output<typeof globalOptions>;
   request?: Request;
   mcp?: boolean;
@@ -59,6 +60,9 @@ export type CommandContext = Omit<
   "ok"
 > & { request?: Request };
 const executionContext = new AsyncLocalStorage<Execution>();
+const cliAgentMode = new AsyncLocalStorage<boolean>();
+export const runWithAgentMode = <T>(agent: boolean, callback: () => T): T =>
+  cliAgentMode.run(agent, callback);
 export const commandMiddleware = middleware<
   typeof commandVars,
   typeof environmentOptions,
@@ -76,7 +80,8 @@ export const commandMiddleware = middleware<
     selectedProfile: c.globals.profile ?? c.env.PRISM_PROFILE,
   };
   const execution: Execution = {
-    agent: c.agent,
+    agent: c.request || isMcpTransport() ? true : (cliAgentMode.getStore() ?? c.agent),
+    formatExplicit: c.formatExplicit,
     globals: c.globals,
     request: c.request,
     signal,
@@ -111,7 +116,7 @@ export const commandWarnings = () => [...(executionContext.getStore()?.warnings 
 export const writeCommandOutput = (value: string, stream: "stdout" | "stderr" = "stdout") => {
   const execution = executionContext.getStore();
   if (stream === "stderr") execution?.warnings.push(value.replace(/\n$/, ""));
-  if (!execution?.agent)
+  if (!execution?.agent && !(stream === "stdout" && execution?.formatExplicit))
     (stream === "stderr" ? process.stderr : process.stdout).write(`${value}\n`);
 };
 export const writeCommandStatus = (value: string) => {
@@ -132,6 +137,10 @@ type Definition<
 > = Omit<NativeOptions<A, O, R>, "run" | "mcp"> & {
   run: NonNullable<NativeOptions<A, O, R>["run"]>;
   authContext?: "default" | "profile";
+  humanOutput?: (
+    data: R extends z.ZodType ? z.output<R> : unknown,
+    context: Parameters<NonNullable<NativeOptions<A, O, R>["run"]>>[0],
+  ) => string | undefined;
   mutates?: boolean;
   hidden?: boolean;
   mcp?: Cli.FileCommand["mcp"];
@@ -159,7 +168,7 @@ export function applyCommandPolicy<
   const R extends z.ZodType | undefined = undefined,
 >(
   definition: Definition<A, O, R>,
-  policy: Pick<Definition<A, O, R>, "mutates" | "hidden" | "authContext"> = {},
+  policy: Pick<Definition<A, O, R>, "mutates" | "hidden" | "authContext" | "humanOutput"> = {},
 ) {
   const original = definition;
   definition = { ...definition, ...policy };
@@ -208,6 +217,7 @@ export function applyCommandPolicy<
       execution.runtime.quiet = context.globals.quiet;
       execution.runtime.printRequests = context.globals.printRequests === true;
     }
+    context = { ...context, agent: execution.agent };
     if (definition.mutates) assertMutationAllowed(context);
     const abort = new AbortController();
     const signal = AbortSignal.any([execution.signal, abort.signal]);
@@ -250,14 +260,37 @@ export function applyCommandPolicy<
         !Array.isArray(data)
       )
         data = { ...data, warnings };
-      const result = (parsed: unknown) =>
-        (tag === "ok"
-          ? {
-              ...tagged,
-              data: parsed,
-              ...(tagged?.cta ? { cta: prepareCta(tagged.cta, context.globals.profile) } : {}),
-            }
-          : parsed) as T;
+      const result = (parsed: unknown) => {
+        if (
+          definition.humanOutput &&
+          !context.agent &&
+          !context.formatExplicit &&
+          !local.request &&
+          !local.mcp
+        ) {
+          const text = definition.humanOutput(
+            parsed as R extends z.ZodType ? z.output<R> : unknown,
+            context,
+          );
+          if (text !== undefined) process.stdout.write(`${text}\n`);
+        }
+        return (
+          tag === "ok"
+            ? {
+                ...tagged,
+                data: parsed,
+                ...(tagged?.cta
+                  ? {
+                      cta:
+                        definition.humanOutput && !context.agent && !context.formatExplicit
+                          ? undefined
+                          : prepareCta(tagged.cta, context.globals.profile),
+                    }
+                  : {}),
+              }
+            : parsed
+        ) as T;
+      };
       if (definition.output) {
         const parsed = definition.output.safeParse(data);
         if (!parsed.success)
@@ -321,6 +354,7 @@ export function applyCommandPolicy<
   };
   const prepared = {
     ...definition,
+    ...(definition.humanOutput ? { outputPolicy: "agent-only" as const } : {}),
     args: definition.args ? decodeCliArguments(definition.args) : undefined,
     env: definition.env ?? environmentOptions,
     contract,
@@ -358,7 +392,7 @@ export function prepareCommand<
   const R extends z.ZodType | undefined,
 >(
   definition: Cli.FileCommand<A, typeof environmentOptions | undefined, O, R>,
-  policy: Pick<Definition<A, O, R>, "mutates" | "hidden" | "authContext"> = {},
+  policy: Pick<Definition<A, O, R>, "mutates" | "hidden" | "authContext" | "humanOutput"> = {},
 ) {
   // File commands and mounted root definitions expose the same runtime context.
   // incur currently declares `version` only on the former.
@@ -432,6 +466,7 @@ const structuredError = (error: unknown) => {
 
 type MutationContext = {
   agent: boolean;
+  formatExplicit?: boolean;
   globals: { readOnly?: boolean; yes?: boolean };
   env?: { PRISM_READ_ONLY?: string };
 };

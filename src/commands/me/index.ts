@@ -1,10 +1,11 @@
 import { Cli, z } from "incur";
-import { writeCommandStatus } from "../../command.js";
+import { writeCommandOutput } from "../../command.js";
 import { getAuthContext } from "../../context.js";
 import { warningsOutput } from "../../output.js";
 import { whoAmI } from "../../utils/user/query.js";
 
 export default Cli.command({
+  outputPolicy: "agent-only",
   output: z.object({
     ...warningsOutput,
     name: z.string(),
@@ -21,25 +22,25 @@ export default Cli.command({
     const authContext = await getAuthContext();
     const me = await whoAmI();
     const { name, email, org, customer, tenantId } = me;
-    writeCommandStatus(["Name:", name].map(String).join(" "));
-    writeCommandStatus(["Email:", email].map(String).join(" "));
+    writeCommandOutput(["Name:", name].map(String).join(" "));
+    writeCommandOutput(["Email:", email].map(String).join(" "));
     if (org) {
-      writeCommandStatus(["Organization:", org.name].map(String).join(" "));
-      writeCommandStatus(["Organization ID:", org.id].map(String).join(" "));
+      writeCommandOutput(["Organization:", org.name].map(String).join(" "));
+      writeCommandOutput(["Organization ID:", org.id].map(String).join(" "));
     } else if (customer) {
-      writeCommandStatus(["Customer:", customer.name].map(String).join(" "));
+      writeCommandOutput(["Customer:", customer.name].map(String).join(" "));
     }
     if (tenantId) {
-      writeCommandStatus(["Tenant ID:", tenantId].map(String).join(" "));
+      writeCommandOutput(["Tenant ID:", tenantId].map(String).join(" "));
     }
-    writeCommandStatus(["Endpoint URL:", authContext.url].map(String).join(" "));
-    writeCommandStatus(
+    writeCommandOutput(["Endpoint URL:", authContext.url].map(String).join(" "));
+    writeCommandOutput(
       ["Authentication:", authContext.source === "environment" ? "Environment" : "Profile"]
         .map(String)
         .join(" "),
     );
     if (authContext.source === "profile") {
-      writeCommandStatus(["Profile:", authContext.profileName].map(String).join(" "));
+      writeCommandOutput(["Profile:", authContext.profileName].map(String).join(" "));
     }
     return {
       name,

@@ -7,6 +7,7 @@ import {
   encodePassthroughArgument,
   environmentOptions,
   globalOptions,
+  runWithAgentMode,
   runWithMcpTransport,
   schemaFieldName,
 } from "./command.js";
@@ -671,7 +672,7 @@ export const serve = async (argv = process.argv.slice(2), environment = process.
       });
     await (prismArguments.includes("--mcp")
       ? runWithMcpTransport(invoke, parseMcpLaunchGlobals(normalized, environment))
-      : invoke());
+      : runWithAgentMode(agent, invoke));
     if (usageError) process.exitCode = 2;
   } finally {
     if (descriptor) Object.defineProperty(process.stdout, "isTTY", descriptor);
