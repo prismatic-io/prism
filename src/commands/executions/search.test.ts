@@ -1,4 +1,5 @@
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw";
+import { graphql } from "msw/graphql";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { TEST_PRISMATIC_URL } from "../../../vitest.setup.js";

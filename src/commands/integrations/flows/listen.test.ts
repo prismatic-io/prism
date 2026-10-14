@@ -1,7 +1,8 @@
 import { encode } from "@msgpack/msgpack";
 import { Cli } from "incur";
 import inquirer from "inquirer";
-import { graphql, HttpResponse, http } from "msw";
+import { HttpResponse, http } from "msw";
+import { graphql } from "msw/graphql";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
