@@ -14,11 +14,17 @@ import {
 import { writeActions } from "./actions.js";
 import { writeConnections } from "./connections.js";
 
+export interface WriteOptions {
+  /** Also wire the npm package build target: `component(definition, { callable })`. */
+  npmPackage: boolean;
+}
+
 const writeComponentIndex = (
   project: Project,
   key: string,
   isPublic: boolean,
   { display: { label, description, iconPath } }: Component,
+  { npmPackage }: WriteOptions,
 ): SourceFile => {
   const documentationUrl = new URL(
     `/docs/components/${encodeURIComponent(key)}/`,
@@ -31,7 +37,7 @@ const writeComponentIndex = (
   file.addImportDeclarations([
     { moduleSpecifier: "@prismatic-io/spectral", namedImports: ["component"] },
     {
-      moduleSpecifier: "@prismatic-io/spectral/dist/clients/http",
+      moduleSpecifier: "@prismatic-io/spectral/http",
       namedImports: ["handleErrors"],
     },
     {
@@ -42,13 +48,23 @@ const writeComponentIndex = (
       moduleSpecifier: "./connections",
       defaultImport: "connections",
     },
+    ...(npmPackage
+      ? [
+          {
+            moduleSpecifier: "../.spectral/buildTarget",
+            namedImports: ["callable"],
+          },
+        ]
+      : []),
   ]);
 
   file.addExportAssignment({
     isExportEquals: false,
     expression: (writer) =>
       writer
-        .writeLine("component({")
+        .conditionalWriteLine(npmPackage, "component(")
+        .conditionalWriteLine(!npmPackage, "component({")
+        .conditionalWriteLine(npmPackage, "{")
         .writeLine(`key: "${key}",`)
         .conditionalWriteLine(isPublic, "public: true,")
         .conditionalWriteLine(isPublic, `documentationUrl: "${documentationUrl}",`)
@@ -61,7 +77,10 @@ const writeComponentIndex = (
         .writeLine("hooks: { error: handleErrors },")
         .writeLine("actions,")
         .writeLine("connections,")
-        .writeLine("})"),
+        .conditionalWriteLine(!npmPackage, "})")
+        .conditionalWriteLine(npmPackage, "},")
+        .conditionalWriteLine(npmPackage, "{ callable },")
+        .conditionalWriteLine(npmPackage, ")"),
   });
 
   return file;
@@ -152,7 +171,7 @@ const writeClient = (project: Project, baseUrl: string, connections: Connection[
     `
 import { Buffer } from "node:buffer";
 import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
-import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/dist/clients/http";
+import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/http";
 export const baseUrl = ${JSON.stringify(baseUrl)};
 export const createClient = async (connection?: Connection): Promise<HttpClient> => {
   if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
@@ -195,6 +214,7 @@ export const write = async (
   key: string,
   isPublic: boolean,
   { baseUrl, component, actions, connections }: Result,
+  options: WriteOptions = { npmPackage: false },
 ): Promise<Project> => {
   const project = new Project({ useInMemoryFileSystem: true });
   project.createDirectory("src");
@@ -202,7 +222,7 @@ export const write = async (
   writeConnections(project, connections);
   writeActions(project, actions);
   writeClient(project, baseUrl, connections);
-  writeComponentIndex(project, key, isPublic, component);
+  writeComponentIndex(project, key, isPublic, component, options);
   writeTests(project, key, connections, actions);
 
   if (isPublic) {

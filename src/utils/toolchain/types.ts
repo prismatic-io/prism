@@ -23,9 +23,31 @@ export abstract class Toolchain {
   abstract readonly packageJson: Record<string, unknown>;
   /** devDependencies required to build, test, and lint the scaffold. */
   abstract readonly devDependencies: Record<string, string>;
+  /**
+   * Whether a component scaffold on this toolchain is also built as an npm package
+   * (`.spectral/` build targets, `tsdown.npm.config.mts`, `component(definition, { callable })`).
+   * Only the modern toolchain; legacy scaffolds are unchanged.
+   */
+  abstract readonly npmPackage: boolean;
 
-  /** Render this toolchain's config files (templates/<name>/) into the project. */
+  /** Which templates/<dir>/ holds this toolchain's config files; defaults to its name. */
+  get templates(): string {
+    return this.name;
+  }
+
+  /** Render this toolchain's config files (templates/<templates>/) into the project. */
   renderTemplates(data: Record<string, unknown> = {}): Promise<void> {
-    return templateDirectory(this.name, data);
+    return templateDirectory(this.templates, data);
+  }
+
+  /**
+   * Render the npm package build on top of the component scaffold (templates/npm-package/):
+   * the `.spectral/` build-target switches (platform vs npm) and `tsdown.npm.config.mts`.
+   * No-op unless {@link npmPackage}.
+   */
+  async renderNpmPackageTemplates(data: Record<string, unknown> = {}): Promise<void> {
+    if (this.npmPackage) {
+      await templateDirectory("npm-package", data);
+    }
   }
 }

@@ -5,6 +5,14 @@
  *
  * To publish this connector for use in the low-code designer,
  * run "npm run build" and then "prism components:publish".
+<% if (npmPackage) { -%>
+ *
+ * To build it as an npm package whose actions can be called
+ * directly from a code-native integration, run "npm run build:npm".
+ * A code-native integration can then depend on it straight from
+ * this repository, e.g. "github:org/repo#v1.0.0" or
+ * "gitlab:group/project#v1.0.0", with no registry involved.
+<% } -%>
  *
  * For information on custom connectors, see
  * https://prismatic.io/docs/custom-connectors/
@@ -15,13 +23,50 @@ import actions from "./actions";
 import triggers from "./triggers";
 import dataSources from "./dataSources";
 import connections from "./connections";
+<% if (npmPackage) { -%>
+import { callable } from "../.spectral/buildTarget";
+<% } -%>
 
+<% if (npmPackage) { -%>
+export default component(
+  {
+    key: "<%= component.key %>",
+<% if (component.public) { -%>
+    public: true,
+    documentationUrl: "https://prismatic.io/docs/components/<%= component.key %>/",
+<% } else { -%>
+    public: false,
+<% } -%>
+    display: {
+      label: "<%= component.name %>",
+      description: "<%= component.description %>",
+<% if (component.public) { -%>
+      category: "Application Connectors",
+<% } -%>
+      iconPath: "icon.png",
+    },
+    actions,
+    triggers,
+    dataSources,
+    connections,
+  },
+  { callable },
+);
+<% } else { -%>
 export default component({
   key: "<%= component.key %>",
+<% if (component.public) { -%>
+  public: true,
+  documentationUrl: "https://prismatic.io/docs/components/<%= component.key %>/",
+<% } else { -%>
   public: false,
+<% } -%>
   display: {
     label: "<%= component.name %>",
     description: "<%= component.description %>",
+<% if (component.public) { -%>
+    category: "Application Connectors",
+<% } -%>
     iconPath: "icon.png",
   },
   actions,
@@ -29,3 +74,4 @@ export default component({
   dataSources,
   connections,
 });
+<% } -%>

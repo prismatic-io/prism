@@ -1,0 +1,99 @@
+# <%= name %>
+
+A Prismatic custom component, scaffolded by `prism components:init`.
+
+| Command                    | What it does                                                        |
+| -------------------------- | ------------------------------------------------------------------- |
+| `npm test`                 | Runs the unit tests                                                 |
+| `npm run build`            | Bundles the component for the Prismatic platform (`dist/`)          |
+| `npm run publish:platform` | Builds, then publishes the component to Prismatic                   |
+| `npm run build:npm`        | Compiles the component as an npm package (`npm-dist/`), see below   |
+
+For documentation on writing custom components, see
+https://prismatic.io/docs/custom-connectors/.
+
+## Using this component from a code-native integration
+
+This component is an npm package that a code-native integration can install,
+directly from this repository or from a registry if you choose to host it.
+`npm run build:npm` produces the package.
+
+Add the component to your integration's `package.json`. The integration must
+also depend on `@prismatic-io/spectral`, which the component expects as a peer.
+
+You do not need to publish the component to Prismatic yourself.
+`prism integrations:import` publishes it whenever an integration depends on it,
+and skips the publish when nothing has changed.
+
+`npm run publish:platform` publishes it on its own, for when you want the
+component available in the low-code designer as well, or for a shared connection.
+
+### From a git repository (no registry needed)
+
+Pin a tag, branch, or commit. npm builds the package on install, so nothing
+needs to be committed or published.
+
+GitHub:
+
+```json
+{
+  "dependencies": {
+    "<%= name %>": "github:your-org/<%= name %>#v1.0.0"
+  }
+}
+```
+
+GitLab (gitlab.com):
+
+```json
+{
+  "dependencies": {
+    "<%= name %>": "gitlab:your-group/<%= name %>#v1.0.0"
+  }
+}
+```
+
+### From a tarball vendored into the integration
+
+```sh
+npm pack                                  # in this directory, writes <%= name %>-0.0.1.tgz
+```
+
+```json
+{
+  "dependencies": {
+    "<%= name %>": "file:./vendor/<%= name %>-0.0.1.tgz"
+  }
+}
+```
+
+### From a local checkout, while developing
+
+```json
+{
+  "dependencies": {
+    "<%= name %>": "file:../<%= name %>"
+  }
+}
+```
+
+npm does not build linked directories, so run `npm run build:npm` here after
+each change. Because the link resolves to this directory's `node_modules`, make
+sure both projects use the same `@prismatic-io/spectral` version.
+
+### From an npm registry
+
+Remove `"private": true` from `package.json`, then `npm publish` to your registry
+and depend on the version as usual.
+
+### Calling an action
+
+```ts
+import <%= key %> from "<%= name %>";
+
+// inside a flow's onExecution
+const result = await <%= key %>.actions.myAction({
+  connection: context.configVars["My Connection"],
+  // ...the action's other inputs, typed from its definition
+});
+```
