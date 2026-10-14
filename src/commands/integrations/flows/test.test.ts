@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { graphql, HttpResponse, http } from "msw";
+import { HttpResponse, http } from "msw";
+import { graphql } from "msw/graphql";
 import { setupServer } from "msw/node";
 import { temporaryDirectoryTask } from "tempy";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";

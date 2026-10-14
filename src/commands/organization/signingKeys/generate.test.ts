@@ -1,7 +1,8 @@
 import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { graphql, HttpResponse } from "msw";
+import { HttpResponse } from "msw";
+import { graphql } from "msw/graphql";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { TEST_PRISMATIC_URL } from "../../../../vitest.setup.js";
