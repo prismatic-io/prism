@@ -16,6 +16,7 @@ import {
   type WaitOptions,
   waitForComponentVersion,
 } from "../availability.js";
+import { publishComponentDependencies } from "../component/dependencies.js";
 import {
   type ComponentDefinition,
   createComponentPackage,
@@ -26,7 +27,7 @@ import {
   uploadConnectionIcons,
   uploadFile,
 } from "../component/publish.js";
-import { getPackageEntrypointDirectory } from "../import.js";
+import { findPackageRoot, getPackageEntrypointDirectory } from "../import.js";
 import { startAction, stopAction } from "../progress.js";
 import { loadYaml } from "../serialize.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
@@ -149,6 +150,24 @@ export const importCodeNativeIntegration = async (
   testApiKeyFlags?: string[],
   waitOptions?: WaitOptions,
 ): Promise<{ integrationId: string; componentId: string }> => {
+  // Components the integration depends on as npm packages run inside its bundle, but shared
+  // connections and the low-code designer need them on the platform too, so the import
+  // publishes them first (skipping public ones and ones already published with this signature).
+  const dependencyResults = await publishComponentDependencies(
+    await findPackageRoot("Code Native Integration"),
+    waitOptions,
+  );
+  const blockingDependencies = dependencyResults.filter(
+    ({ status }) => status === "failed" || status === "not-built" || status === "timed-out",
+  );
+  if (blockingDependencies.length > 0) {
+    throw new CommandFailedError({
+      message: `Not every component dependency is published and available: ${blockingDependencies
+        .map(({ name, detail }) => (detail ? `${name} (${detail})` : name))
+        .join(", ")}; the integration was not imported.`,
+    });
+  }
+
   return withWorkingDirectory(
     await getPackageEntrypointDirectory("Code Native Integration"),
     async () => {
