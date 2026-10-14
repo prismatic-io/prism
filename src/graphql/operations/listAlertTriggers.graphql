@@ -1,0 +1,8 @@
+query listAlertTriggers {
+  alertTriggers {
+    nodes {
+      id
+      name
+    }
+  }
+}

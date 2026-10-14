@@ -1,136 +1,95 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { Cli, z } from "incur";
+import { listMembers } from "../../../utils/component/catalog.js";
+import { requestFailure } from "../../../utils/failure.js";
+import { nextPageCta } from "../../../utils/pagination.js";
+import {
+  paginationFlags,
+  printTable,
+  tableFlags,
+  tableOutputSchema,
+} from "../../../utils/table.js";
+import { compatibleMemberColumns } from "../members.js";
+import { componentKeyArg, toSelector, versionOption, visibilityOptions } from "../schemas.js";
 
-interface ActionNode {
-  [index: string]: unknown;
-  id: string;
-  key: string;
-  label: string;
-  description: string;
-}
-
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Actions that Components implement";
-
-  static examples = [
+export default Cli.command({
+  outputPolicy: "agent-only",
+  description: "List Actions that Components implement",
+  output: tableOutputSchema(
+    [
+      "id",
+      "key",
+      "label",
+      "description",
+      "important",
+      "allowsBranching",
+      "terminateExecution",
+      "componentid",
+      "componentkey",
+      "componentKey",
+      "componentVersion",
+      "public",
+    ],
+    true,
+  ),
+  examples: [
+    { description: "List actions of the Slack component:", args: { componentKey: "slack" } },
     {
-      description: "Get the ID of the GET action of the HTTP component by action key:",
-      command:
-        "<%= config.bin %> <%= command.id %> --columns id --filter 'key=^httpGet$' --no-header http",
+      description: "Search the actions of a component by keyword:",
+      args: { componentKey: "salesforce" },
+      options: { search: "record" },
     },
-    {
-      description: "Get actions related to the SFTP component:",
-      command: "<%= config.bin %> <%= command.id %> sftp",
-    },
-  ];
-
-  static flags = {
-    ...ux.table.flags(),
-    public: Flags.boolean({
-      required: false,
-      description:
-        "Show actions for the public component with the given key. Use this flag when you have a private component with the same key as a public component.",
-    }),
-    private: Flags.boolean({
-      required: false,
-      description:
-        "Show actions for the private component with the given key. Use this flag when you have a private component with the same key as a public component.",
-    }),
-  };
-  static args = {
-    componentKey: Args.string({
-      name: "Component Key",
-      required: true,
-      description: "The key of the component to show actions for (e.g. 'salesforce')",
-    }),
-  };
-
-  async run() {
-    const {
-      flags,
-      args: { componentKey },
-    } = await this.parse(ListCommand);
-
-    let actions: ActionNode[] = [];
-    let componentId: string;
-    let hasNextPage = true;
-    let cursor = "";
-
-    while (hasNextPage) {
-      const {
-        components: {
-          nodes: [component],
+  ],
+  args: z.object({ componentKey: componentKeyArg("to show actions for") }),
+  options: z.object({
+    ...tableFlags(),
+    ...paginationFlags(),
+    ...visibilityOptions("actions"),
+    ...versionOption(),
+    search: z
+      .string()
+      .optional()
+      .describe("Full-text search across action labels and descriptions"),
+  }),
+  alias: { search: "s" },
+  async run(context) {
+    const { options: flags, args } = context;
+    try {
+      const { component, items, pageInfo } = await listMembers(
+        toSelector(args.componentKey, flags),
+        {
+          kind: "action",
+          search: flags.search,
+          after: flags.after,
+          first: flags.first,
+          all: flags.all === true || !context.agent,
         },
-      } = await gqlRequest({
-        document: gql`
-          query listComponentActions(
-            $componentKey: String
-            $after: String
-            $public: Boolean
-          ) {
-            components(key: $componentKey, public: $public) {
-              nodes {
-                id
-                key
-                actions(isTrigger: false, isDataSource: false, after: $after) {
-                  nodes {
-                    id
-                    key
-                    label
-                    description
-                  }
-                  pageInfo {
-                    hasNextPage
-                    endCursor
-                  }
-                }
-              }
-            }
-          }
-        `,
-        variables: {
-          after: cursor,
-          componentKey,
-          public: flags.public ? true : flags.private ? false : null,
-        },
-      });
-      if (!component) {
-        console.log(
-          "The key you provided is not valid. Please run 'prism components:list -x' and identify a valid component key.",
-        );
-        this.exit(1);
-      }
-      actions = [...actions, ...component.actions.nodes];
-      componentId = component.id;
-      cursor = component.actions.pageInfo.endCursor;
-      hasNextPage = component.actions.pageInfo.hasNextPage;
+      );
+      const result = printTable(
+        items,
+        compatibleMemberColumns(
+          component,
+          {
+            important: { extended: true },
+            allowsBranching: { extended: true },
+            terminateExecution: { extended: true },
+          },
+          context.agent,
+        ),
+        { ...flags },
+      );
+      return context.ok(
+        { ...result, pageInfo },
+        nextPageCta(
+          "components actions list",
+          { componentKey: args.componentKey },
+          flags,
+          pageInfo,
+          context.agent,
+          "Fetch the next page of actions",
+        ),
+      );
+    } catch (error) {
+      return context.error(requestFailure(error, "COMPONENT_ACTIONS_LIST_FAILED", true));
     }
-
-    ux.table(
-      actions,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
-        },
-        key: {
-          minWidth: 10,
-          extended: true,
-        },
-        label: {},
-        description: {},
-        componentid: {
-          get: () => componentId,
-          extended: true,
-        },
-        componentkey: {
-          get: () => componentKey,
-          extended: true,
-        },
-      },
-      { ...flags },
-    );
-  }
-}
+  },
+});

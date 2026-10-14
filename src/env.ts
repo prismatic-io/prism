@@ -1,6 +1,7 @@
 import { homedir } from "os";
 import path from "path";
 import { z } from "zod";
+import { getCommandContext } from "./command-context.js";
 
 // Treat empty action inputs as unset.
 const normalizeEmpty = (val: unknown) =>
@@ -27,4 +28,4 @@ const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
-export const getEnv = (): Env => envSchema.parse(process.env);
+export const getEnv = (): Env => envSchema.parse(getCommandContext()?.environment ?? process.env);

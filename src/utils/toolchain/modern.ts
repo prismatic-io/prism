@@ -16,10 +16,13 @@ export class ModernToolchain extends Toolchain {
     format: "biome format --write .",
   };
 
-  readonly packageJson = {};
+  readonly packageJson = {
+    engines: { node: ">=22.18.0" },
+  };
 
   readonly devDependencies = {
     "@biomejs/biome": "2.5.1",
+    "@types/node": "^22.0.0",
     dotenv: "^17.2.2",
     tsdown: "0.22.3",
     typescript: "6.0.3",

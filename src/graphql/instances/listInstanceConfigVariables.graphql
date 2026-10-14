@@ -1,0 +1,27 @@
+query listInstanceConfigVariables($id: ID!, $after: String, $first: Int) {
+  instance(id: $id) {
+    configVariables(after: $after, first: $first) {
+      nodes {
+        id
+        value
+        status
+        inputs {
+          nodes {
+            name
+            value
+          }
+        }
+        requiredConfigVariable {
+          id
+          key
+          defaultValue
+          dataType
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

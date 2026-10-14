@@ -1,0 +1,64 @@
+query listComponentConnections(
+  $key: String!
+  $public: Boolean
+  $versionNumber: Int
+  $allVersions: Boolean
+  $connectionKey: String
+  $inputsAfter: String
+) {
+  components(key: $key, public: $public, versionNumber: $versionNumber, allVersions: $allVersions) {
+    nodes {
+      id
+      key
+      label
+      public
+      versionNumber
+      connections(key: $connectionKey, orderBy: { field: ORDER, direction: ASC }) {
+        nodes {
+          id
+          key
+          label
+          default
+          order
+          comments
+          oauth2Type
+          onPremiseAvailable
+          inputs(first: 100, after: $inputsAfter) {
+            nodes {
+              id
+              key
+              keyPath
+              parentId
+              order
+              label
+              keyLabel
+              type
+              collection
+              required
+              shown
+              default
+              placeholder
+              comments
+              example
+              model
+              language
+              onPremiseControlled
+              scope
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+          templates {
+            nodes {
+              id
+              name
+              templatedInputKeys
+            }
+          }
+        }
+      }
+    }
+  }
+}

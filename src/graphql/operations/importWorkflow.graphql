@@ -1,0 +1,11 @@
+mutation importWorkflow($workflow: ID, $customer: ID, $definition: String!) {
+  importWorkflow(input: { id: $workflow, definition: $definition, customer: $customer }) {
+    workflow {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

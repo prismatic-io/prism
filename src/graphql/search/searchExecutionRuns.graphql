@@ -1,0 +1,57 @@
+fragment ExecutionRunRow on ExecutionRun {
+  id
+  status
+  resultType
+  invokeType
+  startedAt
+  endedAt
+  queuedAt
+  resumedAt
+  durationMs
+  stepCount
+  error
+  errorStepName
+  instanceId
+  instanceName
+  customerId
+  customerName
+  customerExternalId
+  integrationId
+  integrationName
+  flowId
+  flowName
+  isTestExecution
+  isReplay
+  retryAttemptNumber
+  retryForExecutionId
+  allowUpdate
+}
+
+query searchExecutionRuns(
+  $first: Int
+  $after: String
+  $startedAtGte: DateTime!
+  $startedAtLte: DateTime!
+  $filterGroups: [EventFilterGroup!]
+  $orderBy: ExecutionRunOrder
+) {
+  executionRuns(
+    first: $first
+    after: $after
+    startedAtGte: $startedAtGte
+    startedAtLte: $startedAtLte
+    filterGroups: $filterGroups
+    orderBy: $orderBy
+  ) {
+    edges {
+      cursor
+      node {
+        ...ExecutionRunRow
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { dumpYaml } from "../serialize.js";
 import {
   compareConfigVars,
+  getIntegrationDefinition,
   importDefinition,
   loadCodeNativeIntegrationEntryPoint,
   parseTestApiKeys,
@@ -44,24 +45,6 @@ describe("loadCodeNativeIntegrationEntryPoint", () => {
 });
 
 describe("compareConfigVars", () => {
-  it("should correctly identify missing config vars", async () => {
-    const originalYAML = `
-      configPages:
-        - elements:
-            - value: "configVar1"
-            - value: "missingVar"
-    `;
-
-    const newYAML = `
-      configPages:
-        - elements:
-            - value: "configVar1"
-    `;
-
-    const missingVars = await compareConfigVars(originalYAML, newYAML);
-    expect(missingVars).toEqual(["missingVar"]);
-  });
-
   const configuration = {
     instance: { schema: { type: "object" }, version: "instance-v1" },
     userLevel: { schema: { type: "object" }, version: "user-v1" },
@@ -134,6 +117,23 @@ describe("compareConfigVars", () => {
       "Cannot compare config vars against an empty integration definition.",
     );
   });
+  it("should correctly identify missing config vars", async () => {
+    const originalYAML = `
+      configPages:
+        - elements:
+            - value: "configVar1"
+            - value: "missingVar"
+    `;
+
+    const newYAML = `
+      configPages:
+        - elements:
+            - value: "configVar1"
+    `;
+
+    const missingVars = await compareConfigVars(originalYAML, newYAML);
+    expect(missingVars).toEqual(["missingVar"]);
+  });
 });
 
 describe("parseTestApiKeys", () => {
@@ -177,4 +177,21 @@ describe("parseTestApiKeys", () => {
   it("should throw error for missing API key part", () => {
     expect(() => parseTestApiKeys(["flowName"])).toThrow(/Invalid --test-api-key format/);
   });
+});
+
+it.each([
+  null,
+  { definition: null },
+  { definition: "" },
+])("rejects unavailable integration definitions: %j", async (integration) => {
+  mockGqlRequest.mockResolvedValueOnce({ integration });
+  await expect(getIntegrationDefinition("integration-id")).rejects.toThrow(
+    "Integration not found: integration-id",
+  );
+});
+
+it("returns the integration definition unchanged", async () => {
+  const definition = "name: Example\nconfigPages: []\n";
+  mockGqlRequest.mockResolvedValueOnce({ integration: { definition } });
+  await expect(getIntegrationDefinition("integration-id")).resolves.toBe(definition);
 });

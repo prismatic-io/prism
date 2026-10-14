@@ -1,26 +1,28 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { Cli, z } from "incur";
+import { ListLogSeverityLevelsDocument as LIST_LOG_SEVERITY_LEVELS } from "../../../graphql/operations/listLogSeverityLevels.generated.js";
+import { gqlRequest } from "../../../graphql.js";
+import { printTable, tableFlags } from "../../../utils/table.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Log Severities for use by Alert Triggers";
-  static flags = { ...ux.table.flags() };
-
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: z.object({
+    items: z.array(
+      z.object({
+        id: z.number().int().nullable().optional(),
+        name: z.string().nullable().optional(),
+      }),
+    ),
+  }),
+  description: "List Log Severities for use by Alert Triggers",
+  options: z.object({ ...tableFlags() }),
+  async run(context) {
+    const { options: flags } = context;
 
     const result = await gqlRequest({
-      document: gql`
-        query listLogSeverityLevels {
-          logSeverityLevels {
-            id
-            name
-          }
-        }
-      `,
+      document: LIST_LOG_SEVERITY_LEVELS,
     });
 
-    ux.table(
+    return printTable(
       result.logSeverityLevels,
       {
         id: {
@@ -31,5 +33,5 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+  },
+});

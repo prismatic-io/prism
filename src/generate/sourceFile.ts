@@ -38,7 +38,7 @@ const copyTemplateFileToProject = (
 ) => {
   componentProject.addSourceFileAtPath(projectTemplatePath);
   const templateFile = componentProject.getSourceFileOrThrow(projectTemplatePath);
-  templateFile.copy(path.join(process.cwd(), projectRoot, fileName));
+  templateFile.copy(path.resolve(projectRoot, fileName));
 };
 
 const initializeWSDL = ({

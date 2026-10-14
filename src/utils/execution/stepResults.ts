@@ -1,7 +1,9 @@
 import { decode } from "@msgpack/msgpack";
 import { extension } from "mime-types";
+import { writeCommandOutput } from "../../command.js";
 import { fs } from "../../fs.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { ExecutionResultsDocument as EXECUTION_RESULTS } from "../../graphql/operations/executionResults.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
 
 export interface DeserializeResult {
@@ -54,22 +56,11 @@ export const parseData = (
 
 const getFinalStepResult = async (executionId: string) => {
   const result = await gqlRequest({
-    document: gql`
-      query executionResults($executionId: ID!) {
-        executionResult(id: $executionId) {
-          stepResults(last: 1) {
-            nodes {
-              id
-              stepName
-              resultsUrl
-            }
-          }
-        }
-      }
-    `,
+    document: EXECUTION_RESULTS,
     variables: { executionId },
   });
-  const { resultsUrl } = result.executionResult.stepResults.nodes[0];
+  const resultsUrl = result.executionResult?.stepResults.nodes[0]?.resultsUrl;
+  if (!resultsUrl) throw new Error(`Execution ${executionId} has no final step result`);
   const response = await fetch(resultsUrl);
   const arrayBuffer = await response.arrayBuffer();
   const resultsBuffer = Buffer.from(arrayBuffer);
@@ -95,7 +86,7 @@ export const writeFinalStepResults = async (
 
 export const printFinalStepResults = async (executionId: string): Promise<void> => {
   const result = await getFinalStepResult(executionId);
-  console.log(`
+  writeCommandOutput(`
 ======== Step Results ========
 
 ${result.data}

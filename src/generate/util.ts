@@ -5,6 +5,8 @@ import path from "path";
 import prettier from "prettier";
 import striptags from "striptags";
 import { fileURLToPath } from "url";
+import { z } from "zod";
+import { getWorkingDirectory } from "../command-context.js";
 import { exists, walkDir } from "../fs.js";
 import { fetch } from "../utils/http.js";
 
@@ -61,19 +63,25 @@ export const templateDirectory = async (
   await Promise.all(
     files.map((file) => {
       const relativePath = path.relative(absoluteDir, file);
-      return template(path.join(sourceDir, relativePath), relativePath.replace(/\.ejs$/, ""), data);
+      return template(
+        path.join(sourceDir, relativePath),
+        path.join(getWorkingDirectory(), relativePath.replace(/\.ejs$/, "")),
+        data,
+      );
     }),
   );
 };
 
+const packageVersionSchema = z.object({ version: z.string().trim().min(1) });
+
 const updateDependencies = async (dependencies: Record<string, string>) => {
   const promises = Object.entries(dependencies).map(async ([name, version]) => {
     try {
-      if (version === "*" && !name.includes("@component-manifests")) {
+      if (version === "*") {
         const packageUrl = new URL("https://registry.npmjs.org");
         packageUrl.pathname = `/${name}/latest`;
         const response = await fetch(packageUrl.toString());
-        const data = (await response.json()) as any;
+        const data = packageVersionSchema.parse(await response.json());
         return [name, data.version];
       }
     } catch {

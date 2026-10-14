@@ -1,4 +1,5 @@
-import { gql, gqlRequest } from "../../graphql.js";
+import { ExportDocument as EXPORT } from "../../graphql/operations/export.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import { loadYaml } from "../serialize.js";
 
 /** The version of the Integration definition to request.
@@ -67,26 +68,14 @@ export const exportDefinition = async ({
   definitionVersion = INTEGRATION_DEFINITION_VERSION,
 }: ExportDefinitionProps): Promise<IntegrationDefinition> => {
   const result = await gqlRequest({
-    document: gql`
-      query export(
-        $id: ID!
-        $version: Int!
-        $useLatestComponentVersions: Boolean!
-      ) {
-        integration(id: $id) {
-          definition(
-            version: $version
-            useLatestComponentVersions: $useLatestComponentVersions
-          )
-        }
-      }
-    `,
+    document: EXPORT,
     variables: {
       id: integrationId,
       version: definitionVersion,
       useLatestComponentVersions: latestComponents,
     },
   });
-  const definition: string = result.integration.definition;
+  const definition = result.integration?.definition;
+  if (!definition) throw new Error(`Integration not found: ${integrationId}`);
   return loadYaml(definition) as IntegrationDefinition;
 };

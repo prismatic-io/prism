@@ -1,18 +1,30 @@
 import { describe, expect, it, vi } from "vitest";
-import { getAuthContext } from "../../context.js";
 import { getStdout } from "../../../vitest.setup.js";
+import { getAuthContext } from "../../context.js";
+import { runCommand } from "../../test-command.js";
 import PrintTokenCommand from "./token.js";
 
 describe("me:token", () => {
-  it("prints the refresh token from the active environment session", async () => {
+  it("returns the refresh token from the active environment session", async () => {
     vi.mocked(getAuthContext).mockResolvedValue({
       source: "environment",
       url: "https://ci.example.io",
       refreshToken: "environment-refresh-token",
     });
 
-    await PrintTokenCommand.run(["--type", "refresh"]);
+    const result = await runCommand(PrintTokenCommand, ["--type", "refresh"]);
+    expect(result).toEqual({ token: "environment-refresh-token", type: "refresh" });
+    expect(PrintTokenCommand.output.safeParse(result).success).toBe(true);
+  });
 
-    expect(getStdout()).toContain("environment-refresh-token");
+  it("prints only the bare access token to stdout for humans", async () => {
+    await runCommand(PrintTokenCommand, []);
+    expect(getStdout()).toBe("test-token\n");
+  });
+
+  it("returns the structured token to agents without printing it", async () => {
+    const result = await runCommand(PrintTokenCommand, ["--agent"]);
+    expect(result).toEqual({ token: "test-token", type: "access" });
+    expect(getStdout()).toBe("");
   });
 });

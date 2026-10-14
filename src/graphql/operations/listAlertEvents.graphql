@@ -1,0 +1,12 @@
+query listAlertEvents($alertMonitorId: ID) {
+  alertEvents(monitor: $alertMonitorId, sortBy: [{ field: CREATED_AT, direction: DESC }]) {
+    nodes {
+      id
+      monitor {
+        name
+      }
+      createdAt
+      details
+    }
+  }
+}

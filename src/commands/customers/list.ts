@@ -1,60 +1,82 @@
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
-import { ux } from "../../utils/ux.js";
+import { Cli, z } from "incur";
+import type { ListCustomersQuery } from "../../graphql/customers/listCustomers.generated.js";
+import { ListCustomersDocument as LIST_CUSTOMERS } from "../../graphql/customers/listCustomers.generated.js";
+import { gqlRequest } from "../../graphql.js";
+import { requestFailure } from "../../utils/failure.js";
+import { checkPageCursor, nextPageOptions } from "../../utils/pagination.js";
+import { paginationFlags, printTable, tableFlags } from "../../utils/table.js";
+import { customerRowSchema, pageInfoSchema } from "./schemas.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List your Customers";
-  static flags = { ...ux.table.flags() };
+type CustomerNode = ListCustomersQuery["customers"]["nodes"][number];
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+const isCustomerNode = (node: CustomerNode | null): node is CustomerNode => node !== null;
 
-    let customers: any[] = [];
-    let hasNextPage = true;
-    let cursor = "";
+export default Cli.command({
+  outputPolicy: "agent-only",
+  description: "List your Customers",
+  output: z.object({ items: z.array(customerRowSchema), pageInfo: pageInfoSchema }),
+  options: z.object({ ...tableFlags(), ...paginationFlags() }),
+  async run(context) {
+    const { options: flags } = context;
 
-    while (hasNextPage) {
-      const {
-        customers: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listCustomers($after: String) {
-            customers(isSystem: false, after: $after) {
-              nodes {
-                id
-                name
-                externalId
-                description
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
+    try {
+      let customers: CustomerNode[] = [];
+      let hasNextPage = true;
+      let cursor: string | null = flags.after ?? "";
+      let pageInfo: ListCustomersQuery["customers"]["pageInfo"] = {
+        hasNextPage: false,
+        endCursor: null,
+      };
+
+      const seenCursors = new Set<string>([cursor]);
+      while (hasNextPage) {
+        const {
+          customers: { nodes, pageInfo: nextPageInfo },
+        }: ListCustomersQuery = await gqlRequest({
+          document: LIST_CUSTOMERS,
+          variables: { after: cursor, first: flags.first },
+        });
+        customers = [...customers, ...nodes.filter(isCustomerNode)];
+        checkPageCursor(nextPageInfo, seenCursors);
+        pageInfo = nextPageInfo;
+        cursor = nextPageInfo.endCursor ?? null;
+        hasNextPage = nextPageInfo.hasNextPage && (flags.all === true || !context.agent);
+      }
+
+      const result = printTable(
+        customers,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          externalId: {
+            extended: true,
+            get: ({ externalId }) => externalId,
+          },
+          name: {},
+          description: {},
+        },
+        { ...flags },
+      );
+      return context.ok(
+        { ...result, pageInfo },
+        context.agent && pageInfo.hasNextPage && pageInfo.endCursor
+          ? {
+              cta: {
+                commands: [
+                  {
+                    command: "customers list",
+                    description: "Fetch the next page of customers",
+                    options: nextPageOptions(flags, pageInfo.endCursor),
+                  },
+                ],
+              },
             }
-          }
-        `,
-        variables: { after: cursor },
-      });
-      customers = [...customers, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+          : undefined,
+      );
+    } catch (error) {
+      return context.error(requestFailure(error, "CUSTOMER_LIST_FAILED", true));
     }
-
-    ux.table(
-      customers,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
-        },
-        externalId: {
-          extended: true,
-          get: ({ externalId }) => externalId || "",
-        },
-        name: {},
-        description: {},
-      },
-      { ...flags },
-    );
-  }
-}
+  },
+});

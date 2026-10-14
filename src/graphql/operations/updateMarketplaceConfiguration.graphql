@@ -1,0 +1,23 @@
+mutation updateMarketplaceConfiguration(
+  $id: ID
+  $marketplaceConfiguration: String!
+  $overview: String!
+  $multipleInstances: Boolean
+) {
+  updateIntegrationMarketplaceConfiguration(
+    input: {
+      id: $id
+      marketplaceConfiguration: $marketplaceConfiguration
+      overview: $overview
+      allowMultipleMarketplaceInstances: $multipleInstances
+    }
+  ) {
+    integration {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

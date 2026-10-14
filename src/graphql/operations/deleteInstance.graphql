@@ -1,0 +1,11 @@
+mutation deleteInstance($id: ID!) {
+  deleteInstance(input: { id: $id }) {
+    instance {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

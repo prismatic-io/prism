@@ -1,7 +1,8 @@
-import type { OpenAPI, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
-import { startCase, merge } from "lodash-es";
-import { type Input, cleanIdentifier, stripUndefined } from "../../utils.js";
 import type { InputFieldChoice, InputFieldCollection } from "@prismatic-io/spectral";
+import { merge, startCase } from "lodash-es";
+import type { OpenAPI, OpenAPIV3, OpenAPIV3_1 } from "openapi-types";
+import { cleanIdentifier } from "../../../../utils/identifier.js";
+import { type Input, stripUndefined } from "../../utils.js";
 
 type ParameterObject = OpenAPIV3.ParameterObject | OpenAPIV3_1.ParameterObject;
 
@@ -156,8 +157,9 @@ const getProperties = (
   schema: OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject,
 ): Record<string, OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject> => {
   return merge(
+    {},
     schema.properties ?? {},
-    ...(schema.allOf ?? []).map((v) => (v as any).properties), // FIXME: any usage
+    ...(schema.allOf ?? []).map((v) => getProperties(v as OpenAPIV3.SchemaObject)),
   ) as Record<string, OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject>;
 };
 
@@ -165,7 +167,11 @@ const buildBodyInputs = (
   schema: OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject,
   seenKeys: Set<string>,
 ): Input[] => {
-  const requiredKeys = new Set(schema.required ?? []);
+  const requiredIn = (value: OpenAPIV3.SchemaObject | OpenAPIV3_1.SchemaObject): string[] => [
+    ...(value.required ?? []),
+    ...(value.allOf ?? []).flatMap((part) => ("$ref" in part ? [] : requiredIn(part))),
+  ];
+  const requiredKeys = new Set(requiredIn(schema));
   const properties = getProperties(schema);
 
   return Object.entries(properties)

@@ -1,0 +1,11 @@
+mutation createCustomerUser($name: String, $email: String!, $role: ID!, $customer: ID!) {
+  createCustomerUser(input: { name: $name, email: $email, role: $role, customer: $customer }) {
+    user {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

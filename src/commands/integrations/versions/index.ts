@@ -1,59 +1,33 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
-
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Integration versions";
-
-  static flags = {
-    ...ux.table.flags(),
-    "latest-available": Flags.boolean({
-      char: "l",
-      description: "Show only the latest available version",
-    }),
-  };
-
-  static args = {
-    integration: Args.string({
-      required: true,
-      description: "ID of an integration",
-    }),
-  };
-
-  async run() {
+import { Cli, z } from "incur";
+import { ListIntegrationVersionsDocument as LIST_INTEGRATION_VERSIONS } from "../../../graphql/operations/listIntegrationVersions.generated.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
+import { printTable, tableFlags, tableOutputSchema } from "../../../utils/table.js";
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema([
+    "versionNumber",
+    "id",
+    "versionCreatedAt",
+    "versionCreatedBy",
+    "versionComment",
+    "available",
+  ]),
+  description: "List Integration versions",
+  options: z.object({
+    ...tableFlags(),
+    "latest-available": z.boolean().optional().describe("Show only the latest available version"),
+  }),
+  args: z.object({
+    integration: z.string().describe("ID of an integration"),
+  }),
+  async run(context) {
     const {
-      flags,
+      options: flags,
       args: { integration },
-    } = await this.parse(ListCommand);
+    } = context;
 
     const result = await gqlRequest({
-      document: gql`
-        query listIntegrationVersions(
-          $integrationId: ID!
-          $onlyAvailable: Boolean
-          $onlyShowOne: Int
-        ) {
-          integration(id: $integrationId) {
-            versionSequence(
-              versionIsAvailable: $onlyAvailable
-              sortBy: [{ field: VERSION_NUMBER, direction: DESC }]
-              first: $onlyShowOne
-            ) {
-              nodes {
-                id
-                versionNumber
-                versionCreatedAt
-                versionCreatedBy {
-                  email
-                }
-                versionComment
-                versionIsAvailable
-              }
-            }
-          }
-        }
-      `,
+      document: LIST_INTEGRATION_VERSIONS,
       variables: {
         integrationId: integration,
         onlyAvailable: flags["latest-available"] ? true : null,
@@ -61,35 +35,36 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
     });
 
-    ux.table(
-      result.integration.versionSequence.nodes,
+    return printTable(
+      requireResource(result.integration, "Integration").versionSequence.nodes,
       {
         versionNumber: {
           header: "Version",
         },
         id: {
           header: "ID",
-          get: (row: any) => row.id,
+          get: (row) => row.id,
           extended: true,
         },
         versionCreatedAt: {
           header: "Created At",
-          get: (row: any) => new Date(row.versionCreatedAt).toISOString(),
+          get: (row) => new Date(row.versionCreatedAt ?? 0).toISOString(),
         },
         versionCreatedBy: {
           header: "Created By",
-          get: (row: any) => row.versionCreatedBy?.email ?? "",
+          get: (row) => row.versionCreatedBy?.email ?? "",
         },
         versionComment: {
           header: "Comment",
-          get: (row: any) => row.versionComment ?? "",
+          get: (row) => row.versionComment ?? "",
         },
         available: {
           header: "Available",
-          get: (row: any) => row.versionIsAvailable,
+          get: (row) => row.versionIsAvailable,
         },
       },
       { ...flags },
     );
-  }
-}
+  },
+  alias: { "latest-available": "l" },
+});

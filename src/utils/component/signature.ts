@@ -1,4 +1,5 @@
-import { gql, gqlRequest } from "../../graphql.js";
+import { Component3Document as COMPONENT3 } from "../../graphql/operations/component3.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import type { ComponentDefinition } from "./index.js";
 
 interface GetPackageSignatureFromApiProps {
@@ -11,15 +12,7 @@ export const getPackageSignatureFromApi = async ({
   packageSignature,
 }: GetPackageSignatureFromApiProps): Promise<string | null> => {
   const results = await gqlRequest({
-    document: gql`
-      query component($key: String!, $public: Boolean!) {
-        components(key: $key, public: $public) {
-          nodes {
-            signature
-          }
-        }
-      }
-    `,
+    document: COMPONENT3,
     variables: {
       key: componentDefinition.key,
       public: componentDefinition.public ?? false,

@@ -1,0 +1,11 @@
+mutation publishIntegration($id: ID!, $comment: String, $attributes: String) {
+  publishIntegration(input: { id: $id, comment: $comment, attributes: $attributes }) {
+    integration {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

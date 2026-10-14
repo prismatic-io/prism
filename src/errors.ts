@@ -1,14 +1,47 @@
-import type { handle, Interfaces } from "@oclif/core";
 import { getReasonPhrase, StatusCodes } from "http-status-codes";
+import { Errors } from "incur";
 import type { ClientError } from "./graphql.js";
 
-type OclifError = Interfaces.OclifError;
+type CommandErrorOptions = Omit<Errors.IncurError.Options, "code" | "exitCode">;
+
+abstract class CommandError extends Errors.IncurError {
+  // Native result envelopes spread their inputs; Error.message is not enumerable.
+  toResult() {
+    return {
+      code: this.code,
+      message: this.message,
+      exitCode: this.exitCode,
+      retryable: this.retryable,
+    };
+  }
+}
+
+export class ValidationError extends CommandError {
+  constructor(options: CommandErrorOptions) {
+    super({ ...options, code: "VALIDATION_ERROR", exitCode: 2 });
+  }
+}
+
+export class CommandFailedError extends CommandError {
+  constructor(options: CommandErrorOptions) {
+    super({ ...options, code: "COMMAND_FAILED", exitCode: 1 });
+  }
+}
+
+export class ConfirmationRequiredError extends CommandError {
+  constructor(options: CommandErrorOptions) {
+    super({ ...options, code: "CONFIRMATION_REQUIRED", exitCode: 2 });
+  }
+}
+
+export class NotFoundError extends CommandError {
+  constructor(options: CommandErrorOptions) {
+    super({ ...options, code: "NOT_FOUND", exitCode: 1 });
+  }
+}
 
 const isError = (error: unknown): error is Error =>
   Boolean(error) && typeof error === "object" && error !== null && "message" in error;
-
-const isOclifError = (error: unknown): error is Error & OclifError =>
-  isError(error) && "oclif" in error;
 
 const isClientError = (error: unknown): error is ClientError =>
   isError(error) && "response" in error && "request" in error;
@@ -45,32 +78,20 @@ const extractResponseError = ({ response: { errors = [], status } }: ClientError
   }
 };
 
-type ErrorToHandle = Parameters<typeof handle>[0];
-
-export const processError = (error: unknown): ErrorToHandle => {
-  if (isOclifError(error)) {
-    return error;
-  }
-
+export const processError = (error: unknown): Error => {
   if (isClientError(error)) {
-    return {
-      ...error,
+    return Object.assign(new Error(extractResponseError(error)), {
       name: errorName(error, "ClientError"),
-      message: extractResponseError(error),
-    };
+    });
   }
 
-  // Oclif needs the non-enumerable error name copied explicitly.
+  // Preserve the non-enumerable error name when normalizing errors.
   if (isError(error)) {
-    return {
-      ...error,
+    return Object.assign(error, {
       name: errorName(error),
       message: fallbackMessage(error.message, "Unknown error"),
-    };
+    });
   }
 
-  return {
-    name: "Error",
-    message: fallbackMessage(String(error), "Unknown error"),
-  };
+  return new Error(fallbackMessage(String(error), "Unknown error"));
 };

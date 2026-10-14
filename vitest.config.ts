@@ -1,32 +1,33 @@
-import { readFileSync } from "node:fs";
-import { defineConfig, type Plugin } from "vitest/config";
-
-const graphqlPlugin = (): Plugin => ({
-  name: "graphql-loader",
-  transform: (_, id) => {
-    if (id.endsWith(".graphql")) {
-      const content = readFileSync(id, "utf-8");
-      return {
-        code: `export default ${JSON.stringify(content)};`,
-        map: null,
-      };
-    }
-  },
-});
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [graphqlPlugin()],
   test: {
-    // Cold oclif command initialization can exceed five seconds on Windows runners.
-    testTimeout: process.platform === "win32" ? 15_000 : 5_000,
-    clearMocks: true,
-    restoreMocks: true,
-    unstubEnvs: true,
-    unstubGlobals: true,
-    include: ["src/**/*.test.ts"],
-    exclude: ["**/node_modules/**"],
-    environment: "node",
-    setupFiles: ["./vitest.setup.ts"],
-    disableConsoleIntercept: true,
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          // Cold CLI startup on Windows runners can exceed five seconds.
+          testTimeout: process.platform === "win32" ? 30_000 : 5_000,
+          clearMocks: true,
+          restoreMocks: true,
+          unstubEnvs: true,
+          unstubGlobals: true,
+          include: ["src/**/*.test.ts"],
+          exclude: ["**/node_modules/**", "**/temp/**"],
+          environment: "node",
+          setupFiles: ["./vitest.setup.ts"],
+          disableConsoleIntercept: true,
+        },
+      },
+      {
+        test: {
+          name: "cli",
+          include: ["test/cli/**/*.test.ts"],
+          environment: "node",
+          testTimeout: 35_000,
+        },
+      },
+    ],
   },
 });

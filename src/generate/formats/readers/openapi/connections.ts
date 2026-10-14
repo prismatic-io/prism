@@ -19,6 +19,9 @@ export const buildConnections = (
   if (scheme.type === "apiKey" || (scheme.type === "http" && scheme.scheme === "bearer")) {
     const connection = stripUndefined<Connection>({
       orderPriority: 50,
+      ...(scheme.type === "apiKey"
+        ? { apiKey: { in: scheme.in as "header" | "query" | "cookie", name: scheme.name } }
+        : {}),
       key: camelCase(key),
       display: {
         label: startCase(key),

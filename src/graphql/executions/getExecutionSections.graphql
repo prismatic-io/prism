@@ -1,5 +1,6 @@
 query GetExecutionSections($executionId: ID!, $sectionIds: [UUID!]) {
   executionSections(
+    first: 100
     executionResult: $executionId
     sectionId_In: $sectionIds
     orderBy: { field: STARTED_AT, direction: ASC }

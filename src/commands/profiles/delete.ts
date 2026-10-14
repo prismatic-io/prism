@@ -1,35 +1,66 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { Cli, z } from "incur";
+import { writeCommandStatus } from "../../command.js";
 import { deleteProfile } from "../../config.js";
+import { NotFoundError } from "../../errors.js";
+import { warningsOutput } from "../../output.js";
 
-export default class ProfilesDeleteCommand extends PrismaticBaseCommand {
-  static description = "Delete a profile";
-
-  static args = {
-    name: Args.string({
-      required: true,
-      description: "Profile to delete",
-    }),
-  };
-
-  async run() {
+export default Cli.command({
+  output: z.object({
+    profile: z.string(),
+    deleted: z.literal(true),
+    defaultProfile: z.string().nullable(),
+    ...warningsOutput,
+  }),
+  description: "Delete a profile",
+  args: z.object({
+    name: z.string().describe("Profile to delete"),
+  }),
+  async run(context) {
     const {
       args: { name },
-    } = await this.parse(ProfilesDeleteCommand);
+    } = context;
 
     const result = await deleteProfile(name);
     if (!result.deleted) {
-      this.error(`Profile '${name}' does not exist.`, { exit: 1 });
+      return context.error({
+        ...new NotFoundError({ message: `Profile '${name}' does not exist.` }).toResult(),
+        cta: { commands: [{ command: "profiles list", description: "List available profiles" }] },
+      });
     }
 
     if (result.isLast) {
-      this.log(`Deleted '${name}'. No profiles remain.`);
-      return;
+      writeCommandStatus(`Deleted '${name}'. No profiles remain.`);
+      return context.ok(
+        { profile: name, deleted: true, defaultProfile: null },
+        {
+          cta: {
+            commands: [
+              {
+                command: "login",
+                description: "Authenticate a new default profile",
+                options: { profile: "default" },
+              },
+            ],
+          },
+        },
+      );
     }
 
-    this.log(`Deleted '${name}'.`);
+    writeCommandStatus(`Deleted '${name}'.`);
     if (result.defaultChanged) {
-      this.log(`Default profile is now '${result.defaultProfile}'.`);
+      writeCommandStatus(`Default profile is now '${result.defaultProfile}'.`);
     }
-  }
-}
+    return context.ok(
+      {
+        profile: name,
+        deleted: true,
+        defaultProfile: result.defaultProfile ?? null,
+      },
+      {
+        cta: {
+          commands: [{ command: "profiles list", description: "Inspect the remaining profiles" }],
+        },
+      },
+    );
+  },
+});

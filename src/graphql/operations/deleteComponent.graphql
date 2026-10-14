@@ -1,0 +1,11 @@
+mutation deleteComponent($id: ID!) {
+  deleteComponent(input: { id: $id }) {
+    component {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

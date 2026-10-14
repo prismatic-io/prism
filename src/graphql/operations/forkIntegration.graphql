@@ -1,0 +1,11 @@
+mutation forkIntegration($parentID: ID!, $name: String!, $description: String!) {
+  forkIntegration(input: { parent: $parentID, name: $name, description: $description }) {
+    integration {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

@@ -1,0 +1,25 @@
+query listInstances($customer: ID, $integration: ID, $after: String, $first: Int) {
+  instances(
+    customer: $customer
+    integration: $integration
+    isSystem: false
+    after: $after
+    first: $first
+  ) {
+    nodes {
+      id
+      name
+      description
+      enabled
+      customer {
+        id
+        name
+        externalId
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

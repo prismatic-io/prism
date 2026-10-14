@@ -1,174 +1,77 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-import { type LogNode, SectionLabelResolver } from "../../../utils/integration/flows.js";
-import { ux } from "../../../utils/ux.js";
+import { setTimeout as sleep } from "node:timers/promises";
+import { Cli, z } from "incur";
+import { commandSignal } from "../../../command.js";
+import { ListInstanceTestLogsDocument as LIST_INSTANCE_TEST_LOGS } from "../../../graphql/operations/listInstanceTestLogs.generated.js";
+import { TestInstanceFlowConfigDocument as TEST_INSTANCE_FLOW_CONFIG } from "../../../graphql/operations/testInstanceFlowConfig.generated.js";
+import { gqlRequest } from "../../../graphql.js";
+import { type ExecutionEvent, executionEventSchema } from "../../../utils/execution-output.js";
+import { SectionLabelResolver } from "../../../utils/integration/flows.js";
+import { tableFlags } from "../../../utils/table.js";
 
-interface FetchLogsResult {
-  logs: LogNode[];
-  cursor: string | undefined;
-  executionComplete: boolean | undefined;
-}
-
-export default class TestCommand extends PrismaticBaseCommand {
-  static description = "Test a Flow Config of an Instance";
-  static args = {
-    flowConfig: Args.string({
-      description: "ID of a Flow Config to test",
-      required: true,
-    }),
-  };
-
-  static flags = {
-    ...ux.table.flags({ only: ["extended", "columns"] }),
-    tail: Flags.boolean({
-      required: false,
-      char: "t",
-      description: "Tail logs of the flow config test run",
-    }),
-    payload: Flags.string({
-      required: false,
-      char: "p",
-      description: "Optional JSON-formatted data payload to submit with the test",
-    }),
-    contentType: Flags.string({
-      required: false,
-      char: "c",
-      description: "Optional content-type for the test payload",
-    }),
-  };
-
-  async run() {
-    const {
-      args: { flowConfig },
-      flags: { tail, payload, contentType },
-    } = await this.parse(TestCommand);
-
+export default Cli.command({
+  output: executionEventSchema,
+  description: "Test a Flow Config of an Instance",
+  args: z.object({ flowConfig: z.string().describe("ID of a Flow Config to test") }),
+  options: z.object({
+    ...tableFlags({ only: ["extended", "columns"] }),
+    tail: z.boolean().optional().describe("Tail logs of the flow config test run"),
+    payload: z
+      .string()
+      .optional()
+      .describe("Optional JSON-formatted data payload to submit with the test"),
+    contentType: z.string().optional().describe("Optional content-type for the test payload"),
+  }),
+  async *run(context): AsyncGenerator<ExecutionEvent> {
+    const { flowConfig } = context.args;
+    const { tail, payload, contentType, columns } = context.options;
+    const signal = commandSignal();
+    signal?.throwIfAborted();
     const result = await gqlRequest({
-      document: gql`
-        mutation testInstanceFlowConfig(
-          $id: ID!
-          $payload: String
-          $contentType: String
-        ) {
-          testInstanceFlowConfig(
-            input: { id: $id, payload: $payload, contentType: $contentType }
-          ) {
-            testInstanceFlowConfigResult {
-              flowConfig {
-                id
-              }
-              execution {
-                id
-              }
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
-      variables: {
-        id: flowConfig,
-        payload,
-        contentType,
-      },
+      document: TEST_INSTANCE_FLOW_CONFIG,
+      variables: { id: flowConfig, payload, contentType },
     });
-
-    if (!tail) {
-      return;
-    }
-
-    const executionId = result.testInstanceFlowConfig.testInstanceFlowConfigResult.execution.id;
-    await this.tailLogs(executionId);
-  }
-
-  private async tailLogs(executionId: string) {
-    const { flags } = await this.parse(TestCommand);
-
-    let nextCursor: string | undefined;
-    const sectionLabels = new SectionLabelResolver(executionId);
-
-    while (true) {
-      await ux.wait(500);
-
-      const result = await this.fetchLogs(executionId, nextCursor);
-      if (result === undefined) continue;
-
-      const { logs, cursor, executionComplete } = result;
-
-      nextCursor = cursor;
-
-      await sectionLabels.resolve(logs);
-
-      ux.table(
-        logs,
-        {
-          timestamp: {},
-          severity: {
-            minWidth: 12,
-          },
-          message: {
-            get: (row) => {
-              const sectionName = sectionLabels.sectionName(row);
-              return sectionName ? `[${sectionName}] ${row.message}` : row.message;
-            },
-          },
-        },
-        { ...flags, "no-header": true },
-      );
-
-      if (executionComplete) return;
-    }
-  }
-
-  private async fetchLogs(
-    executionId: string,
-    nextCursor?: string,
-  ): Promise<FetchLogsResult | undefined> {
-    const results = await gqlRequest({
-      document: gql`
-        query listInstanceTestLogs($executionId: ID!, $nextCursor: String) {
-          logs(
-            executionResult: $executionId
-            after: $nextCursor
-            orderBy: { field: TIMESTAMP, direction: ASC }
-          ) {
-            edges {
-              node {
-                timestamp
-                severity
-                message
-                sectionId
-              }
-              cursor
-            }
-          }
+    const executionId = result.testInstanceFlowConfig?.testInstanceFlowConfigResult?.execution?.id;
+    if (!executionId) throw new Error("Flow config test did not create an execution");
+    yield { type: "execution", executionId, flowConfigId: flowConfig };
+    if (tail) {
+      const sectionLabels = new SectionLabelResolver(executionId);
+      let nextCursor: string | undefined;
+      while (true) {
+        await sleep(500, undefined, { signal });
+        const batch = await fetchInstanceLogs(executionId, nextCursor);
+        if (!batch) continue;
+        nextCursor = batch.cursor;
+        const warning = await sectionLabels.resolve(batch.logs);
+        if (warning) yield { type: "warning", message: warning };
+        for (const node of batch.logs) {
+          const log = { ...node, sectionName: sectionLabels.sectionName(node) };
+          const selected = columns?.split(",").map((name) => name.trim().toLowerCase());
+          const data = selected
+            ? Object.fromEntries(
+                Object.entries(log).filter(([key]) => selected.includes(key.toLowerCase())),
+              )
+            : log;
+          yield { type: "log", executionId, data };
         }
-      `,
-      variables: {
-        executionId,
-        nextCursor,
-      },
-    });
-
-    const {
-      edges,
-    }: {
-      edges: { cursor?: string; node: LogNode }[];
-    } = results.logs;
-    if (!edges || edges.length === 0) {
-      return undefined;
+        if (batch.executionComplete) break;
+      }
     }
+    yield { type: "completed", executionId, status: tail ? "completed" : "submitted" };
+  },
+  alias: { contentType: "c", payload: "p", tail: "t" },
+});
 
-    const logs = edges.map(({ node }) => node);
-    const executionComplete = logs.reduce<boolean>(
-      (result: boolean, { message }) => result || message.startsWith("Ending Instance Execution"),
-      false,
-    );
-
-    const { cursor } = edges[edges.length - 1];
-    return { logs, cursor, executionComplete };
-  }
+export async function fetchInstanceLogs(executionId: string, nextCursor?: string) {
+  const result = await gqlRequest({
+    document: LIST_INSTANCE_TEST_LOGS,
+    variables: { executionId, nextCursor },
+  });
+  const edges = result.logs.edges;
+  if (!edges.length) return undefined;
+  const logs = edges.flatMap((edge) => (edge.node ? [edge.node] : []));
+  return {
+    logs,
+    cursor: edges.at(-1)?.cursor,
+    executionComplete: logs.some(({ message }) => message.startsWith("Ending Instance Execution")),
+  };
 }

@@ -1,0 +1,16 @@
+query stepPayloadUrl($id: ID!, $filterGroups: [EventFilterGroup!]) {
+  executionRun(id: $id) {
+    id
+    events(first: 1, typeIn: [STEP_RESULT], filterGroups: $filterGroups) {
+      nodes {
+        __typename
+        id
+        ... on StepResultEvent {
+          stepName
+          hasStoredPayload
+          payloadUrl
+        }
+      }
+    }
+  }
+}

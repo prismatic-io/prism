@@ -1,91 +1,102 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { Cli, z } from "incur";
+import { UpdateCustomerDocument as UPDATE_CUSTOMER } from "../../graphql/operations/updateCustomer.generated.js";
+import { gqlRequest } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
+import { requestFailure } from "../../utils/failure.js";
+import { nonBlank } from "./schemas.js";
 
-export default class UpdateCommand extends PrismaticBaseCommand {
-  // TODO: Add more flags once optional updates are implemented
-  static description = "Update a Customer";
-  static args = {
-    customer: Args.string({
-      required: true,
-      description: "ID of a customer",
-    }),
-  };
-
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      description: "name of the customer",
-      required: false,
-    }),
-    description: Flags.string({
-      char: "d",
-      description: "description of the customer",
-      required: false,
-    }),
-    externalId: Flags.string({
-      char: "e",
-      description: "external ID of the customer from your system",
-    }),
-    label: Flags.string({
-      char: "l",
-      description: "a label to apply to the customer",
-      multiple: true,
-    }),
-  };
-
-  static examples = [
+export default Cli.command({
+  output: z.object({ customerId: nonBlank }).extend(warningsOutput),
+  description: "Update a Customer",
+  args: z.object({
+    customer: nonBlank.describe("ID of a customer"),
+  }),
+  options: z
+    .object({
+      name: nonBlank.optional().describe("name of the customer"),
+      description: z.string().optional().describe("description of the customer"),
+      externalId: z.string().optional().describe("external ID of the customer from your system"),
+      label: z.array(nonBlank).optional().describe("a label to apply to the customer"),
+    })
+    .refine(
+      (options) =>
+        options.name !== undefined ||
+        options.description !== undefined ||
+        options.externalId !== undefined ||
+        options.label !== undefined,
+      {
+        message: "Provide at least one field to update",
+      },
+    ),
+  alias: { label: "l", externalId: "e", description: "d", name: "n" },
+  examples: [
     {
       description:
         "Apply multiple labels to a customer (note: previously set labels will be overwritten)",
-      command:
-        '<%= config.bin %> <%= command.id %> Q3VzdG9tZXI6MmUzZDllOTUtMWIyMy00N2FjLTk3MjUtMzU1OTA2YzgyZWZj --label "Prod Customers" --label "Beta Testers"',
+      args: { customer: "Q3VzdG9tZXI6MmUzZDllOTUtMWIyMy00N2FjLTk3MjUtMzU1OTA2YzgyZWZj" },
+      options: { label: ["Prod Customers", "Beta Testers"] },
     },
-  ];
-
-  async run() {
+  ],
+  async run(context) {
     const {
       args: { customer },
-      flags: { name, description, externalId, label },
-    } = await this.parse(UpdateCommand);
+      options: { name, description, externalId, label },
+    } = context;
 
-    const result = await gqlRequest({
-      document: gql`
-        mutation updateCustomer(
-          $id: ID!
-          $name: String
-          $description: String
-          $externalId: String
-          $labels: [String]
-        ) {
-          updateCustomer(
-            input: {
-              id: $id
-              name: $name
-              description: $description
-              externalId: $externalId
-              labels: $labels
-            }
-          ) {
-            customer {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
-      variables: {
-        id: customer,
-        name,
-        description,
-        externalId,
-        labels: label,
-      },
-    });
+    try {
+      const result = await gqlRequest({
+        document: UPDATE_CUSTOMER,
+        variables: {
+          id: customer,
+          name,
+          description,
+          externalId,
+          labels: label,
+        },
+      });
 
-    this.log(result.updateCustomer.customer.id);
-  }
-}
+      const customerId = result.updateCustomer?.customer?.id;
+      if (!customerId)
+        return context.error({
+          code: "CUSTOMER_UPDATE_FAILED",
+          message: "Customer was not updated",
+          exitCode: 1,
+          retryable: false,
+          cta: {
+            commands: [
+              {
+                command: "customers list",
+                description: "Inspect customers before retrying this change",
+              },
+            ],
+          },
+        });
+      return context.ok(
+        { customerId },
+        {
+          cta: {
+            commands: [
+              {
+                command: "customers users list",
+                description: "Inspect this customer's users",
+                args: { customer: customerId },
+              },
+            ],
+          },
+        },
+      );
+    } catch (error) {
+      return context.error({
+        ...requestFailure(error, "CUSTOMER_UPDATE_FAILED"),
+        cta: {
+          commands: [
+            {
+              command: "customers list",
+              description: "Inspect customers before retrying this change",
+            },
+          ],
+        },
+      });
+    }
+  },
+});

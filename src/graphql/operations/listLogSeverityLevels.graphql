@@ -1,0 +1,6 @@
+query listLogSeverityLevels {
+  logSeverityLevels {
+    id
+    name
+  }
+}

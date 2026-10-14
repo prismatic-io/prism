@@ -1,0 +1,12 @@
+mutation commitAvatarUpload($organizationId: ID!, $avatarUrl: String!) {
+  updateOrganization(input: { id: $organizationId, avatarUrl: $avatarUrl }) {
+    organization {
+      id
+      avatarUrl
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

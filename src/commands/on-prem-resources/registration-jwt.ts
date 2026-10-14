@@ -1,96 +1,80 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { Cli, z } from "incur";
+import { ValidationError } from "../../errors.js";
+import { CreateOnPremiseResourceJwtDocument as CREATE_ON_PREMISE_RESOURCE_JWT } from "../../graphql/operations/createOnPremiseResourceJWT.generated.js";
+import { RotateOnPremiseResourceJwtDocument as ROTATE_ON_PREMISE_RESOURCE_JWT } from "../../graphql/operations/rotateOnPremiseResourceJWT.generated.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
 
 const onlyWhenOrgUser = "Only valid for Organization users.";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create a JWT that may be used to register an On-Premise Resource.";
-  static flags = {
-    customerId: Flags.string({
-      char: "c",
-      required: false,
-      description: `The ID of the customer for which to create the JWT. ${onlyWhenOrgUser}`,
-    }),
-    orgOnly: Flags.boolean({
-      required: false,
-      description: `Register a Resource available to Organization users only. ${onlyWhenOrgUser}`,
-    }),
-    resourceId: Flags.string({
-      char: "r",
-      required: false,
-      description:
+export default Cli.command({
+  output: z.object({ token: z.string() }).extend(warningsOutput),
+  description: "Create a JWT that may be used to register an On-Premise Resource.",
+  options: z.object({
+    customerId: z
+      .string()
+      .optional()
+      .describe(`The ID of the customer for which to create the JWT. ${onlyWhenOrgUser}`),
+    orgOnly: z
+      .boolean()
+      .optional()
+      .describe(`Register a Resource available to Organization users only. ${onlyWhenOrgUser}`),
+    resourceId: z
+      .string()
+      .optional()
+      .describe(
         "An optional ID of an existing On-Premise Resource for which to generate a new JWT.",
-    }),
-    rotate: Flags.boolean({
-      required: false,
-      description: "Invalidate all JWTs for the On-Premise Resource and get a new JWT.",
-    }),
-  };
-
-  async run() {
+      ),
+    rotate: z
+      .boolean()
+      .optional()
+      .describe("Invalidate all JWTs for the On-Premise Resource and get a new JWT."),
+  }),
+  async run(context) {
     const {
-      flags: { customerId, orgOnly, resourceId, rotate },
-    } = await this.parse(CreateCommand);
+      options: { customerId, orgOnly, resourceId, rotate },
+    } = context;
 
     if (rotate) {
+      const requiredValue3 = resourceId;
+      if (requiredValue3 == null)
+        throw new ValidationError({
+          message: "--rotate requires --resourceId",
+        });
       const result = await gqlRequest({
-        document: gql`
-          mutation rotateOnPremiseResourceJWT(
-            $customerId: ID
-            $resourceId: ID!
-            $orgOnly: Boolean
-          ) {
-            rotateOnPremiseResourceJWT(
-              input: { customerId: $customerId, orgOnly: $orgOnly, resourceId: $resourceId }
-            ) {
-              result {
-                jwt
-              }
-              errors {
-                field
-                messages
-              }
-            }
-          }
-        `,
+        document: ROTATE_ON_PREMISE_RESOURCE_JWT,
         variables: {
           customerId,
-          resourceId,
+          resourceId: requiredValue3,
           orgOnly,
         },
       });
+      const requiredValue2 = requireOperationResult(
+        result.rotateOnPremiseResourceJWT?.result?.jwt,
+        "On-premise resource JWT was not rotated",
+      );
 
-      this.log(result.rotateOnPremiseResourceJWT.result.jwt);
+      return {
+        token: requiredValue2,
+      };
     } else {
       const result = await gqlRequest({
-        document: gql`
-          mutation createOnPremiseResourceJWT(
-            $customerId: ID
-            $resourceId: ID
-            $orgOnly: Boolean
-          ) {
-            createOnPremiseResourceJWT(
-              input: { customerId: $customerId, orgOnly: $orgOnly, resourceId: $resourceId }
-            ) {
-              result {
-                jwt
-              }
-              errors {
-                field
-                messages
-              }
-            }
-          }
-        `,
+        document: CREATE_ON_PREMISE_RESOURCE_JWT,
         variables: {
           customerId,
           resourceId,
           orgOnly,
         },
       });
+      const requiredValue1 = requireOperationResult(
+        result.createOnPremiseResourceJWT?.result?.jwt,
+        "On-premise resource JWT was not created",
+      );
 
-      this.log(result.createOnPremiseResourceJWT.result.jwt);
+      return {
+        token: requiredValue1,
+      };
     }
-  }
-}
+  },
+  alias: { resourceId: "r", customerId: "c" },
+});

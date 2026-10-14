@@ -1,81 +1,96 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { Cli, z } from "incur";
+import {
+  ListCustomerUsersDocument as LIST_CUSTOMER_USERS,
+  type ListCustomerUsersQuery,
+} from "../../../graphql/customers/listCustomerUsers.generated.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
+import { requestFailure } from "../../../utils/failure.js";
+import { checkPageCursor, nextPageOptions } from "../../../utils/pagination.js";
+import { paginationFlags, printTable, tableFlags } from "../../../utils/table.js";
+import { customerUserRowSchema, nonBlank, pageInfoSchema } from "../schemas.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Customer Users";
-  static args = {
-    customer: Args.string({
-      description: "ID of the customer",
-      required: true,
-    }),
-  };
+type CustomerUserNode = NonNullable<ListCustomerUsersQuery["customer"]>["users"]["nodes"][number];
 
-  static flags = {
-    ...ux.table.flags(),
-  };
+const isCustomerUserNode = (node: CustomerUserNode | null): node is CustomerUserNode =>
+  node !== null;
 
-  async run() {
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: z.object({ items: z.array(customerUserRowSchema), pageInfo: pageInfoSchema }),
+  description: "List Customer Users",
+  args: z.object({
+    customer: nonBlank.describe("ID of the customer"),
+  }),
+  options: z.object({
+    ...tableFlags(),
+    ...paginationFlags(),
+  }),
+  async run(context) {
     const {
       args: { customer },
-      flags,
-    } = await this.parse(ListCommand);
+      options: flags,
+    } = context;
 
-    let customerUsers: any[] = [];
-    let hasNextPage = true;
-    let cursor = "";
+    try {
+      let customerUsers: CustomerUserNode[] = [];
+      let hasNextPage = true;
+      let cursor: string | null = flags.after ?? "";
+      let finalPageInfo: { hasNextPage: boolean; endCursor: string | null } = {
+        hasNextPage: false,
+        endCursor: null,
+      };
 
-    while (hasNextPage) {
-      const {
-        customer: {
-          users: { nodes, pageInfo },
+      const seenCursors = new Set<string>([cursor]);
+      while (hasNextPage) {
+        const response: ListCustomerUsersQuery = await gqlRequest({
+          document: LIST_CUSTOMER_USERS,
+          variables: { id: customer, after: cursor, first: flags.first },
+        });
+        const resource = requireResource(response.customer, "Customer");
+        const { nodes, pageInfo } = resource.users;
+        customerUsers = [...customerUsers, ...nodes.filter(isCustomerUserNode)];
+        checkPageCursor(pageInfo, seenCursors);
+        cursor = pageInfo.endCursor ?? null;
+        finalPageInfo = pageInfo;
+        hasNextPage = pageInfo.hasNextPage && (flags.all === true || !context.agent);
+      }
+
+      const result = printTable(
+        customerUsers,
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          name: {},
+          email: {},
+          role: { get: ({ role: { name } }) => name },
+          externalId: {
+            extended: true,
+            get: ({ externalId }) => externalId,
+          },
         },
-      } = await gqlRequest({
-        document: gql`
-          query listCustomerUsers($id: ID!, $after: String) {
-            customer(id: $id) {
-              users(after: $after) {
-                nodes {
-                  id
-                  name
-                  email
-                  externalId
-                  role {
-                    name
-                  }
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
+        { ...flags },
+      );
+      return context.ok(
+        { ...result, pageInfo: finalPageInfo },
+        context.agent && finalPageInfo.hasNextPage && finalPageInfo.endCursor
+          ? {
+              cta: {
+                commands: [
+                  {
+                    command: "customers users list",
+                    args: { customer },
+                    description: "Fetch the next page of this customer's users",
+                    options: nextPageOptions(flags, finalPageInfo.endCursor),
+                  },
+                ],
+              },
             }
-          }
-        `,
-        variables: { id: customer, after: cursor },
-      });
-      customerUsers = [...customerUsers, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+          : undefined,
+      );
+    } catch (error) {
+      return context.error(requestFailure(error, "CUSTOMER_USERS_LIST_FAILED", true));
     }
-
-    ux.table(
-      customerUsers,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
-        },
-        name: {},
-        email: {},
-        role: { get: ({ role: { name } }) => name },
-        externalId: {
-          extended: true,
-          get: ({ externalId }) => externalId || "",
-        },
-      },
-      { ...flags },
-    );
-  }
-}
+  },
+});

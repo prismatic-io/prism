@@ -1,0 +1,13 @@
+mutation rotateOnPremiseResourceJWT($customerId: ID, $resourceId: ID!, $orgOnly: Boolean) {
+  rotateOnPremiseResourceJWT(
+    input: { customerId: $customerId, orgOnly: $orgOnly, resourceId: $resourceId }
+  ) {
+    result {
+      jwt
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

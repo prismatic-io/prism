@@ -1,0 +1,27 @@
+mutation createInstance(
+  $name: String!
+  $description: String
+  $integration: ID!
+  $customer: ID!
+  $configVariables: [InputInstanceConfigVariable]
+  $labels: [String]
+) {
+  createInstance(
+    input: {
+      name: $name
+      description: $description
+      integration: $integration
+      customer: $customer
+      configVariables: $configVariables
+      labels: $labels
+    }
+  ) {
+    instance {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

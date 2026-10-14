@@ -1,0 +1,50 @@
+query listComponents(
+  $after: String
+  $first: Int
+  $filterQuery: JSONString
+  $search: String
+  $category: String
+  $public: Boolean
+  $hasActions: Boolean
+  $hasTriggers: Boolean
+  $hasDataSources: Boolean
+  $hasDataSourcesOfType: String
+  $hasConnections: Boolean
+  $allVersions: Boolean
+) {
+  components(
+    after: $after
+    first: $first
+    filterQuery: $filterQuery
+    searchTerms_Fulltext: $search
+    category: $category
+    public: $public
+    hasActions: $hasActions
+    hasTriggers: $hasTriggers
+    hasDataSources: $hasDataSources
+    hasDataSourcesOfType: $hasDataSourcesOfType
+    hasConnections: $hasConnections
+    allVersions: $allVersions
+    orderBy: { field: LABEL, direction: ASC }
+  ) {
+    nodes {
+      id
+      key
+      public
+      label
+      description
+      versionNumber
+      category
+      versionCreatedAt
+      customer {
+        id
+        externalId
+        name
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

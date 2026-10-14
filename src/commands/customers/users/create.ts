@@ -1,91 +1,94 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { Cli, z } from "incur";
+import { CreateCustomerUserDocument as CREATE_CUSTOMER_USER } from "../../../graphql/operations/createCustomerUser.generated.js";
+import { gqlRequest } from "../../../graphql.js";
+import { warningsOutput } from "../../../output.js";
+import { requestFailure } from "../../../utils/failure.js";
+import { nonBlank } from "../schemas.js";
 
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create a User for the specified Customer";
-
-  static examples = [
-    {
-      description: "Get the ID of a customer named 'My First Customer':",
-      command:
-        "CUSTOMER_ID=$(prism customers:list --columns id --no-header --filter 'name=^My First Customer$')",
-    },
-    {
-      description: "Get the ID of the 'Member' role:",
-      command:
-        "ROLE_ID=$(prism customers:users:roles --columns id --no-header --filter 'name=^Member$')",
-    },
+export default Cli.command({
+  output: z.object({ userId: nonBlank }).extend(warningsOutput),
+  description: "Create a User for the specified Customer",
+  hint: "Use customers list and customers users roles to find the customer and role IDs.",
+  examples: [
     {
       description: "Add a new 'Member' user for the customer:",
-      command:
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-        "<%= config.bin %> <%= command.id %> --email 'bar@email.com' --name 'Thomas Bar' --customer ${CUSTOMER_ID} --role ${ROLE_ID}",
-    },
-  ];
-
-  static flags = {
-    email: Flags.string({
-      char: "e",
-      required: true,
-      description: "email address",
-    }),
-    role: Flags.string({
-      char: "r",
-      required: true,
-      description: "ID of the role to assign the user",
-    }),
-    customer: Flags.string({
-      char: "c",
-      required: true,
-      description: "ID of the customer this user is associated with",
-    }),
-    name: Flags.string({
-      char: "n",
-      description: "name of the new user",
-      required: false,
-    }),
-  };
-
-  async run() {
-    const {
-      flags: { name, email, role, customer },
-    } = await this.parse(CreateCommand);
-
-    const result = await gqlRequest({
-      document: gql`
-        mutation createCustomerUser(
-          $name: String
-          $email: String!
-          $role: ID!
-          $customer: ID!
-        ) {
-          createCustomerUser(
-            input: {
-              name: $name
-              email: $email
-              role: $role
-              customer: $customer
-            }
-          ) {
-            user {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
-      variables: {
-        name,
-        email,
-        role,
-        customer,
+      options: {
+        email: "bar@email.com",
+        name: "Thomas Bar",
+        customer: "CUSTOMER_ID",
+        role: "ROLE_ID",
       },
-    });
+    },
+  ],
+  options: z.object({
+    email: z.email().describe("email address"),
+    role: nonBlank.describe("ID of the role to assign the user"),
+    customer: nonBlank.describe("ID of the customer this user is associated with"),
+    name: nonBlank.optional().describe("name of the new user"),
+  }),
+  alias: { name: "n", customer: "c", role: "r", email: "e" },
+  async run(context) {
+    const {
+      options: { name, email, role, customer },
+    } = context;
 
-    this.log(result.createCustomerUser.user.id);
-  }
-}
+    try {
+      const result = await gqlRequest({
+        document: CREATE_CUSTOMER_USER,
+        variables: {
+          name,
+          email,
+          role,
+          customer,
+        },
+      });
+      const userId = result.createCustomerUser?.user?.id;
+      if (!userId)
+        return context.error({
+          code: "CUSTOMER_USERS_CREATE_FAILED",
+          message: "Customer user was not created",
+          exitCode: 1,
+          retryable: false,
+          cta: {
+            commands: [
+              {
+                command: "customers users list",
+                args: { customer },
+                description: "Inspect this customer's users before retrying",
+              },
+              { command: "customers users roles", description: "Check available roles" },
+            ],
+          },
+        });
+
+      return context.ok(
+        { userId },
+        {
+          cta: {
+            commands: [
+              {
+                command: "customers users list",
+                args: { customer },
+                description: "Inspect this customer's users",
+              },
+            ],
+          },
+        },
+      );
+    } catch (error) {
+      return context.error({
+        ...requestFailure(error, "CUSTOMER_USERS_CREATE_FAILED"),
+        cta: {
+          commands: [
+            {
+              command: "customers users list",
+              args: { customer },
+              description: "Inspect this customer's users before retrying",
+            },
+            { command: "customers users roles", description: "Check available roles" },
+          ],
+        },
+      });
+    }
+  },
+});

@@ -1,70 +1,43 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create a User for your Organization";
-
-  static examples = [
-    {
-      description: "Get the ID of the 'Integrator' role:",
-      command:
-        "ROLE_ID=$(prism organization:users:roles --columns id --no-header --filter 'name=^Integrator$')",
-    },
+import { Cli, z } from "incur";
+import { CreateOrganizationUserDocument as CREATE_ORGANIZATION_USER } from "../../../graphql/operations/createOrganizationUser.generated.js";
+import { gqlRequest, requireOperationResult } from "../../../graphql.js";
+import { warningsOutput } from "../../../output.js";
+export default Cli.command({
+  output: z.object({ userId: z.string() }).extend(warningsOutput),
+  description: "Create a User for your Organization",
+  examples: [
+    { description: "Get the ID of the 'Integrator' role:" },
     {
       description: "Create an organization user and assign the role:",
-      command:
-        // biome-ignore lint/suspicious/noTemplateCurlyInString: TODO
-        "<%= config.bin %> <%= command.id %> --email 'foo@email.com' --name 'Susan Foo' --role ${ROLE_ID}",
+      options: { email: "foo@email.com", name: "Susan Foo", role: `\${ROLE_ID}` },
     },
-  ];
-
-  static flags = {
-    name: Flags.string({ char: "n", description: "name of the user" }),
-    email: Flags.string({
-      char: "e",
-      required: true,
-      description: "email address of the user",
-    }),
-    role: Flags.string({
-      char: "r",
-      required: true,
-      description: "role the user should assume",
-    }),
-  };
-
-  async run() {
+  ],
+  options: z.object({
+    name: z.string().optional().describe("name of the user"),
+    email: z.string().describe("email address of the user"),
+    role: z.string().describe("role the user should assume"),
+  }),
+  async run(context) {
     const {
-      flags: { name, email, role },
-    } = await this.parse(CreateCommand);
+      options: { name, email, role },
+    } = context;
 
     const result = await gqlRequest({
-      document: gql`
-        mutation createOrganizationUser(
-          $name: String
-          $email: String!
-          $role: ID!
-        ) {
-          createOrganizationUser(
-            input: { name: $name, email: $email, role: $role }
-          ) {
-            user {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: CREATE_ORGANIZATION_USER,
       variables: {
         name,
         email,
         role,
       },
     });
+    const requiredValue1 = requireOperationResult(
+      result.createOrganizationUser?.user?.id,
+      "Organization user was not created",
+    );
 
-    this.log(result.createOrganizationUser.user.id);
-  }
-}
+    return {
+      userId: requiredValue1,
+    };
+  },
+  alias: { role: "r", email: "e", name: "n" },
+});

@@ -1,0 +1,9 @@
+query integrationVersionAvailability($integrationId: ID!, $versionNumber: Int!) {
+  integration(id: $integrationId) {
+    versionSequence(versionNumber: $versionNumber, versionIsAvailable: true) {
+      nodes {
+        id
+      }
+    }
+  }
+}

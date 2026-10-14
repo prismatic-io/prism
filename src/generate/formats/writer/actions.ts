@@ -1,5 +1,5 @@
-import path from "path";
 import { camelCase, groupBy } from "lodash-es";
+import path from "path";
 import {
   type CodeBlockWriter,
   type ImportDeclarationStructure,
@@ -10,7 +10,7 @@ import {
   VariableDeclarationKind,
   type VariableDeclarationStructure,
 } from "ts-morph";
-import { type Action, type Input, createDescription, escapeText } from "../utils.js";
+import { type Action, createDescription, escapeText, type Input } from "../utils.js";
 
 const writeInput = (
   writer: CodeBlockWriter,

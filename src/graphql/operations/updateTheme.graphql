@@ -1,0 +1,11 @@
+mutation updateTheme($colors: [ThemeColorInput], $properties: [ThemePropertyInput]) {
+  updateTheme(input: { colors: $colors, properties: $properties }) {
+    theme {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

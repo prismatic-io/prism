@@ -1,55 +1,25 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
-
-export default class CreateCommand extends PrismaticBaseCommand {
-  static description = "Create an Integration";
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      required: true,
-      description: "name of the integration to create",
-    }),
-    description: Flags.string({
-      char: "d",
-      required: true,
-      description: "longer description of the integration",
-    }),
-    customer: Flags.string({
-      char: "c",
-      description: "ID of customer with which to associate the integration",
-    }),
-  };
-
-  async run() {
+import { Cli, z } from "incur";
+import { CreateIntegrationDocument as CREATE_INTEGRATION } from "../../graphql/operations/createIntegration.generated.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
+export default Cli.command({
+  output: z.object({ integrationId: z.string() }).extend(warningsOutput),
+  description: "Create an Integration",
+  options: z.object({
+    name: z.string().describe("name of the integration to create"),
+    description: z.string().describe("longer description of the integration"),
+    customer: z
+      .string()
+      .optional()
+      .describe("ID of customer with which to associate the integration"),
+  }),
+  async run(context) {
     const {
-      flags: { name, description, customer },
-    } = await this.parse(CreateCommand);
+      options: { name, description, customer },
+    } = context;
 
     const result = await gqlRequest({
-      document: gql`
-        mutation createIntegration(
-          $name: String!
-          $description: String!
-          $customer: ID
-        ) {
-          createIntegration(
-            input: {
-              name: $name
-              description: $description
-              customer: $customer
-            }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: CREATE_INTEGRATION,
       variables: {
         name,
         description,
@@ -57,6 +27,24 @@ export default class CreateCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.createIntegration.integration.id);
-  }
-}
+    const resourceId = requireOperationResult(
+      result.createIntegration?.integration?.id,
+      "Integration was not created",
+    );
+    return context.ok(
+      { integrationId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "integrations flows list",
+              description: "Inspect this integration's flows",
+              args: { integration: resourceId },
+            },
+          ],
+        },
+      },
+    );
+  },
+  alias: { customer: "c", description: "d", name: "n" },
+});

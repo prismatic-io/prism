@@ -1,8 +1,10 @@
-import fs from "fs";
+import { existsSync } from "node:fs";
+import { mkdir, rm } from "node:fs/promises";
 import { readFile } from "fs-extra";
 import path from "path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { walkDir } from "../../../fs.js";
+import { runCommand } from "../../../test-command.js";
 import { TOOLCHAIN_NAMES } from "../../../utils/toolchain/index.js";
 import InitializeIntegration from "./index.js";
 
@@ -27,9 +29,9 @@ describe("integrations:init", () => {
   const basePath = process.env.PWD ?? process.cwd();
   const tempPath = path.resolve("src/commands/integrations/init/temp");
 
-  beforeEach(() => {
-    if (!fs.existsSync(tempPath)) {
-      fs.mkdirSync(tempPath, { recursive: true });
+  beforeEach(async () => {
+    if (!existsSync(tempPath)) {
+      await mkdir(tempPath, { recursive: true });
     }
   });
 
@@ -39,11 +41,14 @@ describe("integrations:init", () => {
 
   it("rejects unsupported configuration types before creating a directory", async () => {
     process.chdir(tempPath);
-    const name = "invalid-configuration-type";
     await expect(
-      InitializeIntegration.run([name, "--configuration-type", "traditional"]),
+      runCommand(InitializeIntegration, [
+        "invalid-configuration-type",
+        "--configuration-type",
+        "traditional",
+      ]),
     ).rejects.toThrow();
-    expect(fs.existsSync(name)).toBe(false);
+    expect(existsSync("invalid-configuration-type")).toBe(false);
   });
 
   for (const toolchain of TOOLCHAIN_NAMES) {
@@ -53,7 +58,7 @@ describe("integrations:init", () => {
           const name = `headless-${toolchain}-${clean}`;
           process.chdir(tempPath);
           try {
-            await InitializeIntegration.run([
+            await runCommand(InitializeIntegration, [
               name,
               "--toolchain",
               toolchain,
@@ -61,11 +66,12 @@ describe("integrations:init", () => {
               "headless",
               ...(clean ? ["--clean"] : []),
             ]);
-            const index = await readFile("src/index.ts", "utf-8");
-            const configuration = await readFile("src/configuration.ts", "utf-8");
-            const augmentation = await readFile(".spectral/index.ts", "utf-8");
-            const flows = await readFile("src/flows.ts", "utf-8");
-            const manifest = JSON.parse(await readFile("package.json", "utf-8"));
+            const generated = (file: string) => readFile(path.join(tempPath, name, file), "utf-8");
+            const index = await generated("src/index.ts");
+            const configuration = await generated("src/configuration.ts");
+            const augmentation = await generated(".spectral/index.ts");
+            const flows = await generated("src/flows.ts");
+            const manifest = JSON.parse(await generated("package.json"));
             expect(index).toContain("configuration: integrationConfiguration");
             expect(index).not.toContain("configPages");
             expect(configuration).toContain('version: "1"');
@@ -74,10 +80,10 @@ describe("integrations:init", () => {
             expect(augmentation).toContain("IntegrationDefinitionConfiguration");
             expect(flows).not.toContain("./configPages");
             expect(manifest.dependencies.zod).toBe("^4.0.0");
-            expect(fs.existsSync("src/configPages.ts")).toBe(false);
+            expect(existsSync(path.join(tempPath, name, "src/configPages.ts"))).toBe(false);
+            expect(process.cwd()).toBe(tempPath);
           } finally {
-            process.chdir(tempPath);
-            fs.rmSync(path.join(tempPath, name), { recursive: true, force: true });
+            await rm(path.join(tempPath, name), { recursive: true, force: true });
           }
         });
       }
@@ -85,11 +91,11 @@ describe("integrations:init", () => {
       describe("scaffold generation", () => {
         const integrationName = `test-integration-${toolchain}`;
 
-        afterEach(() => {
+        afterEach(async () => {
           // Clean up generated directory
           const integrationPath = path.join(tempPath, integrationName);
-          if (fs.existsSync(integrationPath)) {
-            fs.rmSync(integrationPath, { recursive: true, force: true });
+          if (existsSync(integrationPath)) {
+            await rm(integrationPath, { recursive: true, force: true });
           }
         });
 
@@ -98,7 +104,7 @@ describe("integrations:init", () => {
           async () => {
             process.chdir(tempPath);
 
-            await InitializeIntegration.run([integrationName, "--toolchain", toolchain]);
+            await runCommand(InitializeIntegration, [integrationName, "--toolchain", toolchain]);
 
             // The init command chdir's into the created directory, so go back to tempPath
             process.chdir(tempPath);
@@ -116,11 +122,11 @@ describe("integrations:init", () => {
       describe("clean scaffold generation", () => {
         const cleanIntegrationName = `clean-test-integration-${toolchain}`;
 
-        afterEach(() => {
+        afterEach(async () => {
           // Clean up generated directory
           const integrationPath = path.join(tempPath, cleanIntegrationName);
-          if (fs.existsSync(integrationPath)) {
-            fs.rmSync(integrationPath, { recursive: true, force: true });
+          if (existsSync(integrationPath)) {
+            await rm(integrationPath, { recursive: true, force: true });
           }
         });
 
@@ -129,7 +135,7 @@ describe("integrations:init", () => {
           async () => {
             process.chdir(tempPath);
 
-            await InitializeIntegration.run([
+            await runCommand(InitializeIntegration, [
               cleanIntegrationName,
               "--clean",
               "--toolchain",

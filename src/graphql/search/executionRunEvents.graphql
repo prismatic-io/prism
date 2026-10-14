@@ -1,0 +1,70 @@
+fragment LogEventRow on LogEvent {
+  timestamp
+  severity
+  message
+  logType
+  stepName
+  stepDisplayName
+  loopStepName
+  loopStepIndex
+  executionResultId
+  instanceId
+  instanceName
+  customerName
+  integrationName
+  flowName
+}
+
+fragment StepResultEventRow on StepResultEvent {
+  startedAt
+  endedAt
+  stepName
+  stepDisplayName
+  hasError
+  errorCode
+  componentKey
+  actionKey
+  branchName
+  loopStepName
+  loopStepIndex
+  isLoopStep
+  loopIterationCount
+  isRootResult
+  payloadTruncated
+  hasStoredPayload
+}
+
+query executionRunEvents(
+  $id: ID!
+  $first: Int
+  $after: String
+  $typeIn: [EventType!]
+  $filterGroups: [EventFilterGroup!]
+  $orderBy: EventOrder
+) {
+  executionRun(id: $id) {
+    id
+    status
+    endedAt
+    events(
+      first: $first
+      after: $after
+      typeIn: $typeIn
+      filterGroups: $filterGroups
+      orderBy: $orderBy
+    ) {
+      totalCount
+      nodes {
+        __typename
+        id
+        timestamp
+        ...LogEventRow
+        ...StepResultEventRow
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+mutation testInstanceFlowConfig($id: ID!, $payload: String, $contentType: String) {
+  testInstanceFlowConfig(input: { id: $id, payload: $payload, contentType: $contentType }) {
+    testInstanceFlowConfigResult {
+      flowConfig {
+        id
+      }
+      execution {
+        id
+      }
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

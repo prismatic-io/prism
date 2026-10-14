@@ -1,40 +1,42 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
-
-export default class DisableCommand extends PrismaticBaseCommand {
-  static description = "Disable an Instance";
-  static args = {
-    instance: Args.string({
-      required: true,
-      description: "ID of an instance",
-    }),
-  };
-
-  async run() {
+import { Cli, z } from "incur";
+import { DisableInstanceDocument as DISABLE_INSTANCE } from "../../graphql/operations/disableInstance.generated.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
+export default Cli.command({
+  output: z.object({ instanceId: z.string() }).extend(warningsOutput),
+  description: "Disable an Instance",
+  args: z.object({
+    instance: z.string().describe("ID of an instance"),
+  }),
+  async run(context) {
     const {
       args: { instance },
-    } = await this.parse(DisableCommand);
+    } = context;
 
     const result = await gqlRequest({
-      document: gql`
-        mutation disableInstance($id: ID!) {
-          updateInstance(input: { id: $id, enabled: false }) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DISABLE_INSTANCE,
       variables: {
         id: instance,
       },
     });
 
-    this.log(result.updateInstance.instance.id);
-  }
-}
+    const resourceId = requireOperationResult(
+      result.updateInstance?.instance?.id,
+      "Instance was not disabled",
+    );
+    return context.ok(
+      { instanceId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "instances flow-configs list",
+              description: "Inspect this instance's flows",
+              args: { instance: resourceId },
+            },
+          ],
+        },
+      },
+    );
+  },
+});

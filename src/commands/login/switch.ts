@@ -1,21 +1,50 @@
-import { fetchUserTenants, isLoggedIn, refresh, selectTenant } from "../../auth.js";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { getActiveProfileName, readProfile, writeActiveProfile } from "../../config.js";
+import { Cli, z } from "incur";
+import {
+  fetchUserTenants,
+  getAuthenticatedContext,
+  isLoggedIn,
+  refresh,
+  selectTenant,
+} from "../../auth.js";
+import { writeCommandStatus } from "../../command.js";
+import { getProfileAuthContext, saveProfileCredentials } from "../../context.js";
+import { ValidationError } from "../../errors.js";
 import { whoAmI } from "../../utils/user/query.js";
 
-export default class LoginSwitchCommand extends PrismaticBaseCommand {
-  static description = "Switch between organization tenants";
-
-  protected authContext = "profile" as const;
-
-  async run() {
-    await this.parse(LoginSwitchCommand);
-    const profileName = this.profileName ?? (await getActiveProfileName());
-    const config = await readProfile(profileName);
+export default Cli.command({
+  output: z.object({
+    profile: z.string(),
+    tenantId: z.string().optional(),
+    switched: z.boolean(),
+    authenticated: z.boolean(),
+  }),
+  description: "Switch between organization tenants",
+  options: z.object({
+    "tenant-id": z.string().optional().describe("Tenant ID to select without prompting"),
+  }),
+  async run(context) {
+    const {
+      options: { "tenant-id": tenantId },
+    } = context;
+    await getAuthenticatedContext();
+    const { profileName, profile: config } = await getProfileAuthContext();
     const loggedIn = (await isLoggedIn()) && config;
     if (!loggedIn) {
-      this.log("Not logged in. Run 'prism login'.");
-      return;
+      writeCommandStatus("Not logged in. Run 'prism login'.");
+      return context.ok(
+        { profile: profileName, switched: false, authenticated: false },
+        {
+          cta: {
+            commands: [
+              {
+                command: "login",
+                description: "Authenticate this profile",
+                options: { profile: profileName },
+              },
+            ],
+          },
+        },
+      );
     }
 
     const tenants = await fetchUserTenants();
@@ -30,42 +59,79 @@ export default class LoginSwitchCommand extends PrismaticBaseCommand {
     const currentTenantSuspended = currentTenant?.systemSuspended ?? false;
     const activeTenants = tenants.filter((t) => !t.systemSuspended);
 
-    if (!currentTenantSuspended && activeTenants.length <= 1) {
+    const requestedTenant =
+      tenantId !== undefined
+        ? activeTenants.find((tenant) => tenant.tenantId === tenantId)
+        : undefined;
+    if (tenantId !== undefined && !requestedTenant) {
+      return context.error(
+        new ValidationError({
+          retryable: false,
+          message: `Tenant '${tenantId}' is not available to this profile.`,
+        }).toResult(),
+      );
+    }
+
+    if (
+      !currentTenantSuspended &&
+      activeTenants.length <= 1 &&
+      (!requestedTenant || requestedTenant.tenantId === currentTenantId)
+    ) {
       const message =
         activeTenants.length === 1
           ? "This is the only tenant available to this profile."
           : "No tenants are available to this profile.";
-      this.log(message);
-      return;
+      writeCommandStatus(message);
+      return {
+        profile: profileName,
+        tenantId: currentTenantId,
+        switched: false,
+        authenticated: true,
+      };
     }
 
     if (!currentTenantSuspended && currentTenant) {
-      this.log(`Current tenant: ${currentTenant.orgName} (${currentTenant.url})\n`);
+      writeCommandStatus(`Current tenant: ${currentTenant.orgName} (${currentTenant.url})\n`);
     }
 
-    const selectedTenantId = await selectTenant(tenants, {
-      currentTenantId,
-      message: "Select a tenant to switch to:",
-    });
+    if (context.agent && !requestedTenant) {
+      return context.error(
+        new ValidationError({
+          retryable: false,
+          message: "Agent mode requires --tenant-id when more than one tenant is available.",
+        }).toResult(),
+      );
+    }
+    const selectedTenantId =
+      requestedTenant?.tenantId ??
+      (await selectTenant(tenants, {
+        currentTenantId,
+        message: "Select a tenant to switch to:",
+      }));
 
     if (!selectedTenantId || selectedTenantId === currentTenantId) {
       if (currentTenantId && !currentTenantSuspended) {
-        await writeActiveProfile(
-          {
-            ...config,
-            tenantId: currentTenantId,
-          },
-          profileName,
-        );
-        this.log(`Active tenant: ${currentTenant?.orgName} (${currentTenant?.url})`);
+        await saveProfileCredentials({ ...config, tenantId: currentTenantId });
+        writeCommandStatus(`Active tenant: ${currentTenant?.orgName} (${currentTenant?.url})`);
       }
-      return;
+      return {
+        profile: profileName,
+        tenantId: currentTenantId,
+        switched: false,
+        authenticated: true,
+      };
     }
 
-    this.log("\nSwitching tenant...");
-    await refresh(config.refreshToken, selectedTenantId, profileName);
+    writeCommandStatus("\nSwitching tenant...");
+    await refresh(selectedTenantId);
 
     const selectedTenant = tenants.find((t) => t.tenantId === selectedTenantId);
-    this.log(`Switched to: ${selectedTenant?.orgName} (${selectedTenant?.url})`);
-  }
-}
+    writeCommandStatus(`Switched to: ${selectedTenant?.orgName} (${selectedTenant?.url})`);
+    return {
+      profile: profileName,
+      tenantId: selectedTenantId,
+      switched: true,
+      authenticated: true,
+    };
+  },
+});

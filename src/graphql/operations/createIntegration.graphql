@@ -1,0 +1,11 @@
+mutation createIntegration($name: String!, $description: String!, $customer: ID) {
+  createIntegration(input: { name: $name, description: $description, customer: $customer }) {
+    integration {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

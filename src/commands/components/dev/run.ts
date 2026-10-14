@@ -1,69 +1,66 @@
-import { Flags, ux } from "@oclif/core";
-import { isEmpty } from "lodash-es";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-import { spawnProcess } from "../../../utils/process.js";
+import { Cli, z } from "incur";
+import { commandSignal } from "../../../command.js";
+import { CommandFailedError, ValidationError } from "../../../errors.js";
+import {
+  InstanceDocument as INSTANCE,
+  type InstanceQuery,
+} from "../../../graphql/operations/instance.generated.js";
+import {
+  IntegrationDocument as INTEGRATION,
+  type IntegrationQuery,
+} from "../../../graphql/operations/integration.generated.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
+import { spawnProcess, streamProcess } from "../../../utils/process.js";
 
-interface ConfigVariable {
-  requiredConfigVariable: {
-    key: string;
-    connectionTemplate?: {
-      inputFieldTemplates: { nodes: { inputField: { key: string }; value: string }[] };
-    };
-  };
-  inputs: { nodes: { name: string; value: string }[] };
-  meta: string;
-}
+type ConfigVariable =
+  | NonNullable<IntegrationQuery["integration"]>["testConfigVariables"]["nodes"][number]
+  | NonNullable<InstanceQuery["instance"]>["configVariables"]["nodes"][number];
 
-export default class RunCommand extends PrismaticBaseCommand {
-  static description =
-    "Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.\nAfter specifying an integration ID and connection config variable name, this command executes a CLI command with that connection's fields saved as a config variable named PRISMATIC_CONNECTION_VALUE.";
-  static usage = "components:dev:run -i <value> -c <value> -- /command/to/run";
-  static examples = [
-    {
-      description: `To simply print an integration's basic auth config variable named "My Connection" and pipe the resulting JSON to jq, run:`,
-      command: `<%= config.bin %> <%= command.id %> --integrationId SW50ZWexample --connectionKey "My Connection" -- printenv PRISMATIC_CONNECTION_VALUE | jq`,
-    },
-    {
-      description: `If one of your integrations has an authenticated OAuth 2.0 config variable "Slack Connection", you could run your component's unit tests with that environment variable:`,
-      command: `<%= config.bin %> <%= command.id %> -i SW50ZWexample -c "Slack Connection" -- yarn run test`,
-    },
-    {
-      description:
-        "If you would like to fetch a connection from an instance deployed to one of your customers, specify the --instanceId flag instead",
-      command: `<%= config.bin %> <%= command.id %> --instanceId SW50ZWexample -c "Slack Connection" -- yarn run test`,
-    },
-  ];
-
-  static strict = false; // Manual capture of argv so we can get the wrapped command
-  static "--" = true; // Stop parsing flags if -- is encountered as an arg
-
-  static flags = {
-    integrationId: Flags.string({
-      char: "i",
-      description: "Integration ID",
-      exactlyOne: ["instanceId", "integrationId"],
+export default Cli.command({
+  output: z.discriminatedUnion("type", [
+    z.object({ type: z.literal("stdout"), data: z.string() }),
+    z.object({ type: z.literal("stderr"), data: z.string() }),
+    z.object({ type: z.literal("completed"), exitCode: z.literal(0) }),
+  ]),
+  description:
+    "Fetch an integration's active connection and execute a CLI command with that connection's fields as an environment variable.\nAfter specifying an integration ID and connection config variable name, this command executes a CLI command with that connection's fields saved as a config variable named PRISMATIC_CONNECTION_VALUE.",
+  hint: `Pass the local command after --. For example:
+prism components dev run -i INTEGRATION_ID -c "My Connection" -- printenv PRISMATIC_CONNECTION_VALUE
+prism components dev run -i INTEGRATION_ID -c "Slack Connection" -- yarn run test
+prism components dev run --instanceId INSTANCE_ID -c "Slack Connection" -- yarn run test`,
+  args: z.object({
+    command: z.array(z.string()).optional().describe("Local command and arguments to run"),
+  }),
+  options: z
+    .object({
+      integrationId: z.string().optional().describe("Integration ID"),
+      instanceId: z.string().optional().describe("Instance ID. "),
+      connectionKey: z
+        .string()
+        .describe("Key of the connection config variable to fetch meta/state for"),
+    })
+    .superRefine((options, ctx) => {
+      if (
+        [options.integrationId, options.instanceId].filter((value) => value !== undefined)
+          .length !== 1
+      )
+        ctx.addIssue({
+          code: "custom",
+          path: ["integrationId"],
+          message: "Exactly one of --integrationId, --instanceId is required",
+        });
     }),
-    instanceId: Flags.string({
-      description: "Instance ID. ",
-    }),
-    connectionKey: Flags.string({
-      required: true,
-      char: "c",
-      description: "Key of the connection config variable to fetch meta/state for",
-    }),
-  };
-
-  async run() {
+  async *run(context) {
     const {
-      argv,
-      flags: { integrationId, instanceId, connectionKey },
-    } = await this.parse(RunCommand);
+      args: { command: argv },
+      options: { integrationId, instanceId, connectionKey },
+    } = context;
 
-    if (isEmpty(argv)) {
-      this.error(
-        "A command to run must be supplied after a double dash (--) delimiter. See examples in this command's help for details.",
-      );
+    if (!argv?.length) {
+      throw new ValidationError({
+        message:
+          "A command to run must be supplied after a double dash (--) delimiter. See examples in this command's help for details.",
+      });
     }
 
     let configVariables: ConfigVariable[];
@@ -71,81 +68,26 @@ export default class RunCommand extends PrismaticBaseCommand {
     // Get connection from the integration's test instance
     if (integrationId) {
       const result = await gqlRequest({
-        document: gql`
-          query integration($id: ID!) {
-            integration(id: $id) {
-              testConfigVariables {
-                nodes {
-                  requiredConfigVariable {
-                    key
-                    connectionTemplate {
-                      inputFieldTemplates {
-                        nodes {
-                          inputField {
-                            key
-                          }
-                          value
-                        }
-                      }
-                    }
-                  }
-                  inputs {
-                    nodes {
-                      name
-                      value
-                    }
-                  }
-                  meta
-                }
-              }
-            }
-          }
-        `,
+        document: INTEGRATION,
         variables: {
           id: integrationId,
         },
       });
-
-      configVariables = result.integration.testConfigVariables.nodes;
+      configVariables = requireResource(result.integration, "Integration").testConfigVariables
+        .nodes;
     } else {
+      if (!instanceId)
+        throw new ValidationError({
+          message: "Either integrationId or instanceId is required",
+        });
       // Get the config variable from an instance
       const result = await gqlRequest({
-        document: gql`
-          query instance($id: ID!) {
-            instance(id: $id) {
-              configVariables {
-                nodes {
-                  requiredConfigVariable {
-                    key
-                    connectionTemplate {
-                      inputFieldTemplates {
-                        nodes {
-                          inputField {
-                            key
-                          }
-                          value
-                        }
-                      }
-                    }
-                  }
-                  inputs {
-                    nodes {
-                      name
-                      value
-                    }
-                  }
-                  meta
-                }
-              }
-            }
-          }
-        `,
+        document: INSTANCE,
         variables: {
           id: instanceId,
         },
       });
-
-      configVariables = result.instance.configVariables.nodes;
+      configVariables = requireResource(result.instance, "Instance").configVariables.nodes;
     }
 
     const [connection] = configVariables.filter(
@@ -153,27 +95,38 @@ export default class RunCommand extends PrismaticBaseCommand {
     );
 
     if (!connection) {
-      ux.error("Failed to find active connection with that name.", { exit: 1 });
+      throw new CommandFailedError({
+        message: "Failed to find active connection with that name.",
+      });
     }
 
     const { meta, inputs, requiredConfigVariable } = connection;
 
     // Combine templated connection field values with the test instance's field values
     const fields = {
-      ...requiredConfigVariable.connectionTemplate?.inputFieldTemplates.nodes.reduce<
-        Record<string, unknown>
-      >((result, { inputField, value }) => ({ ...result, [inputField.key]: value }), {}),
-      ...inputs.nodes.reduce<Record<string, unknown>>(
-        (result, { name, value }) => ({ ...result, [name]: value }),
-        {},
+      ...Object.fromEntries(
+        requiredConfigVariable.connectionTemplate?.inputFieldTemplates.nodes.map(
+          ({ inputField, value }) => [inputField.key, value],
+        ) ?? [],
       ),
+      ...Object.fromEntries((inputs?.nodes ?? []).map(({ name, value }) => [name, value])),
     };
 
     const value = JSON.stringify({
-      ...JSON.parse(meta),
+      ...(typeof meta === "string"
+        ? JSON.parse(meta)
+        : meta && typeof meta === "object"
+          ? meta
+          : {}),
       fields,
     });
 
-    await spawnProcess(argv as string[], { PRISMATIC_CONNECTION_VALUE: value });
-  }
-}
+    const environment = { PRISMATIC_CONNECTION_VALUE: value };
+    if (context.agent) {
+      yield* streamProcess(argv, environment, { signal: commandSignal() });
+    } else {
+      await spawnProcess(argv, environment, { signal: commandSignal() });
+    }
+  },
+  alias: { connectionKey: "c", integrationId: "i" },
+});

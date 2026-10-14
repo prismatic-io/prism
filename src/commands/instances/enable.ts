@@ -1,40 +1,42 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
-
-export default class EnableCommand extends PrismaticBaseCommand {
-  static description = "Enable an Instance";
-  static args = {
-    instance: Args.string({
-      required: true,
-      description: "ID of an instance",
-    }),
-  };
-
-  async run() {
+import { Cli, z } from "incur";
+import { EnableInstanceDocument as ENABLE_INSTANCE } from "../../graphql/operations/enableInstance.generated.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
+export default Cli.command({
+  output: z.object({ instanceId: z.string() }).extend(warningsOutput),
+  description: "Enable an Instance",
+  args: z.object({
+    instance: z.string().describe("ID of an instance"),
+  }),
+  async run(context) {
     const {
       args: { instance },
-    } = await this.parse(EnableCommand);
+    } = context;
 
     const result = await gqlRequest({
-      document: gql`
-        mutation enableInstance($id: ID!) {
-          updateInstance(input: { id: $id, enabled: true }) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: ENABLE_INSTANCE,
       variables: {
         id: instance,
       },
     });
 
-    this.log(result.updateInstance.instance.id);
-  }
-}
+    const resourceId = requireOperationResult(
+      result.updateInstance?.instance?.id,
+      "Instance was not enabled",
+    );
+    return context.ok(
+      { instanceId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "instances flow-configs list",
+              description: "Inspect this instance's flows",
+              args: { instance: resourceId },
+            },
+          ],
+        },
+      },
+    );
+  },
+});

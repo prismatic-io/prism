@@ -1,0 +1,15 @@
+query listAlertWebhooks($after: String, $first: Int) {
+  alertWebhooks(after: $after, first: $first) {
+    nodes {
+      id
+      name
+      payloadTemplate
+      url
+      headers
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

@@ -1,53 +1,52 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { Cli, z } from "incur";
+import type { ListAlertMonitorsQuery } from "../../../graphql/alerts/listAlertMonitors.generated.js";
+import { ListAlertMonitorsDocument as LIST_ALERT_MONITORS } from "../../../graphql/alerts/listAlertMonitors.generated.js";
+import { gqlRequest } from "../../../graphql.js";
+import {
+  paginationFlags,
+  printTable,
+  tableFlags,
+  tableOutputSchema,
+} from "../../../utils/table.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Alert Monitors for Customer Instances";
-  static flags = { ...ux.table.flags() };
+type AlertMonitorNode = ListAlertMonitorsQuery["alertMonitors"]["nodes"][number];
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+const isAlertMonitorNode = (node: AlertMonitorNode | null): node is AlertMonitorNode =>
+  node !== null;
 
-    let alertMonitors: any[] = [];
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(
+    ["id", "name", "triggered", "customer", "customerId", "instance", "instanceId"],
+    true,
+  ),
+  description: "List Alert Monitors for Customer Instances",
+  options: z.object({ ...tableFlags(), ...paginationFlags() }),
+  async run(context) {
+    const { options: flags } = context;
+
+    let alertMonitors: AlertMonitorNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = flags.after ?? "";
+    let finalPageInfo: { hasNextPage: boolean; endCursor?: string | null } = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
       const {
         alertMonitors: { nodes, pageInfo },
-      } = await gqlRequest({
-        document: gql`
-          query listAlertMonitors($after: String) {
-            alertMonitors(after: $after) {
-              nodes {
-                id
-                name
-                triggered
-                instance {
-                  id
-                  name
-                  customer {
-                    id
-                    name
-                  }
-                }
-              }
-              pageInfo {
-                hasNextPage
-                endCursor
-              }
-            }
-          }
-        `,
-        variables: { after: cursor },
+      }: ListAlertMonitorsQuery = await gqlRequest({
+        document: LIST_ALERT_MONITORS,
+        variables: { after: cursor, first: flags.first },
       });
-      alertMonitors = [...alertMonitors, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      alertMonitors = [...alertMonitors, ...nodes.filter(isAlertMonitorNode)];
+      cursor = pageInfo.endCursor ?? null;
+      finalPageInfo = pageInfo;
+      hasNextPage = pageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = printTable(
       alertMonitors,
       {
         id: {
@@ -57,16 +56,17 @@ export default class ListCommand extends PrismaticBaseCommand {
         name: {},
         triggered: {},
         customer: {
-          get: ({ instance: { customer } }) => customer.name,
+          get: ({ instance }) => instance?.customer.name ?? "",
         },
         customerId: {
           extended: true,
-          get: ({ instance: { customer } }) => customer.id,
+          get: ({ instance }) => instance?.customer.id ?? "",
         },
-        instance: { get: ({ instance }) => instance.name },
-        instanceId: { extended: true, get: ({ instance }) => instance.id },
+        instance: { get: ({ instance }) => instance?.name ?? "" },
+        instanceId: { extended: true, get: ({ instance }) => instance?.id ?? "" },
       },
       { ...flags },
     );
-  }
-}
+    return { ...result, pageInfo: finalPageInfo };
+  },
+});

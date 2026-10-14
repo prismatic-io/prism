@@ -1,41 +1,32 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
-
-export default class UpdateCommand extends PrismaticBaseCommand {
-  // TODO: Add more flags once optional updates are implemented
-  static description = "Update your Organization";
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      description: "name of the organization",
-    }),
-  };
-
-  async run() {
+import { Cli, z } from "incur";
+import { UpdateOrganizationDocument as UPDATE_ORGANIZATION } from "../../graphql/operations/updateOrganization.generated.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
+export default Cli.command({
+  output: z.object({ organizationId: z.string() }).extend(warningsOutput),
+  description: "Update your Organization",
+  options: z.object({
+    name: z.string().optional().describe("name of the organization"),
+  }),
+  async run(context) {
     const {
-      flags: { name },
-    } = await this.parse(UpdateCommand);
+      options: { name },
+    } = context;
 
     const result = await gqlRequest({
-      document: gql`
-        mutation updateOrganization($name: String) {
-          updateOrganization(input: { name: $name }) {
-            organization {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: UPDATE_ORGANIZATION,
       variables: {
         name,
       },
     });
+    const requiredValue1 = requireOperationResult(
+      result.updateOrganization?.organization?.id,
+      "Organization was not updated",
+    );
 
-    this.log(result.updateOrganization.organization.id);
-  }
-}
+    return {
+      organizationId: requiredValue1,
+    };
+  },
+  alias: { name: "n" },
+});

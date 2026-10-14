@@ -1,0 +1,11 @@
+query getStepOutputDetails($executionId: ID!, $stepName: String!) {
+  executionResult(id: $executionId) {
+    id
+    stepResults(displayStepName: $stepName) {
+      nodes {
+        displayStepName
+        resultsUrl
+      }
+    }
+  }
+}

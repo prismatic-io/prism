@@ -1,38 +1,71 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { Cli, z } from "incur";
+import { DeleteUserDocument as DELETE_USER } from "../../../graphql/operations/deleteUser.generated.js";
+import { gqlRequest } from "../../../graphql.js";
+import { warningsOutput } from "../../../output.js";
+import { requestFailure } from "../../../utils/failure.js";
+import { nonBlank } from "../schemas.js";
 
-export default class DeleteCommand extends PrismaticBaseCommand {
-  static description = "Delete a Customer User";
-  static args = {
-    user: Args.string({
-      required: true,
-      description: "ID of the user to delete",
-    }),
-  };
-
-  async run() {
+export default Cli.command({
+  output: z
+    .object({ userId: z.string() })
+    .extend(warningsOutput)
+    .extend({ deleted: z.literal(true) }),
+  description: "Delete a Customer User",
+  args: z.object({
+    user: nonBlank.describe("ID of the user to delete"),
+  }),
+  async run(context) {
     const {
       args: { user },
-    } = await this.parse(DeleteCommand);
+    } = context;
 
-    await gqlRequest({
-      document: gql`
-        mutation deleteUser($id: ID!) {
-          deleteUser(input: { id: $id }) {
-            user {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
-      variables: {
-        id: user,
-      },
-    });
-  }
-}
+    try {
+      const result = await gqlRequest({
+        document: DELETE_USER,
+        variables: {
+          id: user,
+        },
+      });
+      if (!result.deleteUser)
+        return context.error({
+          code: "CUSTOMER_USERS_DELETE_FAILED",
+          message: "The API did not confirm deletion.",
+          exitCode: 1,
+          retryable: false,
+          cta: {
+            commands: [
+              {
+                command: "customers list",
+                description: "Inspect customers before retrying deletion",
+              },
+            ],
+          },
+        });
+      return context.ok(
+        { userId: user, deleted: true },
+        {
+          cta: {
+            commands: [
+              {
+                command: "customers list",
+                description: "Inspect remaining customers",
+              },
+            ],
+          },
+        },
+      );
+    } catch (error) {
+      return context.error({
+        ...requestFailure(error, "CUSTOMER_USERS_DELETE_FAILED"),
+        cta: {
+          commands: [
+            {
+              command: "customers list",
+              description: "Inspect customers before retrying deletion",
+            },
+          ],
+        },
+      });
+    }
+  },
+});

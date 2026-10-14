@@ -1,48 +1,52 @@
-import { Flags } from "@oclif/core";
 import crypto from "crypto";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
+import { Cli, z } from "incur";
+import { withWorkingDirectory } from "../../command-context.js";
 import { fs } from "../../fs.js";
+import { warningsOutput } from "../../output.js";
 import {
   createComponentPackage,
   loadEntrypoint,
   validateDefinition,
 } from "../../utils/component/index.js";
 import { getPackageSignatureFromApi } from "../../utils/component/signature.js";
+import { getPackageEntrypointDirectory } from "../../utils/import.js";
 
-export default class ComponentsSignatureCommand extends PrismaticBaseCommand {
-  static description = "Generate a Component signature";
-
-  static flags = {
-    "skip-signature-verify": Flags.boolean({
-      required: false,
-      description:
+export default Cli.command({
+  output: z.object({ signature: z.string() }).extend(warningsOutput),
+  description: "Generate a Component signature",
+  options: z.object({
+    "skip-signature-verify": z
+      .boolean()
+      .optional()
+      .describe(
         "This consistently returns a signature, regardless of whether the corresponding component has been published to the platform or not.",
-    }),
-  };
-
-  async run() {
+      ),
+  }),
+  async run(context) {
     const {
-      flags: { "skip-signature-verify": skipSignatureVerify },
-    } = await this.parse(ComponentsSignatureCommand);
+      options: { "skip-signature-verify": skipSignatureVerify },
+    } = context;
 
-    const componentDefinition = await loadEntrypoint();
-    await validateDefinition(componentDefinition);
-    const packagePath = await createComponentPackage();
+    return withWorkingDirectory(await getPackageEntrypointDirectory("component"), async () => {
+      const componentDefinition = await loadEntrypoint();
+      await validateDefinition(componentDefinition);
+      const packagePath = await createComponentPackage();
 
-    const packageSignature = crypto
-      .createHash("sha1")
-      .update(await fs.readFile(packagePath))
-      .digest("hex");
+      const packageSignature = crypto
+        .createHash("sha1")
+        .update(await fs.readFile(packagePath))
+        .digest("hex");
 
-    if (skipSignatureVerify) {
-      return this.log(packageSignature);
-    }
+      if (skipSignatureVerify) {
+        return { signature: packageSignature };
+      }
 
-    const packageSignatureFromApi = await getPackageSignatureFromApi({
-      componentDefinition,
-      packageSignature,
+      const packageSignatureFromApi = await getPackageSignatureFromApi({
+        componentDefinition,
+        packageSignature,
+      });
+
+      return { signature: packageSignatureFromApi ?? "" };
     });
-
-    return this.log(packageSignatureFromApi ?? "");
-  }
-}
+  },
+});

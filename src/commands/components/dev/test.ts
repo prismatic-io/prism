@@ -1,13 +1,16 @@
-import { Flags } from "@oclif/core";
+import { resolve } from "node:path";
 import type serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import dotenv from "dotenv";
+import { Cli, z } from "incur";
 import inquirer, { type Answers, type Question } from "inquirer";
 import { kebabCase, snakeCase, upperCase } from "lodash-es";
 import open from "open";
 import { promisify } from "util";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { exists } from "../../../fs.js";
-import { ux } from "../../../utils/ux.js";
+import { requireInteractiveInput, writeCommandStatus } from "../../../command.js";
+import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
+import { CommandFailedError, ValidationError } from "../../../errors.js";
+import { exists, fs } from "../../../fs.js";
+import { getRuntimeEnvironment, runWithEnvironment } from "../../../runtime.js";
 import { deleteComponentByKey } from "../../../utils/component/deleteByKey.js";
 import {
   createComponentPackage,
@@ -25,6 +28,7 @@ import {
   printFinalStepResults,
   writeFinalStepResults,
 } from "../../../utils/execution/stepResults.js";
+import { getPackageEntrypointDirectory } from "../../../utils/import.js";
 import {
   buildComponentTestHarnessIntegration,
   type ComponentTestInfo,
@@ -35,6 +39,9 @@ import { importDefinition } from "../../../utils/integration/import.js";
 import { deleteIntegration, runIntegrationFlow } from "../../../utils/integration/invoke.js";
 import { pollForActiveConfigVarState } from "../../../utils/integration/query.js";
 import { spawnProcess } from "../../../utils/process.js";
+import { startAction, stopAction } from "../../../utils/progress.js";
+import { pressAnyKey } from "../../../utils/prompts.js";
+import { hyperlink } from "../../../utils/terminal.js";
 import { whoAmI } from "../../../utils/user/query.js";
 
 const setTimeoutPromise = promisify(setTimeout);
@@ -75,9 +82,10 @@ const getInputQuestion = ({
     message: `${label}:`,
     when: (answers: Answers) => {
       const envVar = envVarCase(key);
-      const exists = envVar in process.env;
+      const environment = getRuntimeEnvironment();
+      const exists = envVar in environment;
       if (exists) {
-        const value = process.env[envVar] ?? "";
+        const value = environment[envVar] ?? "";
         answers[key] = collection
           ? { type: "complex", value: JSON.parse(value) }
           : { type: "value", value };
@@ -164,261 +172,340 @@ const valuesFromAnswers = ({
   };
 };
 
-export default class TestCommand extends PrismaticBaseCommand {
-  static description =
-    "Run an action of a component within a test integration in the integration runner";
-  static flags = {
-    envPath: Flags.string({
-      required: false,
-      default: ".env",
-      char: "e",
-      description: "Path to dotenv file to load for supplying testing values",
+export default Cli.command({
+  description: "Run an action of a component within a test integration in the integration runner",
+  output: z.union([
+    z.object({ executionId: z.string(), outputPath: z.string().optional() }),
+    z.object({
+      authorizationRequired: z.object({
+        configVarId: z.string(),
+        url: z.string(),
+      }),
     }),
-    build: Flags.boolean({
-      required: false,
-      default: true,
-      allowNo: true,
-      char: "b",
-      description: "Build the component prior to testing",
-    }),
-    "output-file": Flags.string({
-      required: false,
-      char: "o",
-      description: "Output the results of the action to a specified file",
-    }),
-    "print-results": Flags.boolean({
-      required: false,
-      default: false,
-      description: "Print the results of the action to stdout",
-    }),
-    "clean-up": Flags.boolean({
-      required: false,
-      default: false,
-      description: "Clean up the integration and temporary component after running the action",
-    }),
-  };
-
-  async run() {
+  ]),
+  options: z.object({
+    action: z.string().optional().describe("Action key to test (required in agent mode)"),
+    "action-inputs": z
+      .string()
+      .optional()
+      .describe("JSON object containing action input values (agent mode)"),
+    envPath: z
+      .string()
+      .default(".env")
+      .describe("Path to dotenv file to load for supplying testing values"),
+    build: z.boolean().default(true).describe("Build the component prior to testing"),
+    "output-file": z
+      .string()
+      .optional()
+      .describe("Output the results of the action to a specified file"),
+    "print-results": z
+      .boolean()
+      .default(false)
+      .describe("Print the results of the action to stdout"),
+    "clean-up": z
+      .boolean()
+      .default(false)
+      .describe("Clean up the integration and temporary component after running the action"),
+    connection: z.string().optional().describe("Connection key to test (agent mode)"),
+    "connection-inputs": z
+      .string()
+      .optional()
+      .describe("JSON object containing connection input values (agent mode)"),
+  }),
+  async run(context) {
     const {
-      flags: {
+      options: {
         envPath,
         build,
         "output-file": outputFile,
         "print-results": printResults,
         "clean-up": cleanUp,
+        action: actionKey,
+        "action-inputs": rawActionInputs,
+        connection: connectionKey,
+        "connection-inputs": rawConnectionInputs,
       },
-    } = await this.parse(TestCommand);
+    } = context;
 
-    // Save the current working directory, so we can return later after moving to dist/
-    const cwd = process.cwd();
+    // Agent input must be complete and syntactically valid before we build the local
+    // component or perform any authenticated API work.
+    const suppliedActionInputs = context.agent
+      ? parseInputObject(rawActionInputs, "--action-inputs")
+      : {};
+    const suppliedConnectionInputs = context.agent
+      ? parseInputObject(rawConnectionInputs, "--connection-inputs")
+      : {};
+    if (context.agent && !actionKey) {
+      requireInteractiveInput("Agent mode requires --action and optional --action-inputs JSON");
+    }
+
+    // Resolve input and output paths against the invocation directory.
+    const cwd = getWorkingDirectory();
 
     if (build) {
-      console.log("Building component...");
+      writeCommandStatus("Building component...");
       await spawnProcess(["npm", "run", "build"], {});
     }
 
-    if (await exists(envPath)) {
-      const { error } = dotenv.config({ path: envPath, override: true });
-      if (error) {
-        ux.error(`Failed to load specified dotenv file: ${error}`, {
-          exit: 1,
+    const environment = { ...getRuntimeEnvironment() };
+    const environmentPath = resolve(cwd, envPath);
+    if (await exists(environmentPath)) {
+      Object.assign(environment, dotenv.parse(await fs.readFile(environmentPath)));
+    }
+    return runWithEnvironment(environment, async () => {
+      startAction("Validating Component");
+
+      const { name } = await whoAmI();
+      if (!name) {
+        throw new CommandFailedError({
+          message: "Failed to determine the name of the currently logged in user.",
         });
       }
-    }
 
-    ux.action.start("Validating Component");
+      const testingKey = kebabCase(name);
 
-    const { name } = await whoAmI();
-    if (!name) {
-      ux.error("Failed to determine the name of the currently logged in user.", {
-        exit: 1,
-      });
-    }
+      return withWorkingDirectory(await getPackageEntrypointDirectory("component"), async () => {
+        const loadedDefinition = await loadEntrypoint();
+        const definition = { ...loadedDefinition, display: { ...loadedDefinition.display } };
+        const { key: componentKey, public: isPublic } = definition;
+        definition.key = `${componentKey}-${testingKey}-testing`;
+        definition.display.label = `${definition.display.label} ${name} Testing`;
+        await validateDefinition(definition);
 
-    const testingKey = kebabCase(name);
+        const packagePath = await createComponentPackage();
+        const signatureMatches = await checkPackageSignature(definition, packagePath);
 
-    const definition = await loadEntrypoint();
-    const { key: componentKey, public: isPublic } = definition;
-    definition.key = `${componentKey}-${testingKey}-testing`;
-    definition.display.label = `${definition.display.label} ${name} Testing`;
-    await validateDefinition(definition);
+        stopAction();
 
-    const packagePath = await createComponentPackage();
-    const signatureMatches = await checkPackageSignature(definition, packagePath);
+        if (!signatureMatches) {
+          startAction("Publishing Component");
 
-    ux.action.stop();
+          const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
+            await publishDefinition(definition);
 
-    if (!signatureMatches) {
-      ux.action.start("Publishing Component");
+          const {
+            display: { iconPath },
+          } = definition;
+          if (iconPath) {
+            await uploadFile(resolve(getWorkingDirectory(), iconPath), iconUploadUrl);
+          }
 
-      const { iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
-        await publishDefinition(definition);
+          await uploadConnectionIcons(definition, connectionIconUploadUrls);
+          await uploadFile(packagePath, packageUploadUrl);
 
-      const {
-        display: { iconPath },
-      } = definition;
-      if (iconPath) {
-        await uploadFile(iconPath, iconUploadUrl);
-      }
+          stopAction();
+        }
 
-      await uploadConnectionIcons(definition, connectionIconUploadUrls);
-      await uploadFile(packagePath, packageUploadUrl);
+        const publishedTimestamp = Date.now();
 
-      ux.action.stop();
-    }
+        const actions = definition.actions || {};
 
-    const publishedTimestamp = Date.now();
+        let action: serverTypes.Action;
+        let actionInputs: Answers;
+        if (context.agent) {
+          const selected = actionKey ? actions[actionKey] : undefined;
+          if (!selected) {
+            throw new ValidationError({
+              message: `Unknown action key: ${actionKey}`,
+            });
+          }
+          action = selected;
+          actionInputs = inputValues(action.inputs, suppliedActionInputs);
+        } else {
+          ({ action } = await inquirer.prompt<{ action: serverTypes.Action }>({
+            type: "select",
+            name: "action",
+            message: "Action:",
+            choices: Object.entries(actions).map(
+              ([
+                key,
+                {
+                  display: { label },
+                },
+              ]) => ({
+                name: label,
+                value: key,
+                short: key,
+              }),
+            ),
+            default: Object.keys(actions)[0],
+            filter: (value: string) => actions[value],
+          }));
+          actionInputs = await inquirer.prompt(action.inputs.map((i) => getInputQuestion(i)));
+        }
 
-    const actions = definition.actions || {};
+        const { inputs } = action;
 
-    const { action } = await inquirer.prompt<{ action: serverTypes.Action }>({
-      type: "select",
-      name: "action",
-      message: "Action:",
-      choices: Object.entries(actions).map(
-        ([
-          key,
-          {
-            display: { label },
+        const answers = {
+          action,
+          actionInputs,
+        };
+
+        // Ask about Connection to test if there is a connection type input
+        const hasConnection = inputs.some(({ type }) => type === "connection");
+        if (hasConnection) {
+          const connections = definition.connections || [];
+          let connection: serverTypes.Connection;
+          let connectionInputs: Answers;
+          if (context.agent) {
+            if (!connectionKey) {
+              requireInteractiveInput(
+                "The selected action requires --connection and optional --connection-inputs JSON",
+              );
+            }
+            const selected = connections.find(({ key }) => key === connectionKey);
+            if (!selected) {
+              throw new ValidationError({
+                message: `Unknown connection key: ${connectionKey}`,
+              });
+            }
+            connection = selected;
+            connectionInputs = inputValues(connection.inputs, suppliedConnectionInputs);
+          } else {
+            ({ connection } = await inquirer.prompt<{
+              connection: serverTypes.Connection;
+            }>({
+              type: "select",
+              name: "connection",
+              message: "Connection:",
+              choices: connections.map(({ key, label }) => ({
+                name: label,
+                value: key,
+                short: key,
+              })),
+              default: Object.keys(connections)[0],
+              filter: (value: string) => {
+                const [connection] = connections.filter(({ key }) => value === key);
+                return connection;
+              },
+            }));
+
+            connectionInputs = await inquirer.prompt(
+              connection.inputs
+                .filter(({ shown }) => shown === undefined || shown === true)
+                .map((i) => getInputQuestion(i)),
+            );
+          }
+
+          Object.assign(answers, { connection, connectionInputs });
+        }
+
+        const { actionInfo, connectionInfo } = valuesFromAnswers(answers);
+
+        startAction("Assembling test integration");
+
+        // FIXME: Wait for version to be available but due to issues we have to do a static wait.
+        const wait = 5000 - (Date.now() - publishedTimestamp);
+        if (wait > 0) {
+          await setTimeoutPromise(wait);
+        }
+
+        // Build up YAML
+        const harnessYaml = await buildComponentTestHarnessIntegration({
+          integrationInfo: {
+            name: componentTestIntegrationName(componentKey, name),
           },
-        ]) => ({
-          name: label,
-          value: key,
-          short: key,
-        }),
-      ),
-      default: Object.keys(actions)[0],
-      filter: (value: string) => actions[value],
-    });
+          componentInfo: { key: definition.key, isPublic: isPublic ?? false },
+          actionInfo,
+          connectionInfo,
+        });
 
-    const { inputs } = action;
+        stopAction();
+        startAction("Updating test Integration");
 
-    // Ask for values of action's inputs
-    const actionInputs = await inquirer.prompt(inputs.map((i) => getInputQuestion(i)));
-
-    const answers = {
-      action,
-      actionInputs,
-    };
-
-    // Ask about Connection to test if there is a connection type input
-    const hasConnection = inputs.some(({ type }) => type === "connection");
-    if (hasConnection) {
-      const connections = definition.connections || [];
-      const { connection } = await inquirer.prompt<{
-        connection: serverTypes.Connection;
-      }>({
-        type: "select",
-        name: "connection",
-        message: "Connection:",
-        choices: connections.map(({ key, label }) => ({
-          name: label,
-          value: key,
-          short: key,
-        })),
-        default: Object.keys(connections)[0],
-        filter: (value: string) => {
-          const [connection] = connections.filter(({ key }) => value === key);
-          return connection;
-        },
-      });
-
-      // Prompt for connection's inputs
-      const { inputs } = connection;
-      const connectionInputs = await inquirer.prompt(
-        inputs
-          .filter(({ shown }) => shown === undefined || shown === true)
-          .map((i) => getInputQuestion(i)),
-      );
-
-      Object.assign(answers, { connection, connectionInputs });
-    }
-
-    const { actionInfo, connectionInfo } = valuesFromAnswers(answers);
-
-    ux.action.start("Assembling test integration");
-
-    // FIXME: Wait for version to be available but due to issues we have to do a static wait.
-    const wait = 5000 - (Date.now() - publishedTimestamp);
-    if (wait > 0) {
-      await setTimeoutPromise(wait);
-    }
-
-    // Build up YAML
-    const harnessYaml = await buildComponentTestHarnessIntegration({
-      integrationInfo: {
-        name: componentTestIntegrationName(componentKey, name),
-      },
-      componentInfo: { key: definition.key, isPublic: isPublic ?? false },
-      actionInfo,
-      connectionInfo,
-    });
-
-    ux.action.stop();
-    ux.action.start("Updating test Integration");
-
-    const {
-      integrationId,
-      pendingAuthorizations,
-      systemInstance: {
-        flowConfigs: {
-          nodes: [
-            {
-              flow: { id: flowId },
+        const {
+          integrationId,
+          pendingAuthorizations,
+          systemInstance: {
+            flowConfigs: {
+              nodes: [
+                {
+                  flow: { id: flowId },
+                },
+              ],
             },
-          ],
-        },
-      },
-    } = await importDefinition(harnessYaml);
+          },
+        } = await importDefinition(harnessYaml);
 
-    ux.action.stop();
+        stopAction();
 
-    // Prompt for user authorization of pending connections
-    if (pendingAuthorizations.length > 0) {
-      const [{ id, url }] = pendingAuthorizations;
-      if (!url) {
-        throw new Error(
-          "Did not receive a valid URL for authorization. Verify your Connection inputs.",
-        );
-      }
+        // Prompt for user authorization of pending connections
+        if (pendingAuthorizations.length > 0) {
+          const [{ id, url }] = pendingAuthorizations;
+          if (!url) {
+            throw new Error(
+              "Did not receive a valid URL for authorization. Verify your Connection inputs.",
+            );
+          }
 
-      ux.url("Authorize URL", url);
-      await ux.anykey("Press any key to open your browser and authorize the Connection");
-      await open(url);
+          if (context.agent) {
+            return { authorizationRequired: { configVarId: id, url } };
+          }
 
-      ux.action.start("Waiting for Connection authorization");
+          writeCommandStatus(hyperlink("Authorize URL", url));
+          await pressAnyKey("Press any key to open your browser and authorize the Connection");
+          await open(url);
 
-      await pollForActiveConfigVarState(integrationId, id);
+          startAction("Waiting for Connection authorization");
 
-      ux.action.stop();
-    }
+          await pollForActiveConfigVarState(integrationId, id);
 
-    ux.action.start("Running test Integration");
+          stopAction();
+        }
 
-    const { executionId } = await runIntegrationFlow({ integrationId, flowId });
+        startAction("Running test Integration");
 
-    await displayLogs(executionId);
+        const { executionId } = await runIntegrationFlow({ integrationId, flowId });
 
-    if (outputFile) {
-      process.chdir(cwd);
-      console.log(`Writing step results to ${outputFile}`);
-      await writeFinalStepResults(executionId, outputFile);
-    }
+        await displayLogs(executionId);
 
-    if (printResults) {
-      await printFinalStepResults(executionId);
-    }
+        if (outputFile) {
+          writeCommandStatus(`Writing step results to ${outputFile}`);
+          await writeFinalStepResults(executionId, resolve(cwd, outputFile));
+        }
 
-    if (cleanUp) {
-      ux.action.start(`Cleaning up test Integration (${integrationId})`);
-      await deleteIntegration(integrationId);
-      ux.action.stop();
+        if (printResults) {
+          await printFinalStepResults(executionId);
+        }
 
-      ux.action.start(`Cleaning up test component (${definition.key})`);
-      await deleteComponentByKey(definition.key);
-      ux.action.stop();
-    }
+        if (cleanUp) {
+          startAction(`Cleaning up test Integration (${integrationId})`);
+          await deleteIntegration(integrationId);
+          stopAction();
 
-    ux.action.stop();
+          startAction(`Cleaning up test component (${definition.key})`);
+          await deleteComponentByKey(definition.key);
+          stopAction();
+        }
+        return { executionId, ...(outputFile ? { outputPath: resolve(cwd, outputFile) } : {}) };
+      });
+    });
+  },
+  alias: { "output-file": "o", build: "b", envPath: "e" },
+});
+
+const parseInputObject = (raw: string | undefined, flag: string): Record<string, unknown> => {
+  if (!raw) return {};
+  try {
+    const value = JSON.parse(raw);
+    if (typeof value !== "object" || value === null || Array.isArray(value)) throw new Error();
+    return value;
+  } catch {
+    throw new ValidationError({
+      message: `${flag} must be a JSON object`,
+    });
   }
-}
+};
+
+const inputValues = (inputs: serverTypes.Input[], provided: Record<string, unknown>): Answers =>
+  Object.fromEntries(
+    inputs.flatMap((input) => {
+      const value = provided[input.key] ?? input.default;
+      if (value === undefined) return [];
+      if (input.type === "connection") {
+        return [[input.key, { type: "configVar", value: String(value) }]];
+      }
+      if (input.collection) return [[input.key, { type: "complex", value }]];
+      return [[input.key, { type: "value", value }]];
+    }),
+  );

@@ -1,0 +1,15 @@
+query whoami {
+  authenticatedUser {
+    name
+    email
+    tenantId
+    org {
+      id
+      name
+    }
+    customer {
+      id
+      name
+    }
+  }
+}

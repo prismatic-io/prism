@@ -1,0 +1,35 @@
+query listIntegrations(
+  $showAllVersions: Boolean
+  $after: String
+  $first: Int
+  $customer: ID
+  $customerIsnull: Boolean
+  $search: String
+) {
+  integrations(
+    allVersions: $showAllVersions
+    after: $after
+    first: $first
+    customer: $customer
+    customer_Isnull: $customerIsnull
+    name_Icontains: $search
+  ) {
+    nodes {
+      id
+      name
+      description
+      versionNumber
+      labels
+      category
+      customer {
+        id
+        name
+        externalId
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

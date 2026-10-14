@@ -1,42 +1,32 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { Cli, z } from "incur";
+import { AvailableConnectionsDocument as AVAILABLE_CONNECTIONS } from "../../../graphql/operations/availableConnections.generated.js";
+import { gqlRequest } from "../../../graphql.js";
+import { printTable, tableFlags, tableOutputSchema } from "../../../utils/table.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List all integration-agnostic connections available to the organization";
-  static flags = {
-    ...ux.table.flags(),
-    "managed-by": Flags.string({
-      description: "Filter connections by management type",
-      options: ["org", "customer"],
-    }),
-  };
+type AvailableConnection = {
+  connection: { component: { key: string | null } | null } | null;
+  customer: { externalId: string | null; name: string } | null;
+  description: string | null;
+  managedBy: string;
+  stableKey: string;
+};
 
-  async run() {
-    const { flags } = await this.parse(ListCommand);
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["stableKey", "description", "managedBy", "customer", "component"]),
+  description: "List all integration-agnostic connections available to the organization",
+  options: z.object({
+    ...tableFlags(),
+    "managed-by": z
+      .enum(["org", "customer"])
+      .optional()
+      .describe("Filter connections by management type"),
+  }),
+  async run(context) {
+    const { options: flags } = context;
 
     const result = await gqlRequest({
-      document: gql`
-        query availableConnections($managedBy: String) {
-          scopedConfigVariables(managedBy: $managedBy) {
-            nodes {
-              stableKey
-              description
-              managedBy
-              customer {
-                externalId
-                name
-              }
-              connection {
-                component {
-                  key
-                }
-              }
-            }
-          }
-        }
-      `,
+      document: AVAILABLE_CONNECTIONS,
       variables: {
         managedBy: flags["managed-by"] || null,
       },
@@ -44,7 +34,7 @@ export default class ListCommand extends PrismaticBaseCommand {
 
     const connections = result.scopedConfigVariables.nodes;
 
-    ux.table(
+    return printTable(
       connections,
       {
         stableKey: {
@@ -61,17 +51,17 @@ export default class ListCommand extends PrismaticBaseCommand {
         },
         customer: {
           header: "Customer",
-          get: (row: any) =>
+          get: (row: AvailableConnection) =>
             row.customer ? `${row.customer.name} (${row.customer.externalId})` : "N/A",
           minWidth: 25,
         },
         component: {
           header: "Component",
-          get: (row: any) => row.connection?.component?.key || "N/A",
+          get: (row: AvailableConnection) => row.connection?.component?.key || "N/A",
           minWidth: 20,
         },
       },
       { ...flags },
     );
-  }
-}
+  },
+});

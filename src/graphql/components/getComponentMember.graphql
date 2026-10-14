@@ -1,0 +1,73 @@
+fragment CatalogMemberDetail on Action {
+  id
+  key
+  label
+  description
+  directions
+  important
+  authorizationRequired
+  isTrigger
+  isCommonTrigger
+  isPollingTrigger
+  scheduleSupport
+  synchronousResponseSupport
+  batchSupport
+  defaultBatchSize
+  hasOnDeployPerform
+  hasOnInstanceDeploy
+  hasOnInstanceDelete
+  hasWebhookCreateFunction
+  hasWebhookDeleteFunction
+  isDataSource
+  dataSourceType
+  isDetailDataSource
+  allowsBranching
+  staticBranchNames
+  dynamicBranchInput
+  terminateExecution
+  breakLoop
+  canCallComponentFunctions
+  examplePayload
+  outputSchema {
+    __typename
+    ... on ActionOutputSchema {
+      type
+      schema
+    }
+    ... on BranchingOutputSchema {
+      type
+      branchSchemas {
+        name
+        schema
+      }
+    }
+  }
+}
+
+query getComponentMember(
+  $key: String!
+  $public: Boolean
+  $versionNumber: Int
+  $allVersions: Boolean
+  $memberKey: String!
+  $isTrigger: Boolean!
+  $isDataSource: Boolean!
+) {
+  components(key: $key, public: $public, versionNumber: $versionNumber, allVersions: $allVersions) {
+    nodes {
+      id
+      key
+      label
+      public
+      versionNumber
+      actions(key: $memberKey, isTrigger: $isTrigger, isDataSource: $isDataSource) {
+        nodes {
+          ...CatalogMemberDetail
+          detailDataSource {
+            ...CatalogMemberDetail
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,66 +1,60 @@
 import inquirer from "inquirer";
-import type { GetExecutionLogsQuery } from "../../graphql/executions/getExecutionLogs.generated.js";
-import GET_EXECUTION_LOGS from "../../graphql/executions/getExecutionLogs.graphql";
-import type { GetExecutionSectionsQuery } from "../../graphql/executions/getExecutionSections.generated.js";
-import GET_EXECUTION_SECTIONS from "../../graphql/executions/getExecutionSections.graphql";
-import type { GetExecutionStepResultsQuery } from "../../graphql/executions/getExecutionStepResults.generated.js";
-import GET_EXECUTION_STEP_RESULTS from "../../graphql/executions/getExecutionStepResults.graphql";
-import type { IsCniExecutionCompleteQuery } from "../../graphql/executions/isCniExecutionComplete.generated.js";
-import IS_CNI_EXECUTION_COMPLETE from "../../graphql/executions/isCniExecutionComplete.graphql";
+import { commandSignal, requireInteractiveInput } from "../../command.js";
+import { GetExecutionLogsDocument as GET_EXECUTION_LOGS } from "../../graphql/executions/getExecutionLogs.generated.js";
+import { GetExecutionSectionsDocument } from "../../graphql/executions/getExecutionSections.generated.js";
+import { GetExecutionStepResultsDocument as GET_EXECUTION_STEP_RESULTS } from "../../graphql/executions/getExecutionStepResults.generated.js";
+import { IsCniExecutionCompleteDocument as IS_CNI_EXECUTION_COMPLETE } from "../../graphql/executions/isCniExecutionComplete.generated.js";
 import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getIntegrationFlows.generated.js";
-import GET_INTEGRATION_FLOWS from "../../graphql/integrations/getIntegrationFlows.graphql";
+import { GetIntegrationFlowsDocument as GET_INTEGRATION_FLOWS } from "../../graphql/integrations/getIntegrationFlows.generated.js";
 import { gqlRequest } from "../../graphql.js";
 import { handleError } from "../errors.js";
+export type IntegrationFlow = NonNullable<
+  GetIntegrationFlowsQuery["integration"]
+>["flows"]["nodes"][number];
 
-type IntegrationFlowNode = NonNullable<
-  NonNullable<GetIntegrationFlowsQuery["integration"]>["flows"]["nodes"][number]
->;
+export type IntegrationFlowsPage = {
+  flows: IntegrationFlow[];
+  pageInfo: { hasNextPage: boolean; endCursor?: string | null };
+};
 
-export type IntegrationFlow = IntegrationFlowNode;
-
-export async function getIntegrationFlows(integrationId: string): Promise<IntegrationFlow[]> {
+export async function getIntegrationFlowsPage(
+  integrationId: string,
+  options: { after?: string; first?: number; all?: boolean } = {},
+): Promise<IntegrationFlowsPage> {
   let flows: IntegrationFlow[] = [];
   let hasNextPage = true;
-  let cursor: string | undefined;
+  let cursor = options.after;
+  let pageInfo: IntegrationFlowsPage["pageInfo"] = { hasNextPage: false, endCursor: null };
 
   while (hasNextPage) {
-    const result: GetIntegrationFlowsQuery = await gqlRequest<GetIntegrationFlowsQuery>({
+    const result: GetIntegrationFlowsQuery = await gqlRequest({
       document: GET_INTEGRATION_FLOWS,
       variables: {
         id: integrationId,
         after: cursor,
+        first: options.first,
       },
     });
 
     const integration = result.integration;
     if (!integration) break;
 
-    const { nodes, pageInfo } = integration.flows;
-    const validNodes = nodes.filter((n): n is IntegrationFlowNode => n !== null);
-    flows = [...flows, ...validNodes];
-    cursor = pageInfo.endCursor ?? undefined;
-    hasNextPage = pageInfo.hasNextPage;
+    const { nodes, pageInfo: currentPageInfo } = integration.flows;
+    flows = [...flows, ...nodes];
+    pageInfo = currentPageInfo;
+    cursor = currentPageInfo.endCursor ?? undefined;
+    hasNextPage = currentPageInfo.hasNextPage && options.all === true;
   }
 
-  return flows;
+  return { flows, pageInfo };
 }
 
-export interface LogNode {
-  [index: string]: unknown;
-  timestamp: string;
-  severity: string;
-  message: string;
-  sectionId?: string | null;
-}
-
-export interface FetchLogsResult {
-  logs: LogNode[];
-  cursor: string | undefined;
-  executionComplete?: boolean;
+export async function getIntegrationFlows(integrationId: string): Promise<IntegrationFlow[]> {
+  return (await getIntegrationFlowsPage(integrationId, { all: true })).flows;
 }
 
 export async function getExecutionLogs(executionId: string, nextCursor?: string) {
-  return await gqlRequest<GetExecutionLogsQuery>({
+  return await gqlRequest({
     document: GET_EXECUTION_LOGS,
     variables: {
       executionId,
@@ -69,67 +63,8 @@ export async function getExecutionLogs(executionId: string, nextCursor?: string)
   });
 }
 
-export async function getExecutionSections(executionId: string, sectionIds: string[]) {
-  return await gqlRequest<GetExecutionSectionsQuery>({
-    document: GET_EXECUTION_SECTIONS,
-    variables: {
-      executionId,
-      sectionIds,
-    },
-  });
-}
-
-/**
- * Resolves ExecutionSection labels for logs tailed during a single execution, caching
- * results so each section's label is only fetched once. Sections may not have mirrored
- * to Postgres yet by the time their logs arrive, so unresolved ids are retried on the
- * next call to `resolve`.
- */
-export class SectionLabelResolver {
-  private readonly labels = new Map<string, string>();
-
-  constructor(private readonly executionId: string) {}
-
-  async resolve(logs: LogNode[]): Promise<void> {
-    const unresolvedSectionIds = [
-      ...new Set(
-        logs.flatMap((log) =>
-          log.sectionId && !this.labels.has(log.sectionId) ? [log.sectionId] : [],
-        ),
-      ),
-    ];
-    if (unresolvedSectionIds.length === 0) return;
-
-    try {
-      const { executionSections } = await getExecutionSections(
-        this.executionId,
-        unresolvedSectionIds,
-      );
-      for (const node of executionSections.nodes) {
-        if (node?.sectionId) {
-          this.labels.set(node.sectionId, node.label);
-        }
-      }
-    } catch (err) {
-      console.error(`There was an error fetching execution section labels:\n${err}`);
-    }
-  }
-
-  /** The resolved section label for a log, falling back to its raw section id, or null if it's outside any section. */
-  sectionName(log: LogNode): string | null {
-    return log.sectionId ? (this.labels.get(log.sectionId) ?? log.sectionId) : null;
-  }
-}
-
-export interface StepResultNode {
-  [index: string]: unknown;
-  stepName: string;
-  endedAt: string;
-  resultsUrl: string;
-}
-
 export async function getExecutionStepResults(executionId: string, nextCursor?: string) {
-  return await gqlRequest<GetExecutionStepResultsQuery>({
+  return await gqlRequest({
     document: GET_EXECUTION_STEP_RESULTS,
     variables: {
       executionId,
@@ -139,7 +74,7 @@ export async function getExecutionStepResults(executionId: string, nextCursor?: 
 }
 
 export async function isCniExecutionComplete(executionId: string) {
-  const result = await gqlRequest<IsCniExecutionCompleteQuery>({
+  const result = await gqlRequest({
     document: IS_CNI_EXECUTION_COMPLETE,
     variables: {
       executionId,
@@ -180,6 +115,7 @@ export async function resolveFlow(options: ResolveFlowOptions): Promise<Integrat
   const hasFlowIdentifier = flowId || flowName;
 
   if (!hasFlowIdentifier) {
+    requireInteractiveInput("Agent mode requires --flow-id or --flow-name");
     return selectFlowPrompt(integrationId, { message: promptMessage });
   }
 
@@ -239,4 +175,47 @@ export async function selectFlowPrompt(
   });
 
   return selectedFlow;
+}
+
+/** Labels are cached only for this execution; unmirrored sections are retried. */
+export class SectionLabelResolver {
+  private readonly labels = new Map<string, string>();
+
+  constructor(private readonly executionId: string) {}
+
+  async resolve(logs: ReadonlyArray<{ sectionId?: string | null }>): Promise<string | undefined> {
+    const signal = commandSignal();
+    signal?.throwIfAborted();
+    const sectionIds = [
+      ...new Set(
+        logs.flatMap(({ sectionId }) =>
+          sectionId && !this.labels.has(sectionId) ? [sectionId] : [],
+        ),
+      ),
+    ];
+    if (!sectionIds.length) return;
+    try {
+      // Stay within the API's connection page limit without dropping later sections.
+      for (let offset = 0; offset < sectionIds.length; offset += 100) {
+        signal?.throwIfAborted();
+        const { executionSections } = await gqlRequest({
+          document: GetExecutionSectionsDocument,
+          variables: {
+            executionId: this.executionId,
+            sectionIds: sectionIds.slice(offset, offset + 100),
+          },
+        });
+        for (const node of executionSections.nodes) {
+          if (node?.sectionId) this.labels.set(node.sectionId, node.label);
+        }
+      }
+    } catch (error) {
+      signal?.throwIfAborted();
+      return `There was an error fetching execution section labels: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  }
+
+  sectionName(log: { sectionId?: string | null }): string | null {
+    return log.sectionId ? (this.labels.get(log.sectionId) ?? log.sectionId) : null;
+  }
 }

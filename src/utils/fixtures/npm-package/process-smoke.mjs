@@ -1,10 +1,10 @@
-import { writeFileSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 
 if (process.argv[2] === "--fail") {
   process.exit(19);
 }
 
-writeFileSync(
+await writeFile(
   process.env.PRISM_PROCESS_TEST_OUTPUT,
   JSON.stringify({
     argument: process.argv[2],

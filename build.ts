@@ -1,19 +1,4 @@
-import { readFileSync } from "node:fs";
 import { cp } from "node:fs/promises";
-import type { BunPlugin } from "bun";
-
-const graphqlLoader: BunPlugin = {
-  name: "graphql-loader",
-  setup: (build) => {
-    build.onLoad({ filter: /\.graphql$/ }, (args) => {
-      const content = readFileSync(args.path, "utf-8");
-      return {
-        contents: `export default ${JSON.stringify(content)};`,
-        loader: "js",
-      };
-    });
-  },
-};
 
 const isDebug = process.argv.includes("--debug");
 
@@ -23,7 +8,6 @@ const result = await Bun.build({
   target: "node",
   minify: !isDebug,
   sourcemap: isDebug ? "external" : "none",
-  plugins: [graphqlLoader],
 });
 
 if (!result.success) {

@@ -1,0 +1,7 @@
+query getSystemInstanceId($integrationId: ID!) {
+  integration(id: $integrationId) {
+    systemInstance {
+      id
+    }
+  }
+}

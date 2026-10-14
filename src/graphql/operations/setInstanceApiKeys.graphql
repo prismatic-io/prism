@@ -1,0 +1,20 @@
+mutation setInstanceApiKeys($instanceId: ID!, $flowConfigs: [InputInstanceFlowConfig]) {
+  updateInstance(input: { id: $instanceId, flowConfigs: $flowConfigs, configMode: "INSTANCE" }) {
+    instance {
+      id
+      flowConfigs {
+        nodes {
+          id
+          apiKeys
+          flow {
+            id
+          }
+        }
+      }
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

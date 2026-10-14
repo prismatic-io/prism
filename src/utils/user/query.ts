@@ -1,4 +1,5 @@
-import { gql, gqlRequest } from "../../graphql.js";
+import { WhoamiDocument as WHOAMI } from "../../graphql/operations/whoami.generated.js";
+import { gqlRequest } from "../../graphql.js";
 
 interface OrgUser {
   userType: "org";
@@ -27,25 +28,25 @@ interface CustomerUser {
 type User = OrgUser | CustomerUser;
 
 export const whoAmI = async (): Promise<User> => {
-  const { authenticatedUser } = await gqlRequest<{ authenticatedUser: User }>({
-    document: gql`
-      query whoami {
-        authenticatedUser {
-          name
-          email
-          tenantId
-          org {
-            id
-            name
-          }
-          customer {
-            id
-            name
-          }
-        }
-      }
-    `,
+  const { authenticatedUser } = await gqlRequest({
+    document: WHOAMI,
   });
-  authenticatedUser.userType = authenticatedUser.org ? "org" : "customer";
-  return authenticatedUser;
+  if (authenticatedUser.org) {
+    return {
+      ...authenticatedUser,
+      userType: "org",
+      org: authenticatedUser.org,
+      customer: undefined,
+    };
+  }
+  if (authenticatedUser.customer) {
+    return {
+      ...authenticatedUser,
+      userType: "customer",
+      customer: authenticatedUser.customer,
+      org: undefined,
+      tenantId: undefined,
+    };
+  }
+  throw new Error("Authenticated user is not associated with an organization or customer");
 };

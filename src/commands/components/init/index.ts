@@ -1,156 +1,139 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
 import { promises as fs } from "fs";
+import { Cli, z } from "incur";
 import * as path from "path";
 import { parseAndGenerate } from "wsdl-tsclient";
-import { Logger as WsdlTsClientLogger } from "wsdl-tsclient/dist/src/utils/logger.js";
+import { writeCommandStatus } from "../../../command.js";
+import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
+import { CommandFailedError } from "../../../errors.js";
 import { generate } from "../../../generate/index.js";
 import { updatePackageJson } from "../../../generate/util.js";
+import { warningsOutput } from "../../../output.js";
 import { formatSourceFiles, getFilesToFormat, VALID_NAME_REGEX } from "../../../utils/generate.js";
 import {
   DEFAULT_TOOLCHAIN,
   getToolchain,
   TOOLCHAIN_NAMES,
 } from "../../../utils/toolchain/index.js";
-import GenerateComponentCommand from "./component.js";
-import GenerateFormatsCommand from "./formats.js";
+import { generateComponent } from "./component.js";
+import { generateFormats } from "./formats.js";
 
-export default class InitializeComponent extends PrismaticBaseCommand {
-  static description = "Initialize a new Component";
-
-  static examples = [
+export default Cli.command({
+  output: z.object({
+    name: z.string(),
+    path: z.string(),
+    toolchain: z.string(),
+    ...warningsOutput,
+  }),
+  description: "Initialize a new Component",
+  examples: [
     {
       description:
         "Initialize a new component directory for a component named 'send-customer-invoices':",
-      command: "<%= config.bin %> <%= command.id %> send-customer-invoices",
+      args: { name: "send-customer-invoices" },
     },
     {
-      description:
-        "Initialize a component from a WSDL definition file, then install dependencies, build, and publish it:",
-      command: `<%= config.bin %> <%= command.id %> --wsdl-path ./example.wsdl "Example WSDL"
-cd "Example WSDL" && yarn install && yarn build
-prism components:publish`,
+      description: "Initialize a component from a WSDL definition file:",
+      args: { name: "example-wsdl" },
+      options: { "wsdl-path": "./example.wsdl" },
     },
-  ];
-
-  static flags = {
-    "wsdl-path": Flags.string({
-      required: false,
-      description: "Path to the WSDL definition file used to generate a Component",
-    }),
-    "open-api-path": Flags.string({
-      required: false,
-      description:
+  ],
+  options: z.object({
+    "wsdl-path": z
+      .string()
+      .optional()
+      .describe("Path to the WSDL definition file used to generate a Component"),
+    "open-api-path": z
+      .string()
+      .optional()
+      .describe(
         "The path to an OpenAPI Specification file (JSON or YAML) used to generate a Component",
-    }),
-    verbose: Flags.boolean({
-      required: false,
-      default: false,
-      description: "Output more verbose logging from Component generation",
-    }),
-    toolchain: Flags.option({
-      options: TOOLCHAIN_NAMES,
-      default: DEFAULT_TOOLCHAIN,
-      description:
+      ),
+    verbose: z
+      .boolean()
+      .default(false)
+      .describe("Output more verbose logging from Component generation"),
+    toolchain: z
+      .enum(TOOLCHAIN_NAMES)
+      .default(DEFAULT_TOOLCHAIN)
+      .describe(
         "Toolchain to scaffold: 'modern' (tsdown + vitest + Biome) or 'legacy' (webpack + jest + eslint)",
-    })(),
-  };
-  static args = {
-    name: Args.string({
-      required: true,
-      description:
+      ),
+  }),
+  args: z.object({
+    name: z
+      .string()
+      .describe(
         "Name of the new component to create (alphanumeric characters, hyphens, and underscores)",
-    }),
-  };
+      ),
+  }),
+  async run(context) {
+    const cwd = getWorkingDirectory();
 
-  async run() {
-    const cwd = process.cwd();
+    const {
+      args: { name },
+      options: {
+        verbose,
+        "wsdl-path": rawWsdlPath,
+        "open-api-path": rawOpenApiPath,
+        toolchain: toolchainName,
+      },
+    } = context;
 
-    try {
-      const {
-        args: { name },
-        flags: {
-          verbose,
-          "wsdl-path": rawWsdlPath,
-          "open-api-path": rawOpenApiPath,
-          toolchain: toolchainName,
-        },
-      } = await this.parse(InitializeComponent);
+    const toolchain = getToolchain(toolchainName);
+    const wsdlPath = rawWsdlPath ? path.resolve(cwd, rawWsdlPath) : undefined;
+    const openApiPath = rawOpenApiPath ? path.resolve(cwd, rawOpenApiPath) : undefined;
 
-      const toolchain = getToolchain(toolchainName);
-      const wsdlPath = rawWsdlPath ? path.resolve(rawWsdlPath) : undefined;
-      const openApiPath = rawOpenApiPath ? path.resolve(rawOpenApiPath) : undefined;
+    if (!VALID_NAME_REGEX.test(name)) {
+      const regexUrl = new URL("https://regex101.com");
+      regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
+      throw new CommandFailedError({
+        message: `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
+      });
+    }
+    if (wsdlPath && !wsdlPath?.includes(".wsdl")) {
+      throw new CommandFailedError({
+        message: "If a WSDL is provided it must have an extension of '.wsdl'",
+      });
+    }
+    writeCommandStatus(`Creating component directory for "${name}"...`);
 
-      if (!VALID_NAME_REGEX.test(name)) {
-        const regexUrl = new URL("https://regex101.com");
-        regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
-        this.error(
-          `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
-          { exit: 1 },
-        );
-      }
-      if (wsdlPath && !wsdlPath?.includes(".wsdl")) {
-        this.error("If a WSDL is provided it must have an extension of '.wsdl'", {
-          exit: 1,
-        });
-      }
-      this.log(`Creating component directory for "${name}"...`);
+    const directory = path.resolve(cwd, name);
+    await fs.mkdir(directory);
 
-      await fs.mkdir(name);
-      process.chdir(name);
-
+    return withWorkingDirectory(directory, async () => {
       if (openApiPath) {
-        await GenerateFormatsCommand.invoke(
-          {
-            name,
-            openapi: openApiPath,
-            toolchain: toolchain.name,
-          },
-          this.config,
-        );
+        await generateFormats({
+          name,
+          openapi: openApiPath,
+          toolchain: toolchain.name,
+        });
       } else {
-        await GenerateComponentCommand.invoke(
-          {
-            name,
-            description: "Prism-generated Component",
-            toolchain: toolchain.name,
-          },
-          this.config,
-        );
-
-        // Need to pop back as the WSDL generator assumes it's a directory up
-        process.chdir(cwd);
+        await generateComponent({
+          name,
+          description: "Prism-generated Component",
+          toolchain: toolchain.name,
+        });
 
         if (wsdlPath) {
-          if (!verbose) {
-            // wsdl-tsclient emits pretty noisy logs that aren't particularly useful
-            WsdlTsClientLogger.disabled();
-          }
-
           const [wsdlName] = path.basename(wsdlPath).split(".wsdl");
-          await parseAndGenerate(wsdlPath, name, {
+          await parseAndGenerate(wsdlPath, directory, {
             caseInsensitiveNames: true,
+            quiet: context.agent || !verbose,
           });
 
           await generate({
-            projectRoot: name,
+            projectRoot: directory,
             projectTemplateName: wsdlName,
             projectTemplatePath: wsdlPath,
           });
         }
       }
 
-      // Return to new project's directory
-      process.chdir(path.join(cwd, name));
-
       await updatePackageJson({
-        path: "package.json",
+        path: path.join(directory, "package.json"),
         scripts: {
           build: toolchain.scripts.build,
           publish: "npm run build && prism components:publish",
-          "generate:manifest": "npm run build && npx @prismatic-io/spectral component-manifest",
-          "generate:manifest:dev":
-            "npm run build && npx @prismatic-io/spectral component-manifest --skip-signature-verify",
           test: toolchain.scripts.test,
           lint: toolchain.scripts.lint,
           typecheck: toolchain.scripts.typecheck,
@@ -164,10 +147,10 @@ prism components:publish`,
         devDependencies: toolchain.devDependencies,
       });
 
-      const filesToFormat = await getFilesToFormat(name);
-      await formatSourceFiles(name, filesToFormat);
+      const filesToFormat = await getFilesToFormat(path.join(directory, "package.json"));
+      await formatSourceFiles(path.join(directory, "package.json"), filesToFormat);
 
-      this.log(`
+      writeCommandStatus(`
 "${name}" is ready for development.
 To install dependencies, run either "npm install" or "yarn install"
 To test the component, run "npm run test" or "yarn test"
@@ -176,8 +159,7 @@ To publish the component, run "prism components:publish"
 
 For documentation on writing custom components, visit https://prismatic.io/docs/custom-connectors/
         `);
-    } finally {
-      process.chdir(cwd);
-    }
-  }
-}
+      return { name, path: directory, toolchain: toolchain.name };
+    });
+  },
+});

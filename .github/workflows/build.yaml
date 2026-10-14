@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ["20", "22", "24"]
+        node-version: ["22.19.0", "22", "24", "26"]
     name: validate (node ${{ matrix.node-version }})
     steps:
       - uses: actions/checkout@v7.0.1
@@ -16,7 +16,9 @@ jobs:
       - run: mise install node@${{ matrix.node-version }}
       - run: bun install --frozen-lockfile
       - run: mise exec node@${{ matrix.node-version }} -- npm install --dry-run --engine-strict
-      - run: mise run validate:node${{ matrix.node-version }}
+      - run: mise run validate
+        env:
+          MISE_NODE_VERSION: ${{ matrix.node-version }}
 
   test-windows:
     runs-on: windows-latest
@@ -25,4 +27,5 @@ jobs:
       - uses: jdx/mise-action@v4.3.0
       - run: mise exec -- bun install --frozen-lockfile
       - run: mise exec -- bun run clean-test-temp
+      - run: mise exec -- bun run bundle
       - run: mise exec -- node node_modules/vitest/vitest.mjs run

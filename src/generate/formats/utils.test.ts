@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanIdentifier, createDescription } from "./utils.js";
+import { createDescription } from "./utils.js";
 
 describe("createDescription", () => {
   it.each([{ value: "Bob's", expected: "Bob's" }])("should not flip quotes", ({
@@ -7,18 +7,5 @@ describe("createDescription", () => {
     expected,
   }) => {
     expect(createDescription(value)).toStrictEqual(expected);
-  });
-});
-
-describe("cleanIdentifier", () => {
-  it.each([
-    { value: "foo/bar", expected: "fooBar" },
-    { value: ",foo_bar", expected: "fooBar" },
-    { value: "12345foobar", expected: "one2345Foobar" },
-    { value: "0", expected: "zero" },
-    { value: "default", expected: "defaultValue" },
-    { value: "case", expected: "aCase" },
-  ])("produces clean identifiers", ({ value, expected }) => {
-    expect(cleanIdentifier(value)).toStrictEqual(expected);
   });
 });

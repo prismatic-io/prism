@@ -1,38 +1,28 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { Cli, z } from "incur";
+import { DeleteInstanceDocument as DELETE_INSTANCE } from "../../graphql/operations/deleteInstance.generated.js";
+import { gqlRequest } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
 
-export default class DeleteCommand extends PrismaticBaseCommand {
-  static description = "Delete an Instance";
-  static args = {
-    instance: Args.string({
-      required: true,
-      description: "ID of the instance to delete",
-    }),
-  };
-
-  async run() {
+export default Cli.command({
+  output: z
+    .object({ instanceId: z.string() })
+    .extend(warningsOutput)
+    .extend({ deleted: z.literal(true) }),
+  description: "Delete an Instance",
+  args: z.object({
+    instance: z.string().describe("ID of the instance to delete"),
+  }),
+  async run(context) {
     const {
       args: { instance },
-    } = await this.parse(DeleteCommand);
+    } = context;
 
     await gqlRequest({
-      document: gql`
-        mutation deleteInstance($id: ID!) {
-          deleteInstance(input: { id: $id }) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DELETE_INSTANCE,
       variables: {
         id: instance,
       },
     });
-  }
-}
+    return { instanceId: instance, deleted: true as const };
+  },
+});

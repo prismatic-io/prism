@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-09-08T18:11:10.362Z",
+  "stack": "https://app.rwersal.prismatic-dev.io",
+  "checks": [
+    {
+      "cli": "release",
+      "create": true,
+      "arrays": true,
+      "variablesAlias": true,
+      "attachedAlias": true,
+      "update": true,
+      "delete": true
+    },
+    {
+      "cli": "port",
+      "create": true,
+      "arrays": true,
+      "variablesAlias": true,
+      "attachedAlias": true,
+      "update": true,
+      "delete": true
+    }
+  ],
+  "allTemporaryCustomersRemoved": true
+}

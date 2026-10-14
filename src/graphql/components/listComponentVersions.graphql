@@ -1,0 +1,28 @@
+query listComponentVersions($key: String!, $public: Boolean, $after: String, $first: Int) {
+  components(key: $key, public: $public) {
+    nodes {
+      id
+      key
+      public
+      versionNumber
+      versionSequenceId
+      versions(after: $after, first: $first, orderBy: { field: VERSION_NUMBER, direction: DESC }) {
+        nodes {
+          id
+          versionNumber
+          publishedAt
+          comment
+          isAvailable
+          publishedBy {
+            name
+            email
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}

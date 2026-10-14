@@ -1,0 +1,10 @@
+query state($integrationId: ID!) {
+  integration(id: $integrationId) {
+    testConfigVariables(status_In: ["pending", "active", "error"]) {
+      nodes {
+        id
+        status
+      }
+    }
+  }
+}

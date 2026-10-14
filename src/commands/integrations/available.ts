@@ -1,52 +1,48 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
-
-export default class AvailableCommand extends PrismaticBaseCommand {
-  static description = "Mark an Integration version as available or unavailable";
-  static args = {
-    integration: Args.string({
-      required: true,
-      description: "ID of an integration version",
-    }),
-  };
-  static flags = {
-    available: Flags.boolean({
-      required: true,
-      char: "a",
-      description: "Version is available or unavailable",
-      allowNo: true,
-    }),
-  };
-
-  async run() {
+import { Cli, z } from "incur";
+import { MarkAvailabilityDocument as MARK_AVAILABILITY } from "../../graphql/operations/markAvailability.generated.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
+export default Cli.command({
+  output: z.object({ integrationId: z.string() }).extend(warningsOutput),
+  description: "Mark an Integration version as available or unavailable",
+  args: z.object({
+    integration: z.string().describe("ID of an integration version"),
+  }),
+  options: z.object({
+    available: z.boolean().describe("Version is available or unavailable"),
+  }),
+  async run(context) {
     const {
       args: { integration },
-      flags: { available },
-    } = await this.parse(AvailableCommand);
+      options: { available },
+    } = context;
 
     const result = await gqlRequest({
-      document: gql`
-        mutation markAvailability($id: ID!, $available: Boolean!) {
-          updateIntegrationVersionAvailability(
-            input: { id: $id, available: $available }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: MARK_AVAILABILITY,
       variables: {
         id: integration,
         available,
       },
     });
 
-    this.log(result.updateIntegrationVersionAvailability.integration.id);
-  }
-}
+    const resourceId = requireOperationResult(
+      result.updateIntegrationVersionAvailability?.integration?.id,
+      "Integration availability was not updated",
+    );
+    return context.ok(
+      { integrationId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "integrations flows list",
+              description: "Inspect this integration's flows",
+              args: { integration: resourceId },
+            },
+          ],
+        },
+      },
+    );
+  },
+  alias: { available: "a" },
+});

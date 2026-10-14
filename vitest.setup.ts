@@ -4,6 +4,13 @@ export const TEST_PRISMATIC_URL = "https://example.com";
 
 vi.mock(import("./src/auth.js"), () => ({
   getAccessToken: vi.fn(() => Promise.resolve("test-token")),
+  getAuthenticatedContext: vi.fn(() =>
+    Promise.resolve({
+      source: "environment" as const,
+      accessToken: "test-token",
+      url: "https://example.com",
+    }),
+  ),
   logout: vi.fn(() => Promise.resolve()),
   createRequestParams: (data: Record<string, string | undefined>): string =>
     new URLSearchParams(
@@ -11,14 +18,13 @@ vi.mock(import("./src/auth.js"), () => ({
     ).toString(),
 }));
 
-vi.mock(import("./src/context.js"), () => ({
+vi.mock(import("./src/context.js"), async (importOriginal) => ({
+  ...(await importOriginal()),
   getAuthContext: vi.fn(),
   getPrismaticUrl: vi.fn(() => Promise.resolve(TEST_PRISMATIC_URL)),
   hasEnvironmentCredentials: vi.fn(() =>
     Boolean(process.env.PRISM_ACCESS_TOKEN || process.env.PRISM_REFRESH_TOKEN),
   ),
-  useDefaultAuthContext: vi.fn(),
-  useProfileAuthContext: vi.fn(),
 }));
 
 vi.mock(import("./src/utils/http.js"), () => ({

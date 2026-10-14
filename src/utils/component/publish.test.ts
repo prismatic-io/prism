@@ -1,3 +1,4 @@
+import { print } from "graphql";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ComponentDefinition } from "./index.js";
 import { publishDefinition } from "./publish.js";
@@ -24,7 +25,7 @@ describe("publishDefinition", () => {
     gqlRequest.mockResolvedValue({
       publishComponent: {
         publishResult: {
-          component: { versionNumber: "1" },
+          component: { id: "component-id", versionNumber: 1 },
           iconUploadUrl: "https://example.com/icon",
           packageUploadUrl: "https://example.com/package",
           connectionIconUploadUrls: [],
@@ -43,7 +44,7 @@ describe("publishDefinition", () => {
     });
 
     const { document, variables } = gqlRequest.mock.calls[0][0];
-    expect(document).toContain("$serverFunctions: [ServerFunctionDefinitionInput]");
+    expect(print(document)).toContain("$serverFunctions: [ServerFunctionDefinitionInput]");
     expect(variables.definition).toMatchObject({
       configurationInit: { connections: ["instance.api"] },
     });

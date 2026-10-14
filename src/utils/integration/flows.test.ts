@@ -6,7 +6,12 @@ import { TEST_PRISMATIC_URL } from "../../../vitest.setup.js";
 import type { IsCniExecutionCompleteQuery } from "../../graphql/executions/isCniExecutionComplete.generated.js";
 import type { GetIntegrationFlowsQuery } from "../../graphql/integrations/getIntegrationFlows.generated.js";
 import { ActionScheduleSupport } from "../../graphql/schema.generated.js";
-import { getIntegrationFlows, isCniExecutionComplete, selectFlowPrompt } from "./flows.js";
+import {
+  getIntegrationFlows,
+  getIntegrationFlowsPage,
+  isCniExecutionComplete,
+  selectFlowPrompt,
+} from "./flows.js";
 
 vi.mock(import("inquirer"), () => ({
   default: {
@@ -17,8 +22,8 @@ vi.mock(import("inquirer"), () => ({
 const api = graphql.link(`${TEST_PRISMATIC_URL}/api`);
 
 type IntegrationFlowNode = NonNullable<
-  NonNullable<GetIntegrationFlowsQuery["integration"]>["flows"]["nodes"][number]
->;
+  GetIntegrationFlowsQuery["integration"]
+>["flows"]["nodes"][number];
 
 const createFlowNode = (
   id: string,
@@ -124,6 +129,29 @@ describe("flows utils", () => {
       expect(result[2].id).toBe("flow-3");
     });
 
+    it("returns a bounded page with a resumable cursor", async () => {
+      const requests: Array<Record<string, unknown>> = [];
+      server.use(
+        api.query("GetIntegrationFlows", ({ variables }) => {
+          requests.push(variables);
+          return HttpResponse.json(
+            buildGetIntegrationFlowsResponse([createFlowNode("flow-1", "Flow One")], {
+              hasNextPage: true,
+              endCursor: "cursor-1",
+            }),
+          );
+        }),
+      );
+
+      await expect(
+        getIntegrationFlowsPage("integration-123", { after: "starting-cursor", first: 5 }),
+      ).resolves.toMatchObject({
+        flows: [{ id: "flow-1" }],
+        pageInfo: { hasNextPage: true, endCursor: "cursor-1" },
+      });
+      expect(requests).toEqual([{ id: "integration-123", after: "starting-cursor", first: 5 }]);
+    });
+
     it("should return empty array when integration not found", async () => {
       server.use(
         api.query("GetIntegrationFlows", () => HttpResponse.json({ data: { integration: null } })),
@@ -134,26 +162,13 @@ describe("flows utils", () => {
       expect(result).toEqual([]);
     });
 
-    it("should filter out null nodes", async () => {
+    it("returns an empty array for an integration with no flows", async () => {
       server.use(
         api.query("GetIntegrationFlows", () =>
-          HttpResponse.json({
-            data: {
-              integration: {
-                flows: {
-                  nodes: [createFlowNode("flow-1", "Flow One"), null],
-                  pageInfo: { hasNextPage: false, endCursor: null },
-                },
-              },
-            },
-          }),
+          HttpResponse.json(buildGetIntegrationFlowsResponse([])),
         ),
       );
-
-      const result = await getIntegrationFlows("integration-123");
-
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe("flow-1");
+      expect(await getIntegrationFlows("integration-123")).toEqual([]);
     });
   });
 

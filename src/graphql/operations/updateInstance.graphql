@@ -1,0 +1,25 @@
+mutation updateInstance(
+  $id: ID!
+  $name: String
+  $description: String
+  $version: ID
+  $labels: [String]
+) {
+  updateInstance(
+    input: {
+      id: $id
+      name: $name
+      description: $description
+      integration: $version
+      labels: $labels
+    }
+  ) {
+    instance {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

@@ -1,0 +1,11 @@
+mutation DeleteOrganizationSigningKeyMutation($id: ID!) {
+  deleteOrganizationSigningKey(input: { id: $id }) {
+    organizationSigningKey {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

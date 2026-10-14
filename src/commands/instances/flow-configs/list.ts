@@ -1,63 +1,67 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { Cli, z } from "incur";
+import {
+  ListInstanceFlowConfigsDocument as LIST_INSTANCE_FLOW_CONFIGS,
+  type ListInstanceFlowConfigsQuery,
+} from "../../../graphql/instances/listInstanceFlowConfigs.generated.js";
+import { gqlRequest, requireResource } from "../../../graphql.js";
+import {
+  paginationFlags,
+  printTable,
+  tableFlags,
+  tableOutputSchema,
+} from "../../../utils/table.js";
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Instance Flow Configs";
-  static args = {
-    instance: Args.string({ description: "ID of an Instance", required: true }),
-  };
-  static flags = {
-    ...ux.table.flags(),
-  };
+type InstanceFlowConfigNode = NonNullable<
+  ListInstanceFlowConfigsQuery["instance"]
+>["flowConfigs"]["nodes"][number];
 
-  async run() {
+const isInstanceFlowConfigNode = (
+  node: InstanceFlowConfigNode | null,
+): node is InstanceFlowConfigNode => node !== null;
+
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: tableOutputSchema(["id", "name", "webhookUrl"], true),
+  description: "List Instance Flow Configs",
+  args: z.object({
+    instance: z.string().describe("ID of an Instance"),
+  }),
+  options: z.object({
+    ...tableFlags(),
+    ...paginationFlags(),
+  }),
+  async run(context) {
     const {
       args: { instance },
-      flags,
-    } = await this.parse(ListCommand);
+      options: flags,
+    } = context;
 
-    let flowConfigs: any[] = [];
+    let flowConfigs: InstanceFlowConfigNode[] = [];
     let hasNextPage = true;
-    let cursor = "";
+    let cursor: string | null = flags.after ?? "";
+    let finalPageInfo: { hasNextPage: boolean; endCursor?: string | null } = {
+      hasNextPage: false,
+      endCursor: null,
+    };
 
     while (hasNextPage) {
-      const {
-        instance: {
-          flowConfigs: { nodes, pageInfo },
-        },
-      } = await gqlRequest({
-        document: gql`
-          query listInstanceFlowConfigs($id: ID!, $after: String) {
-            instance(id: $id) {
-              flowConfigs(after: $after) {
-                nodes {
-                  id
-                  flow {
-                    name
-                  }
-                  webhookUrl
-                }
-                pageInfo {
-                  hasNextPage
-                  endCursor
-                }
-              }
-            }
-          }
-        `,
+      const response: ListInstanceFlowConfigsQuery = await gqlRequest({
+        document: LIST_INSTANCE_FLOW_CONFIGS,
         variables: {
           id: instance,
           after: cursor,
+          first: flags.first,
         },
       });
-      flowConfigs = [...flowConfigs, ...nodes];
-      cursor = pageInfo.endCursor;
-      hasNextPage = pageInfo.hasNextPage;
+      const resource = requireResource(response.instance, "Instance");
+      const { nodes, pageInfo } = resource.flowConfigs;
+      flowConfigs = [...flowConfigs, ...nodes.filter(isInstanceFlowConfigNode)];
+      cursor = pageInfo.endCursor ?? null;
+      finalPageInfo = pageInfo;
+      hasNextPage = pageInfo.hasNextPage && (flags.all === true || !context.agent);
     }
 
-    ux.table(
+    const result = printTable(
       flowConfigs,
       {
         id: {
@@ -65,7 +69,7 @@ export default class ListCommand extends PrismaticBaseCommand {
           extended: true,
         },
         name: {
-          get: (row: any) => row.flow.name,
+          get: (row) => row.flow.name,
         },
         webhookUrl: {
           extended: true,
@@ -73,5 +77,6 @@ export default class ListCommand extends PrismaticBaseCommand {
       },
       { ...flags },
     );
-  }
-}
+    return { ...result, pageInfo: finalPageInfo };
+  },
+});

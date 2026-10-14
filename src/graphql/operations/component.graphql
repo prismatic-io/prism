@@ -1,0 +1,7 @@
+query component($key: String!) {
+  components(key: $key, public: false) {
+    nodes {
+      id
+    }
+  }
+}

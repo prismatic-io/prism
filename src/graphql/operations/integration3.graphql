@@ -1,0 +1,7 @@
+query integration3($name: String!) {
+  integrations(name: $name) {
+    nodes {
+      id
+    }
+  }
+}

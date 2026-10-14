@@ -1,0 +1,17 @@
+query listInstanceFlowConfigs($id: ID!, $after: String, $first: Int) {
+  instance(id: $id) {
+    flowConfigs(after: $after, first: $first) {
+      nodes {
+        id
+        flow {
+          name
+        }
+        webhookUrl
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

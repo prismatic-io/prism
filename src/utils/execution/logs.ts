@@ -1,8 +1,10 @@
 import chalk from "chalk";
 import { promisify } from "util";
-import { gql, gqlRequest } from "../../graphql.js";
+import { LogsDocument as LOGS } from "../../graphql/operations/logs.generated.js";
+import { PollExecutionDocument as POLL_EXECUTION } from "../../graphql/operations/pollExecution.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import { formatTimestamp } from "../date.js";
-import { ux } from "../ux.js";
+import { printTable } from "../table.js";
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -18,17 +20,11 @@ export const waitForExecutionCompletion = (executionId: string): Promise<void> =
     const interval = setInterval(async () => {
       try {
         const result = await gqlRequest({
-          document: gql`
-            query pollExecution($executionId: ID!) {
-              executionResult(id: $executionId) {
-                endedAt
-              }
-            }
-          `,
+          document: POLL_EXECUTION,
           variables: { executionId },
         });
 
-        const { endedAt } = result.executionResult;
+        const endedAt = result.executionResult?.endedAt;
         if (endedAt) {
           clearInterval(interval);
 
@@ -51,24 +47,12 @@ export const displayLogs = async (executionId: string): Promise<void> => {
 
   // TODO: Add paging
   const result = await gqlRequest({
-    document: gql`
-      query logs($executionId: ID!) {
-        executionResult(id: $executionId) {
-          logs(orderBy: { field: TIMESTAMP, direction: ASC }) {
-            nodes {
-              timestamp
-              severity
-              message
-            }
-          }
-        }
-      }
-    `,
+    document: LOGS,
     variables: { executionId },
   });
 
-  const logs: Log[] = result.executionResult.logs.nodes;
-  ux.table(
+  const logs: Log[] = result.executionResult?.logs.nodes ?? [];
+  printTable(
     logs,
     {
       timestamp: {
@@ -91,6 +75,6 @@ export const displayLogs = async (executionId: string): Promise<void> => {
       },
       message: {},
     },
-    { "no-header": true },
+    { header: false },
   );
 };

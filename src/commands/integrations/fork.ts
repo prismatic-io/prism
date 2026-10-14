@@ -1,56 +1,25 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
-
-export default class ForkCommand extends PrismaticBaseCommand {
-  static description = "Fork an Integration";
-
-  static flags = {
-    name: Flags.string({
-      char: "n",
-      required: true,
-      description: "name of the forked integration",
-    }),
-    description: Flags.string({
-      char: "d",
-      required: true,
-      description: "longer description of the forked integration",
-    }),
-  };
-
-  static args = {
-    parent: Args.string({
-      required: true,
-      description: "ID of the Integration to fork",
-    }),
-  };
-
-  async run() {
+import { Cli, z } from "incur";
+import { ForkIntegrationDocument as FORK_INTEGRATION } from "../../graphql/operations/forkIntegration.generated.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
+export default Cli.command({
+  output: z.object({ integrationId: z.string() }).extend(warningsOutput),
+  description: "Fork an Integration",
+  options: z.object({
+    name: z.string().describe("name of the forked integration"),
+    description: z.string().describe("longer description of the forked integration"),
+  }),
+  args: z.object({
+    parent: z.string().describe("ID of the Integration to fork"),
+  }),
+  async run(context) {
     const {
-      flags: { name, description },
+      options: { name, description },
       args: { parent },
-    } = await this.parse(ForkCommand);
+    } = context;
 
     const result = await gqlRequest({
-      document: gql`
-        mutation forkIntegration(
-          $parentID: ID!
-          $name: String!
-          $description: String!
-        ) {
-          forkIntegration(
-            input: { parent: $parentID, name: $name, description: $description }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: FORK_INTEGRATION,
       variables: {
         parentID: parent,
         name,
@@ -58,6 +27,24 @@ export default class ForkCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.forkIntegration.integration.id);
-  }
-}
+    const resourceId = requireOperationResult(
+      result.forkIntegration?.integration?.id,
+      "Integration was not forked",
+    );
+    return context.ok(
+      { integrationId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "integrations flows list",
+              description: "Inspect this integration's flows",
+              args: { integration: resourceId },
+            },
+          ],
+        },
+      },
+    );
+  },
+  alias: { description: "d", name: "n" },
+});

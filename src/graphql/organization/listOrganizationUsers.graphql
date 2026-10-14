@@ -1,0 +1,20 @@
+query listOrganizationUsers($after: String, $first: Int) {
+  organization {
+    users(after: $after, first: $first) {
+      nodes {
+        id
+        name
+        email
+        externalId
+        phone
+        role {
+          name
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

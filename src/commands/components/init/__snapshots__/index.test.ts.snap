@@ -215,59 +215,30 @@ export default {
 `;
 
 exports[`component generation tests > legacy - openApi - nested-objects > should match scaffolding snapshots > nested-objects-legacy/src/client.ts 1`] = `
-"import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
+"import { Buffer } from "node:buffer";
+import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
 import {
   HttpClient,
   createClient as createHttpClient,
 } from "@prismatic-io/spectral/dist/clients/http";
-import { apiKey } from "./connections";
-
 export const baseUrl = "https://api.example.com/v1";
-
-const toAuthorizationHeaders = (
-  connection: Connection,
-): { Authorization: string } => {
-  const accessToken = util.types.toString(connection.token?.access_token);
-  if (accessToken) {
-    return { Authorization: \`Bearer \${accessToken}\` };
-  }
-
-  const apiKey = util.types.toString(connection.fields?.apiKey);
-  if (apiKey) {
-    return { Authorization: \`Bearer \${apiKey}\` };
-  }
-
-  const username = util.types.toString(connection.fields?.username);
-  const password = util.types.toString(connection.fields?.password);
-  if (username && password) {
-    const encoded = Buffer.from(\`\${username}:\${password}\`).toString("base64");
-    return { Authorization: \`Basic \${encoded}\` };
-  }
-
-  throw new Error(
-    \`Failed to guess at authorization parameters for Connection: \${connection.key}\`,
-  );
-};
-
 export const createClient = async (
-  connection: Connection,
+  connection?: Connection,
 ): Promise<HttpClient> => {
-  if (![apiKey.key].includes(connection.key)) {
-    throw new ConnectionError(
-      connection,
-      \`Received unexpected connection type: \${connection.key}\`,
-    );
+  if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
+  switch (connection.key) {
+    case "apiKey":
+      return createHttpClient({
+        baseUrl,
+        responseType: "json",
+        headers: { "X-API-Key": util.types.toString(connection.fields.apiKey) },
+      });
+    default:
+      throw new ConnectionError(
+        connection,
+        "Received unexpected connection type: " + connection.key,
+      );
   }
-
-  const client = createHttpClient({
-    baseUrl,
-    headers: {
-      ...toAuthorizationHeaders(connection),
-      Accept: "application/json",
-    },
-    responseType: "json",
-  });
-  return client;
 };
 "
 `;
@@ -285,11 +256,7 @@ describe("nestedObjectsLegacy", () => {
     const result = await harness.action("createEmployee", {
       connection,
       name: undefined,
-      address: {
-        street: "",
-        city: "",
-        country: "",
-      },
+      address: '{\\n  "street": "",\\n  "city": "",\\n  "country": ""\\n}',
       metadata: undefined,
     });
     expect(result?.data).toBeDefined();
@@ -647,17 +614,12 @@ const findPets = action({
     label: "Find Pets",
     description: "Returns all pets from the system that the user has access to",
   },
-  perform: async (context, { connection, tags, limit }) => {
-    const client = await createClient(connection);
+  perform: async (context, { tags, limit }) => {
+    const client = await createClient();
     const { data } = await client.get(\`/pets\`, { params: { tags, limit } });
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     tags: input({
       label: "Tags",
       type: "string",
@@ -686,17 +648,12 @@ const addPet = action({
     label: "Add Pet",
     description: "Creates a new pet in the store",
   },
-  perform: async (context, { connection, name, tag }) => {
-    const client = await createClient(connection);
+  perform: async (context, { name, tag }) => {
+    const client = await createClient();
     const { data } = await client.post(\`/pets\`, { name, tag });
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     name: input({
       label: "Name",
       type: "string",
@@ -721,17 +678,14 @@ const findPetById = action({
     description:
       "Returns a user based on a single ID, if the user does not have access to the pet",
   },
-  perform: async (context, { connection, id }) => {
-    const client = await createClient(connection);
-    const { data } = await client.get(\`/pets/\${id}\`);
+  perform: async (context, { id }) => {
+    const client = await createClient();
+    const { data } = await client.get(
+      \`/pets/\${encodeURIComponent(String(id))}\`,
+    );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     id: input({
       label: "Id",
       type: "string",
@@ -747,17 +701,14 @@ const deletePet = action({
     label: "Delete Pet",
     description: "deletes a single pet based on the ID supplied",
   },
-  perform: async (context, { connection, id }) => {
-    const client = await createClient(connection);
-    const { data } = await client.delete(\`/pets/\${id}\`);
+  perform: async (context, { id }) => {
+    const client = await createClient();
+    const { data } = await client.delete(
+      \`/pets/\${encodeURIComponent(String(id))}\`,
+    );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     id: input({
       label: "Id",
       type: "string",
@@ -778,59 +729,24 @@ export default {
 `;
 
 exports[`component generation tests > legacy - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-legacy/src/client.ts 1`] = `
-"import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
+"import { Buffer } from "node:buffer";
+import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
 import {
   HttpClient,
   createClient as createHttpClient,
 } from "@prismatic-io/spectral/dist/clients/http";
-import {} from "./connections";
-
 export const baseUrl = "https://petstore.swagger.io/v2";
-
-const toAuthorizationHeaders = (
-  connection: Connection,
-): { Authorization: string } => {
-  const accessToken = util.types.toString(connection.token?.access_token);
-  if (accessToken) {
-    return { Authorization: \`Bearer \${accessToken}\` };
-  }
-
-  const apiKey = util.types.toString(connection.fields?.apiKey);
-  if (apiKey) {
-    return { Authorization: \`Bearer \${apiKey}\` };
-  }
-
-  const username = util.types.toString(connection.fields?.username);
-  const password = util.types.toString(connection.fields?.password);
-  if (username && password) {
-    const encoded = Buffer.from(\`\${username}:\${password}\`).toString("base64");
-    return { Authorization: \`Basic \${encoded}\` };
-  }
-
-  throw new Error(
-    \`Failed to guess at authorization parameters for Connection: \${connection.key}\`,
-  );
-};
-
 export const createClient = async (
-  connection: Connection,
+  connection?: Connection,
 ): Promise<HttpClient> => {
-  if (![].includes(connection.key)) {
-    throw new ConnectionError(
-      connection,
-      \`Received unexpected connection type: \${connection.key}\`,
-    );
+  if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
+  switch (connection.key) {
+    default:
+      throw new ConnectionError(
+        connection,
+        "Received unexpected connection type: " + connection.key,
+      );
   }
-
-  const client = createHttpClient({
-    baseUrl,
-    headers: {
-      ...toAuthorizationHeaders(connection),
-      Accept: "application/json",
-    },
-    responseType: "json",
-  });
-  return client;
 };
 "
 `;
@@ -1175,19 +1091,14 @@ const findPets = action({
     label: "Find Pets",
     description: "Returns all pets from the system that the user has access to",
   },
-  perform: async (context, { connection, tags, limit }) => {
-    const client = await createClient(connection);
+  perform: async (context, { tags, limit }) => {
+    const client = await createClient();
     const { data } = await client.get(\`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2\`, {
       params: { tags, limit },
     });
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     tags: input({
       label: "Tags",
       type: "string",
@@ -1216,8 +1127,8 @@ const addPet = action({
     label: "Add Pet",
     description: "Creates a new pet in the store",
   },
-  perform: async (context, { connection, name, tag }) => {
-    const client = await createClient(connection);
+  perform: async (context, { name, tag }) => {
+    const client = await createClient();
     const { data } = await client.post(
       \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2\`,
       { name, tag },
@@ -1225,11 +1136,6 @@ const addPet = action({
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     name: input({
       label: "Name",
       type: "string",
@@ -1254,19 +1160,14 @@ const findPetById = action({
     description:
       "Returns a user based on a single ID, if the user does not have access to the pet",
   },
-  perform: async (context, { connection, id }) => {
-    const client = await createClient(connection);
+  perform: async (context, { id }) => {
+    const client = await createClient();
     const { data } = await client.get(
-      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${id}\`,
+      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${encodeURIComponent(String(id))}\`,
     );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     id: input({
       label: "Id",
       type: "string",
@@ -1282,19 +1183,14 @@ const deletePet = action({
     label: "Delete Pet",
     description: "deletes a single pet based on the ID supplied",
   },
-  perform: async (context, { connection, id }) => {
-    const client = await createClient(connection);
+  perform: async (context, { id }) => {
+    const client = await createClient();
     const { data } = await client.delete(
-      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${id}\`,
+      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${encodeURIComponent(String(id))}\`,
     );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     id: input({
       label: "Id",
       type: "string",
@@ -1327,59 +1223,24 @@ export default {
 `;
 
 exports[`component generation tests > legacy - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-legacy/src/client.ts 1`] = `
-"import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
+"import { Buffer } from "node:buffer";
+import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
 import {
   HttpClient,
   createClient as createHttpClient,
 } from "@prismatic-io/spectral/dist/clients/http";
-import {} from "./connections";
-
 export const baseUrl = "https://petstore.swagger.io/v2";
-
-const toAuthorizationHeaders = (
-  connection: Connection,
-): { Authorization: string } => {
-  const accessToken = util.types.toString(connection.token?.access_token);
-  if (accessToken) {
-    return { Authorization: \`Bearer \${accessToken}\` };
-  }
-
-  const apiKey = util.types.toString(connection.fields?.apiKey);
-  if (apiKey) {
-    return { Authorization: \`Bearer \${apiKey}\` };
-  }
-
-  const username = util.types.toString(connection.fields?.username);
-  const password = util.types.toString(connection.fields?.password);
-  if (username && password) {
-    const encoded = Buffer.from(\`\${username}:\${password}\`).toString("base64");
-    return { Authorization: \`Basic \${encoded}\` };
-  }
-
-  throw new Error(
-    \`Failed to guess at authorization parameters for Connection: \${connection.key}\`,
-  );
-};
-
 export const createClient = async (
-  connection: Connection,
+  connection?: Connection,
 ): Promise<HttpClient> => {
-  if (![].includes(connection.key)) {
-    throw new ConnectionError(
-      connection,
-      \`Received unexpected connection type: \${connection.key}\`,
-    );
+  if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
+  switch (connection.key) {
+    default:
+      throw new ConnectionError(
+        connection,
+        "Received unexpected connection type: " + connection.key,
+      );
   }
-
-  const client = createHttpClient({
-    baseUrl,
-    headers: {
-      ...toAuthorizationHeaders(connection),
-      Accept: "application/json",
-    },
-    responseType: "json",
-  });
-  return client;
 };
 "
 `;
@@ -1492,19 +1353,14 @@ const listTodos = action({
     label: "List Todos",
     description: "List all todos",
   },
-  perform: async (context, { connection, completed, limit }) => {
-    const client = await createClient(connection);
+  perform: async (context, { completed, limit }) => {
+    const client = await createClient();
     const { data } = await client.get(\`/todos\`, {
       params: { completed, limit },
     });
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     completed: input({
       label: "Completed",
       type: "boolean",
@@ -1533,9 +1389,9 @@ const createTodo = action({
   },
   perform: async (
     context,
-    { connection, title, description, completed, tags, reminderOffsets },
+    { title, description, completed, tags, reminderOffsets },
   ) => {
-    const client = await createClient(connection);
+    const client = await createClient();
     const { data } = await client.post(\`/todos\`, {
       title,
       description,
@@ -1546,11 +1402,6 @@ const createTodo = action({
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     title: input({
       label: "Title",
       type: "string",
@@ -1606,17 +1457,14 @@ const getTodo = action({
     label: "Get Todo",
     description: "Get a specific todo",
   },
-  perform: async (context, { connection, todoId }) => {
-    const client = await createClient(connection);
-    const { data } = await client.get(\`/todos/\${todoId}\`);
+  perform: async (context, { todoId }) => {
+    const client = await createClient();
+    const { data } = await client.get(
+      \`/todos/\${encodeURIComponent(String(todoId))}\`,
+    );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     todoId: input({
       label: "Todo Id",
       type: "string",
@@ -1634,32 +1482,16 @@ const updateTodo = action({
   },
   perform: async (
     context,
-    {
-      connection,
-      todoId,
-      title,
-      description,
-      completed,
-      tags,
-      reminderOffsets,
-    },
+    { todoId, title, description, completed, tags, reminderOffsets },
   ) => {
-    const client = await createClient(connection);
-    const { data } = await client.put(\`/todos/\${todoId}\`, {
-      title,
-      description,
-      completed,
-      tags,
-      reminderOffsets,
-    });
+    const client = await createClient();
+    const { data } = await client.put(
+      \`/todos/\${encodeURIComponent(String(todoId))}\`,
+      { title, description, completed, tags, reminderOffsets },
+    );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     todoId: input({
       label: "Todo Id",
       type: "string",
@@ -1722,17 +1554,14 @@ const deleteTodo = action({
     label: "Delete Todo",
     description: "Delete a todo",
   },
-  perform: async (context, { connection, todoId }) => {
-    const client = await createClient(connection);
-    const { data } = await client.delete(\`/todos/\${todoId}\`);
+  perform: async (context, { todoId }) => {
+    const client = await createClient();
+    const { data } = await client.delete(
+      \`/todos/\${encodeURIComponent(String(todoId))}\`,
+    );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     todoId: input({
       label: "Todo Id",
       type: "string",
@@ -1783,59 +1612,33 @@ export default {
 `;
 
 exports[`component generation tests > legacy - openApi - todo-api > should match scaffolding snapshots > todo-api-legacy/src/client.ts 1`] = `
-"import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
+"import { Buffer } from "node:buffer";
+import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
 import {
   HttpClient,
   createClient as createHttpClient,
 } from "@prismatic-io/spectral/dist/clients/http";
-import { bearerAuth } from "./connections";
-
 export const baseUrl = "https://api.example.com/v1";
-
-const toAuthorizationHeaders = (
-  connection: Connection,
-): { Authorization: string } => {
-  const accessToken = util.types.toString(connection.token?.access_token);
-  if (accessToken) {
-    return { Authorization: \`Bearer \${accessToken}\` };
-  }
-
-  const apiKey = util.types.toString(connection.fields?.apiKey);
-  if (apiKey) {
-    return { Authorization: \`Bearer \${apiKey}\` };
-  }
-
-  const username = util.types.toString(connection.fields?.username);
-  const password = util.types.toString(connection.fields?.password);
-  if (username && password) {
-    const encoded = Buffer.from(\`\${username}:\${password}\`).toString("base64");
-    return { Authorization: \`Basic \${encoded}\` };
-  }
-
-  throw new Error(
-    \`Failed to guess at authorization parameters for Connection: \${connection.key}\`,
-  );
-};
-
 export const createClient = async (
-  connection: Connection,
+  connection?: Connection,
 ): Promise<HttpClient> => {
-  if (![bearerAuth.key].includes(connection.key)) {
-    throw new ConnectionError(
-      connection,
-      \`Received unexpected connection type: \${connection.key}\`,
-    );
+  if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
+  switch (connection.key) {
+    case "bearerAuth":
+      return createHttpClient({
+        baseUrl,
+        responseType: "json",
+        headers: {
+          Authorization:
+            "Bearer " + util.types.toString(connection.fields.apiKey),
+        },
+      });
+    default:
+      throw new ConnectionError(
+        connection,
+        "Received unexpected connection type: " + connection.key,
+      );
   }
-
-  const client = createHttpClient({
-    baseUrl,
-    headers: {
-      ...toAuthorizationHeaders(connection),
-      Accept: "application/json",
-    },
-    responseType: "json",
-  });
-  return client;
 };
 "
 `;
@@ -6557,59 +6360,30 @@ export default {
 `;
 
 exports[`component generation tests > modern - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern/src/client.ts 1`] = `
-"import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
+"import { Buffer } from "node:buffer";
+import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
 import {
   HttpClient,
   createClient as createHttpClient,
 } from "@prismatic-io/spectral/dist/clients/http";
-import { apiKey } from "./connections";
-
 export const baseUrl = "https://api.example.com/v1";
-
-const toAuthorizationHeaders = (
-  connection: Connection,
-): { Authorization: string } => {
-  const accessToken = util.types.toString(connection.token?.access_token);
-  if (accessToken) {
-    return { Authorization: \`Bearer \${accessToken}\` };
-  }
-
-  const apiKey = util.types.toString(connection.fields?.apiKey);
-  if (apiKey) {
-    return { Authorization: \`Bearer \${apiKey}\` };
-  }
-
-  const username = util.types.toString(connection.fields?.username);
-  const password = util.types.toString(connection.fields?.password);
-  if (username && password) {
-    const encoded = Buffer.from(\`\${username}:\${password}\`).toString("base64");
-    return { Authorization: \`Basic \${encoded}\` };
-  }
-
-  throw new Error(
-    \`Failed to guess at authorization parameters for Connection: \${connection.key}\`,
-  );
-};
-
 export const createClient = async (
-  connection: Connection,
+  connection?: Connection,
 ): Promise<HttpClient> => {
-  if (![apiKey.key].includes(connection.key)) {
-    throw new ConnectionError(
-      connection,
-      \`Received unexpected connection type: \${connection.key}\`,
-    );
+  if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
+  switch (connection.key) {
+    case "apiKey":
+      return createHttpClient({
+        baseUrl,
+        responseType: "json",
+        headers: { "X-API-Key": util.types.toString(connection.fields.apiKey) },
+      });
+    default:
+      throw new ConnectionError(
+        connection,
+        "Received unexpected connection type: " + connection.key,
+      );
   }
-
-  const client = createHttpClient({
-    baseUrl,
-    headers: {
-      ...toAuthorizationHeaders(connection),
-      Accept: "application/json",
-    },
-    responseType: "json",
-  });
-  return client;
 };
 "
 `;
@@ -6627,11 +6401,7 @@ describe("nestedObjectsModern", () => {
     const result = await harness.action("createEmployee", {
       connection,
       name: undefined,
-      address: {
-        street: "",
-        city: "",
-        country: "",
-      },
+      address: '{\\n  "street": "",\\n  "city": "",\\n  "country": ""\\n}',
       metadata: undefined,
     });
     expect(result?.data).toBeDefined();
@@ -6693,7 +6463,7 @@ exports[`component generation tests > modern - openApi - nested-objects > should
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
     "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
@@ -7055,17 +6825,12 @@ const findPets = action({
     label: "Find Pets",
     description: "Returns all pets from the system that the user has access to",
   },
-  perform: async (context, { connection, tags, limit }) => {
-    const client = await createClient(connection);
+  perform: async (context, { tags, limit }) => {
+    const client = await createClient();
     const { data } = await client.get(\`/pets\`, { params: { tags, limit } });
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     tags: input({
       label: "Tags",
       type: "string",
@@ -7094,17 +6859,12 @@ const addPet = action({
     label: "Add Pet",
     description: "Creates a new pet in the store",
   },
-  perform: async (context, { connection, name, tag }) => {
-    const client = await createClient(connection);
+  perform: async (context, { name, tag }) => {
+    const client = await createClient();
     const { data } = await client.post(\`/pets\`, { name, tag });
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     name: input({
       label: "Name",
       type: "string",
@@ -7129,17 +6889,14 @@ const findPetById = action({
     description:
       "Returns a user based on a single ID, if the user does not have access to the pet",
   },
-  perform: async (context, { connection, id }) => {
-    const client = await createClient(connection);
-    const { data } = await client.get(\`/pets/\${id}\`);
+  perform: async (context, { id }) => {
+    const client = await createClient();
+    const { data } = await client.get(
+      \`/pets/\${encodeURIComponent(String(id))}\`,
+    );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     id: input({
       label: "Id",
       type: "string",
@@ -7155,17 +6912,14 @@ const deletePet = action({
     label: "Delete Pet",
     description: "deletes a single pet based on the ID supplied",
   },
-  perform: async (context, { connection, id }) => {
-    const client = await createClient(connection);
-    const { data } = await client.delete(\`/pets/\${id}\`);
+  perform: async (context, { id }) => {
+    const client = await createClient();
+    const { data } = await client.delete(
+      \`/pets/\${encodeURIComponent(String(id))}\`,
+    );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     id: input({
       label: "Id",
       type: "string",
@@ -7186,59 +6940,24 @@ export default {
 `;
 
 exports[`component generation tests > modern - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern/src/client.ts 1`] = `
-"import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
+"import { Buffer } from "node:buffer";
+import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
 import {
   HttpClient,
   createClient as createHttpClient,
 } from "@prismatic-io/spectral/dist/clients/http";
-import {} from "./connections";
-
 export const baseUrl = "https://petstore.swagger.io/v2";
-
-const toAuthorizationHeaders = (
-  connection: Connection,
-): { Authorization: string } => {
-  const accessToken = util.types.toString(connection.token?.access_token);
-  if (accessToken) {
-    return { Authorization: \`Bearer \${accessToken}\` };
-  }
-
-  const apiKey = util.types.toString(connection.fields?.apiKey);
-  if (apiKey) {
-    return { Authorization: \`Bearer \${apiKey}\` };
-  }
-
-  const username = util.types.toString(connection.fields?.username);
-  const password = util.types.toString(connection.fields?.password);
-  if (username && password) {
-    const encoded = Buffer.from(\`\${username}:\${password}\`).toString("base64");
-    return { Authorization: \`Basic \${encoded}\` };
-  }
-
-  throw new Error(
-    \`Failed to guess at authorization parameters for Connection: \${connection.key}\`,
-  );
-};
-
 export const createClient = async (
-  connection: Connection,
+  connection?: Connection,
 ): Promise<HttpClient> => {
-  if (![].includes(connection.key)) {
-    throw new ConnectionError(
-      connection,
-      \`Received unexpected connection type: \${connection.key}\`,
-    );
+  if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
+  switch (connection.key) {
+    default:
+      throw new ConnectionError(
+        connection,
+        "Received unexpected connection type: " + connection.key,
+      );
   }
-
-  const client = createHttpClient({
-    baseUrl,
-    headers: {
-      ...toAuthorizationHeaders(connection),
-      Accept: "application/json",
-    },
-    responseType: "json",
-  });
-  return client;
 };
 "
 `;
@@ -7299,7 +7018,7 @@ exports[`component generation tests > modern - openApi - petstore-expanded > sho
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
     "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
@@ -7649,19 +7368,14 @@ const findPets = action({
     label: "Find Pets",
     description: "Returns all pets from the system that the user has access to",
   },
-  perform: async (context, { connection, tags, limit }) => {
-    const client = await createClient(connection);
+  perform: async (context, { tags, limit }) => {
+    const client = await createClient();
     const { data } = await client.get(\`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2\`, {
       params: { tags, limit },
     });
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     tags: input({
       label: "Tags",
       type: "string",
@@ -7690,8 +7404,8 @@ const addPet = action({
     label: "Add Pet",
     description: "Creates a new pet in the store",
   },
-  perform: async (context, { connection, name, tag }) => {
-    const client = await createClient(connection);
+  perform: async (context, { name, tag }) => {
+    const client = await createClient();
     const { data } = await client.post(
       \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2\`,
       { name, tag },
@@ -7699,11 +7413,6 @@ const addPet = action({
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     name: input({
       label: "Name",
       type: "string",
@@ -7728,19 +7437,14 @@ const findPetById = action({
     description:
       "Returns a user based on a single ID, if the user does not have access to the pet",
   },
-  perform: async (context, { connection, id }) => {
-    const client = await createClient(connection);
+  perform: async (context, { id }) => {
+    const client = await createClient();
     const { data } = await client.get(
-      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${id}\`,
+      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${encodeURIComponent(String(id))}\`,
     );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     id: input({
       label: "Id",
       type: "string",
@@ -7756,19 +7460,14 @@ const deletePet = action({
     label: "Delete Pet",
     description: "deletes a single pet based on the ID supplied",
   },
-  perform: async (context, { connection, id }) => {
-    const client = await createClient(connection);
+  perform: async (context, { id }) => {
+    const client = await createClient();
     const { data } = await client.delete(
-      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${id}\`,
+      \`/82dbb5d5-b5fb-47ea-b3dc-1748750470e2/\${encodeURIComponent(String(id))}\`,
     );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     id: input({
       label: "Id",
       type: "string",
@@ -7801,59 +7500,24 @@ export default {
 `;
 
 exports[`component generation tests > modern - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern/src/client.ts 1`] = `
-"import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
+"import { Buffer } from "node:buffer";
+import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
 import {
   HttpClient,
   createClient as createHttpClient,
 } from "@prismatic-io/spectral/dist/clients/http";
-import {} from "./connections";
-
 export const baseUrl = "https://petstore.swagger.io/v2";
-
-const toAuthorizationHeaders = (
-  connection: Connection,
-): { Authorization: string } => {
-  const accessToken = util.types.toString(connection.token?.access_token);
-  if (accessToken) {
-    return { Authorization: \`Bearer \${accessToken}\` };
-  }
-
-  const apiKey = util.types.toString(connection.fields?.apiKey);
-  if (apiKey) {
-    return { Authorization: \`Bearer \${apiKey}\` };
-  }
-
-  const username = util.types.toString(connection.fields?.username);
-  const password = util.types.toString(connection.fields?.password);
-  if (username && password) {
-    const encoded = Buffer.from(\`\${username}:\${password}\`).toString("base64");
-    return { Authorization: \`Basic \${encoded}\` };
-  }
-
-  throw new Error(
-    \`Failed to guess at authorization parameters for Connection: \${connection.key}\`,
-  );
-};
-
 export const createClient = async (
-  connection: Connection,
+  connection?: Connection,
 ): Promise<HttpClient> => {
-  if (![].includes(connection.key)) {
-    throw new ConnectionError(
-      connection,
-      \`Received unexpected connection type: \${connection.key}\`,
-    );
+  if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
+  switch (connection.key) {
+    default:
+      throw new ConnectionError(
+        connection,
+        "Received unexpected connection type: " + connection.key,
+      );
   }
-
-  const client = createHttpClient({
-    baseUrl,
-    headers: {
-      ...toAuthorizationHeaders(connection),
-      Accept: "application/json",
-    },
-    responseType: "json",
-  });
-  return client;
 };
 "
 `;
@@ -7914,7 +7578,7 @@ exports[`component generation tests > modern - openApi - petstore-expanded-uuid-
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
     "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
@@ -8032,19 +7696,14 @@ const listTodos = action({
     label: "List Todos",
     description: "List all todos",
   },
-  perform: async (context, { connection, completed, limit }) => {
-    const client = await createClient(connection);
+  perform: async (context, { completed, limit }) => {
+    const client = await createClient();
     const { data } = await client.get(\`/todos\`, {
       params: { completed, limit },
     });
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     completed: input({
       label: "Completed",
       type: "boolean",
@@ -8073,9 +7732,9 @@ const createTodo = action({
   },
   perform: async (
     context,
-    { connection, title, description, completed, tags, reminderOffsets },
+    { title, description, completed, tags, reminderOffsets },
   ) => {
-    const client = await createClient(connection);
+    const client = await createClient();
     const { data } = await client.post(\`/todos\`, {
       title,
       description,
@@ -8086,11 +7745,6 @@ const createTodo = action({
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     title: input({
       label: "Title",
       type: "string",
@@ -8146,17 +7800,14 @@ const getTodo = action({
     label: "Get Todo",
     description: "Get a specific todo",
   },
-  perform: async (context, { connection, todoId }) => {
-    const client = await createClient(connection);
-    const { data } = await client.get(\`/todos/\${todoId}\`);
+  perform: async (context, { todoId }) => {
+    const client = await createClient();
+    const { data } = await client.get(
+      \`/todos/\${encodeURIComponent(String(todoId))}\`,
+    );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     todoId: input({
       label: "Todo Id",
       type: "string",
@@ -8174,32 +7825,16 @@ const updateTodo = action({
   },
   perform: async (
     context,
-    {
-      connection,
-      todoId,
-      title,
-      description,
-      completed,
-      tags,
-      reminderOffsets,
-    },
+    { todoId, title, description, completed, tags, reminderOffsets },
   ) => {
-    const client = await createClient(connection);
-    const { data } = await client.put(\`/todos/\${todoId}\`, {
-      title,
-      description,
-      completed,
-      tags,
-      reminderOffsets,
-    });
+    const client = await createClient();
+    const { data } = await client.put(
+      \`/todos/\${encodeURIComponent(String(todoId))}\`,
+      { title, description, completed, tags, reminderOffsets },
+    );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     todoId: input({
       label: "Todo Id",
       type: "string",
@@ -8262,17 +7897,14 @@ const deleteTodo = action({
     label: "Delete Todo",
     description: "Delete a todo",
   },
-  perform: async (context, { connection, todoId }) => {
-    const client = await createClient(connection);
-    const { data } = await client.delete(\`/todos/\${todoId}\`);
+  perform: async (context, { todoId }) => {
+    const client = await createClient();
+    const { data } = await client.delete(
+      \`/todos/\${encodeURIComponent(String(todoId))}\`,
+    );
     return { data };
   },
   inputs: {
-    connection: input({
-      label: "Connection",
-      type: "connection",
-      required: true,
-    }),
     todoId: input({
       label: "Todo Id",
       type: "string",
@@ -8323,59 +7955,33 @@ export default {
 `;
 
 exports[`component generation tests > modern - openApi - todo-api > should match scaffolding snapshots > todo-api-modern/src/client.ts 1`] = `
-"import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
+"import { Buffer } from "node:buffer";
+import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
 import {
   HttpClient,
   createClient as createHttpClient,
 } from "@prismatic-io/spectral/dist/clients/http";
-import { bearerAuth } from "./connections";
-
 export const baseUrl = "https://api.example.com/v1";
-
-const toAuthorizationHeaders = (
-  connection: Connection,
-): { Authorization: string } => {
-  const accessToken = util.types.toString(connection.token?.access_token);
-  if (accessToken) {
-    return { Authorization: \`Bearer \${accessToken}\` };
-  }
-
-  const apiKey = util.types.toString(connection.fields?.apiKey);
-  if (apiKey) {
-    return { Authorization: \`Bearer \${apiKey}\` };
-  }
-
-  const username = util.types.toString(connection.fields?.username);
-  const password = util.types.toString(connection.fields?.password);
-  if (username && password) {
-    const encoded = Buffer.from(\`\${username}:\${password}\`).toString("base64");
-    return { Authorization: \`Basic \${encoded}\` };
-  }
-
-  throw new Error(
-    \`Failed to guess at authorization parameters for Connection: \${connection.key}\`,
-  );
-};
-
 export const createClient = async (
-  connection: Connection,
+  connection?: Connection,
 ): Promise<HttpClient> => {
-  if (![bearerAuth.key].includes(connection.key)) {
-    throw new ConnectionError(
-      connection,
-      \`Received unexpected connection type: \${connection.key}\`,
-    );
+  if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
+  switch (connection.key) {
+    case "bearerAuth":
+      return createHttpClient({
+        baseUrl,
+        responseType: "json",
+        headers: {
+          Authorization:
+            "Bearer " + util.types.toString(connection.fields.apiKey),
+        },
+      });
+    default:
+      throw new ConnectionError(
+        connection,
+        "Received unexpected connection type: " + connection.key,
+      );
   }
-
-  const client = createHttpClient({
-    baseUrl,
-    headers: {
-      ...toAuthorizationHeaders(connection),
-      Accept: "application/json",
-    },
-    responseType: "json",
-  });
-  return client;
 };
 "
 `;
@@ -8913,7 +8519,7 @@ exports[`component generation tests > modern - openApi - todo-api > should match
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
     "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
@@ -12442,7 +12048,7 @@ exports[`component generation tests > modern - wsdl - countryinfoservice > shoul
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
     "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
@@ -12980,7 +12586,7 @@ exports[`component generation tests > modern - wsdl - numberconversion > should 
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "types": ["vitest/globals"],
+    "types": ["node", "vitest/globals"],
     "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]

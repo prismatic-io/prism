@@ -1,0 +1,18 @@
+query availableConnections($managedBy: String) {
+  scopedConfigVariables(managedBy: $managedBy) {
+    nodes {
+      stableKey
+      description
+      managedBy
+      customer {
+        externalId
+        name
+      }
+      connection {
+        component {
+          key
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+query searchCatalog(
+  $searchTerms: String!
+  $componentFilterQuery: JSONString
+  $actionFilterQuery: JSONString
+  $contextStableKey: String
+) {
+  componentActionSearchResults(
+    searchTerms: $searchTerms
+    componentFilterQuery: $componentFilterQuery
+    actionFilterQuery: $actionFilterQuery
+    contextStableKey: $contextStableKey
+  ) {
+    __typename
+    ... on Component {
+      id
+      key
+      label
+      description
+      public
+      category
+      versionNumber
+    }
+    ... on Action {
+      id
+      key
+      label
+      description
+      isTrigger
+      isDataSource
+      dataSourceType
+      component {
+        id
+        key
+        label
+        public
+        category
+        versionNumber
+      }
+    }
+  }
+}

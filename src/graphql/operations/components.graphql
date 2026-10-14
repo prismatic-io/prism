@@ -1,0 +1,10 @@
+query components($keys: [String]!) {
+  components(key_In: $keys) {
+    nodes {
+      id
+      key
+      versionNumber
+      public
+    }
+  }
+}

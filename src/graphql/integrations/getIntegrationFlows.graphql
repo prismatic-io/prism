@@ -1,6 +1,6 @@
-query GetIntegrationFlows($id: ID!, $after: String) {
+query GetIntegrationFlows($id: ID!, $after: String, $first: Int) {
   integration(id: $id) {
-    flows(after: $after) {
+    flows(after: $after, first: $first) {
       nodes {
         id
         stableKey

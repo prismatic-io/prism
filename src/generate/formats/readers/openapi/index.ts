@@ -41,7 +41,10 @@ export const read = async (filePath: string): Promise<Result> => {
   const component = buildComponent(api);
 
   const actions = Object.entries(api.paths ?? {}).reduce<Action[]>(
-    (result, [path, operations]) => [...result, ...operationsToActions(path, operations)],
+    (result, [path, operations]) => [
+      ...result,
+      ...operationsToActions(path, operations, "security" in api ? api.security : undefined),
+    ],
     [],
   );
 

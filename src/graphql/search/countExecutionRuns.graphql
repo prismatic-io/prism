@@ -1,0 +1,13 @@
+query countExecutionRuns(
+  $startedAtGte: DateTime
+  $startedAtLte: DateTime
+  $filterGroups: [EventFilterGroup!]
+) {
+  executionRunKpis(
+    startedAtGte: $startedAtGte
+    startedAtLte: $startedAtLte
+    filterGroups: $filterGroups
+  ) {
+    count
+  }
+}

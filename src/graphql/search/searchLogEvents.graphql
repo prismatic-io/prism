@@ -1,0 +1,44 @@
+query searchLogEvents(
+  $first: Int
+  $after: String
+  $timestampGte: DateTime
+  $timestampLte: DateTime
+  $filterGroups: [EventFilterGroup!]
+  $orderBy: EventOrder
+) {
+  events(
+    first: $first
+    after: $after
+    typeIn: [LOG_EVENT]
+    timestampGte: $timestampGte
+    timestampLte: $timestampLte
+    filterGroups: $filterGroups
+    orderBy: $orderBy
+  ) {
+    totalCount
+    nodes {
+      __typename
+      id
+      timestamp
+      ... on LogEvent {
+        severity
+        message
+        logType
+        stepName
+        stepDisplayName
+        loopStepName
+        loopStepIndex
+        executionResultId
+        instanceId
+        instanceName
+        customerName
+        integrationName
+        flowName
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

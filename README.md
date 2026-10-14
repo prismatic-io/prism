@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://prismatic.io/favicon-48x48.png" />
+  <img src="https://prismatic.io/favicon-48x48.png" alt="Prismatic" />
   <h1>@prismatic-io/prism</h1>
 </div>
 
@@ -7,7 +7,7 @@
 
 ## Using Prism
 
-Prism is a NodeJS package, so it requires NodeJS and NPM to be installed.
+Prism requires Node.js 22.19.0 or newer and npm.
 You can download both from the [NodeJS Website](https://nodejs.org/).
 Prism works on MacOS, Linux, Windows and [WSL](https://docs.microsoft.com/en-us/windows/wsl/).
 
@@ -31,7 +31,9 @@ $ prism me
 Name: John Doe
 Email: john.doe@example.com
 Organization: Example Software Company
+Organization ID: example-organization-id
 Endpoint URL: https://app.prismatic.io
+Authentication: Profile
 Profile: default
 ```
 

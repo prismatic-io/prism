@@ -1,40 +1,38 @@
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
-import { ux } from "../../../utils/ux.js";
+import { Cli, z } from "incur";
+import { ListCustomerRolesDocument as LIST_CUSTOMER_ROLES } from "../../../graphql/operations/listCustomerRoles.generated.js";
+import { gqlRequest } from "../../../graphql.js";
+import { requestFailure } from "../../../utils/failure.js";
+import { printTable, tableFlags } from "../../../utils/table.js";
+import { customerRoleRowSchema } from "../schemas.js";
+export default Cli.command({
+  outputPolicy: "agent-only",
+  output: z.object({ items: z.array(customerRoleRowSchema) }),
+  description: "List Roles you can grant to Customer Users",
+  options: z.object({
+    ...tableFlags(),
+  }),
+  async run(context) {
+    const { options: flags } = context;
 
-export default class ListCommand extends PrismaticBaseCommand {
-  static description = "List Roles you can grant to Customer Users";
+    try {
+      const result = await gqlRequest({
+        document: LIST_CUSTOMER_ROLES,
+      });
 
-  static flags = {
-    ...ux.table.flags(),
-  };
-
-  async run() {
-    const { flags } = await this.parse(ListCommand);
-
-    const result = await gqlRequest({
-      document: gql`
-        query listCustomerRoles {
-          customerRoles {
-            id
-            name
-            description
-          }
-        }
-      `,
-    });
-
-    ux.table(
-      result.customerRoles,
-      {
-        id: {
-          minWidth: 8,
-          extended: true,
+      return printTable(
+        result.customerRoles.filter((role) => role !== null),
+        {
+          id: {
+            minWidth: 8,
+            extended: true,
+          },
+          name: {},
+          description: {},
         },
-        name: {},
-        description: {},
-      },
-      { ...flags },
-    );
-  }
-}
+        { ...flags },
+      );
+    } catch (error) {
+      return context.error(requestFailure(error, "CUSTOMER_ROLES_LIST_FAILED", true));
+    }
+  },
+});

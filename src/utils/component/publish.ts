@@ -1,10 +1,16 @@
+import { resolve } from "node:path";
 import crypto from "crypto";
 import mimetypes from "mime-types";
 import { extname } from "path";
+import { writeCommandStatus } from "../../command.js";
+import { getWorkingDirectory } from "../../command-context.js";
 import { fs } from "../../fs.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { Component2Document as COMPONENT2 } from "../../graphql/operations/component2.generated.js";
+import type { PublishComponentMutationVariables } from "../../graphql/operations/publishComponent.generated.js";
+import { PublishComponentDocument as PUBLISH_COMPONENT } from "../../graphql/operations/publishComponent.generated.js";
+import { gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
-import { ux } from "../ux.js";
+import { confirm as confirmPrompt } from "../prompts.js";
 import type { ComponentDefinition } from "./index.js";
 
 const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {
@@ -26,15 +32,7 @@ export const checkPackageSignature = async (
 ): Promise<boolean> => {
   // Retrieve the existing signature of the component if it exists.
   const results = await gqlRequest({
-    document: gql`
-      query component($key: String!, $public: Boolean!) {
-        components(key: $key, public: $public) {
-          nodes {
-            signature
-          }
-        }
-      }
-    `,
+    document: COMPONENT2,
     variables: {
       key,
       public: isPublic ?? false,
@@ -56,15 +54,12 @@ export const checkPackageSignature = async (
   return existingSignature === packageSignature;
 };
 
-export const confirmPublish = async (
-  { display: { label, description } }: ComponentDefinition,
-  confirm = true,
-): Promise<boolean> => {
-  if (!confirm) return true;
+export const confirmPublish = async ({
+  display: { label, description },
+}: ComponentDefinition): Promise<boolean> => {
+  writeCommandStatus([label, "-", description].map(String).join(" "));
 
-  ux.log(label, "-", description);
-
-  return await ux.confirm(`Would you like to publish ${label}? (y/N)`);
+  return await confirmPrompt(`Would you like to publish ${label}? (y/N)`);
 };
 
 export const publishDefinition = async (
@@ -92,6 +87,7 @@ export const publishDefinition = async (
     };
   } = {},
 ): Promise<{
+  componentId: string;
   iconUploadUrl: string;
   packageUploadUrl: string;
   sourceUploadUrl?: string;
@@ -102,7 +98,7 @@ export const publishDefinition = async (
       avatarIconUploadUrl?: string;
     }
   >;
-  versionNumber: string;
+  versionNumber: number;
 }> => {
   const componentDefinition: Record<string, unknown> = Object.entries(rest).reduce(
     (result, [key, value]) =>
@@ -144,55 +140,7 @@ export const publishDefinition = async (
 
   // Initiate start of the publish procedure by sending config data and receive back presigned s3 URL
   const result = await gqlRequest({
-    document: gql`
-      mutation publishComponent(
-        $definition: ComponentDefinitionInput!
-        $actions: [ActionDefinitionInput]!
-        $triggers: [TriggerDefinitionInput]
-        $dataSources: [DataSourceDefinitionInput]
-        $connections: [ConnectionDefinitionInput]
-        $serverFunctions: [ServerFunctionDefinitionInput]
-        $comment: String
-        $customer: ID
-        $attributes: String
-      ) {
-        publishComponent(
-          input: {
-            definition: $definition
-            actions: $actions
-            triggers: $triggers
-            dataSources: $dataSources
-            connections: $connections
-            serverFunctions: $serverFunctions
-            comment: $comment
-            customer: $customer
-            attributes: $attributes
-          }
-        ) {
-          publishResult {
-            component {
-              id
-              versionNumber
-            }
-            iconUploadUrl
-            packageUploadUrl
-            sourceUploadUrl
-            connectionIconUploadUrls {
-              connectionKey
-              iconUploadUrl
-            }
-            connectionAvatarIconUploadUrls {
-              connectionKey
-              iconUploadUrl
-            }
-          }
-          errors {
-            field
-            messages
-          }
-        }
-      }
-    `,
+    document: PUBLISH_COMPONENT,
     variables: {
       definition: componentDefinition,
       actions: actionDefinitions,
@@ -203,22 +151,28 @@ export const publishDefinition = async (
       comment,
       customer,
       attributes: attributes ? JSON.stringify(attributes) : undefined,
-    },
+    } as unknown as PublishComponentMutationVariables,
   });
 
+  const publishResult = result.publishComponent?.publishResult;
+  if (!publishResult) throw new Error("Component publish returned no upload information");
   const {
     iconUploadUrl,
     packageUploadUrl,
     sourceUploadUrl,
     connectionIconUploadUrls,
     connectionAvatarIconUploadUrls,
-    component: { versionNumber },
-  } = result.publishComponent.publishResult;
+    component,
+  } = publishResult;
+  if (!iconUploadUrl || !packageUploadUrl || !component) {
+    throw new Error("Component publish returned incomplete upload information");
+  }
+  const { id: componentId, versionNumber } = component;
 
   const uploadUrls: Record<string, { iconUploadUrl?: string; avatarIconUploadUrl?: string }> = {};
 
   (
-    connectionIconUploadUrls as Array<{
+    (connectionIconUploadUrls ?? []).filter((value) => value !== null) as Array<{
       connectionKey: string;
       iconUploadUrl: string;
     }>
@@ -227,7 +181,7 @@ export const publishDefinition = async (
   });
 
   (
-    connectionAvatarIconUploadUrls as Array<{
+    (connectionAvatarIconUploadUrls ?? []).filter((value) => value !== null) as Array<{
       connectionKey: string;
       iconUploadUrl: string;
     }>
@@ -239,9 +193,10 @@ export const publishDefinition = async (
   });
 
   return {
+    componentId,
     iconUploadUrl,
     packageUploadUrl,
-    sourceUploadUrl,
+    sourceUploadUrl: sourceUploadUrl ?? undefined,
     connectionIconUploadUrls: uploadUrls,
     versionNumber,
   };
@@ -302,11 +257,18 @@ export const uploadConnectionIcons = async (
       const connectionIconPaths = iconPaths[connectionKey];
 
       if (connectionIconPaths.iconPath && iconUploadUrl) {
-        acc.push(uploadFile(connectionIconPaths.iconPath, iconUploadUrl));
+        acc.push(
+          uploadFile(resolve(getWorkingDirectory(), connectionIconPaths.iconPath), iconUploadUrl),
+        );
       }
 
       if (connectionIconPaths.avatarIconPath && avatarIconUploadUrl) {
-        acc.push(uploadFile(connectionIconPaths.avatarIconPath, avatarIconUploadUrl));
+        acc.push(
+          uploadFile(
+            resolve(getWorkingDirectory(), connectionIconPaths.avatarIconPath),
+            avatarIconUploadUrl,
+          ),
+        );
       }
 
       return acc;

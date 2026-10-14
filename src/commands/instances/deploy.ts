@@ -1,49 +1,53 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
-
-export default class DeployCommand extends PrismaticBaseCommand {
-  static description = "Deploy an Instance";
-  static args = {
-    instance: Args.string({
-      required: true,
-      description: "ID of an instance",
-    }),
-  };
-  static flags = {
-    force: Flags.boolean({
-      char: "f",
-      description:
+import { Cli, z } from "incur";
+import { DeployInstanceDocument as DEPLOY_INSTANCE } from "../../graphql/operations/deployInstance.generated.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
+export default Cli.command({
+  output: z.object({ instanceId: z.string() }).extend(warningsOutput),
+  description: "Deploy an Instance",
+  args: z.object({
+    instance: z.string().describe("ID of an instance"),
+  }),
+  options: z.object({
+    force: z
+      .boolean()
+      .optional()
+      .describe(
         "Force deployment even when there are certain conditions that would normally prevent it",
-    }),
-  };
-
-  async run() {
+      ),
+  }),
+  async run(context) {
     const {
       args: { instance },
-      flags: { force },
-    } = await this.parse(DeployCommand);
+      options: { force },
+    } = context;
 
     const result = await gqlRequest({
-      document: gql`
-        mutation deployInstance($id: ID!, $force: Boolean) {
-          deployInstance(input: { id: $id, force: $force }) {
-            instance {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DEPLOY_INSTANCE,
       variables: {
         id: instance,
         force,
       },
     });
 
-    this.log(result.deployInstance.instance.id);
-  }
-}
+    const resourceId = requireOperationResult(
+      result.deployInstance?.instance?.id,
+      "Instance was not deployed",
+    );
+    return context.ok(
+      { instanceId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "instances flow-configs list",
+              description: "Inspect this instance's flows",
+              args: { instance: resourceId },
+            },
+          ],
+        },
+      },
+    );
+  },
+  alias: { force: "f" },
+});

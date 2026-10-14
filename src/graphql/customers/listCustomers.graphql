@@ -1,0 +1,14 @@
+query listCustomers($after: String, $first: Int) {
+  customers(isSystem: false, after: $after, first: $first) {
+    nodes {
+      id
+      name
+      externalId
+      description
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

@@ -1,52 +1,41 @@
-import { Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
+import { Cli, z } from "incur";
+import { ValidationError } from "../../errors.js";
+import { CommitAvatarUploadDocument as COMMIT_AVATAR_UPLOAD } from "../../graphql/operations/commitAvatarUpload.generated.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
 
-export default class UpdateAvatarUrlCommand extends PrismaticBaseCommand {
-  // TODO: Add more flags once optional updates are implemented
-  static description = "Update your Organization Avatar URL";
-
-  static flags = {
-    organizationId: Flags.string({
-      name: "organization",
-      required: true,
-      description: "ID of an organization",
-    }),
-    avatarUrl: Flags.string({
-      char: "n",
-      required: false,
-      description: "Url of the organization avatar",
-    }),
-  };
-
-  async run() {
+export default Cli.command({
+  output: z.object({ organizationId: z.string() }).extend(warningsOutput),
+  description: "Update your Organization Avatar URL",
+  options: z.object({
+    organizationId: z.string().describe("ID of an organization"),
+    avatarUrl: z.string().optional().describe("Url of the organization avatar"),
+  }),
+  async run(context) {
     const {
-      flags: { organizationId, avatarUrl },
-    } = await this.parse(UpdateAvatarUrlCommand);
+      options: { organizationId, avatarUrl },
+    } = context;
+    const requiredValue2 = avatarUrl;
+    if (requiredValue2 == null)
+      throw new ValidationError({
+        message: "--avatarUrl is required to update the avatar",
+      });
 
     const result = await gqlRequest({
-      document: gql`
-        mutation commitAvatarUpload($organizationId: ID!, $avatarUrl: String!) {
-          updateOrganization(
-            input: { id: $organizationId, avatarUrl: $avatarUrl }
-          ) {
-            organization {
-              id
-              avatarUrl
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: COMMIT_AVATAR_UPLOAD,
       variables: {
         organizationId,
-        avatarUrl,
+        avatarUrl: requiredValue2,
       },
     });
+    const requiredValue1 = requireOperationResult(
+      result.updateOrganization?.organization?.id,
+      "Organization avatar was not updated",
+    );
 
-    this.log(result.updateOrganization.organization.id);
-  }
-}
+    return {
+      organizationId: requiredValue1,
+    };
+  },
+  alias: { avatarUrl: "n" },
+});

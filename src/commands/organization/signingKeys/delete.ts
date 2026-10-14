@@ -1,38 +1,28 @@
-import { Args } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../../baseCommand.js";
-import { gql, gqlRequest } from "../../../graphql.js";
+import { Cli, z } from "incur";
+import { DeleteOrganizationSigningKeyMutationDocument as DELETE_ORGANIZATION_SIGNING_KEY_MUTATION } from "../../../graphql/operations/DeleteOrganizationSigningKeyMutation.generated.js";
+import { gqlRequest } from "../../../graphql.js";
+import { warningsOutput } from "../../../output.js";
 
-export default class DeleteCommand extends PrismaticBaseCommand {
-  static description = "Delete an embedded marketplace signing key";
-  static args = {
-    signingKeyId: Args.string({
-      required: true,
-      description: "ID of the signing key to delete",
-    }),
-  };
-
-  async run() {
+export default Cli.command({
+  output: z
+    .object({ signingKeyId: z.string() })
+    .extend(warningsOutput)
+    .extend({ deleted: z.literal(true) }),
+  description: "Delete an embedded marketplace signing key",
+  args: z.object({
+    signingKeyId: z.string().describe("ID of the signing key to delete"),
+  }),
+  async run(context) {
     const {
       args: { signingKeyId },
-    } = await this.parse(DeleteCommand);
+    } = context;
 
     await gqlRequest({
-      document: gql`
-        mutation ($id: ID!) {
-          deleteOrganizationSigningKey(input: { id: $id }) {
-            organizationSigningKey {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: DELETE_ORGANIZATION_SIGNING_KEY_MUTATION,
       variables: {
         id: signingKeyId,
       },
     });
-  }
-}
+    return { signingKeyId: signingKeyId, deleted: true as const };
+  },
+});

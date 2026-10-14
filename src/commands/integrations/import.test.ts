@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import * as diagnostics from "../../command.js";
+import { runCommand } from "../../test-command.js";
 import type { ComponentDefinition } from "../../utils/component/index.js";
-import { ux } from "../../utils/ux.js";
+import * as prompts from "../../utils/prompts.js";
 import ImportCommand from "./import.js";
 
 vi.mock(import("../../fs.js"), () => ({
@@ -15,7 +17,9 @@ vi.mock(import("../../utils/integration/import.js"), async (importOriginal) => {
   return {
     ...original,
     importYamlIntegration: vi.fn(() => Promise.resolve("imported-integration-id")),
-    importCodeNativeIntegration: vi.fn(() => Promise.resolve("imported-cni-id")),
+    importCodeNativeIntegration: vi.fn(() =>
+      Promise.resolve({ integrationId: "imported-cni-id", componentId: "comp_1" }),
+    ),
     getIntegrationDefinition: vi.fn(() =>
       Promise.resolve(`
 configPages:
@@ -32,6 +36,9 @@ configPages:
     ),
     loadCodeNativeIntegrationEntryPoint: vi.fn(() =>
       Promise.resolve({
+        entrypoint: "/project/dist/index.js",
+        componentKey: "cni",
+        flowCount: 1,
         integrationDefinition: `
 configPages:
   - elements:
@@ -45,6 +52,11 @@ configPages:
 
 vi.mock(import("../../utils/integration/open.js"), () => ({
   openIntegration: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock(import("../../utils/availability.js"), async (original) => ({
+  ...(await original()),
+  waitForIntegrationImport: vi.fn(async () => true),
 }));
 
 describe("ImportCommand", () => {
@@ -75,40 +87,67 @@ configPages:
       - value: "existingVar"
 `);
 
-      const warnSpy = vi
-        .spyOn(ImportCommand.prototype, "warn")
-        .mockImplementation((input: string | Error) => input);
-      const confirmSpy = vi.spyOn(ux, "confirm").mockResolvedValue(false);
+      const warnSpy = vi.spyOn(diagnostics, "writeCommandOutput").mockImplementation(() => {});
+      const confirmSpy = vi.spyOn(prompts, "confirm").mockResolvedValue(false);
 
       await expect(
-        ImportCommand.run(["--path", "/valid/path.yaml", "-i", "existing-id", "--replace"]),
+        runCommand(ImportCommand, ["--path", "/valid/path.yaml", "-i", "existing-id", "--replace"]),
       ).rejects.toThrow(/Import canceled/);
 
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("missingVar"));
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("missingVar"), "stderr");
       expect(confirmSpy).toHaveBeenCalled();
     });
   });
 
   describe("Code Native import", () => {
-    it("should import Code Native integration when no path is provided", async () => {
+    it("passes the default prerequisite timeout to Code Native import", async () => {
       const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
-      const logSpy = vi.spyOn(ImportCommand.prototype, "log").mockImplementation(() => {});
+      const logSpy = vi.spyOn(diagnostics, "writeCommandStatus").mockImplementation(() => {});
 
-      await ImportCommand.run([]);
+      const result = await runCommand(ImportCommand, []);
 
-      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, undefined);
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, undefined, {
+        timeoutSeconds: 300,
+      });
       expect(logSpy).toHaveBeenCalledWith("imported-cni-id");
+      expect(result).toEqual({ integrationId: "imported-cni-id", componentId: "comp_1" });
     });
 
     it("should pass test API keys to Code Native import", async () => {
       const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
-      vi.spyOn(ImportCommand.prototype, "log").mockImplementation(() => {});
+      vi.spyOn(diagnostics, "writeCommandStatus").mockImplementation(() => {});
 
-      await ImportCommand.run(["--test-api-key", 'myFlow="key123"']);
+      await runCommand(ImportCommand, ["--test-api-key", 'myFlow="key123"']);
 
-      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, [
-        'myFlow="key123"',
-      ]);
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(
+        undefined,
+        false,
+        ['myFlow="key123"'],
+        { timeoutSeconds: 300 },
+      );
+    });
+
+    it.each([
+      { flags: [] },
+      { flags: ["--no-wait"] },
+    ])("passes the prerequisite timeout with flags %j", async ({ flags }) => {
+      const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
+      await runCommand(ImportCommand, [...flags, "--wait-timeout", "600"]);
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, undefined, {
+        timeoutSeconds: 600,
+      });
+    });
+
+    it("does not publish a component for YAML imports", async () => {
+      const { exists } = await import("../../fs.js");
+      vi.mocked(exists).mockResolvedValue(true);
+      vi.spyOn(diagnostics, "writeCommandStatus").mockImplementation(() => {});
+
+      const result = await runCommand(ImportCommand, ["--path", "/valid/path.yaml"]);
+
+      const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
+      expect(importCodeNativeIntegration).not.toHaveBeenCalled();
+      expect(result).toEqual({ integrationId: "imported-integration-id" });
     });
   });
 
@@ -118,9 +157,9 @@ configPages:
       vi.mocked(exists).mockResolvedValue(true);
 
       const { openIntegration } = await import("../../utils/integration/open.js");
-      vi.spyOn(ImportCommand.prototype, "log").mockImplementation(() => {});
+      vi.spyOn(diagnostics, "writeCommandStatus").mockImplementation(() => {});
 
-      await ImportCommand.run(["--path", "/valid/path.yaml", "--open"]);
+      await runCommand(ImportCommand, ["--path", "/valid/path.yaml", "--open"]);
 
       expect(openIntegration).toHaveBeenCalledWith("imported-integration-id");
     });

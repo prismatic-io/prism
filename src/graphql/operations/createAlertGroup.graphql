@@ -1,0 +1,11 @@
+mutation createAlertGroup($name: String!, $users: [ID], $webhooks: [ID]) {
+  createAlertGroup(input: { name: $name, users: $users, webhooks: $webhooks }) {
+    alertGroup {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

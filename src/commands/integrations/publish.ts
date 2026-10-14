@@ -1,50 +1,70 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
-
-export default class PublishCommand extends PrismaticBaseCommand {
-  static description = "Publish a version of an Integration for use in Instances";
-
-  static args = {
-    integration: Args.string({
-      required: true,
-      description: "ID of an integration to publish",
-    }),
-  };
-
-  static flags = {
-    comment: Flags.string({
-      char: "c",
-      required: false,
-      description: "comment about changes in this publication",
-    }),
-    commitHash: Flags.string({
-      required: false,
-      description: "Commit hash corresponding to the integration version being published",
-    }),
-    commitUrl: Flags.string({
-      required: false,
-      description: "URL to the commit details corresponding to this integration version",
-    }),
-    repoUrl: Flags.string({
-      required: false,
-      description: "URL to the repository containing the definition for this integration",
-    }),
-    pullRequestUrl: Flags.string({
-      required: false,
-      description: "URL to the pull request that modified this integration version",
-    }),
-  };
-
-  async run() {
+import { Cli, z } from "incur";
+import { IntegrationDraftVersionDocument as INTEGRATION_DRAFT_VERSION } from "../../graphql/operations/integrationDraftVersion.generated.js";
+import { PublishIntegrationDocument as PUBLISH_INTEGRATION } from "../../graphql/operations/publishIntegration.generated.js";
+import { gqlRequest, requireOperationResult, requireResource } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
+import {
+  publishWaitDescription,
+  resolveWaitOptions,
+  waitForIntegrationVersion,
+  waitOptions,
+  waitTimeout,
+} from "../../utils/availability.js";
+import { startAction, stopAction } from "../../utils/progress.js";
+export default Cli.command({
+  output: z
+    .object({ integrationId: z.string(), versionNumber: z.number(), available: z.boolean() })
+    .extend(warningsOutput),
+  description: "Publish a version of an Integration for use in Instances",
+  args: z.object({
+    integration: z.string().describe("ID of an integration to publish"),
+  }),
+  options: z.object({
+    comment: z.string().optional().describe("comment about changes in this publication"),
+    commitHash: z
+      .string()
+      .optional()
+      .describe("Commit hash corresponding to the integration version being published"),
+    commitUrl: z
+      .string()
+      .optional()
+      .describe("URL to the commit details corresponding to this integration version"),
+    repoUrl: z
+      .string()
+      .optional()
+      .describe("URL to the repository containing the definition for this integration"),
+    pullRequestUrl: z
+      .string()
+      .optional()
+      .describe("URL to the pull request that modified this integration version"),
+    ...waitOptions(publishWaitDescription),
+  }),
+  async run(context) {
     const {
       args: { integration },
-      flags: { comment, commitHash, commitUrl, repoUrl, pullRequestUrl },
-    } = await this.parse(PublishCommand);
+      options: { comment, commitHash, commitUrl, repoUrl, pullRequestUrl },
+    } = context;
+    const wait = resolveWaitOptions(context.options);
 
+    const { versionNumber, isCodeNative } = requireResource(
+      (
+        await gqlRequest({
+          document: INTEGRATION_DRAFT_VERSION,
+          variables: { integrationId: integration },
+        })
+      ).integration,
+      "Integration",
+    );
+
+    const provenance = isCodeNative && context.agent ? { modified: "prism-agent" } : undefined;
     const didProvideAttributes =
-      Boolean(commitHash) || Boolean(repoUrl) || Boolean(pullRequestUrl) || Boolean(commitUrl);
+      Boolean(provenance) ||
+      Boolean(commitHash) ||
+      Boolean(repoUrl) ||
+      Boolean(pullRequestUrl) ||
+      Boolean(commitUrl);
     const attributes = {
+      provenance,
       commitHash,
       commitUrl,
       repoUrl,
@@ -52,25 +72,7 @@ export default class PublishCommand extends PrismaticBaseCommand {
     };
 
     const result = await gqlRequest({
-      document: gql`
-        mutation publishIntegration(
-          $id: ID!
-          $comment: String
-          $attributes: String
-        ) {
-          publishIntegration(
-            input: { id: $id, comment: $comment, attributes: $attributes }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: PUBLISH_INTEGRATION,
       variables: {
         id: integration,
         comment,
@@ -78,6 +80,38 @@ export default class PublishCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.publishIntegration.integration.id);
-  }
-}
+    const resourceId = requireOperationResult(
+      result.publishIntegration?.integration?.id,
+      "Integration was not published",
+    );
+
+    const cta = {
+      commands: [
+        {
+          command: "integrations versions",
+          description: "Check whether the new version is available",
+          args: { integration: resourceId },
+        },
+      ],
+    };
+
+    if (!wait) {
+      return context.ok({ integrationId: resourceId, versionNumber, available: false }, { cta });
+    }
+
+    startAction(`Waiting for version ${versionNumber} to become available`);
+    const available = await waitForIntegrationVersion(resourceId, versionNumber, wait);
+    if (!available) {
+      stopAction("timed out");
+      return context.error({
+        ...waitTimeout(
+          `Version ${versionNumber} was published and is still processing after ${wait.timeoutSeconds} seconds.`,
+        ),
+        cta,
+      });
+    }
+    stopAction();
+    return context.ok({ integrationId: resourceId, versionNumber, available: true }, { cta });
+  },
+  alias: { comment: "c" },
+});

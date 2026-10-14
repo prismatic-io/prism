@@ -1,0 +1,13 @@
+mutation createOnPremiseResourceJWT($customerId: ID, $resourceId: ID, $orgOnly: Boolean) {
+  createOnPremiseResourceJWT(
+    input: { customerId: $customerId, orgOnly: $orgOnly, resourceId: $resourceId }
+  ) {
+    result {
+      jwt
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

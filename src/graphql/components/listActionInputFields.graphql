@@ -1,0 +1,38 @@
+query listActionInputFields($actions: [ActionInputFieldsSelector!]!, $after: String, $first: Int) {
+  actionInputFields(actions: $actions, after: $after, first: $first) {
+    nodes {
+      id
+      key
+      keyPath
+      parentId
+      order
+      label
+      keyLabel
+      type
+      collection
+      required
+      shown
+      default
+      placeholder
+      comments
+      example
+      model
+      language
+      onPremiseControlled
+      scope
+      action {
+        id
+        key
+      }
+      dataSource {
+        key
+        label
+        dataSourceType
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

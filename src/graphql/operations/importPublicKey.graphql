@@ -1,0 +1,11 @@
+mutation importPublicKey($publicKey: String!) {
+  importOrganizationSigningKey(input: { publicKey: $publicKey }) {
+    organizationSigningKey {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

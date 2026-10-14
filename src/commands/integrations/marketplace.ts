@@ -1,47 +1,32 @@
-import { Args, Flags } from "@oclif/core";
-import { PrismaticBaseCommand } from "../../baseCommand.js";
-import { gql, gqlRequest } from "../../graphql.js";
-
-export default class MarketplaceCommand extends PrismaticBaseCommand {
-  static description = "Make a version of an Integration available in the Marketplace";
-
-  static args = {
-    integration: Args.string({
-      required: true,
-      description: "ID of an integration version to make marketplace available",
-    }),
-  };
-
-  static flags = {
-    available: Flags.boolean({
-      char: "a",
-      description: "Mark this Integration version available in the marketplace",
-      allowNo: true,
-      required: true,
-    }),
-    deployable: Flags.boolean({
-      char: "d",
-      description:
+import { Cli, z } from "incur";
+import { UpdateMarketplaceConfigurationDocument as UPDATE_MARKETPLACE_CONFIGURATION } from "../../graphql/operations/updateMarketplaceConfiguration.generated.js";
+import { gqlRequest, requireOperationResult } from "../../graphql.js";
+import { warningsOutput } from "../../output.js";
+export default Cli.command({
+  output: z.object({ integrationId: z.string() }).extend(warningsOutput),
+  description: "Make a version of an Integration available in the Marketplace",
+  args: z.object({
+    integration: z.string().describe("ID of an integration version to make marketplace available"),
+  }),
+  options: z.object({
+    available: z.boolean().describe("Mark this Integration version available in the marketplace"),
+    deployable: z
+      .boolean()
+      .default(true)
+      .describe(
         "Mark this Integration version as deployable in the marketplace; does not apply if not also marked available",
-      allowNo: true,
-      default: true,
-    }),
-    "allow-multiple-instances": Flags.boolean({
-      char: "m",
-      description: "Allow a customer to deploy multiple instances of this integration",
-      allowNo: true,
-    }),
-    overview: Flags.string({
-      char: "o",
-      description: "Overview to describe the purpose of the integration",
-    }),
-  };
-
-  async run() {
+      ),
+    "allow-multiple-instances": z
+      .boolean()
+      .optional()
+      .describe("Allow a customer to deploy multiple instances of this integration"),
+    overview: z.string().optional().describe("Overview to describe the purpose of the integration"),
+  }),
+  async run(context) {
     const {
       args: { integration },
-      flags: { available, deployable, overview, "allow-multiple-instances": multipleInstances },
-    } = await this.parse(MarketplaceCommand);
+      options: { available, deployable, overview, "allow-multiple-instances": multipleInstances },
+    } = context;
 
     const marketplaceConfiguration = available
       ? deployable
@@ -50,31 +35,7 @@ export default class MarketplaceCommand extends PrismaticBaseCommand {
       : "NOT_AVAILABLE_IN_MARKETPLACE";
 
     const result = await gqlRequest({
-      document: gql`
-        mutation updateMarketplaceConfiguration(
-          $id: ID
-          $marketplaceConfiguration: String!
-          $overview: String!
-          $multipleInstances: Boolean
-        ) {
-          updateIntegrationMarketplaceConfiguration(
-            input: {
-              id: $id
-              marketplaceConfiguration: $marketplaceConfiguration
-              overview: $overview
-              allowMultipleMarketplaceInstances: $multipleInstances
-            }
-          ) {
-            integration {
-              id
-            }
-            errors {
-              field
-              messages
-            }
-          }
-        }
-      `,
+      document: UPDATE_MARKETPLACE_CONFIGURATION,
       variables: {
         id: integration,
         marketplaceConfiguration,
@@ -85,6 +46,24 @@ export default class MarketplaceCommand extends PrismaticBaseCommand {
       },
     });
 
-    this.log(result.updateIntegrationMarketplaceConfiguration.integration.id);
-  }
-}
+    const resourceId = requireOperationResult(
+      result.updateIntegrationMarketplaceConfiguration?.integration?.id,
+      "Integration marketplace configuration was not updated",
+    );
+    return context.ok(
+      { integrationId: resourceId },
+      {
+        cta: {
+          commands: [
+            {
+              command: "integrations flows list",
+              description: "Inspect this integration's flows",
+              args: { integration: resourceId },
+            },
+          ],
+        },
+      },
+    );
+  },
+  alias: { overview: "o", "allow-multiple-instances": "m", deployable: "d", available: "a" },
+});

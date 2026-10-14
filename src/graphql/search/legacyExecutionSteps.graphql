@@ -1,0 +1,31 @@
+query legacyExecutionSteps($id: ID!, $first: Int, $after: String, $hasError: Boolean) {
+  executionResult(id: $id) {
+    id
+    stepResults(
+      first: $first
+      after: $after
+      hasError: $hasError
+      orderBy: { field: STARTED_AT, direction: ASC }
+    ) {
+      totalCount
+      nodes {
+        id
+        startedAt
+        endedAt
+        stepName
+        displayStepName
+        hasError
+        branchName
+        loopStepName
+        loopStepIndex
+        isLoopStep
+        isRootResult
+        resultsUrl
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
