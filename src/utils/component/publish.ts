@@ -26,10 +26,10 @@ const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>>
   triggers: true,
 };
 
-export const checkPackageSignature = async (
+export const getPackageSignatureMatch = async (
   { key, public: isPublic }: ComponentDefinition,
   packagePath: string,
-): Promise<boolean> => {
+): Promise<{ matches: boolean; versionNumber?: number }> => {
   // Retrieve the existing signature of the component if it exists.
   const results = await gqlRequest({
     document: COMPONENT2,
@@ -41,7 +41,7 @@ export const checkPackageSignature = async (
 
   const {
     components: {
-      nodes: [{ signature: existingSignature } = { signature: null }],
+      nodes: [existingComponent],
     },
   } = results;
 
@@ -51,8 +51,16 @@ export const checkPackageSignature = async (
     .update(await fs.readFile(packagePath))
     .digest("hex");
 
-  return existingSignature === packageSignature;
+  return {
+    matches: existingComponent?.signature === packageSignature,
+    versionNumber: existingComponent?.versionNumber,
+  };
 };
+
+export const checkPackageSignature = async (
+  definition: ComponentDefinition,
+  packagePath: string,
+): Promise<boolean> => (await getPackageSignatureMatch(definition, packagePath)).matches;
 
 export const confirmPublish = async ({
   display: { label, description },

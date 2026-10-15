@@ -4,7 +4,7 @@ import { temporaryDirectoryTask } from "tempy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  checkPackageSignature: vi.fn(),
+  getPackageSignatureMatch: vi.fn(),
   publishDefinition: vi.fn(),
   uploadConnectionIcons: vi.fn(),
   uploadFile: vi.fn(),
@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock(import("./publish.js"), async (importOriginal) => ({
   ...(await importOriginal()),
-  checkPackageSignature: mocks.checkPackageSignature,
+  getPackageSignatureMatch: mocks.getPackageSignatureMatch,
   publishDefinition: mocks.publishDefinition,
   uploadConnectionIcons: mocks.uploadConnectionIcons,
   uploadFile: mocks.uploadFile,
@@ -53,7 +53,7 @@ const integrationWith = async (
     await writeJson(path.join(dir, "package.json"), {
       name,
       version: "1.2.3",
-      ...(marker ? { prismatic: { component: true } } : {}),
+      ...(marker ? { prismatic: { component: "./dist/index.js" } } : {}),
     });
     if (definition) {
       await writeFile(
@@ -74,6 +74,8 @@ const definition = (key: string, isPublic = false) => ({
 
 describe("isComponentPackage", () => {
   it("recognizes the init marker and nothing else", () => {
+    expect(isComponentPackage({ prismatic: { component: "./dist/index.js" } })).toBe(true);
+    // Existing packages with the original boolean marker remain supported.
     expect(isComponentPackage({ prismatic: { component: true } })).toBe(true);
     expect(isComponentPackage({ prismatic: { component: false } })).toBe(false);
     expect(isComponentPackage({ name: "lodash" })).toBe(false);
@@ -102,7 +104,10 @@ describe("findComponentDependencies", () => {
         "my-component@1.2.3",
         "@acme/other-component@1.2.3",
       ]);
-      expect(found[1].directory).toBe(path.join(root, "node_modules", "@acme", "other-component"));
+      expect(found[1]).toMatchObject({
+        directory: path.join(root, "node_modules", "@acme", "other-component"),
+        platformEntrypoint: "./dist/index.js",
+      });
     });
   });
 
@@ -115,7 +120,7 @@ describe("findComponentDependencies", () => {
       await writeJson(path.join(hoisted, "package.json"), {
         name: "hoisted-component",
         version: "2.0.0",
-        prismatic: { component: true },
+        prismatic: { component: "./dist/index.js" },
       });
       const integration = path.join(workspace, "packages", "cni");
       await mkdir(integration, { recursive: true });
@@ -125,7 +130,12 @@ describe("findComponentDependencies", () => {
       });
 
       expect(await findComponentDependencies(integration)).toEqual([
-        { name: "hoisted-component", version: "2.0.0", directory: hoisted },
+        {
+          name: "hoisted-component",
+          version: "2.0.0",
+          directory: hoisted,
+          platformEntrypoint: "./dist/index.js",
+        },
       ]);
     });
   });
@@ -138,7 +148,7 @@ describe("findComponentDependencies", () => {
         name: "@acme/sealed-component",
         version: "3.1.0",
         exports: { ".": "./index.js" },
-        prismatic: { component: true },
+        prismatic: { component: "./dist/index.js" },
       });
       await writeFile(path.join(dir, "index.js"), "module.exports = {};");
       await writeJson(path.join(root, "package.json"), {
@@ -147,7 +157,12 @@ describe("findComponentDependencies", () => {
       });
 
       expect(await findComponentDependencies(root)).toEqual([
-        { name: "@acme/sealed-component", version: "3.1.0", directory: dir },
+        {
+          name: "@acme/sealed-component",
+          version: "3.1.0",
+          directory: dir,
+          platformEntrypoint: "./dist/index.js",
+        },
       ]);
     });
   });
@@ -184,9 +199,10 @@ describe("publishComponentDependencies", () => {
         "unchanged-component": { definition: definition("unchangedComponent") },
         "changed-component": { definition: definition("changedComponent") },
       });
-      mocks.checkPackageSignature.mockImplementation(
-        async ({ key }: { key: string }) => key === "unchangedComponent",
-      );
+      mocks.getPackageSignatureMatch.mockImplementation(async ({ key }: { key: string }) => ({
+        matches: key === "publicComponent" || key === "unchangedComponent",
+        versionNumber: key === "publicComponent" ? 8 : 3,
+      }));
       const cwd = process.cwd();
 
       const results = await publishComponentDependencies(root);
@@ -207,8 +223,8 @@ describe("publishComponentDependencies", () => {
         path.join(root, "node_modules", "changed-component", "dist", "icon.png"),
         "icon-url",
       );
-      // Only the two private, built components were validated/packaged.
-      expect(mocks.validateDefinition).toHaveBeenCalledTimes(2);
+      // Every built package, including a public one, is validated against the platform artifact.
+      expect(mocks.validateDefinition).toHaveBeenCalledTimes(3);
       // No wait options: the publish is not awaited.
       expect(mocks.waitForComponentVersion).not.toHaveBeenCalled();
     });
@@ -219,7 +235,7 @@ describe("publishComponentDependencies", () => {
       await integrationWith(root, {
         "slow-component": { definition: definition("slowComponent") },
       });
-      mocks.checkPackageSignature.mockResolvedValue(false);
+      mocks.getPackageSignatureMatch.mockResolvedValue({ matches: false });
       mocks.waitForComponentVersion.mockResolvedValue(false);
 
       const [result] = await publishComponentDependencies(root, { timeoutSeconds: 7 });
@@ -236,7 +252,7 @@ describe("publishComponentDependencies", () => {
         "broken-component": { definition: definition("brokenComponent") },
         "fine-component": { definition: definition("fineComponent") },
       });
-      mocks.checkPackageSignature.mockResolvedValue(false);
+      mocks.getPackageSignatureMatch.mockResolvedValue({ matches: false });
       mocks.validateDefinition.mockImplementationOnce(async () => {
         throw new Error("Component icon does not exist");
       });

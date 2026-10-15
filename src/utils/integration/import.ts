@@ -16,7 +16,10 @@ import {
   type WaitOptions,
   waitForComponentVersion,
 } from "../availability.js";
-import { publishComponentDependencies } from "../component/dependencies.js";
+import {
+  type DependencyPublishResult,
+  publishComponentDependencies,
+} from "../component/dependencies.js";
 import {
   type ComponentDefinition,
   createComponentPackage,
@@ -29,7 +32,7 @@ import {
 } from "../component/publish.js";
 import { findPackageRoot, getPackageEntrypointDirectory } from "../import.js";
 import { startAction, stopAction } from "../progress.js";
-import { loadYaml } from "../serialize.js";
+import { dumpYaml, loadYaml } from "../serialize.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
 import { validateCodeNativeDefinition } from "./validate.js";
@@ -70,6 +73,62 @@ interface Integration {
     };
   };
 }
+
+/** Adds npm component dependencies to every flow's platform metadata. Action calls are
+ * dynamic TypeScript calls, so they cannot be discovered by walking the converted steps. */
+export const addComponentDependencies = (
+  definition: string,
+  dependencies: DependencyPublishResult[],
+): string => {
+  const parsed = loadYaml<IntegrationObjectFromYAML>(definition);
+  if (!parsed) return definition;
+
+  const components = dependencies.flatMap(({ key, isPublic, versionNumber }) =>
+    key && versionNumber !== undefined
+      ? [{ key, isPublic: Boolean(isPublic), version: versionNumber }]
+      : [],
+  );
+
+  const pinReferences = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      value.forEach(pinReferences);
+      return;
+    }
+    if (typeof value !== "object" || value === null) return;
+
+    const candidate = value as Record<string, unknown>;
+    if (
+      typeof candidate.key === "string" &&
+      typeof candidate.isPublic === "boolean" &&
+      "version" in candidate
+    ) {
+      const dependency = components.find(
+        ({ key, isPublic }) => key === candidate.key && isPublic === candidate.isPublic,
+      );
+      if (dependency) candidate.version = dependency.version;
+    }
+    Object.values(candidate).forEach(pinReferences);
+  };
+
+  pinReferences(parsed);
+
+  parsed.flows = parsed.flows.map((flow) => {
+    const supplementalComponents = [...(flow.supplementalComponents ?? [])];
+    for (const component of components) {
+      const existingIndex = supplementalComponents.findIndex(
+        (existing) => existing.key === component.key && existing.isPublic === component.isPublic,
+      );
+      if (existingIndex === -1) {
+        supplementalComponents.push(component);
+      } else {
+        supplementalComponents[existingIndex] = component;
+      }
+    }
+    return { ...flow, supplementalComponents };
+  });
+
+  return dumpYaml(parsed);
+};
 
 export const importDefinition = async (
   definition: string,
@@ -155,7 +214,10 @@ export const importCodeNativeIntegration = async (
   // publishes them first (skipping public ones and ones already published with this signature).
   const dependencyResults = await publishComponentDependencies(
     await findPackageRoot("Code Native Integration"),
-    waitOptions,
+    {
+      ...waitOptions,
+      timeoutSeconds: waitOptions?.timeoutSeconds ?? DEFAULT_WAIT_TIMEOUT_SECONDS,
+    },
   );
   const blockingDependencies = dependencyResults.filter(
     ({ status }) => status === "failed" || status === "not-built" || status === "timed-out",
@@ -173,6 +235,10 @@ export const importCodeNativeIntegration = async (
     async () => {
       const { integrationDefinition, componentDefinition, publishingMetadata } =
         await loadCodeNativeIntegrationEntryPoint();
+      const integrationDefinitionWithDependencies = addComponentDependencies(
+        integrationDefinition,
+        dependencyResults,
+      );
 
       await validateDefinition(componentDefinition, {
         forCodeNativeIntegration: true,
@@ -223,7 +289,7 @@ export const importCodeNativeIntegration = async (
 
       startAction("Importing definition for Code Native Integration into Prismatic");
       const { integrationId: integrationImportId, systemInstance } = await importDefinition(
-        integrationDefinition,
+        integrationDefinitionWithDependencies,
         integrationId,
         replace,
       );

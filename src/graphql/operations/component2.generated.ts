@@ -11,7 +11,9 @@ export type Component2QueryVariables = Exact<{
   public: boolean;
 }>;
 
-export type Component2Query = { components: { nodes: Array<{ signature: string }> } };
+export type Component2Query = {
+  components: { nodes: Array<{ signature: string; versionNumber: number }> };
+};
 
 export const Component2Document = {
   kind: "Document",
@@ -64,7 +66,10 @@ export const Component2Document = {
                   name: { kind: "Name", value: "nodes" },
                   selectionSet: {
                     kind: "SelectionSet",
-                    selections: [{ kind: "Field", name: { kind: "Name", value: "signature" } }],
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "signature" } },
+                      { kind: "Field", name: { kind: "Name", value: "versionNumber" } },
+                    ],
                   },
                 },
               ],

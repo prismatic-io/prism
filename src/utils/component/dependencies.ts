@@ -6,7 +6,7 @@ import { type WaitOptions, waitForComponentVersion } from "../availability.js";
 import { startAction, stopAction } from "../progress.js";
 import { createComponentPackage, loadEntrypoint, validateDefinition } from "./index.js";
 import {
-  checkPackageSignature,
+  getPackageSignatureMatch,
   publishDefinition,
   uploadConnectionIcons,
   uploadFile,
@@ -14,20 +14,23 @@ import {
 
 /**
  * `prism components:init` marks the package.json of every component it scaffolds with
- * `"prismatic": { "component": true }`, which is how a code-native integration's
+ * `"prismatic": { "component": "./dist/index.js" }`, which is how a code-native integration's
  * dependencies are told apart from ordinary packages.
  */
-export const COMPONENT_PACKAGE_MARKER = { component: true } as const;
+export const COMPONENT_PACKAGE_MARKER = { component: "./dist/index.js" } as const;
 
 interface PackageJson {
   name?: string;
   version?: string;
   dependencies?: Record<string, string>;
-  prismatic?: { component?: boolean };
+  prismatic?: { component?: boolean | string };
 }
 
 export const isComponentPackage = (pkg: unknown): pkg is PackageJson =>
-  typeof pkg === "object" && pkg !== null && (pkg as PackageJson).prismatic?.component === true;
+  typeof pkg === "object" &&
+  pkg !== null &&
+  ((pkg as PackageJson).prismatic?.component === true ||
+    typeof (pkg as PackageJson).prismatic?.component === "string");
 
 export interface ComponentDependency {
   /** The npm package name, as it appears in the integration's dependencies. */
@@ -35,6 +38,8 @@ export interface ComponentDependency {
   version: string;
   /** Absolute path of the installed package. */
   directory: string;
+  /** Package-relative entrypoint containing the self-contained platform artifact. */
+  platformEntrypoint: string;
 }
 
 const readPackageJson = async (path: string): Promise<PackageJson | undefined> =>
@@ -79,7 +84,15 @@ export const findComponentDependencies = async (root: string): Promise<Component
     if (!directory) continue;
     const pkg = await readPackageJson(resolve(directory, "package.json"));
     if (isComponentPackage(pkg)) {
-      found.push({ name, version: pkg.version ?? "", directory });
+      found.push({
+        name,
+        version: pkg.version ?? "",
+        directory,
+        platformEntrypoint:
+          typeof pkg.prismatic?.component === "string"
+            ? pkg.prismatic.component
+            : "./dist/index.js",
+      });
     }
   }
   return found;
@@ -95,6 +108,8 @@ export type DependencyPublishStatus =
 
 export interface DependencyPublishResult extends ComponentDependency {
   key?: string;
+  isPublic?: boolean;
+  versionNumber?: number;
   status: DependencyPublishStatus;
   detail?: string;
 }
@@ -109,8 +124,9 @@ const publishComponentDependency = async (
   dependency: ComponentDependency,
   wait?: WaitOptions,
 ): Promise<DependencyPublishResult> => {
-  const distDirectory = resolve(dependency.directory, "dist");
-  if (!(await exists(resolve(distDirectory, "index.js")))) {
+  const platformEntrypoint = resolve(dependency.directory, dependency.platformEntrypoint);
+  const distDirectory = dirname(platformEntrypoint);
+  if (!(await exists(platformEntrypoint))) {
     return {
       ...dependency,
       status: "not-built",
@@ -120,16 +136,27 @@ const publishComponentDependency = async (
 
   return withWorkingDirectory(distDirectory, async () => {
     const definition = await loadEntrypoint();
-    const { key, public: isPublic } = definition;
-    if (isPublic) {
-      // Public components (Prismatic's own, and any published publicly) already exist on the platform.
-      return { ...dependency, key, status: "public" as const };
-    }
-
+    const { key, public: isPublic = false } = definition;
     await validateDefinition(definition);
     const packagePath = await createComponentPackage();
-    if (await checkPackageSignature(definition, packagePath)) {
-      return { ...dependency, key, status: "unchanged" as const };
+    const signatureMatch = await getPackageSignatureMatch(definition, packagePath);
+    if (signatureMatch.matches && signatureMatch.versionNumber !== undefined) {
+      return {
+        ...dependency,
+        key,
+        isPublic,
+        versionNumber: signatureMatch.versionNumber,
+        status: isPublic ? ("public" as const) : ("unchanged" as const),
+      };
+    }
+    if (isPublic) {
+      return {
+        ...dependency,
+        key,
+        isPublic,
+        status: "failed" as const,
+        detail: `the installed package ${dependency.name}@${dependency.version} does not match the latest published platform version`,
+      };
     }
 
     const {
@@ -152,11 +179,19 @@ const publishComponentDependency = async (
       return {
         ...dependency,
         key,
+        isPublic,
         status: "timed-out" as const,
         detail: `v${versionNumber} was published and is still processing after ${wait.timeoutSeconds} seconds; retry the import once it is available, or pass a larger --wait-timeout`,
       };
     }
-    return { ...dependency, key, status: "published" as const, detail: `v${versionNumber}` };
+    return {
+      ...dependency,
+      key,
+      isPublic,
+      status: "published" as const,
+      versionNumber,
+      detail: `v${versionNumber}`,
+    };
   });
 };
 

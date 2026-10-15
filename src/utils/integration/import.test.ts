@@ -2,14 +2,76 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { temporaryDirectoryTask } from "tempy";
 import { describe, expect, it, vi } from "vitest";
-import { dumpYaml } from "../serialize.js";
+import { dumpYaml, loadYaml } from "../serialize.js";
 import {
+  addComponentDependencies,
   compareConfigVars,
   getIntegrationDefinition,
   importDefinition,
   loadCodeNativeIntegrationEntryPoint,
   parseTestApiKeys,
 } from "./import.js";
+
+describe("addComponentDependencies", () => {
+  it("adds npm components to every flow without duplicating existing metadata", () => {
+    const definition = dumpYaml({
+      name: "Integration",
+      description: "Integration",
+      definitionVersion: 7,
+      documentation: "",
+      flows: [
+        {
+          name: "First",
+          description: "First",
+          endpointSecurityType: "unsecured",
+          isSynchronous: false,
+          steps: [],
+          supplementalComponents: [{ key: "slack", isPublic: true, version: "LATEST" }],
+        },
+        {
+          name: "Second",
+          description: "Second",
+          endpointSecurityType: "unsecured",
+          isSynchronous: false,
+          steps: [],
+        },
+      ],
+    });
+
+    const result = addComponentDependencies(definition, [
+      {
+        name: "@prismatic-io/components-slack",
+        version: "1.0.0",
+        directory: "/components/slack",
+        platformEntrypoint: "./dist/index.js",
+        key: "slack",
+        isPublic: true,
+        versionNumber: 8,
+        status: "public",
+      },
+      {
+        name: "private-component",
+        version: "1.0.0",
+        directory: "/components/private",
+        platformEntrypoint: "./dist/index.js",
+        key: "privateComponent",
+        isPublic: false,
+        versionNumber: 3,
+        status: "unchanged",
+      },
+    ]);
+
+    const parsed = loadYaml<{ flows: Array<{ supplementalComponents: unknown[] }> }>(result);
+    expect(parsed?.flows[0].supplementalComponents).toEqual([
+      { key: "slack", isPublic: true, version: 8 },
+      { key: "privateComponent", isPublic: false, version: 3 },
+    ]);
+    expect(parsed?.flows[1].supplementalComponents).toEqual([
+      { key: "slack", isPublic: true, version: 8 },
+      { key: "privateComponent", isPublic: false, version: 3 },
+    ]);
+  });
+});
 
 const mockGqlRequest = vi.fn();
 vi.mock(import("../../graphql.js"), async (importOriginal) => {

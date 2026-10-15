@@ -107,6 +107,11 @@ export type FlowObjectFromYAML = {
   name: string;
   description: string;
   steps: Array<ActionObjectFromYAML>;
+  supplementalComponents?: Array<{
+    key: string;
+    isPublic: boolean;
+    version: number | "LATEST";
+  }>;
 };
 
 export type IntegrationObjectFromYAML = {

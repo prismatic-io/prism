@@ -2,6 +2,7 @@ query component2($key: String!, $public: Boolean!) {
   components(key: $key, public: $public) {
     nodes {
       signature
+      versionNumber
     }
   }
 }
