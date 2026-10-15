@@ -66,6 +66,42 @@ describe("CLI error output", () => {
     expect(result.stdout).toContain("code: CONFIRMATION_REQUIRED");
   });
 
+  it.each([
+    { mode: [] },
+    { mode: ["--no-agent"] },
+  ])("accepts legacy --no-confirm in non-agent pipelines: $mode", async ({ mode }) => {
+    const result = await runCli(
+      [...mode, "integrations:import", "--no-confirm", "--path", "/missing/integration.yaml"],
+      { HOME: "/tmp", PATH: process.env.PATH },
+    );
+    expect(result.status).toBe(2);
+    expect(result.stderr).toContain("Cannot find definition file");
+  });
+
+  it.each([
+    "components:publish",
+    "integrations:import",
+  ])("rejects legacy --no-confirm in explicit and detected agent mode on %s", async (command) => {
+    for (const mode of [["--agent"], []]) {
+      const result = await runCli([...mode, command, "--no-confirm"], {
+        HOME: "/tmp",
+        PATH: process.env.PATH,
+        PRISM_AGENT: "true",
+      });
+      expect(result.status).toBe(2);
+      expect(result.stdout).toContain("code: UNKNOWN_FLAG");
+    }
+  });
+
+  it.each(["profiles:list", "me:token:revoke"])("rejects --no-confirm on %s", async (command) => {
+    const result = await runCli(["--agent", command, "--no-confirm"], {
+      HOME: "/tmp",
+      PATH: process.env.PATH,
+    });
+    expect(result.status).toBe(2);
+    expect(result.stdout).toContain("code: UNKNOWN_FLAG");
+  });
+
   it("enforces read-only mode even with approval", async () => {
     const result = await runCli(["--agent", "--yes", "--read-only", "profiles:delete", "default"], {
       HOME: "/tmp",

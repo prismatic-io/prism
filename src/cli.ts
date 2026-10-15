@@ -184,7 +184,13 @@ const resolveRoute = (argv: string[]) => {
   return { start, end, path: path.join(":"), command: node.command };
 };
 
-export const normalizeCommandArguments = (argv: string[]): string[] => {
+// These commands exposed a negatable --confirm flag before the incur migration.
+const legacyNoConfirmCommands = new Set(["components:publish", "integrations:import"]);
+
+export const normalizeCommandArguments = (
+  argv: string[],
+  { legacyConfirmation = true }: { legacyConfirmation?: boolean } = {},
+): string[] => {
   const delimiter = argv.indexOf("--");
   const tokens = [...(delimiter < 0 ? argv : argv.slice(0, delimiter))];
   if (tokens[0] === "help") {
@@ -210,6 +216,8 @@ export const normalizeCommandArguments = (argv: string[]): string[] => {
       continue;
     }
     let token = tokens[index];
+    if (legacyConfirmation && token === "--no-confirm" && legacyNoConfirmCommands.has(route.path))
+      token = "--yes";
     const mode = /^--(no-)?agent=(true|false)$/i.exec(token);
     if (mode)
       token =
@@ -589,15 +597,19 @@ export const serve = async (argv = process.argv.slice(2), environment = process.
     return;
   }
   const agent = resolveAgentMode(argv, environment);
+  const prismArguments = optionTokens(argv);
   let normalized: string[];
   try {
-    normalized = isNativeRoute(argv) ? argv : normalizeCommandArguments(argv);
+    normalized = isNativeRoute(argv)
+      ? argv
+      : normalizeCommandArguments(argv, {
+          legacyConfirmation: !agent && !prismArguments.includes("--mcp"),
+        });
   } catch (error) {
     if (!agent) throw error;
     writeAgentUsageError(error, argv);
     return;
   }
-  const prismArguments = optionTokens(argv);
   const commandPath = resolveCommandPath(normalized);
   const command = Object.entries(Commands).find(([id]) => id === commandPath)?.[1];
   const hasLocalVersionAlias = Object.values(command?.contract.options ?? {}).some(

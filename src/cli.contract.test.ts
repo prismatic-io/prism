@@ -1,5 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { Parser } from "incur";
+import { Mcp, Parser } from "incur";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import {
@@ -487,6 +487,52 @@ describe("command separators and agent mode", () => {
       "--no-header",
       "--no-truncate",
     ]);
+  });
+
+  it("aliases --no-confirm only on component publish and integration import", () => {
+    for (const id of Object.keys(Commands)) {
+      const expected =
+        id === "components:publish" || id === "integrations:import" ? "--yes" : "--no-confirm";
+      for (const route of [[id], id.split(":")]) {
+        expect(
+          normalizeCommandArguments([...route, "--no-confirm"], { legacyConfirmation: false }),
+        ).toEqual([...id.split(":"), "--no-confirm"]);
+        expect(normalizeCommandArguments([...route, "--no-confirm"])).toEqual([
+          ...id.split(":"),
+          expected,
+        ]);
+        expect(normalizeCommandArguments(["--no-confirm", ...route])).toEqual([
+          expected,
+          ...id.split(":"),
+        ]);
+      }
+    }
+  });
+
+  it("preserves --no-confirm as an option value or delimiter argument", () => {
+    expect(normalizeCommandArguments(["components:publish", "--comment", "--no-confirm"])).toEqual([
+      "components",
+      "publish",
+      "--comment=--no-confirm",
+    ]);
+    expect(normalizeCommandArguments(["--profile", "--no-confirm", "components:publish"])).toEqual([
+      "--profile=--no-confirm",
+      "components",
+      "publish",
+    ]);
+    expect(
+      normalizeCommandArguments(["components:publish", "--", "--no-confirm"])
+        .slice(2)
+        .map(decodePassthroughArgument),
+    ).toEqual(["--no-confirm"]);
+  });
+
+  it("does not advertise legacy confirmation aliases in MCP tool schemas", () => {
+    for (const id of ["components:publish", "integrations:import"] as const) {
+      const [tool] = Mcp.collectTools(new Map([[id, Commands[id]]]), []);
+      expect(tool).toBeDefined();
+      expect(JSON.stringify(tool.inputSchema)).not.toMatch(/no-confirm|noConfirm/);
+    }
   });
 
   it("supports explicit enable and disable flags with explicit precedence", () => {
