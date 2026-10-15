@@ -3,7 +3,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it } from "vitest";
 import { withWorkingDirectory } from "../../command-context.js";
-import { type ComponentDefinition, validateDefinition } from "./index.js";
+import {
+  type ComponentDefinition,
+  unwrapComponentEntrypoint,
+  validateDefinition,
+} from "./index.js";
 
 const directories: string[] = [];
 afterEach(async () => {
@@ -45,4 +49,31 @@ it("accepts existing connection icons resolved against the package directory", a
 
 it("accepts connections without optional icons", async () => {
   await expect(validate({})).resolves.toBeUndefined();
+});
+
+it("loads the server component from an npm component artifact", () => {
+  const definition = {
+    key: "npm-component",
+    display: { label: "NPM component", description: "NPM component" },
+    actions: {},
+    connections: [],
+  } as ComponentDefinition;
+
+  expect(
+    unwrapComponentEntrypoint({
+      __prismaticNpmComponent: true,
+      component: definition,
+    }),
+  ).toBe(definition);
+});
+
+it("keeps loading legacy component entrypoints unchanged", () => {
+  const definition = {
+    key: "legacy-component",
+    display: { label: "Legacy component", description: "Legacy component" },
+    actions: {},
+    connections: [],
+  } as ComponentDefinition;
+
+  expect(unwrapComponentEntrypoint(definition)).toBe(definition);
 });

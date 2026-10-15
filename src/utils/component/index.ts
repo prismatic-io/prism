@@ -38,9 +38,23 @@ export type ComponentDefinition = Omit<ComponentDefinitionTemplate, "hooks"> &
   LegacyDefinition &
   ForwardDefinition;
 
+type NpmComponentArtifact = {
+  __prismaticNpmComponent: true;
+  component: ComponentDefinition;
+};
+
 interface ComponentEntrypoint {
-  default: ComponentDefinition;
+  default: ComponentDefinition | NpmComponentArtifact;
 }
+
+const isNpmComponentArtifact = (
+  definition: ComponentDefinition | NpmComponentArtifact,
+): definition is NpmComponentArtifact =>
+  "__prismaticNpmComponent" in definition && definition.__prismaticNpmComponent === true;
+
+export const unwrapComponentEntrypoint = (
+  definition: ComponentDefinition | NpmComponentArtifact,
+): ComponentDefinition => (isNpmComponentArtifact(definition) ? definition.component : definition);
 
 export const loadEntrypoint = async (): Promise<ComponentDefinition> => {
   const directory = await getPackageEntrypointDirectory("component");
@@ -50,7 +64,7 @@ export const loadEntrypoint = async (): Promise<ComponentDefinition> => {
       message: "Failed to find 'index.js' entrypoint file. Is the current path a component?",
     });
   const { default: definition }: ComponentEntrypoint = require(entrypointPath);
-  return definition;
+  return unwrapComponentEntrypoint(definition);
 };
 
 export const createComponentPackage = (): Promise<string> =>
