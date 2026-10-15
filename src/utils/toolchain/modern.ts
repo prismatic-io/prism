@@ -9,7 +9,7 @@ export class ModernToolchain extends Toolchain {
   readonly name: ToolchainName = "modern";
 
   readonly scripts = {
-    build: "tsdown",
+    build: "npm run typecheck && tsdown",
     test: "vitest run",
     lint: "biome lint .",
     typecheck: "tsc --noEmit",

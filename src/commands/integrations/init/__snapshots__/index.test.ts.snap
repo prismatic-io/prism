@@ -820,7 +820,7 @@ exports[`integrations:init > modern toolchain > clean scaffold generation > shou
   "main": "index.js",
   "private": true,
   "scripts": {
-    "build": "tsdown",
+    "build": "npm run typecheck && tsdown",
     "import": "npm run build && prism integrations:import",
     "test": "vitest run",
     "lint": "biome lint .",
@@ -1030,18 +1030,21 @@ export default defineConfig({
   format: "cjs",
   outDir: "dist",
   platform: "node",
+  target: "node22",
   clean: true,
+  minify: true,
   dts: false,
+  checks: { legacyCjs: false },
   deps: {
     alwaysBundle: () => true,
     onlyBundle: false,
   },
   outExtensions: () => ({ js: ".js" }),
-  outputOptions: { exports: "named" },
+  outputOptions: { exports: "named", codeSplitting: false },
   loader: {
     ".md": "text",
   },
-  copy: [{ from: "assets/*", to: "dist" }],
+  copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
 });
 
 `;
@@ -1176,7 +1179,7 @@ exports[`integrations:init > modern toolchain > scaffold generation > should mat
   "main": "index.js",
   "private": true,
   "scripts": {
-    "build": "tsdown",
+    "build": "npm run typecheck && tsdown",
     "import": "npm run build && prism integrations:import",
     "test": "vitest run",
     "lint": "biome lint .",
@@ -1494,18 +1497,21 @@ export default defineConfig({
   format: "cjs",
   outDir: "dist",
   platform: "node",
+  target: "node22",
   clean: true,
+  minify: true,
   dts: false,
+  checks: { legacyCjs: false },
   deps: {
     alwaysBundle: () => true,
     onlyBundle: false,
   },
   outExtensions: () => ({ js: ".js" }),
-  outputOptions: { exports: "named" },
+  outputOptions: { exports: "named", codeSplitting: false },
   loader: {
     ".md": "text",
   },
-  copy: [{ from: "assets/*", to: "dist" }],
+  copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
 });
 
 `;
