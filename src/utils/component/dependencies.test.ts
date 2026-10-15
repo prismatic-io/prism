@@ -4,7 +4,7 @@ import { temporaryDirectoryTask } from "tempy";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  getPackageSignatureMatch: vi.fn(),
+  findPublishedVersion: vi.fn(),
   publishDefinition: vi.fn(),
   uploadConnectionIcons: vi.fn(),
   uploadFile: vi.fn(),
@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock(import("./publish.js"), async (importOriginal) => ({
   ...(await importOriginal()),
-  getPackageSignatureMatch: mocks.getPackageSignatureMatch,
+  findPublishedVersion: mocks.findPublishedVersion,
   publishDefinition: mocks.publishDefinition,
   uploadConnectionIcons: mocks.uploadConnectionIcons,
   uploadFile: mocks.uploadFile,
@@ -199,10 +199,13 @@ describe("publishComponentDependencies", () => {
         "unchanged-component": { definition: definition("unchangedComponent") },
         "changed-component": { definition: definition("changedComponent") },
       });
-      mocks.getPackageSignatureMatch.mockImplementation(async ({ key }: { key: string }) => ({
-        matches: key === "publicComponent" || key === "unchangedComponent",
-        versionNumber: key === "publicComponent" ? 8 : 3,
-      }));
+      mocks.findPublishedVersion.mockImplementation(async ({ key }: { key: string }) =>
+        key === "publicComponent"
+          ? { versionNumber: 8 }
+          : key === "unchangedComponent"
+            ? { versionNumber: 3 }
+            : undefined,
+      );
       const cwd = process.cwd();
 
       const results = await publishComponentDependencies(root);
@@ -216,6 +219,8 @@ describe("publishComponentDependencies", () => {
       ]);
       expect(mocks.publishDefinition).toHaveBeenCalledTimes(1);
       expect(mocks.publishDefinition.mock.calls[0][0].key).toBe("changedComponent");
+      // The resolved platform version is what the import pins.
+      expect(results.map(({ versionNumber }) => versionNumber)).toEqual([8, undefined, 3, 4]);
       expect(mocks.publishDefinition.mock.calls[0][1].comment).toContain("changed-component@1.2.3");
       expect(mocks.uploadFile).toHaveBeenCalledWith("/tmp/package.zip", "package-url");
       // The icon resolves against the package's dist/ directory, not the process cwd.
@@ -235,7 +240,7 @@ describe("publishComponentDependencies", () => {
       await integrationWith(root, {
         "slow-component": { definition: definition("slowComponent") },
       });
-      mocks.getPackageSignatureMatch.mockResolvedValue({ matches: false });
+      mocks.findPublishedVersion.mockResolvedValue(undefined);
       mocks.waitForComponentVersion.mockResolvedValue(false);
 
       const [result] = await publishComponentDependencies(root, { timeoutSeconds: 7 });
@@ -246,13 +251,32 @@ describe("publishComponentDependencies", () => {
     });
   });
 
+  it("fails a public component whose installed package matches no published version", async () => {
+    await temporaryDirectoryTask(async (root) => {
+      await integrationWith(root, {
+        "stale-public": { definition: definition("stalePublic", true) },
+      });
+      mocks.findPublishedVersion.mockResolvedValue(undefined);
+
+      const [result] = await publishComponentDependencies(root, { timeoutSeconds: 7 });
+
+      expect(result.status).toBe("failed");
+      expect(result.detail).toContain(
+        'does not match any published version of the public component "stalePublic"',
+      );
+      // The lookup gets the wait options, so an in-flight publish is waited out before deciding.
+      expect(mocks.findPublishedVersion.mock.calls[0][2]).toEqual({ timeoutSeconds: 7 });
+      expect(mocks.publishDefinition).not.toHaveBeenCalled();
+    });
+  });
+
   it("reports a failing component and still processes the others", async () => {
     await temporaryDirectoryTask(async (root) => {
       await integrationWith(root, {
         "broken-component": { definition: definition("brokenComponent") },
         "fine-component": { definition: definition("fineComponent") },
       });
-      mocks.getPackageSignatureMatch.mockResolvedValue({ matches: false });
+      mocks.findPublishedVersion.mockResolvedValue(undefined);
       mocks.validateDefinition.mockImplementationOnce(async () => {
         throw new Error("Component icon does not exist");
       });

@@ -1,0 +1,15 @@
+query componentVersions(
+  $key: String!
+  $public: Boolean!
+  $signature: String
+  $allVersions: Boolean
+) {
+  components(key: $key, public: $public, signature: $signature, allVersions: $allVersions) {
+    nodes {
+      id
+      signature
+      versionNumber
+      versionIsAvailable
+    }
+  }
+}

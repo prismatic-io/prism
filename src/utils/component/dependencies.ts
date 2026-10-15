@@ -6,7 +6,7 @@ import { type WaitOptions, waitForComponentVersion } from "../availability.js";
 import { startAction, stopAction } from "../progress.js";
 import { createComponentPackage, loadEntrypoint, validateDefinition } from "./index.js";
 import {
-  getPackageSignatureMatch,
+  findPublishedVersion,
   publishDefinition,
   uploadConnectionIcons,
   uploadFile,
@@ -139,13 +139,13 @@ const publishComponentDependency = async (
     const { key, public: isPublic = false } = definition;
     await validateDefinition(definition);
     const packagePath = await createComponentPackage();
-    const signatureMatch = await getPackageSignatureMatch(definition, packagePath);
-    if (signatureMatch.matches && signatureMatch.versionNumber !== undefined) {
+    const published = await findPublishedVersion(definition, packagePath, wait);
+    if (published) {
       return {
         ...dependency,
         key,
         isPublic,
-        versionNumber: signatureMatch.versionNumber,
+        versionNumber: published.versionNumber,
         status: isPublic ? ("public" as const) : ("unchanged" as const),
       };
     }
@@ -155,7 +155,7 @@ const publishComponentDependency = async (
         key,
         isPublic,
         status: "failed" as const,
-        detail: `the installed package ${dependency.name}@${dependency.version} does not match the latest published platform version`,
+        detail: `the installed package ${dependency.name}@${dependency.version} does not match any published version of the public component "${key}"; install a version that has been published, or publish this one first`,
       };
     }
 

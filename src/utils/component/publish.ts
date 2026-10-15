@@ -6,9 +6,11 @@ import { writeCommandStatus } from "../../command.js";
 import { getWorkingDirectory } from "../../command-context.js";
 import { fs } from "../../fs.js";
 import { Component2Document as COMPONENT2 } from "../../graphql/operations/component2.generated.js";
+import { ComponentVersionsDocument as COMPONENT_VERSIONS } from "../../graphql/operations/componentVersions.generated.js";
 import type { PublishComponentMutationVariables } from "../../graphql/operations/publishComponent.generated.js";
 import { PublishComponentDocument as PUBLISH_COMPONENT } from "../../graphql/operations/publishComponent.generated.js";
 import { gqlRequest } from "../../graphql.js";
+import { type WaitOptions, waitForComponentVersion } from "../availability.js";
 import { fetch } from "../http.js";
 import { confirm as confirmPrompt } from "../prompts.js";
 import type { ComponentDefinition } from "./index.js";
@@ -24,6 +26,60 @@ const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>>
   key: true,
   public: true,
   triggers: true,
+};
+
+/** The signature the platform assigns a published package: the sha1 of its zip. */
+export const packageSignature = async (packagePath: string): Promise<string> =>
+  crypto
+    .createHash("sha1")
+    .update(await fs.readFile(packagePath))
+    .digest("hex");
+
+const componentVersions = async (
+  key: string,
+  isPublic: boolean,
+  filter: { signature?: string; allVersions?: boolean },
+) => {
+  const { components } = await gqlRequest({
+    document: COMPONENT_VERSIONS,
+    variables: { key, public: isPublic, ...filter },
+  });
+  return components.nodes;
+};
+
+/**
+ * The published version of a component whose package is byte-identical to `packagePath`, if
+ * any: the one an integration that installed this package should be pinned to.
+ *
+ * Looks across every version rather than the latest only, so an older package that is still a
+ * published version resolves, and only at versions the platform has finished processing. A
+ * newly published version is a clone of the previous row until the platform has hashed its
+ * upload, so during that window it still carries the previous signature; matching an unavailable
+ * row would pin the wrong version. If the latest version is still processing and `wait` is
+ * given, the lookup waits for it and looks again, so a retried import doesn't publish a
+ * duplicate of a version that is about to become available.
+ */
+export const findPublishedVersion = async (
+  { key, public: isPublic = false }: ComponentDefinition,
+  packagePath: string,
+  wait?: WaitOptions,
+): Promise<{ versionNumber: number } | undefined> => {
+  const signature = await packageSignature(packagePath);
+
+  const lookup = async () => {
+    const matching = await componentVersions(key, isPublic, { signature, allVersions: true });
+    const available = matching.filter((version) => version.versionIsAvailable);
+    if (available.length === 0) return undefined;
+    return { versionNumber: Math.max(...available.map((version) => version.versionNumber)) };
+  };
+
+  const found = await lookup();
+  if (found || !wait) return found;
+
+  const [latest] = await componentVersions(key, isPublic, {});
+  if (!latest || latest.versionIsAvailable) return undefined;
+  if (!(await waitForComponentVersion(latest.id, wait))) return undefined;
+  return lookup();
 };
 
 export const getPackageSignatureMatch = async (
