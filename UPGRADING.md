@@ -13,7 +13,7 @@ Resource create/update/publish commands retain bare IDs, resource deletes retain
 ## Changes requiring attention
 
 - **Node.js 22.19.0+** replaces Node 20 support.
-- `--confirm` / `--no-confirm` on `components:publish`, `integrations:import`, and `me:token:revoke` are removed. Use global `--yes` to approve prompts.
+- `--confirm` on `components:publish`, `integrations:import`, and `me:token:revoke` is removed. Use global `--yes` to approve prompts; `--no-confirm` remains an alias for `--yes` only on `components:publish` and `integrations:import` in non-agent CLI invocations (including CI/CD). Agent mode requires `--yes`; MCP uses `context.yes`.
 - `integrations:flows:listen --no-prompt` is removed; use `--yes`. Its old conflicting `-n` alias belongs to `--flow-name`.
 - Without a terminal, commands refuse interactive confirmation; use `--yes`. Agent mode requires it for every marked mutation, including local writes.
 - Help, errors, completion, and version formatting change with the CLI framework. `--version` returns a bare version. Usage errors exit 2; runtime errors exit 1. Human errors use stderr; agent errors are structured on stdout.
