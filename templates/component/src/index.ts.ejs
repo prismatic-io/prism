@@ -1,27 +1,34 @@
 /**
- * This project defines a custom connector that you can use
- * in the low-code integration designer. To run unit tests
- * of this connector locally, run "npm run test".
- *
- * To publish this connector for use in the low-code designer,
- * run "npm run build" and then "prism components:publish".
- *
- * For information on custom connectors, see
- * https://prismatic.io/docs/custom-connectors/
+ * The npm entrypoint: the component's actions run inside the integration that installs this
+ * package, its triggers and data sources are hosted on that integration's own component, and
+ * its connections reference the copy of this component published to Prismatic.
  */
+<% if (npmPackage) { -%>
+import { componentClient } from "@prismatic-io/spectral";
+import built from "./definition";
 
+export default componentClient(built);
+<% } else { -%>
 import { component } from "@prismatic-io/spectral";
 import actions from "./actions";
-import triggers from "./triggers";
-import dataSources from "./dataSources";
 import connections from "./connections";
+import dataSources from "./dataSources";
+import triggers from "./triggers";
 
 export default component({
   key: "<%= component.key %>",
+<% if (component.public) { -%>
+  public: true,
+  documentationUrl: "https://prismatic.io/docs/components/<%= component.key %>/",
+<% } else { -%>
   public: false,
+<% } -%>
   display: {
     label: "<%= component.name %>",
     description: "<%= component.description %>",
+<% if (component.public) { -%>
+    category: "Application Connectors",
+<% } -%>
     iconPath: "icon.png",
   },
   actions,
@@ -29,3 +36,4 @@ export default component({
   dataSources,
   connections,
 });
+<% } -%>

@@ -26,9 +26,14 @@ it("generates independent component scaffolds concurrently without changing cwd"
       expect(JSON.parse(await readFile(path.join(directory, "package.json"), "utf8")).name).toBe(
         `component-${index}`,
       );
-      expect(await readFile(path.join(directory, "src", "index.ts"), "utf8")).toContain(
-        `Description ${index}`,
-      );
+      // A modern scaffold's src/index.ts is the npm client entry; its definition (and so its
+      // description) lives in src/definition.ts. A legacy scaffold defines it in src/index.ts.
+      expect(
+        await readFile(
+          path.join(directory, "src", index === 0 ? "definition.ts" : "index.ts"),
+          "utf8",
+        ),
+      ).toContain(`Description ${index}`);
       expect(
         await readFile(
           path.join(directory, index === 0 ? "tsdown.config.mts" : "webpack.config.js"),

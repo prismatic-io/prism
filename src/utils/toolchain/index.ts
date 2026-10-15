@@ -1,9 +1,9 @@
 import { LegacyToolchain } from "./legacy.js";
-import { ModernToolchain } from "./modern.js";
+import { InternalModernToolchain, ModernToolchain } from "./modern.js";
 import type { Toolchain, ToolchainName } from "./types.js";
 
 export { LegacyToolchain } from "./legacy.js";
-export { ModernToolchain } from "./modern.js";
+export { InternalModernToolchain, ModernToolchain } from "./modern.js";
 export type { Toolchain, ToolchainName } from "./types.js";
 
 export const TOOLCHAIN_NAMES = ["modern", "legacy"] as const satisfies readonly ToolchainName[];
@@ -15,7 +15,16 @@ const toolchains: Record<ToolchainName, Toolchain> = {
   legacy: new LegacyToolchain(),
 };
 
-export const getToolchain = (name: ToolchainName): Toolchain => toolchains[name];
+const internalToolchains: Partial<Record<ToolchainName, Toolchain>> = {
+  modern: new InternalModernToolchain(),
+};
+
+/**
+ * `internal` selects the variant Prismatic's own components are scaffolded with, where
+ * one exists for the toolchain (only modern); otherwise the ordinary toolchain.
+ */
+export const getToolchain = (name: ToolchainName, { internal = false } = {}): Toolchain =>
+  (internal ? internalToolchains[name] : undefined) ?? toolchains[name];
 
 /**
  * Every build/test/lint config filename either toolchain may emit. Used by
@@ -29,4 +38,6 @@ export const TOOLCHAIN_CONFIG_OUTPUTS: readonly string[] = [
   "tsdown.config.mts",
   "vitest.config.ts",
   "biome.json",
+  "biome.jsonc",
+  "tsdown.npm.config.mts",
 ];

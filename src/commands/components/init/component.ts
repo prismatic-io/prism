@@ -38,9 +38,15 @@ export async function generateComponent(flags: {
   name?: string;
   description?: string;
   toolchain?: "modern" | "legacy";
+  /** One of Prismatic's own components (`components:init --internal`). */
+  internal?: boolean;
+  /** A public component gets `documentationUrl` and a category alongside `public: true`. */
+  public?: boolean;
 }) {
   const directory = getWorkingDirectory();
-  const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
+  const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN, {
+    internal: flags.internal,
+  });
   if (!flags.name || !flags.description) {
     requireInteractiveInput(
       "Agent mode requires both --name and --description for components:init:component",
@@ -67,7 +73,12 @@ export async function generateComponent(flags: {
     flags,
   );
 
-  const context = { component: { name, description, key: camelCase(name) } };
+  // npmPackage: the scaffold has a typed npm client entrypoint and a separate platform artifact.
+  const context = {
+    component: { name, description, key: camelCase(name), public: flags.public === true },
+    npmPackage: toolchain.npmPackage,
+    spectralEntryPoints: true,
+  };
   const sharedFiles = [
     path.join("assets", "icon.png"),
     path.join("src", "actions.test.ts"),
@@ -82,6 +93,9 @@ export async function generateComponent(flags: {
     ".env.testing",
     "package.json",
   ];
+  if (toolchain.npmPackage) {
+    sharedFiles.push(path.join("src", "definition.ts"), path.join("src", "platform.ts"));
+  }
   await Promise.all([
     ...sharedFiles.map((file) =>
       template(
@@ -91,6 +105,7 @@ export async function generateComponent(flags: {
       ),
     ),
     toolchain.renderTemplates(context),
+    toolchain.renderNpmPackageTemplates(context),
   ]);
   return { name, path: directory, toolchain: toolchain.name };
 }

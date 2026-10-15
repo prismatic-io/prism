@@ -135,7 +135,13 @@ export const writeConnections = (project: Project, connections: Connection[]): S
 
   file.addExportAssignment({
     isExportEquals: false,
-    expression: (writer) => writer.write("[").write(sortedConnectionKeys.join(", ")).write("]"),
+    expression: (writer) =>
+      writer
+        .write("[")
+        .write(sortedConnectionKeys.join(", "))
+        .write("] as [")
+        .write(sortedConnectionKeys.map((key) => `typeof ${key}`).join(", "))
+        .write("]"),
   });
 
   return file;

@@ -47,6 +47,8 @@ export async function generateFormats(options: {
   icon?: string;
   public?: boolean;
   toolchain?: "modern" | "legacy";
+  /** One of Prismatic's own components (`components:init --internal`). */
+  internal?: boolean;
 }) {
   const directory = getWorkingDirectory();
   const {
@@ -55,11 +57,24 @@ export async function generateFormats(options: {
     openapi,
     public: isPublic = false,
     toolchain: toolchainName = DEFAULT_TOOLCHAIN,
+    internal = false,
   } = options;
-  const toolchain = getToolchain(toolchainName);
+  const toolchain = getToolchain(toolchainName, { internal });
   const key = camelCase(name);
 
+  const result = await read(openapi);
+
   const sharedFiles = [path.join("assets", "icon.png")];
+  const templateData = {
+    component: {
+      name,
+      key,
+      description: result.component.display.description,
+      public: isPublic,
+    },
+    npmPackage: toolchain.npmPackage,
+    spectralEntryPoints: true,
+  };
   await Promise.all([
     ...sharedFiles.map((f) =>
       template(
@@ -67,11 +82,12 @@ export async function generateFormats(options: {
         path.join(directory, f),
       ),
     ),
-    toolchain.renderTemplates(),
+    // See generateComponent for what `npmPackage` switches in the templates.
+    toolchain.renderTemplates(templateData),
+    toolchain.renderNpmPackageTemplates(templateData),
   ]);
 
-  const result = await read(openapi);
-  await write(key, isPublic, result);
+  await write(key, isPublic, result, { npmPackage: toolchain.npmPackage });
   await copy(openapi, path.join(directory, `${key}-openapi-spec${extname(openapi)}`));
 
   if (icon) {

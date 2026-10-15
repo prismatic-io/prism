@@ -83,6 +83,7 @@ const additiveCommandOptions: Record<string, Set<string>> = {
     "public",
   ]),
   "components:actions:list": new Set(["search", "version"]),
+  "components:init": new Set(["internal"]),
   "components:data-sources:list": new Set(["search", "type", "version"]),
   "components:triggers:list": new Set(["search", "version"]),
   "organization:signing-keys:generate": new Set(["private-key-file"]),
