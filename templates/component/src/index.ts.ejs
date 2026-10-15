@@ -18,42 +18,17 @@
  * https://prismatic.io/docs/custom-connectors/
  */
 
-import { component } from "@prismatic-io/spectral";
+<% if (npmPackage) { -%>
+import { buildComponent } from "../.spectral/buildTarget";
+<% } else { -%>
+import { component as buildComponent } from "@prismatic-io/spectral";
+<% } -%>
 import actions from "./actions";
 import triggers from "./triggers";
 import dataSources from "./dataSources";
 import connections from "./connections";
-<% if (npmPackage) { -%>
-import { callable } from "../.spectral/buildTarget";
-<% } -%>
 
-<% if (npmPackage) { -%>
-export default component(
-  {
-    key: "<%= component.key %>",
-<% if (component.public) { -%>
-    public: true,
-    documentationUrl: "https://prismatic.io/docs/components/<%= component.key %>/",
-<% } else { -%>
-    public: false,
-<% } -%>
-    display: {
-      label: "<%= component.name %>",
-      description: "<%= component.description %>",
-<% if (component.public) { -%>
-      category: "Application Connectors",
-<% } -%>
-      iconPath: "icon.png",
-    },
-    actions,
-    triggers,
-    dataSources,
-    connections,
-  },
-  { callable },
-);
-<% } else { -%>
-export default component({
+export default buildComponent({
   key: "<%= component.key %>",
 <% if (component.public) { -%>
   public: true,
@@ -74,4 +49,3 @@ export default component({
   dataSources,
   connections,
 });
-<% } -%>

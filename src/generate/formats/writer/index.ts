@@ -15,7 +15,7 @@ import { writeActions } from "./actions.js";
 import { writeConnections } from "./connections.js";
 
 export interface WriteOptions {
-  /** Also wire the npm package build target: `component(definition, { callable })`. */
+  /** Also wire the npm package build target, which selects the component representation. */
   npmPackage: boolean;
 }
 
@@ -35,7 +35,19 @@ const writeComponentIndex = (
   });
 
   file.addImportDeclarations([
-    { moduleSpecifier: "@prismatic-io/spectral", namedImports: ["component"] },
+    ...(npmPackage
+      ? [
+          {
+            moduleSpecifier: "../.spectral/buildTarget",
+            namedImports: ["buildComponent"],
+          },
+        ]
+      : [
+          {
+            moduleSpecifier: "@prismatic-io/spectral",
+            namedImports: [{ name: "component", alias: "buildComponent" }],
+          },
+        ]),
     {
       moduleSpecifier: "@prismatic-io/spectral/http",
       namedImports: ["handleErrors"],
@@ -48,23 +60,13 @@ const writeComponentIndex = (
       moduleSpecifier: "./connections",
       defaultImport: "connections",
     },
-    ...(npmPackage
-      ? [
-          {
-            moduleSpecifier: "../.spectral/buildTarget",
-            namedImports: ["callable"],
-          },
-        ]
-      : []),
   ]);
 
   file.addExportAssignment({
     isExportEquals: false,
     expression: (writer) =>
       writer
-        .conditionalWriteLine(npmPackage, "component(")
-        .conditionalWriteLine(!npmPackage, "component({")
-        .conditionalWriteLine(npmPackage, "{")
+        .writeLine("buildComponent({")
         .writeLine(`key: "${key}",`)
         .conditionalWriteLine(isPublic, "public: true,")
         .conditionalWriteLine(isPublic, `documentationUrl: "${documentationUrl}",`)
@@ -77,10 +79,7 @@ const writeComponentIndex = (
         .writeLine("hooks: { error: handleErrors },")
         .writeLine("actions,")
         .writeLine("connections,")
-        .conditionalWriteLine(!npmPackage, "})")
-        .conditionalWriteLine(npmPackage, "},")
-        .conditionalWriteLine(npmPackage, "{ callable },")
-        .conditionalWriteLine(npmPackage, ")"),
+        .writeLine("})"),
   });
 
   return file;

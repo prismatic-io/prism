@@ -289,12 +289,12 @@ export default [apiKey];
 `;
 
 exports[`component generation tests > legacy - openApi - nested-objects > should match scaffolding snapshots > nested-objects-legacy/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { component as buildComponent } from "@prismatic-io/spectral";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
 
-export default component({
+export default buildComponent({
   key: "nestedObjectsLegacy",
   display: {
     label: "Nested Objects API",
@@ -777,12 +777,12 @@ export default [];
 `;
 
 exports[`component generation tests > legacy - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-legacy/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { component as buildComponent } from "@prismatic-io/spectral";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
 
-export default component({
+export default buildComponent({
   key: "petstoreExpandedLegacy",
   display: {
     label: "Swagger Petstore",
@@ -1271,12 +1271,12 @@ export default [];
 `;
 
 exports[`component generation tests > legacy - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-legacy/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { component as buildComponent } from "@prismatic-io/spectral";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
 
-export default component({
+export default buildComponent({
   key: "petstoreExpandedUuidPathsLegacy",
   display: {
     label: "Swagger Petstore",
@@ -1688,12 +1688,12 @@ export default [bearerAuth];
 `;
 
 exports[`component generation tests > legacy - openApi - todo-api > should match scaffolding snapshots > todo-api-legacy/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { component as buildComponent } from "@prismatic-io/spectral";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
 
-export default component({
+export default buildComponent({
   key: "todoApiLegacy",
   display: {
     label: "Todo API",
@@ -5567,13 +5567,13 @@ exports[`component generation tests > legacy - wsdl - countryinfoservice > shoul
  * https://prismatic.io/docs/custom-connectors/
  */
 
-import { component } from "@prismatic-io/spectral";
+import { component as buildComponent } from "@prismatic-io/spectral";
 import actions from "./actions";
 import triggers from "./triggers";
 import dataSources from "./dataSources";
 import connections from "./connections";
 
-export default component({
+export default buildComponent({
   key: "countryinfoserviceLegacy",
   public: false,
   display: {
@@ -6059,13 +6059,13 @@ exports[`component generation tests > legacy - wsdl - numberconversion > should 
  * https://prismatic.io/docs/custom-connectors/
  */
 
-import { component } from "@prismatic-io/spectral";
+import { component as buildComponent } from "@prismatic-io/spectral";
 import actions from "./actions";
 import triggers from "./triggers";
 import dataSources from "./dataSources";
 import connections from "./connections";
 
-export default component({
+export default buildComponent({
   key: "numberconversionLegacy",
   public: false,
   display: {
@@ -6121,21 +6121,21 @@ exports[`component generation tests > modern + internal - openApi - nested-objec
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -6526,30 +6526,26 @@ export default [apiKey];
 `;
 
 exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { buildComponent } from "../.spectral/buildTarget";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "nestedObjectsModernInternal",
-    public: true,
-    documentationUrl:
-      "https://prismatic.io/docs/components/nestedObjectsModernInternal/",
-    display: {
-      label: "Nested Objects API",
-      description: "API for testing nested object handling in code generation",
-      category: "Application Connectors",
-      iconPath: "icon.png",
-    },
-    hooks: { error: handleErrors },
-    actions,
-    connections,
+export default buildComponent({
+  key: "nestedObjectsModernInternal",
+  public: true,
+  documentationUrl:
+    "https://prismatic.io/docs/components/nestedObjectsModernInternal/",
+  display: {
+    label: "Nested Objects API",
+    description: "API for testing nested object handling in code generation",
+    category: "Application Connectors",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  hooks: { error: handleErrors },
+  actions,
+  connections,
+});
 "
 `;
 
@@ -6634,21 +6630,21 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -7197,31 +7193,27 @@ export default [];
 `;
 
 exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { buildComponent } from "../.spectral/buildTarget";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "petstoreExpandedModernInternal",
-    public: true,
-    documentationUrl:
-      "https://prismatic.io/docs/components/petstoreExpandedModernInternal/",
-    display: {
-      label: "Swagger Petstore",
-      description:
-        "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
-      category: "Application Connectors",
-      iconPath: "icon.png",
-    },
-    hooks: { error: handleErrors },
-    actions,
-    connections,
+export default buildComponent({
+  key: "petstoreExpandedModernInternal",
+  public: true,
+  documentationUrl:
+    "https://prismatic.io/docs/components/petstoreExpandedModernInternal/",
+  display: {
+    label: "Swagger Petstore",
+    description:
+      "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
+    category: "Application Connectors",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  hooks: { error: handleErrors },
+  actions,
+  connections,
+});
 "
 `;
 
@@ -7306,21 +7298,21 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -7874,31 +7866,27 @@ export default [];
 `;
 
 exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { buildComponent } from "../.spectral/buildTarget";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "petstoreExpandedUuidPathsModernInternal",
-    public: true,
-    documentationUrl:
-      "https://prismatic.io/docs/components/petstoreExpandedUuidPathsModernInternal/",
-    display: {
-      label: "Swagger Petstore",
-      description:
-        "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
-      category: "Application Connectors",
-      iconPath: "icon.png",
-    },
-    hooks: { error: handleErrors },
-    actions,
-    connections,
+export default buildComponent({
+  key: "petstoreExpandedUuidPathsModernInternal",
+  public: true,
+  documentationUrl:
+    "https://prismatic.io/docs/components/petstoreExpandedUuidPathsModernInternal/",
+  display: {
+    label: "Swagger Petstore",
+    description:
+      "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
+    category: "Application Connectors",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  hooks: { error: handleErrors },
+  actions,
+  connections,
+});
 "
 `;
 
@@ -7983,21 +7971,21 @@ exports[`component generation tests > modern + internal - openApi - todo-api > s
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -8480,30 +8468,26 @@ export default [bearerAuth];
 `;
 
 exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { buildComponent } from "../.spectral/buildTarget";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "todoApiModernInternal",
-    public: true,
-    documentationUrl:
-      "https://prismatic.io/docs/components/todoApiModernInternal/",
-    display: {
-      label: "Todo API",
-      description: "A simple Todo API for testing component generation",
-      category: "Application Connectors",
-      iconPath: "icon.png",
-    },
-    hooks: { error: handleErrors },
-    actions,
-    connections,
+export default buildComponent({
+  key: "todoApiModernInternal",
+  public: true,
+  documentationUrl:
+    "https://prismatic.io/docs/components/todoApiModernInternal/",
+  display: {
+    label: "Todo API",
+    description: "A simple Todo API for testing component generation",
+    category: "Application Connectors",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  hooks: { error: handleErrors },
+  actions,
+  connections,
+});
 "
 `;
 
@@ -9053,21 +9037,21 @@ exports[`component generation tests > modern + internal - wsdl - countryinfoserv
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern-internal/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern-internal/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -12543,32 +12527,28 @@ exports[`component generation tests > modern + internal - wsdl - countryinfoserv
  * https://prismatic.io/docs/custom-connectors/
  */
 
-import { component } from "@prismatic-io/spectral";
+import { buildComponent } from "../.spectral/buildTarget";
 import actions from "./actions";
 import triggers from "./triggers";
 import dataSources from "./dataSources";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "countryinfoserviceModernInternal",
-    public: true,
-    documentationUrl:
-      "https://prismatic.io/docs/components/countryinfoserviceModernInternal/",
-    display: {
-      label: "countryinfoservice-modern-internal",
-      description: "Prism-generated Component",
-      category: "Application Connectors",
-      iconPath: "icon.png",
-    },
-    actions,
-    triggers,
-    dataSources,
-    connections,
+export default buildComponent({
+  key: "countryinfoserviceModernInternal",
+  public: true,
+  documentationUrl:
+    "https://prismatic.io/docs/components/countryinfoserviceModernInternal/",
+  display: {
+    label: "countryinfoservice-modern-internal",
+    description: "Prism-generated Component",
+    category: "Application Connectors",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  actions,
+  triggers,
+  dataSources,
+  connections,
+});
 "
 `;
 
@@ -12699,21 +12679,21 @@ exports[`component generation tests > modern + internal - wsdl - numberconversio
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern-internal/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern + internal - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern-internal/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -13218,32 +13198,28 @@ exports[`component generation tests > modern + internal - wsdl - numberconversio
  * https://prismatic.io/docs/custom-connectors/
  */
 
-import { component } from "@prismatic-io/spectral";
+import { buildComponent } from "../.spectral/buildTarget";
 import actions from "./actions";
 import triggers from "./triggers";
 import dataSources from "./dataSources";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "numberconversionModernInternal",
-    public: true,
-    documentationUrl:
-      "https://prismatic.io/docs/components/numberconversionModernInternal/",
-    display: {
-      label: "numberconversion-modern-internal",
-      description: "Prism-generated Component",
-      category: "Application Connectors",
-      iconPath: "icon.png",
-    },
-    actions,
-    triggers,
-    dataSources,
-    connections,
+export default buildComponent({
+  key: "numberconversionModernInternal",
+  public: true,
+  documentationUrl:
+    "https://prismatic.io/docs/components/numberconversionModernInternal/",
+  display: {
+    label: "numberconversion-modern-internal",
+    description: "Prism-generated Component",
+    category: "Application Connectors",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  actions,
+  triggers,
+  dataSources,
+  connections,
+});
 "
 `;
 
@@ -13348,21 +13324,21 @@ exports[`component generation tests > modern - openApi - nested-objects > should
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -13799,26 +13775,22 @@ export default [apiKey];
 `;
 
 exports[`component generation tests > modern - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { buildComponent } from "../.spectral/buildTarget";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "nestedObjectsModern",
-    display: {
-      label: "Nested Objects API",
-      description: "API for testing nested object handling in code generation",
-      iconPath: "icon.png",
-    },
-    hooks: { error: handleErrors },
-    actions,
-    connections,
+export default buildComponent({
+  key: "nestedObjectsModern",
+  display: {
+    label: "Nested Objects API",
+    description: "API for testing nested object handling in code generation",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  hooks: { error: handleErrors },
+  actions,
+  connections,
+});
 "
 `;
 
@@ -13902,21 +13874,21 @@ exports[`component generation tests > modern - openApi - petstore-expanded > sho
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -14517,27 +14489,23 @@ export default [];
 `;
 
 exports[`component generation tests > modern - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { buildComponent } from "../.spectral/buildTarget";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "petstoreExpandedModern",
-    display: {
-      label: "Swagger Petstore",
-      description:
-        "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
-      iconPath: "icon.png",
-    },
-    hooks: { error: handleErrors },
-    actions,
-    connections,
+export default buildComponent({
+  key: "petstoreExpandedModern",
+  display: {
+    label: "Swagger Petstore",
+    description:
+      "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  hooks: { error: handleErrors },
+  actions,
+  connections,
+});
 "
 `;
 
@@ -14621,21 +14589,21 @@ exports[`component generation tests > modern - openApi - petstore-expanded-uuid-
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -15241,27 +15209,23 @@ export default [];
 `;
 
 exports[`component generation tests > modern - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { buildComponent } from "../.spectral/buildTarget";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "petstoreExpandedUuidPathsModern",
-    display: {
-      label: "Swagger Petstore",
-      description:
-        "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
-      iconPath: "icon.png",
-    },
-    hooks: { error: handleErrors },
-    actions,
-    connections,
+export default buildComponent({
+  key: "petstoreExpandedUuidPathsModern",
+  display: {
+    label: "Swagger Petstore",
+    description:
+      "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  hooks: { error: handleErrors },
+  actions,
+  connections,
+});
 "
 `;
 
@@ -15345,21 +15309,21 @@ exports[`component generation tests > modern - openApi - todo-api > should match
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - openApi - todo-api > should match scaffolding snapshots > todo-api-modern/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - openApi - todo-api > should match scaffolding snapshots > todo-api-modern/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -15888,26 +15852,22 @@ export default [bearerAuth];
 `;
 
 exports[`component generation tests > modern - openApi - todo-api > should match scaffolding snapshots > todo-api-modern/src/index.ts 1`] = `
-"import { component } from "@prismatic-io/spectral";
+"import { buildComponent } from "../.spectral/buildTarget";
 import { handleErrors } from "@prismatic-io/spectral/http";
 import actions from "./actions";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "todoApiModern",
-    display: {
-      label: "Todo API",
-      description: "A simple Todo API for testing component generation",
-      iconPath: "icon.png",
-    },
-    hooks: { error: handleErrors },
-    actions,
-    connections,
+export default buildComponent({
+  key: "todoApiModern",
+  display: {
+    label: "Todo API",
+    description: "A simple Todo API for testing component generation",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  hooks: { error: handleErrors },
+  actions,
+  connections,
+});
 "
 `;
 
@@ -16456,21 +16416,21 @@ exports[`component generation tests > modern - wsdl - countryinfoservice > shoul
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -20003,29 +19963,25 @@ exports[`component generation tests > modern - wsdl - countryinfoservice > shoul
  * https://prismatic.io/docs/custom-connectors/
  */
 
-import { component } from "@prismatic-io/spectral";
+import { buildComponent } from "../.spectral/buildTarget";
 import actions from "./actions";
 import triggers from "./triggers";
 import dataSources from "./dataSources";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "countryinfoserviceModern",
-    public: false,
-    display: {
-      label: "countryinfoservice-modern",
-      description: "Prism-generated Component",
-      iconPath: "icon.png",
-    },
-    actions,
-    triggers,
-    dataSources,
-    connections,
+export default buildComponent({
+  key: "countryinfoserviceModern",
+  public: false,
+  display: {
+    label: "countryinfoservice-modern",
+    description: "Prism-generated Component",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  actions,
+  triggers,
+  dataSources,
+  connections,
+});
 "
 `;
 
@@ -20155,21 +20111,21 @@ exports[`component generation tests > modern - wsdl - numberconversion > should 
 "// Copied to buildTarget.ts by \`npm run build:npm\` (npm package whose actions are directly
 // callable from a code-native integration). Do not import this file directly — import
 // "./buildTarget" instead.
-export const callable = true;
+export { callableComponent as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern/.spectral/buildTarget.platform.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
 exports[`component generation tests > modern - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern/.spectral/buildTarget.ts 1`] = `
 "// Copied to buildTarget.ts by \`npm run build\` (the platform bundle, self-contained, for
 // \`prism components:publish\`). Do not import this file directly — import "./buildTarget" instead.
-export const callable = false;
+export { component as buildComponent } from "@prismatic-io/spectral";
 "
 `;
 
@@ -20731,29 +20687,25 @@ exports[`component generation tests > modern - wsdl - numberconversion > should 
  * https://prismatic.io/docs/custom-connectors/
  */
 
-import { component } from "@prismatic-io/spectral";
+import { buildComponent } from "../.spectral/buildTarget";
 import actions from "./actions";
 import triggers from "./triggers";
 import dataSources from "./dataSources";
 import connections from "./connections";
-import { callable } from "../.spectral/buildTarget";
 
-export default component(
-  {
-    key: "numberconversionModern",
-    public: false,
-    display: {
-      label: "numberconversion-modern",
-      description: "Prism-generated Component",
-      iconPath: "icon.png",
-    },
-    actions,
-    triggers,
-    dataSources,
-    connections,
+export default buildComponent({
+  key: "numberconversionModern",
+  public: false,
+  display: {
+    label: "numberconversion-modern",
+    description: "Prism-generated Component",
+    iconPath: "icon.png",
   },
-  { callable },
-);
+  actions,
+  triggers,
+  dataSources,
+  connections,
+});
 "
 `;
 
