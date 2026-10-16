@@ -92,7 +92,20 @@ describe("component generation tests", () => {
         expect(readme).toContain('"mycomponent": "file:../MyComponent"');
         expect(readme).toContain("myComponent.connections.apiKey(");
         expect(readme).toContain("myComponent.triggers.exampleTrigger(");
-        expect(fileExists(path.join(tempPath, "MyComponent", "src", "platform.ts"))).toBe(true);
+        expect(fileExists(path.join(tempPath, "MyComponent", "src", "platform.ts"))).toBe(false);
+        expect(fileExists(path.join(tempPath, "MyComponent", "src", "definition.ts"))).toBe(false);
+        const source = await readFile(
+          path.join(tempPath, "MyComponent", "src", "index.ts"),
+          "utf-8",
+        );
+        expect(source).toContain("export default component({");
+        expect(source).not.toContain("callableComponent");
+        const connections = await readFile(
+          path.join(tempPath, "MyComponent", "src", "connections.ts"),
+          "utf-8",
+        );
+        expect(connections).toContain("export default [acmeApiKey, authorizationCode];");
+        expect(pkg.scripts["build:npm"]).toBe("npm run build && node build-npm.mjs");
       } finally {
         process.chdir(basePath);
       }

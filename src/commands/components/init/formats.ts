@@ -65,12 +65,12 @@ export async function generateFormats(options: {
         path.join(directory, f),
       ),
     ),
-    // See generateComponent for what `npmPackage` switches in the templates.
+    // Render the selected build and packaging configurations.
     toolchain.renderTemplates(templateData),
     toolchain.renderNpmPackageTemplates(templateData),
   ]);
 
-  await write(key, isPublic, result, { npmPackage: toolchain.npmPackage });
+  await write(key, isPublic, result);
   await copy(openapi, path.join(directory, `${key}-openapi-spec${extname(openapi)}`));
 
   if (icon) {

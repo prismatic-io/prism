@@ -22,7 +22,7 @@ import { generateFormats } from "./formats.js";
 import { COMPONENT_TEMPLATE_EXAMPLE, type ReadmeExample } from "./readme.js";
 
 const NPM_DIST = "npm-dist";
-// What tsdown.npm.config.mts emits (CommonJS with `fixedExtension`).
+// What build-npm.mjs emits (CommonJS with `fixedExtension`).
 const NPM_MAIN = `./${NPM_DIST}/index.cjs`;
 const NPM_TYPES = `./${NPM_DIST}/index.d.cts`;
 const SPECTRAL = "@prismatic-io/spectral";
@@ -224,6 +224,8 @@ export default Cli.command({
         await updatePackageJson({
           path: packageJsonPath,
           name: packageName,
+          version: "0.0.1",
+          private: true,
           main: NPM_MAIN,
           types: NPM_TYPES,
           // The platform bundle (dist/, with the icon copied in by the build) ships too, so
@@ -233,7 +235,7 @@ export default Cli.command({
           prismatic: COMPONENT_PACKAGE_MARKER,
           scripts: {
             build: toolchain.scripts.build,
-            "build:npm": "npm run build && tsdown --config tsdown.npm.config.mts",
+            "build:npm": "npm run build && node build-npm.mjs",
             // `prepare` is what npm runs before packing, before publishing, and when installing
             // the package from a git URL, so every consumer gets freshly built dist/ and npm-dist/.
             prepare: "npm run build:npm",

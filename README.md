@@ -71,6 +71,13 @@ There, you will find information about the various subcommands you can run, trou
 
 ### npm component dependencies
 
+Component source keeps its conventional `export default component(...)` in
+`src/index.ts`, and tests continue to use that export. `build-npm.mjs` generates a
+temporary callable adapter for the npm build and removes it afterward; no authored
+wrapper, separate definition file, or connection tuple assertion is required.
+Spectral 10.36.0 or later retains the authoring data used by this adapter and must
+remain a peer dependency of the npm package.
+
 When importing a code-native integration, Prism resolves marked component packages
 in its direct `dependencies` by the SHA-1 signature of their platform artifact.
 It reuses any matching published version, including older versions, and publishes

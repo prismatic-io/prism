@@ -40,4 +40,5 @@ export const TOOLCHAIN_CONFIG_OUTPUTS: readonly string[] = [
   "biome.json",
   "biome.jsonc",
   "tsdown.npm.config.mts",
+  "build-npm.mjs",
 ];

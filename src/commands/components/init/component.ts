@@ -76,7 +76,7 @@ export async function generateComponent(flags: {
     flags,
   );
 
-  // npmPackage: the scaffold has an npm entrypoint and a separate platform artifact.
+  // Source authoring is shared by platform and npm builds.
   const context = {
     component: {
       name,
@@ -105,9 +105,6 @@ export async function generateComponent(flags: {
     ".env.testing",
     "package.json",
   ];
-  if (toolchain.npmPackage) {
-    sharedFiles.push(path.join("src", "definition.ts"), path.join("src", "platform.ts"));
-  }
   await Promise.all([
     ...sharedFiles.map((file) =>
       template(
