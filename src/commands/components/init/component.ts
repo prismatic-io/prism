@@ -34,13 +34,22 @@ export default Cli.command({
   alias: { description: "d", name: "n" },
 });
 
+/** The description `components:init` gives a component until its author writes one. */
+export const DEFAULT_COMPONENT_DESCRIPTION = "Prism-generated Component";
+
 export async function generateComponent(flags: {
   name?: string;
   description?: string;
   toolchain?: "modern" | "legacy";
+  /** One of Prismatic's own components (`components:init --prismatic-internal`): published to npm
+   * under the `@prismatic-io/components-*` scope, and public on the platform, so the
+   * definition gets `public: true`, `documentationUrl` and a category. */
+  internal?: boolean;
 }) {
   const directory = getWorkingDirectory();
-  const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
+  const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN, {
+    internal: flags.internal,
+  });
   if (!flags.name || !flags.description) {
     requireInteractiveInput(
       "Agent mode requires both --name and --description for components:init:component",
@@ -67,7 +76,21 @@ export async function generateComponent(flags: {
     flags,
   );
 
-  const context = { component: { name, description, key: camelCase(name) } };
+  // npmPackage: the scaffold has an npm entrypoint and a separate platform artifact.
+  const context = {
+    component: {
+      name,
+      description,
+      // What a public page may say about the component: nothing, while the description is
+      // still the placeholder components:init writes.
+      summary: description === DEFAULT_COMPONENT_DESCRIPTION ? undefined : description,
+      key: camelCase(name),
+      public: flags.internal === true,
+    },
+    npmPackage: toolchain.npmPackage,
+    // Only the modern scaffold's Biome config carries the rule forbidding spectral dist/ imports.
+    spectralEntryPoints: toolchain.npmPackage,
+  };
   const sharedFiles = [
     path.join("assets", "icon.png"),
     path.join("src", "actions.test.ts"),
@@ -82,6 +105,9 @@ export async function generateComponent(flags: {
     ".env.testing",
     "package.json",
   ];
+  if (toolchain.npmPackage) {
+    sharedFiles.push(path.join("src", "definition.ts"), path.join("src", "platform.ts"));
+  }
   await Promise.all([
     ...sharedFiles.map((file) =>
       template(
@@ -91,6 +117,7 @@ export async function generateComponent(flags: {
       ),
     ),
     toolchain.renderTemplates(context),
+    toolchain.renderNpmPackageTemplates(context),
   ]);
   return { name, path: directory, toolchain: toolchain.name };
 }

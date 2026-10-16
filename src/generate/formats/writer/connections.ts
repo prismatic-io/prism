@@ -12,6 +12,7 @@ import {
 } from "ts-morph";
 import { cleanIdentifier } from "../../../utils/identifier.js";
 import { type Connection, type ConnectionInput, escapeText } from "../utils.js";
+import type { WriteOptions } from "./options.js";
 
 const writeInput = (
   writer: CodeBlockWriter,
@@ -94,7 +95,11 @@ const buildConnectionDeclaration = ({
   };
 };
 
-export const writeConnections = (project: Project, connections: Connection[]): SourceFile => {
+export const writeConnections = (
+  project: Project,
+  connections: Connection[],
+  { npmPackage }: WriteOptions,
+): SourceFile => {
   const file = project.createSourceFile(path.join("src", "connections.ts"), undefined, {
     scriptKind: ScriptKind.TS,
   });
@@ -135,7 +140,17 @@ export const writeConnections = (project: Project, connections: Connection[]): S
 
   file.addExportAssignment({
     isExportEquals: false,
-    expression: (writer) => writer.write("[").write(sortedConnectionKeys.join(", ")).write("]"),
+    // The npm entry's connection factories are keyed by connection key, which needs the
+    // literal tuple type; the platform-only scaffold keeps the plain array.
+    expression: (writer) =>
+      npmPackage
+        ? writer
+            .write("[")
+            .write(sortedConnectionKeys.join(", "))
+            .write("] as [")
+            .write(sortedConnectionKeys.map((key) => `typeof ${key}`).join(", "))
+            .write("]")
+        : writer.write("[").write(sortedConnectionKeys.join(", ")).write("]"),
   });
 
   return file;
