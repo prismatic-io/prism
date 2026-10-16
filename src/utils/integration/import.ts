@@ -17,6 +17,10 @@ import {
   waitForComponentVersion,
 } from "../availability.js";
 import {
+  auditComponentDependencies,
+  publishComponentDependencies,
+} from "../component/dependencies.js";
+import {
   type ComponentDefinition,
   createComponentPackage,
   validateDefinition,
@@ -26,7 +30,7 @@ import {
   uploadConnectionIcons,
   uploadFile,
 } from "../component/publish.js";
-import { getPackageEntrypointDirectory } from "../import.js";
+import { findPackageRoot, getPackageEntrypointDirectory } from "../import.js";
 import { startAction, stopAction } from "../progress.js";
 import { loadYaml } from "../serialize.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
@@ -149,11 +153,34 @@ export const importCodeNativeIntegration = async (
   testApiKeyFlags?: string[],
   waitOptions?: WaitOptions,
 ): Promise<{ integrationId: string; componentId: string }> => {
+  // Components the integration depends on as npm packages run inside its bundle, but their
+  // connections and the low-code designer need them on the platform too, so the import
+  // publishes them first and waits for them, skipping public ones and ones whose latest
+  // published version has this signature. The platform then resolves the integration's
+  // LATEST references to those versions as it imports.
+  const packageRoot = await findPackageRoot("Code Native Integration");
+  const dependencyWarnings = await auditComponentDependencies(packageRoot);
+  const dependencyResults = await publishComponentDependencies(packageRoot, {
+    ...waitOptions,
+    timeoutSeconds: waitOptions?.timeoutSeconds ?? DEFAULT_WAIT_TIMEOUT_SECONDS,
+  });
+  const blockingDependencies = dependencyResults.filter(
+    ({ status }) => status === "failed" || status === "not-built" || status === "timed-out",
+  );
+  if (blockingDependencies.length > 0) {
+    throw new CommandFailedError({
+      message: `Not every component dependency is published and available: ${blockingDependencies
+        .map(({ name, detail }) => (detail ? `${name} (${detail})` : name))
+        .join(", ")}; the integration was not imported.`,
+    });
+  }
+
   return withWorkingDirectory(
     await getPackageEntrypointDirectory("Code Native Integration"),
     async () => {
       const { integrationDefinition, componentDefinition, publishingMetadata } =
         await loadCodeNativeIntegrationEntryPoint();
+      for (const warning of dependencyWarnings) writeCommandOutput(warning, "stderr");
 
       await validateDefinition(componentDefinition, {
         forCodeNativeIntegration: true,

@@ -202,6 +202,36 @@ export const publishDefinition = async (
   };
 };
 
+/**
+ * Publishes a new version of the component in the working directory and uploads its package,
+ * icon, connection icons and, when given, its source: what `prism components:publish` and the
+ * dependency publish in `prism integrations:import` both do once they have decided to publish.
+ */
+export const uploadComponentVersion = async (
+  definition: ComponentDefinition,
+  packagePath: string,
+  options: Parameters<typeof publishDefinition>[1] & { sourceCodePath?: string },
+): Promise<{ componentId: string; versionNumber: number }> => {
+  const { sourceCodePath, ...publishOptions } = options;
+  const {
+    componentId,
+    iconUploadUrl,
+    packageUploadUrl,
+    sourceUploadUrl,
+    connectionIconUploadUrls,
+    versionNumber,
+  } = await publishDefinition(definition, publishOptions);
+  await uploadFile(packagePath, packageUploadUrl);
+  if (definition.display.iconPath) {
+    await uploadFile(resolve(getWorkingDirectory(), definition.display.iconPath), iconUploadUrl);
+  }
+  if (sourceCodePath && sourceUploadUrl) {
+    await uploadFile(sourceCodePath, sourceUploadUrl);
+  }
+  await uploadConnectionIcons(definition, connectionIconUploadUrls);
+  return { componentId, versionNumber };
+};
+
 export const uploadFile = async (filePath: string, destinationUrl: string) => {
   try {
     // TODO: Stream instead of Buffer.
