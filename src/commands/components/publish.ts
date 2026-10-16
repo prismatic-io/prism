@@ -1,7 +1,6 @@
-import { resolve } from "node:path";
 import { Cli, z } from "incur";
 import { writeCommandStatus } from "../../command.js";
-import { getWorkingDirectory, withWorkingDirectory } from "../../command-context.js";
+import { withWorkingDirectory } from "../../command-context.js";
 import { warningsOutput } from "../../output.js";
 import {
   publishWaitDescription,
@@ -19,9 +18,7 @@ import {
 import {
   checkPackageSignature,
   confirmPublish,
-  publishDefinition,
-  uploadConnectionIcons,
-  uploadFile,
+  uploadComponentVersion,
 } from "../../utils/component/publish.js";
 import { getPackageEntrypointDirectory } from "../../utils/import.js";
 import { startAction, stopAction } from "../../utils/progress.js";
@@ -142,33 +139,12 @@ export default Cli.command({
         return { success: true as const, messages: ["Publishing cancelled."] };
       }
 
-      const {
-        componentId,
-        iconUploadUrl,
-        packageUploadUrl,
-        sourceUploadUrl,
-        connectionIconUploadUrls,
-        versionNumber,
-      } = await publishDefinition(definition, {
+      const { componentId, versionNumber } = await uploadComponentVersion(definition, packagePath, {
         comment,
         customer,
         attributes: didProvideAttributes ? attributes : undefined,
+        sourceCodePath,
       });
-
-      const {
-        display: { iconPath },
-      } = definition;
-      await uploadFile(packagePath, packageUploadUrl);
-      if (iconPath) {
-        await uploadFile(resolve(getWorkingDirectory(), iconPath), iconUploadUrl);
-      }
-
-      // Upload source code if it was created and the API returned an upload URL
-      if (sourceCodePath && sourceUploadUrl) {
-        await uploadFile(sourceCodePath, sourceUploadUrl);
-      }
-
-      await uploadConnectionIcons(definition, connectionIconUploadUrls);
 
       const {
         key,
