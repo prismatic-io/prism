@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getWorkingDirectory } from "../../command-context.js";
 
 const mocks = vi.hoisted(() => ({
-  checkPackageSignature: vi.fn(),
+  findComponentBySignature: vi.fn(),
+  calculatePackageSignature: vi.fn(),
   uploadComponentVersion: vi.fn(),
   createComponentPackage: vi.fn(),
   validateDefinition: vi.fn(),
@@ -13,8 +14,12 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock(import("./publish.js"), async (importOriginal) => ({
   ...(await importOriginal()),
-  checkPackageSignature: mocks.checkPackageSignature,
   uploadComponentVersion: mocks.uploadComponentVersion,
+}));
+vi.mock(import("./signature.js"), async (importOriginal) => ({
+  ...(await importOriginal()),
+  findComponentBySignature: mocks.findComponentBySignature,
+  calculatePackageSignature: mocks.calculatePackageSignature,
 }));
 vi.mock(import("./index.js"), async (importOriginal) => ({
   ...(await importOriginal()),
@@ -238,7 +243,8 @@ describe("auditComponentDependencies", () => {
 describe("publishComponentDependencies", () => {
   beforeEach(() => {
     mocks.createComponentPackage.mockResolvedValue("/tmp/package.zip");
-    mocks.checkPackageSignature.mockResolvedValue(false);
+    mocks.findComponentBySignature.mockReset().mockResolvedValue(undefined);
+    mocks.calculatePackageSignature.mockResolvedValue("package-hash");
     mocks.uploadComponentVersion.mockResolvedValue({ componentId: "comp_1", versionNumber: 4 });
     mocks.waitForComponentVersion.mockResolvedValue(true);
   });
@@ -251,8 +257,10 @@ describe("publishComponentDependencies", () => {
         "unchanged-component": { definition: definition("unchangedComponent") },
         "changed-component": { definition: definition("changedComponent") },
       });
-      mocks.checkPackageSignature.mockImplementation(
-        async ({ key }: { key: string }) => key === "unchangedComponent",
+      mocks.findComponentBySignature.mockImplementation(async ({ key }: { key: string }) =>
+        ["unchangedComponent", "publicComponent"].includes(key)
+          ? { id: key, signature: "package-hash", versionIsAvailable: true }
+          : undefined,
       );
       const directories: string[] = [];
       mocks.uploadComponentVersion.mockImplementation(async () => {
@@ -271,8 +279,9 @@ describe("publishComponentDependencies", () => {
         ["changed-component", "published"],
       ]);
       expect(results[3].detail).toBe("v4");
-      // A public component is validated but never packaged, compared or published.
-      expect(mocks.checkPackageSignature.mock.calls.map(([{ key }]) => key)).toEqual([
+      // Public artifacts are matched too, but never published by this command.
+      expect(mocks.findComponentBySignature.mock.calls.map(([{ key }]) => key)).toEqual([
+        "publicComponent",
         "unchangedComponent",
         "changedComponent",
       ]);
@@ -301,10 +310,100 @@ describe("publishComponentDependencies", () => {
 
       expect(mocks.waitForComponentVersion).toHaveBeenCalledWith("comp_1", { timeoutSeconds: 7 });
       expect(result.status).toBe("timed-out");
-      expect(result.detail).toContain("v4 was published and is still processing after 7 seconds");
+      expect(result.detail).toContain("signature package-hash is still processing after 7 seconds");
     });
   });
 
+  it.each([
+    false,
+    true,
+  ])("waits for a matching processing artifact (public=%s) without republishing", async (isPublic) => {
+    await temporaryDirectoryTask(async (root) => {
+      await integrationWith(root, { component: { definition: definition("component", isPublic) } });
+      mocks.findComponentBySignature.mockResolvedValue({
+        id: "processing-id",
+        signature: "package-hash",
+        versionIsAvailable: false,
+      });
+      mocks.waitForComponentVersion.mockResolvedValue(false);
+      const [result] = await publishComponentDependencies(root, { timeoutSeconds: 3 });
+      expect(result).toMatchObject({ status: "timed-out", signature: "package-hash" });
+      expect(mocks.waitForComponentVersion).toHaveBeenCalledWith("processing-id", {
+        timeoutSeconds: 3,
+      });
+      expect(mocks.uploadComponentVersion).not.toHaveBeenCalled();
+    });
+  });
+
+  it.each([
+    false,
+    true,
+  ])("holds an existing component until it becomes available (public=%s)", async (isPublic) => {
+    await temporaryDirectoryTask(async (root) => {
+      await integrationWith(root, { component: { definition: definition("component", isPublic) } });
+      mocks.findComponentBySignature.mockResolvedValue({
+        id: "processing-id",
+        signature: "package-hash",
+        versionIsAvailable: false,
+      });
+      const started = Promise.withResolvers<void>();
+      const availability = Promise.withResolvers<boolean>();
+      mocks.waitForComponentVersion.mockImplementation(() => {
+        started.resolve();
+        return availability.promise;
+      });
+      let completed = false;
+      const pending = publishComponentDependencies(root, { timeoutSeconds: 3 }).then((results) => {
+        completed = true;
+        return results;
+      });
+      await started.promise;
+      await Promise.resolve();
+      expect(completed).toBe(false);
+      expect(mocks.waitForComponentVersion).toHaveBeenCalledWith("processing-id", {
+        timeoutSeconds: 3,
+      });
+      expect(mocks.uploadComponentVersion).not.toHaveBeenCalled();
+
+      availability.resolve(true);
+      const [result] = await pending;
+      expect(result).toMatchObject({
+        status: isPublic ? "public" : "unchanged",
+        signature: "package-hash",
+      });
+      expect(mocks.uploadComponentVersion).not.toHaveBeenCalled();
+    });
+  });
+
+  it("reuses an available historical version and returns its signature for YAML selection", async () => {
+    await temporaryDirectoryTask(async (root) => {
+      await integrationWith(root, { component: { definition: definition("component") } });
+      mocks.findComponentBySignature.mockResolvedValue({
+        id: "historical-id",
+        signature: "package-hash",
+        versionIsAvailable: true,
+      });
+      const [result] = await publishComponentDependencies(root, { timeoutSeconds: 3 });
+      expect(result).toMatchObject({
+        status: "unchanged",
+        signature: "package-hash",
+        key: "component",
+        isPublic: false,
+      });
+      expect(mocks.uploadComponentVersion).not.toHaveBeenCalled();
+      expect(mocks.waitForComponentVersion).not.toHaveBeenCalled();
+    });
+  });
+
+  it("fails when a public package has no matching artifact instead of publishing or choosing LATEST", async () => {
+    await temporaryDirectoryTask(async (root) => {
+      await integrationWith(root, { component: { definition: definition("component", true) } });
+      const [result] = await publishComponentDependencies(root, { timeoutSeconds: 3 });
+      expect(result).toMatchObject({ status: "failed", signature: "package-hash" });
+      expect(result.detail).toContain("no published version matching signature");
+      expect(mocks.uploadComponentVersion).not.toHaveBeenCalled();
+    });
+  });
   it("fails a package whose marker does not name an index.js bundle", async () => {
     await temporaryDirectoryTask(async (root) => {
       await integrationWith(root, {

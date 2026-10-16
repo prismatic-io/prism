@@ -69,6 +69,19 @@ tenant switching still operate on the selected profile.
 For help with Prism, please see our [Prism documentation page](https://prismatic.io/docs/cli/).
 There, you will find information about the various subcommands you can run, troubleshooting tips, etc.
 
+### npm component dependencies
+
+When importing a code-native integration, Prism resolves marked component packages
+in its direct `dependencies` by the SHA-1 signature of their platform artifact.
+It reuses any matching published version, including older versions, and publishes
+missing private artifacts. Public artifacts must already have a matching published
+version. Prism waits for processing artifacts before importing the integration.
+
+The imported YAML uses `signature` selectors for these components and the generated
+integration component, rather than `LATEST` or numeric versions. Unrelated component
+references are preserved. Conflicting installed artifacts or existing signature
+selectors that disagree with the installed package cause the import to fail.
+
 ## What is Prismatic?
 
 Prismatic is the leading embedded iPaaS, enabling B2B SaaS teams to ship product integrations faster and with less dev time. The only embedded iPaaS that empowers both developers and non-developers with tools for the complete integration lifecycle, Prismatic includes low-code and code-native building options, deployment and management tooling, and self-serve customer tools.

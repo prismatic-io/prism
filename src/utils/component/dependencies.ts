@@ -7,7 +7,8 @@ import { exists, fs } from "../../fs.js";
 import { type WaitOptions, waitForComponentVersion } from "../availability.js";
 import { startAction, stopAction } from "../progress.js";
 import { createComponentPackage, loadEntrypoint, validateDefinition } from "./index.js";
-import { checkPackageSignature, uploadComponentVersion } from "./publish.js";
+import { uploadComponentVersion } from "./publish.js";
+import { calculatePackageSignature, findComponentBySignature } from "./signature.js";
 
 /**
  * `prism components:init` marks the package.json of every component it scaffolds with
@@ -170,6 +171,7 @@ export type DependencyPublishStatus =
 
 export interface DependencyPublishResult extends ComponentDependency {
   key?: string;
+  signature?: string;
   isPublic?: boolean;
   status: DependencyPublishStatus;
   detail?: string;
@@ -208,36 +210,48 @@ const publishComponentDependency = async (
     const definition = await loadEntrypoint();
     const { key, public: isPublic = false } = definition;
     await validateDefinition(definition);
-    // A public component is Prismatic's to publish, never this import's.
-    if (isPublic) return { ...dependency, key, isPublic, status: "public" as const };
-
-    // As `prism components:publish --skip-on-signature-match`: a package identical to the
-    // latest published version is not published again. The import then leaves its references
-    // at LATEST, and the platform resolves LATEST to the newest available version on import.
     const packagePath = await createComponentPackage();
-    if (await checkPackageSignature(definition, packagePath)) {
-      return { ...dependency, key, isPublic, status: "unchanged" as const };
+    const signature = await calculatePackageSignature(packagePath);
+    const existing = await findComponentBySignature(definition, signature);
+    const result = { ...dependency, key, isPublic, signature };
+
+    // Public artifacts must already have been published by Prismatic. Never silently
+    // substitute LATEST when the installed package has a different signature.
+    if (!existing && isPublic) {
+      return {
+        ...result,
+        status: "failed" as const,
+        detail: `public component ${key} has no published version matching signature ${signature}`,
+      };
     }
 
-    const { componentId, versionNumber } = await uploadComponentVersion(definition, packagePath, {
-      comment: `Published by prism integrations:import from ${dependency.name}@${dependency.version}`,
-    });
-    // Waited for so LATEST resolves to this version when the integration is imported.
-    if (wait && !(await waitForComponentVersion(componentId, wait))) {
+    const published = existing
+      ? { componentId: existing.id, versionNumber: undefined }
+      : await uploadComponentVersion(definition, packagePath, {
+          comment: `Published by prism integrations:import from ${dependency.name}@${dependency.version}`,
+        });
+    const componentId = published.componentId;
+    // A retry can find a matching version that is still processing. Wait for that
+    // exact artifact just as we do for a newly published one.
+    if (
+      !existing?.versionIsAvailable &&
+      wait &&
+      !(await waitForComponentVersion(componentId, wait))
+    ) {
       return {
-        ...dependency,
-        key,
-        isPublic,
+        ...result,
         status: "timed-out" as const,
-        detail: `v${versionNumber} was published and is still processing after ${wait.timeoutSeconds} seconds; retry the import once it is available, or pass a larger --wait-timeout`,
+        detail: `signature ${signature} is still processing after ${wait.timeoutSeconds} seconds; retry the import once it is available, or pass a larger --wait-timeout`,
       };
     }
     return {
-      ...dependency,
-      key,
-      isPublic,
-      status: "published" as const,
-      detail: `v${versionNumber}`,
+      ...result,
+      status: isPublic
+        ? ("public" as const)
+        : existing
+          ? ("unchanged" as const)
+          : ("published" as const),
+      detail: existing ? undefined : `v${published.versionNumber}`,
     };
   });
 };
@@ -245,8 +259,8 @@ const publishComponentDependency = async (
 /**
  * Publish every private component the code-native integration at `root` depends on, so the
  * components exist on the platform (for their connections and the low-code designer)
- * without a separate `publish:platform` step. A package matching the latest published
- * signature, and a public component, are left alone. A component that fails to publish, or whose
+ * without a separate `publish:platform` step. A package matching any published
+ * signature is reused, including public components (which this command never publishes). A component that fails to publish, or whose
  * published version is not available within the wait, does not stop the others; it is
  * reported in its result for the caller to act on.
  */

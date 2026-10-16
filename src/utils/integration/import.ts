@@ -30,10 +30,12 @@ import {
   uploadConnectionIcons,
   uploadFile,
 } from "../component/publish.js";
+import { calculatePackageSignature } from "../component/signature.js";
 import { findPackageRoot, getPackageEntrypointDirectory } from "../import.js";
 import { startAction, stopAction } from "../progress.js";
 import { loadYaml } from "../serialize.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
+import { type ComponentSignature, pinComponentSignatures } from "./signatures.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
 import { validateCodeNativeDefinition } from "./validate.js";
 
@@ -155,9 +157,8 @@ export const importCodeNativeIntegration = async (
 ): Promise<{ integrationId: string; componentId: string }> => {
   // Components the integration depends on as npm packages run inside its bundle, but their
   // connections and the low-code designer need them on the platform too, so the import
-  // publishes them first and waits for them, skipping public ones and ones whose latest
-  // published version has this signature. The platform then resolves the integration's
-  // LATEST references to those versions as it imports.
+  // resolves them by package signature, publishes missing private artifacts, and waits
+  // for availability. YAML references use those signatures instead of LATEST.
   const packageRoot = await findPackageRoot("Code Native Integration");
   const dependencyWarnings = await auditComponentDependencies(packageRoot);
   const dependencyResults = await publishComponentDependencies(packageRoot, {
@@ -210,6 +211,26 @@ export const importCodeNativeIntegration = async (
       }
 
       const packagePath = await createComponentPackage();
+      const signatures: ComponentSignature[] = dependencyResults.map(
+        ({ key, isPublic, signature, name }) => {
+          if (!key || isPublic === undefined || !signature) {
+            throw new CommandFailedError({
+              message: `Component dependency ${name} did not resolve to a package signature.`,
+            });
+          }
+          return { key, isPublic, signature };
+        },
+      );
+      // The generated CNI component is also selected by its uploaded artifact, so a
+      // concurrent import cannot redirect its execution actions to another version.
+      const pinnedDefinition = pinComponentSignatures(integrationDefinition, [
+        ...signatures,
+        {
+          key: componentDefinition.key,
+          isPublic: componentDefinition.public ?? false,
+          signature: await calculatePackageSignature(packagePath),
+        },
+      ]);
 
       const { componentId, iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
         await publishComponentDefinition(componentDefinition, {
@@ -231,7 +252,7 @@ export const importCodeNativeIntegration = async (
 
       startAction("Importing definition for Code Native Integration into Prismatic");
       const { integrationId: integrationImportId, systemInstance } = await importDefinition(
-        integrationDefinition,
+        pinnedDefinition,
         integrationId,
         replace,
       );

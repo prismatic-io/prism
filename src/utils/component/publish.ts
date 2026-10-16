@@ -1,5 +1,4 @@
 import { resolve } from "node:path";
-import crypto from "crypto";
 import mimetypes from "mime-types";
 import { extname } from "path";
 import { writeCommandStatus } from "../../command.js";
@@ -12,6 +11,7 @@ import { gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
 import { confirm as confirmPrompt } from "../prompts.js";
 import type { ComponentDefinition } from "./index.js";
+import { calculatePackageSignature } from "./signature.js";
 
 const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {
   actions: true,
@@ -46,10 +46,7 @@ export const checkPackageSignature = async (
   } = results;
 
   // Generate the signature of the package so we may compare it against the existing one.
-  const packageSignature = crypto
-    .createHash("sha1")
-    .update(await fs.readFile(packagePath))
-    .digest("hex");
+  const packageSignature = await calculatePackageSignature(packagePath);
 
   return existingSignature === packageSignature;
 };

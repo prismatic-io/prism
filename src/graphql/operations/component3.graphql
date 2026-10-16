@@ -1,7 +1,9 @@
-query component3($key: String!, $public: Boolean!) {
-  components(key: $key, public: $public) {
+query component3($key: String!, $public: Boolean!, $signature: String!) {
+  components(key: $key, public: $public, signature: $signature, allVersions: true, first: 1) {
     nodes {
+      id
       signature
+      versionIsAvailable
     }
   }
 }

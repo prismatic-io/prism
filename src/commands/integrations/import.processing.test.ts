@@ -28,7 +28,7 @@ vi.mock(import("../../utils/import.js"), async (original) => ({
 vi.mock(import("../../utils/component/index.js"), async (original) => ({
   ...(await original()),
   validateDefinition: vi.fn(),
-  createComponentPackage: async () => "/package.zip",
+  createComponentPackage: async () => join(state.directory, "package.zip"),
 }));
 vi.mock(import("../../utils/component/publish.js"), async (original) => ({
   ...(await original()),
@@ -54,6 +54,8 @@ vi.mock(import("../../utils/integration/metadata.js"), async (original) => ({
 
 beforeEach(async () => {
   state.directory = await mkdtemp(join(tmpdir(), "prism-cni-processing-"));
+  await writeFile(join(state.directory, "package.zip"), "abc");
+  await writeFile(join(state.directory, "package.json"), '{"name":"test-cni"}');
   await writeFile(
     join(state.directory, "index.js"),
     `module.exports = { default: { key: "cni-key", display: {},
@@ -69,7 +71,12 @@ beforeEach(async () => {
                   isTrigger: true,
                   action: { key: "webhook", component: { key: "webhook-triggers" } },
                 },
-                { action: { key: "execute", component: { key: "cni-key" } } },
+                {
+                  action: {
+                    key: "execute",
+                    component: { key: "cni-key", isPublic: false, version: "LATEST" },
+                  },
+                },
               ],
             },
           ],
@@ -114,6 +121,8 @@ function emulateProcessing(readyAfterMs: number, integrationReadyAfterMs = 0) {
       };
     }
     if (document === ImportIntegrationDocument) {
+      expect(variables.definition).toContain("signature: a9993e364706816aba3e25717850c26c9cd0d89d");
+      expect(variables.definition).not.toContain("version: LATEST");
       importedAt = Date.now();
       events.push("import");
       expect(events.at(-2)).toBe("available");
