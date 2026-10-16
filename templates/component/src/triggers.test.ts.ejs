@@ -13,9 +13,9 @@ import {
   createConnection,
   createHarness,
   defaultTriggerPayload,
-} from "@prismatic-io/spectral/dist/testing";
+} from "@prismatic-io/spectral/testing";
 import dotenv from "dotenv";
-import myComponent from ".";
+import myComponent from "./<%= npmPackage ? 'platform' : 'index' %>";
 import { acmeApiKey } from "./connections";
 
 dotenv.config({ path: ".env.testing" });

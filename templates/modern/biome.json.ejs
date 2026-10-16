@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
   "files": {
-    "includes": ["**", "!**/dist", "!**/node_modules"]
+    "includes": ["**", "!**/dist", <% if (locals.npmPackage) { %>"!**/npm-dist", <% } %>"!**/node_modules"]
   },
   "formatter": {
     "enabled": true,
@@ -23,7 +23,20 @@
       "suspicious": {
         "noExplicitAny": "off",
         "noTsIgnore": "off"
-      }
+      }<% if (locals.spectralEntryPoints) { %>,
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "patterns": [
+              {
+                "group": ["@prismatic-io/spectral/dist", "@prismatic-io/spectral/dist/**"],
+                "message": "Import from @prismatic-io/spectral, @prismatic-io/spectral/http, or @prismatic-io/spectral/testing instead of dist/ paths."
+              }
+            ]
+          }
+        }
+      }<% } %>
     }
   }
 }

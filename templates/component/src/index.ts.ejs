@@ -1,3 +1,14 @@
+<% if (npmPackage) { -%>
+/**
+ * The npm entrypoint: a code-native integration that installs this package calls the
+ * component's actions, triggers and data sources in-process, and declares its connections
+ * from the component's definitions. `src/platform.ts` is the entry Prismatic publishes.
+ */
+import { callableComponent } from "@prismatic-io/spectral";
+import built from "./definition";
+
+export default callableComponent(built);
+<% } else { -%>
 /**
  * This project defines a custom connector that you can use
  * in the low-code integration designer. To run unit tests
@@ -18,10 +29,18 @@ import connections from "./connections";
 
 export default component({
   key: "<%= component.key %>",
+<% if (component.public) { -%>
+  public: true,
+  documentationUrl: "https://prismatic.io/docs/components/<%= component.key %>/",
+<% } else { -%>
   public: false,
+<% } -%>
   display: {
     label: "<%= component.name %>",
     description: "<%= component.description %>",
+<% if (component.public) { -%>
+    category: "Application Connectors",
+<% } -%>
     iconPath: "icon.png",
   },
   actions,
@@ -29,3 +48,4 @@ export default component({
   dataSources,
   connections,
 });
+<% } -%>

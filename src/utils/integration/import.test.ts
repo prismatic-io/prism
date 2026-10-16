@@ -2,14 +2,52 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { temporaryDirectoryTask } from "tempy";
 import { describe, expect, it, vi } from "vitest";
+import type { DependencyPublishResult } from "../component/dependencies.js";
 import { dumpYaml } from "../serialize.js";
 import {
   compareConfigVars,
   getIntegrationDefinition,
+  importCodeNativeIntegration,
   importDefinition,
   loadCodeNativeIntegrationEntryPoint,
   parseTestApiKeys,
 } from "./import.js";
+
+const mocks = vi.hoisted(() => ({
+  publishComponentDependencies: vi.fn(),
+  findPackageRoot: vi.fn(async () => "/integration"),
+}));
+vi.mock(import("../component/dependencies.js"), async (importOriginal) => ({
+  ...(await importOriginal()),
+  publishComponentDependencies: mocks.publishComponentDependencies,
+}));
+vi.mock(import("../import.js"), async (importOriginal) => ({
+  ...(await importOriginal()),
+  findPackageRoot: mocks.findPackageRoot,
+}));
+
+const dependency = (name: string, key: string): DependencyPublishResult => ({
+  name,
+  version: "1.0.0",
+  directory: `/components/${name}`,
+  platformEntrypoint: "./dist/index.js",
+  key,
+  isPublic: false,
+  status: "unchanged",
+});
+
+describe("importCodeNativeIntegration", () => {
+  it("does not import when a dependency failed to publish", async () => {
+    mocks.publishComponentDependencies.mockResolvedValueOnce([
+      { ...dependency("broken-component", "broken"), status: "failed", detail: "boom" },
+      { ...dependency("fine-component", "fine"), status: "published" },
+    ]);
+
+    await expect(importCodeNativeIntegration()).rejects.toThrow(
+      /broken-component \(boom\); the integration was not imported/,
+    );
+  });
+});
 
 const mockGqlRequest = vi.fn();
 vi.mock(import("../../graphql.js"), async (importOriginal) => {
