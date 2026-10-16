@@ -1,5 +1,4 @@
 import { copy } from "fs-extra";
-import { Cli, z } from "incur";
 import { camelCase } from "lodash-es";
 import path, { extname } from "path";
 import { writeCommandStatus } from "../../../command.js";
@@ -7,39 +6,7 @@ import { getWorkingDirectory } from "../../../command-context.js";
 import { read } from "../../../generate/formats/readers/openapi/index.js";
 import { write } from "../../../generate/formats/writer/index.js";
 import { template } from "../../../generate/util.js";
-import { warningsOutput } from "../../../output.js";
-import {
-  DEFAULT_TOOLCHAIN,
-  getToolchain,
-  TOOLCHAIN_NAMES,
-} from "../../../utils/toolchain/index.js";
-
-export default Cli.command({
-  output: z.object({
-    name: z.string(),
-    path: z.string(),
-    toolchain: z.string(),
-    ...warningsOutput,
-  }),
-  description: "Initialize a new Component from a format",
-  options: z.object({
-    name: z.string().describe("Name of the component"),
-    icon: z.string().optional().describe("Path to png icon for the component"),
-    openapi: z.string().describe("Path to OpenAPI file for the component"),
-    public: z
-      .boolean()
-      .optional()
-      .meta({ cli: { hidden: true } }),
-    toolchain: z
-      .enum(TOOLCHAIN_NAMES)
-      .default(DEFAULT_TOOLCHAIN)
-      .meta({ cli: { hidden: true } }),
-  }),
-  async run(context) {
-    return await generateFormats(context.options);
-  },
-  alias: { openapi: "o", icon: "i", name: "n" },
-});
+import { DEFAULT_TOOLCHAIN, getToolchain } from "../../../utils/toolchain/index.js";
 
 export async function generateFormats(options: {
   name: string;
