@@ -11,7 +11,11 @@
  * https://prismatic.io/docs/custom-connectors/connections/#writing-oauth-20-connections
  */
 
-import { connection, oauth2Connection, OAuth2Type } from "@prismatic-io/spectral";
+import {
+  connection,
+  oauth2Connection,
+  OAuth2Type,
+} from "@prismatic-io/spectral";
 
 export const acmeApiKey = connection({
   key: "apiKey",
@@ -106,4 +110,7 @@ export const authorizationCode = oauth2Connection({
   },
 });
 
-export default [acmeApiKey, authorizationCode];
+export default [acmeApiKey, authorizationCode] as [
+  typeof acmeApiKey,
+  typeof authorizationCode,
+];

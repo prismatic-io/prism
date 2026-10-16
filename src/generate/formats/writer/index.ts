@@ -1,3 +1,7 @@
+import type { WriteOptions } from "./options.js";
+
+export type { WriteOptions } from "./options.js";
+
 import { outputFile } from "fs-extra";
 import { minBy } from "lodash-es";
 import path from "path";
@@ -19,19 +23,24 @@ const writeComponentIndex = (
   key: string,
   isPublic: boolean,
   { display: { label, description, iconPath } }: Component,
+  { npmPackage }: WriteOptions,
 ): SourceFile => {
   const documentationUrl = new URL(
     `/docs/components/${encodeURIComponent(key)}/`,
     "https://prismatic.io",
   );
-  const file = project.createSourceFile(path.join("src", "index.ts"), undefined, {
+  const definitionPath = npmPackage ? "definition.ts" : "index.ts";
+  const file = project.createSourceFile(path.join("src", definitionPath), undefined, {
     scriptKind: ScriptKind.TS,
   });
 
   file.addImportDeclarations([
-    { moduleSpecifier: "@prismatic-io/spectral", namedImports: ["component"] },
     {
-      moduleSpecifier: "@prismatic-io/spectral/dist/clients/http",
+      moduleSpecifier: "@prismatic-io/spectral",
+      namedImports: ["component"],
+    },
+    {
+      moduleSpecifier: "@prismatic-io/spectral/http",
       namedImports: ["handleErrors"],
     },
     {
@@ -64,6 +73,26 @@ const writeComponentIndex = (
         .writeLine("})"),
   });
 
+  if (npmPackage) {
+    // Same shape as templates/component/src/{index,platform}.ts.ejs.
+    project.createSourceFile(
+      path.join("src", "index.ts"),
+      [
+        `import { callableComponent } from "@prismatic-io/spectral";`,
+        `import built from "./definition";`,
+        "",
+        "export default callableComponent(built);",
+        "",
+      ].join("\n"),
+      { scriptKind: ScriptKind.TS },
+    );
+    project.createSourceFile(
+      path.join("src", "platform.ts"),
+      `export { default } from "./definition";\n`,
+      { scriptKind: ScriptKind.TS },
+    );
+  }
+
   return file;
 };
 
@@ -72,6 +101,7 @@ const writeTests = (
   key: string,
   connections: Connection[],
   [{ key: actionKey, inputs }]: Action[],
+  { npmPackage }: WriteOptions,
 ): SourceFile => {
   const connection = minBy(connections, ({ orderPriority }) => orderPriority);
   const connectionKey = connection?.key;
@@ -83,7 +113,9 @@ const writeTests = (
         Boolean(connectionKey),
         `import { ${connectionKey} } from "./connections";`,
       )
-      .writeLine(`import component from ".";`)
+      // The platform entry: the package root on a classic scaffold, src/platform.ts when the
+      // root is the npm entry.
+      .writeLine(`import component from "${npmPackage ? "./platform" : "."}";`)
       .blankLine()
       .writeLine(`describe("${key}", () => {`)
       .writeLine("const harness = testing.createHarness(component);")
@@ -152,7 +184,7 @@ const writeClient = (project: Project, baseUrl: string, connections: Connection[
     `
 import { Buffer } from "node:buffer";
 import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
-import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/dist/clients/http";
+import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/http";
 export const baseUrl = ${JSON.stringify(baseUrl)};
 export const createClient = async (connection?: Connection): Promise<HttpClient> => {
   if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
@@ -195,15 +227,16 @@ export const write = async (
   key: string,
   isPublic: boolean,
   { baseUrl, component, actions, connections }: Result,
+  options: WriteOptions = { npmPackage: false },
 ): Promise<Project> => {
   const project = new Project({ useInMemoryFileSystem: true });
   project.createDirectory("src");
 
-  writeConnections(project, connections);
+  writeConnections(project, connections, options);
   writeActions(project, actions);
   writeClient(project, baseUrl, connections);
-  writeComponentIndex(project, key, isPublic, component);
-  writeTests(project, key, connections, actions);
+  writeComponentIndex(project, key, isPublic, component, options);
+  writeTests(project, key, connections, actions, options);
 
   if (isPublic) {
     writeDocumentationFiles(project, component, connections);
