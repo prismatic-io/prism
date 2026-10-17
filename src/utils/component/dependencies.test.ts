@@ -174,6 +174,34 @@ describe("findComponentDependencies", () => {
     });
   });
 
+  it("finds an npm alias with sealed exports and a nested package boundary", async () => {
+    await temporaryDirectoryTask(async (root) => {
+      const dir = path.join(root, "node_modules", "component-alias");
+      await mkdir(path.join(dir, "npm-dist"), { recursive: true });
+      await writeJson(path.join(dir, "package.json"), {
+        name: "@acme/component",
+        version: "3.1.0",
+        exports: { ".": { default: "./npm-dist/index.cjs" } },
+        prismatic: { component: "./dist/index.js" },
+      });
+      await writeJson(path.join(dir, "npm-dist", "package.json"), { type: "commonjs" });
+      await writeFile(path.join(dir, "npm-dist", "index.cjs"), "module.exports = {};");
+      await writeJson(path.join(root, "package.json"), {
+        dependencies: { "component-alias": "npm:@acme/component@3.1.0" },
+      });
+
+      expect(await findComponentDependencies(root)).toEqual([
+        {
+          name: "component-alias",
+          version: "3.1.0",
+          directory: dir,
+          platformEntrypoint: "./dist/index.js",
+        },
+      ]);
+      expect(await auditComponentDependencies(root)).toEqual([]);
+    });
+  });
+
   it("reads a third-party package with unexpected fields as an ordinary dependency", async () => {
     await temporaryDirectoryTask(async (root) => {
       await integrationWith(root, { "my-component": {}, odd: { marker: false } });

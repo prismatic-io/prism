@@ -1,16 +1,12 @@
 import { copy } from "fs-extra";
-import { camelCase, minBy } from "lodash-es";
+import { camelCase } from "lodash-es";
 import path, { extname } from "path";
 import { writeCommandStatus } from "../../../command.js";
 import { getWorkingDirectory } from "../../../command-context.js";
 import { read } from "../../../generate/formats/readers/openapi/index.js";
 import { write } from "../../../generate/formats/writer/index.js";
 import { template } from "../../../generate/util.js";
-import {
-  DEFAULT_TOOLCHAIN,
-  getToolchain,
-} from "../../../utils/toolchain/index.js";
-import type { ReadmeExample } from "./readme.js";
+import { DEFAULT_TOOLCHAIN, getToolchain } from "../../../utils/toolchain/index.js";
 
 export async function generateFormats(options: {
   name: string;
@@ -26,9 +22,6 @@ export async function generateFormats(options: {
   toolchain: string;
   /** The description the spec gives the component. */
   description: string;
-  /** What the README's usage example can name: the generated component has no triggers or
-   * data sources, so those parts of the example are left out. */
-  example: ReadmeExample;
 }> {
   const directory = getWorkingDirectory();
   const {
@@ -41,22 +34,13 @@ export async function generateFormats(options: {
   } = options;
   // Internal components are Prismatic's public ones.
   const isPublic = publicOption || internal;
-  const toolchain = getToolchain(toolchainName, { internal });
+  const toolchain = getToolchain(toolchainName);
   const key = camelCase(name);
 
   const result = await read(openapi);
 
   const sharedFiles = [path.join("assets", "icon.png")];
-  const templateData = {
-    component: {
-      name,
-      key,
-      description: result.component.display.description,
-      summary: result.component.display.description,
-      public: isPublic,
-    },
-    npmPackage: toolchain.npmPackage,
-  };
+  const templateData = { npmPackage: toolchain.npmPackage };
   await Promise.all([
     ...sharedFiles.map((f) =>
       template(
@@ -85,17 +69,10 @@ To publish the component, run "prism components:publish"
 
 For documentation on writing custom components, visit https://prismatic.io/docs/custom-connectors/
     `);
-  const connection = minBy(result.connections, ({ orderPriority }) => orderPriority);
   return {
     name,
     path: directory,
     toolchain: toolchain.name,
     description: result.component.display.description,
-    example: {
-      connection: connection?.key,
-      // Generated actions take the connection through an input named `connection`.
-      connectionInput: "connection",
-      action: result.actions[0]?.key,
-    },
   };
 }

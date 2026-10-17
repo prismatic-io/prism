@@ -19,7 +19,6 @@ import {
 } from "../../../utils/toolchain/index.js";
 import { DEFAULT_COMPONENT_DESCRIPTION, generateComponent } from "./component.js";
 import { generateFormats } from "./formats.js";
-import { COMPONENT_TEMPLATE_EXAMPLE, type ReadmeExample } from "./readme.js";
 
 const NPM_DIST = "npm-dist";
 // What build-npm.mjs emits (CommonJS with `fixedExtension`).
@@ -33,44 +32,6 @@ const SPECTRAL_RANGE = `^${MINIMUM_SPECTRAL_VERSION}`;
 const INTERNAL_SCOPE = "@prismatic-io/components-";
 const INTERNAL_REPOSITORY_URL = "git+https://github.com/prismatic-io/components.git";
 const INTERNAL_LICENSE = "Apache-2.0";
-/**
- * Rewrite the scaffold's package.json into the internal, registry-publishable shape:
- * scoped name, metadata npm shows, and public npm publishing. Keys are written in a fixed order.
- */
-const applyInternalPackageShape = async (
-  packageJsonPath: string,
-  { directory, description }: { directory: string; description: string },
-): Promise<void> => {
-  // Remove `private` to allow npm publishing. Keep the component marker and platform artifact:
-  // an integration's import loads the artifact to see the component is public and leave it alone.
-  const { private: _private, ...pkg } = JSON.parse(
-    await fs.readFile(packageJsonPath, "utf-8"),
-  ) as Record<string, unknown>;
-  const { name: _name, version: _version, main, types, files: _files, scripts, ...rest } = pkg;
-  const ordered = {
-    // The directory name is already the kebab form the key was derived from; npm scoped names
-    // must be lowercase, and the components repo keeps its directories lowercase to match.
-    name: `${INTERNAL_SCOPE}${directory.toLowerCase()}`,
-    version: "0.0.0",
-    description,
-    license: INTERNAL_LICENSE,
-    repository: {
-      type: "git",
-      url: INTERNAL_REPOSITORY_URL,
-      directory: `components/${directory.toLowerCase()}`,
-    },
-    main,
-    types,
-    files: [NPM_DIST, "dist"],
-    publishConfig: { access: "public" },
-    scripts,
-    ...rest,
-  };
-  await fs.writeFile(packageJsonPath, JSON.stringify(ordered), "utf-8");
-  // Re-format the file the way every other scaffold write does.
-  await updatePackageJson({ path: packageJsonPath });
-};
-
 export default Cli.command({
   output: z.object({
     name: z.string(),
@@ -92,6 +53,12 @@ export default Cli.command({
     },
   ],
   options: z.object({
+    "npm-package": z
+      .string()
+      .optional()
+      .describe(
+        "Enable npm registry publishing with this package name (for example @your-org/acme); does not make the platform component public",
+      ),
     "wsdl-path": z
       .string()
       .optional()
@@ -127,16 +94,17 @@ export default Cli.command({
       args: { name },
       options: {
         verbose,
+        "npm-package": npmPackage,
         "wsdl-path": rawWsdlPath,
         "open-api-path": rawOpenApiPath,
         toolchain: toolchainName,
       },
     } = context;
-    // Hidden (see HIDDEN_OPTIONS): scaffolds one of Prismatic's own components, with the scoped
-    // @prismatic-io/components-* name, publishConfig and repository metadata.
+
+    // Keep Prismatic's internal publishing preset out of customer-facing schemas and help.
     const internal = hiddenOption("prismatic-internal");
 
-    const toolchain = getToolchain(toolchainName, { internal });
+    const toolchain = getToolchain(toolchainName);
     const wsdlPath = rawWsdlPath ? path.resolve(cwd, rawWsdlPath) : undefined;
     const openApiPath = rawOpenApiPath ? path.resolve(cwd, rawOpenApiPath) : undefined;
 
@@ -147,9 +115,26 @@ export default Cli.command({
         message: `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
       });
     }
-    if (internal && !toolchain.npmPackage) {
+    if (internal && npmPackage !== undefined) {
       throw new CommandFailedError({
-        message: `--prismatic-internal scaffolds an npm-publishable component, which only the modern toolchain supports (got --toolchain ${toolchain.name})`,
+        message: "--npm-package and --prismatic-internal cannot be combined.",
+      });
+    }
+    if ((internal || npmPackage !== undefined) && !toolchain.npmPackage) {
+      throw new CommandFailedError({
+        message:
+          "npm publishing is supported only by the modern toolchain; use --toolchain modern.",
+      });
+    }
+    if (
+      npmPackage !== undefined &&
+      (npmPackage.length > 214 ||
+        !/^(@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(npmPackage) ||
+        ["node_modules", "favicon.ico"].includes(npmPackage))
+    ) {
+      throw new CommandFailedError({
+        message:
+          "Invalid --npm-package name. Use a lowercase npm name such as acme or @your-org/acme.",
       });
     }
     if (wsdlPath && !wsdlPath?.includes(".wsdl")) {
@@ -161,13 +146,11 @@ export default Cli.command({
 
     const directory = path.resolve(cwd, name);
     let description = DEFAULT_COMPONENT_DESCRIPTION;
-    // What the README's usage example names; the OpenAPI generator reports what it produced.
-    let example: ReadmeExample = COMPONENT_TEMPLATE_EXAMPLE;
     await fs.mkdir(directory);
 
     return withWorkingDirectory(directory, async () => {
       if (openApiPath) {
-        ({ description, example } = await generateFormats({
+        ({ description } = await generateFormats({
           name,
           openapi: openApiPath,
           toolchain: toolchain.name,
@@ -208,7 +191,10 @@ export default Cli.command({
         // code-native integration can depend on it, from a registry, a git URL, or a tarball.
         // npm rejects uppercase in new package names; the directory and display label keep
         // the name as typed.
-        const packageName = name.toLowerCase();
+        const packageName = internal
+          ? `${INTERNAL_SCOPE}${camelCase(name).toLowerCase()}`
+          : (npmPackage ?? name.toLowerCase());
+        const registryPublishing = internal || npmPackage !== undefined;
         await updatePackageJson({
           path: packageJsonPath,
           name: packageName,
@@ -216,6 +202,19 @@ export default Cli.command({
           private: true,
           main: NPM_MAIN,
           types: NPM_TYPES,
+          exports: { ".": { types: NPM_TYPES, default: NPM_MAIN } },
+          ...(internal
+            ? {
+                description,
+                license: INTERNAL_LICENSE,
+                repository: {
+                  type: "git",
+                  url: INTERNAL_REPOSITORY_URL,
+                  directory: `components/${name}`,
+                },
+                publishConfig: { access: "public" },
+              }
+            : {}),
           // The platform bundle (dist/, with the icon copied in by the build) ships too, so
           // `prism integrations:import` can publish the component from the installed package.
           files: [NPM_DIST, "dist"],
@@ -243,24 +242,17 @@ export default Cli.command({
           },
           peerDependencies: { [SPECTRAL]: SPECTRAL_RANGE },
         });
-        if (internal) {
-          await applyInternalPackageShape(packageJsonPath, { directory: name, description });
-        } else {
-          // Internal components get the npm page README from their toolchain templates;
-          // everyone else gets the guide to depending on the component from a code-native
-          // integration.
-          await template(
-            path.join("component", "README.md.ejs"),
-            path.join(directory, "README.md"),
-            {
-              name: packageName,
-              // The local-checkout example points at the directory, which keeps the typed case.
-              directory: name,
-              key: camelCase(name),
-              example,
-            },
-          );
+        if (registryPublishing) {
+          const pkg = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
+          delete pkg.private;
+          await fs.writeFile(packageJsonPath, JSON.stringify(pkg), "utf-8");
+          await updatePackageJson({ path: packageJsonPath });
         }
+        await template(path.join("component", "README.md.ejs"), path.join(directory, "README.md"), {
+          name: packageName,
+          registryPublishing,
+          internal,
+        });
       } else {
         // Legacy toolchain retains the platform-only package.
         await updatePackageJson({

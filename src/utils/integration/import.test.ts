@@ -2,6 +2,7 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { temporaryDirectoryTask } from "tempy";
 import { describe, expect, it, vi } from "vitest";
+import { withWorkingDirectory } from "../../command-context.js";
 import type { DependencyPublishResult } from "../component/dependencies.js";
 import { dumpYaml } from "../serialize.js";
 import {
@@ -15,15 +16,10 @@ import {
 
 const mocks = vi.hoisted(() => ({
   publishComponentDependencies: vi.fn(),
-  findPackageRoot: vi.fn(async () => "/integration"),
 }));
 vi.mock(import("../component/dependencies.js"), async (importOriginal) => ({
   ...(await importOriginal()),
   publishComponentDependencies: mocks.publishComponentDependencies,
-}));
-vi.mock(import("../import.js"), async (importOriginal) => ({
-  ...(await importOriginal()),
-  findPackageRoot: mocks.findPackageRoot,
 }));
 
 const dependency = (name: string, key: string): DependencyPublishResult => ({
@@ -43,9 +39,44 @@ describe("importCodeNativeIntegration", () => {
       { ...dependency("fine-component", "fine"), status: "published" },
     ]);
 
-    await expect(importCodeNativeIntegration()).rejects.toThrow(
-      /broken-component \(boom\); the integration was not imported/,
-    );
+    await temporaryDirectoryTask(async (root) => {
+      await writeFile(path.join(root, "package.json"), '{"name":"integration"}');
+      const yaml = dumpYaml({
+        isCodeNative: true,
+        flows: [
+          {
+            name: "Flow",
+            steps: [
+              { isTrigger: true, action: { key: "trigger", component: { key: "cni" } } },
+              { action: { key: "execute", component: { key: "cni" } } },
+            ],
+          },
+        ],
+      });
+      await writeFile(
+        path.join(root, "index.js"),
+        `module.exports = { default: {
+        key: "cni", display: { label: "CNI", description: "Test" },
+        triggers: { trigger: { perform() {} } }, actions: { execute: { perform() {} } },
+        codeNativeIntegrationYAML: ${JSON.stringify(yaml)}
+      } };`,
+      );
+      await expect(withWorkingDirectory(root, () => importCodeNativeIntegration())).rejects.toThrow(
+        /broken-component \(boom\); the integration was not imported/,
+      );
+    });
+  });
+
+  it("validates the CNI before publishing any component dependencies", async () => {
+    mocks.publishComponentDependencies.mockClear();
+    await temporaryDirectoryTask(async (root) => {
+      await writeFile(path.join(root, "package.json"), '{"name":"integration"}');
+      await writeFile(path.join(root, "index.js"), "module.exports = { default: {} };");
+      await expect(withWorkingDirectory(root, () => importCodeNativeIntegration())).rejects.toThrow(
+        /Failed to find Code Native Integration definition/,
+      );
+      expect(mocks.publishComponentDependencies).not.toHaveBeenCalled();
+    });
   });
 });
 

@@ -47,9 +47,7 @@ export async function generateComponent(flags: {
   internal?: boolean;
 }) {
   const directory = getWorkingDirectory();
-  const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN, {
-    internal: flags.internal,
-  });
+  const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
   if (!flags.name || !flags.description) {
     requireInteractiveInput(
       "Agent mode requires both --name and --description for components:init:component",
@@ -81,9 +79,6 @@ export async function generateComponent(flags: {
     component: {
       name,
       description,
-      // What a public page may say about the component: nothing, while the description is
-      // still the placeholder components:init writes.
-      summary: description === DEFAULT_COMPONENT_DESCRIPTION ? undefined : description,
       key: camelCase(name),
       public: flags.internal === true,
     },

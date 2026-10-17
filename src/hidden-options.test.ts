@@ -14,6 +14,21 @@ describe("extractHiddenOptions", () => {
     });
   });
 
+  it("lets the last occurrence determine the value", () => {
+    expect(
+      extractHiddenOptions(
+        ["--prismatic-internal", "--prismatic-internal=false"],
+        ["prismatic-internal"],
+      ).set.size,
+    ).toBe(0);
+    expect(
+      extractHiddenOptions(
+        ["--prismatic-internal=false", "--prismatic-internal=true"],
+        ["prismatic-internal"],
+      ).set.has("prismatic-internal"),
+    ).toBe(true);
+  });
+
   it("reads an explicit =false as unset and leaves other flags alone", () => {
     const { argv, set } = extractHiddenOptions(
       ["init", "--prismatic-internal=false", "--internal"],

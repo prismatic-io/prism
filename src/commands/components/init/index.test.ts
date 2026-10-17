@@ -54,7 +54,7 @@ describe("component generation tests", () => {
           "legacy",
           "--prismatic-internal",
         ]),
-      ).rejects.toThrow(/only the modern toolchain/);
+      ).rejects.toThrow(/only by the modern toolchain/);
     } finally {
       process.chdir(basePath);
     }
@@ -82,6 +82,7 @@ describe("component generation tests", () => {
           private: true,
           main: "./npm-dist/index.cjs",
           types: "./npm-dist/index.d.cts",
+          exports: { ".": { types: "./npm-dist/index.d.cts", default: "./npm-dist/index.cjs" } },
           files: ["npm-dist", "dist"],
           prismatic: { component: "./dist/index.js" },
           scripts: { prepare: "npm run build:npm", "publish:platform": expect.any(String) },
@@ -89,9 +90,7 @@ describe("component generation tests", () => {
         });
         expect(pkg.scripts.publish).toBeUndefined();
         const readme = await readFile(path.join(tempPath, "MyComponent", "README.md"), "utf-8");
-        expect(readme).toContain('"mycomponent": "file:../MyComponent"');
-        expect(readme).toContain("myComponent.connections.apiKey(");
-        expect(readme).toContain("myComponent.triggers.exampleTrigger(");
+        expect(readme).toContain('Registry publishing is disabled by `"private": true`');
         expect(fileExists(path.join(tempPath, "MyComponent", "src", "platform.ts"))).toBe(false);
         expect(fileExists(path.join(tempPath, "MyComponent", "src", "definition.ts"))).toBe(false);
         const source = await readFile(
@@ -116,17 +115,10 @@ describe("component generation tests", () => {
       try {
         await runCommand(InitializeComponent, ["MyInternal", "--prismatic-internal"]);
         const pkg = await readJson(path.join(tempPath, "MyInternal", "package.json"));
-        expect(Object.keys(pkg).slice(0, 5)).toEqual([
-          "name",
-          "version",
-          "description",
-          "license",
-          "repository",
-        ]);
         expect(pkg).toMatchObject({
           name: "@prismatic-io/components-myinternal",
-          version: "0.0.0",
-          repository: { directory: "components/myinternal" },
+          version: "0.0.1",
+          repository: { directory: "components/MyInternal" },
           files: ["npm-dist", "dist"],
           publishConfig: { access: "public" },
           prismatic: { component: "./dist/index.js" },
@@ -140,6 +132,79 @@ describe("component generation tests", () => {
         process.chdir(basePath);
       }
     });
+  });
+
+  it.each([
+    "@customer/acme",
+    "customer-acme",
+  ])("enables registry publishing as %s without changing platform visibility", async (packageName) => {
+    process.chdir(tempPath);
+    const directory = packageName.startsWith("@") ? "ScopedCustomer" : "UnscopedCustomer";
+    try {
+      await runCommand(InitializeComponent, [directory, "--npm-package", packageName]);
+      const pkg = JSON.parse(
+        await readFile(path.join(tempPath, directory, "package.json"), "utf-8"),
+      );
+      expect(pkg.name).toBe(packageName);
+      expect(pkg.private).toBeUndefined();
+      expect(pkg.publishConfig).toBeUndefined();
+      expect(pkg.exports).toEqual({
+        ".": { types: "./npm-dist/index.d.cts", default: "./npm-dist/index.cjs" },
+      });
+      expect(await readFile(path.join(tempPath, directory, "src/index.ts"), "utf-8")).toContain(
+        "public: false",
+      );
+      const readme = await readFile(path.join(tempPath, directory, "README.md"), "utf-8");
+      expect(readme).toContain("This package is enabled for registry publishing");
+    } finally {
+      process.chdir(basePath);
+    }
+  });
+
+  it("derives internal naming from the component key and uses the standard toolchain", async () => {
+    process.chdir(tempPath);
+    try {
+      await runCommand(InitializeComponent, ["internal-example", "--prismatic-internal"]);
+      const pkg = JSON.parse(
+        await readFile(path.join(tempPath, "internal-example/package.json"), "utf-8"),
+      );
+      expect(pkg.name).toBe("@prismatic-io/components-internalexample");
+      expect(pkg.scripts.build).toBe("npm run typecheck && tsdown");
+      expect(pkg.publishConfig).toEqual({ access: "public" });
+      const source = await readFile(path.join(tempPath, "internal-example/src/index.ts"), "utf-8");
+      expect(source).toContain('key: "internalExample"');
+      expect(source).toContain("public: true");
+    } finally {
+      process.chdir(basePath);
+    }
+  });
+
+  it.each([
+    ["--npm-package", "@customer/acme", "--prismatic-internal"],
+    ["--npm-package", "@customer/acme", "--toolchain", "legacy"],
+    ...[
+      "",
+      "UpperCase",
+      "@scope",
+      "@scope/",
+      "../escape",
+      "has spaces",
+      "node_modules",
+      "~acme",
+      "acme~foo",
+      "@scope/~acme",
+      "x".repeat(215),
+    ].map((name) => ["--npm-package", name]),
+  ])("rejects invalid publishing options before creating files: %j", async (...flags) => {
+    process.chdir(tempPath);
+    try {
+      await expect(
+        runCommand(InitializeComponent, ["invalid-publishing", ...flags]),
+      ).rejects.toThrow();
+      expect(fileExists(path.join(tempPath, "invalid-publishing"))).toBe(false);
+    } finally {
+      process.chdir(basePath);
+    }
   });
 
   // Cases are [title, case] so `%s` names each describe exactly as before (snapshot keys depend on it).

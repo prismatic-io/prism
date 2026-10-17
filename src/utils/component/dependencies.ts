@@ -88,9 +88,14 @@ const resolvePackageDirectory = async (root: string, name: string): Promise<stri
   try {
     return dirname(require.resolve(`${name}/package.json`));
   } catch {
-    // A package whose `exports` map does not expose package.json: resolve its entrypoint and
-    // walk up to the directory whose package.json carries its name.
+    // Exports may hide package.json. Use Node's install locations before inspecting the
+    // entrypoint: npm aliases need not match the name in the installed manifest.
   }
+  for (const location of require.resolve.paths(name) ?? []) {
+    const directory = resolve(location, name);
+    if (await exists(resolve(directory, "package.json"))) return directory;
+  }
+  // Preserve entrypoint resolution for installations outside ordinary node_modules paths.
   let entrypoint: string;
   try {
     entrypoint = require.resolve(name);

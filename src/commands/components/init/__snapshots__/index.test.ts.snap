@@ -6337,78 +6337,68 @@ exports[`component generation tests > legacy - wsdl - numberconversion > should 
 "
 `;
 
-exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/README.md 1`] = `
-"<div align="center">
-  <img src="https://prismatic.io/favicon-48x48.png" alt="Prismatic" />
-  <h1>@prismatic-io/components-nested-objects-modern-internal</h1>
-</div>
-
-API for testing nested object handling in code generation. This package is Prismatic's nested-objects-modern-internal connector. Use it with your [code-native integration](https://prismatic.io/docs/integrations/code-native/).
-
-## Using nested-objects-modern-internal
-
-To install the nested-objects-modern-internal connector, run:
-
-\`\`\`bash
-npm install @prismatic-io/components-nested-objects-modern-internal
-\`\`\`
-
-Your integration must also depend on \`@prismatic-io/spectral\`, which this package declares as a peer dependency; both must resolve to a single copy of spectral.
-
-\`\`\`ts
-import nestedObjectsModernInternal from "@prismatic-io/components-nested-objects-modern-internal";
-
-// Inside a flow's onExecution
-const result = await nestedObjectsModernInternal.actions.<actionKey>({
-  connection: context.configVars["nested-objects-modern-internal Connection"],
-  // ...the action's other inputs, typed from its definition
-});
-\`\`\`
-
-Please see the [nested-objects-modern-internal connector documentation](https://prismatic.io/docs/components/nestedObjectsModernInternal/) for its actions, triggers, data sources and connections.
-
-## What is Prismatic?
-
-Prismatic is the leading embedded iPaaS, enabling B2B SaaS teams to ship product integrations faster and with less dev time. The only embedded iPaaS that empowers both developers and non-developers with tools for the complete integration lifecycle, Prismatic includes low-code and code-native building options, deployment and management tooling, and self-serve customer tools.
-
-Prismatic's unparalleled versatility lets teams deliver any integration from simple to complex in one powerful platform. SaaS companies worldwide, from startups to Fortune 500s, trust Prismatic to help connect their products to the other products their customers use.
-
-With Prismatic, you can:
-
-- Build [integrations](https://prismatic.io/docs/integrations/) using our [intuitive low-code designer](https://prismatic.io/docs/integrations/low-code-integration-designer/) or [code-native](https://prismatic.io/docs/integrations/code-native/) approach in your preferred IDE
-- Leverage pre-built [connectors](https://prismatic.io/docs/components/) for common integration tasks, or develop custom connectors using our TypeScript SDK
-- Embed a native [integration marketplace](https://prismatic.io/docs/embed/) in your product for customer self-service
-- Configure and deploy customer-specific integration instances with powerful configuration tools
-- Support customers efficiently with comprehensive [logging, monitoring, and alerting](https://prismatic.io/docs/monitor-instances/)
-- Run integrations in a secure, scalable infrastructure designed for B2B SaaS
-- Customize the platform to fit your product, industry, and development workflows
-
-## Who uses Prismatic?
-
-Prismatic is built for B2B software companies that need to provide integrations to their customers. Whether you're a growing SaaS startup or an established enterprise, Prismatic's platform scales with your integration needs.
-
-Our platform is particularly powerful for teams serving specialized vertical markets. We provide the flexibility and tools to build exactly the integrations your customers need, regardless of the systems you're connecting to or how unique your integration requirements may be.
-
-## What kind of integrations can you build using Prismatic?
-
-Prismatic supports integrations of any complexity - from simple data syncs to sophisticated, industry-specific solutions. Teams use it to build integrations between any type of system, whether modern SaaS or legacy with standard or custom protocols. Here are some example use cases:
-
-- Connect your product with customers' ERPs, CRMs, and other business systems
-- Process data from multiple sources with customer-specific transformation requirements
-- Automate workflows with customizable triggers, actions, and schedules
-- Handle complex authentication flows and data mapping scenarios
-
-For information on the Prismatic platform, check out our [website](https://prismatic.io/) and [docs](https://prismatic.io/docs/).
-
-## License
-
-This package is Apache-2.0 licensed.
+exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/.vscode/extensions.json 1`] = `
+"{
+  "recommendations": ["biomejs.biome"]
+}
 "
 `;
 
-exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/biome.jsonc 1`] = `
+exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/.vscode/settings.json 1`] = `
+"{
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit"
+  }
+}
+"
+`;
+
+exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/README.md 1`] = `
+"# @prismatic-io/components-nestedobjectsmoderninternal
+
+A Prismatic custom component, scaffolded by \`prism components:init\`.
+
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
+
+For documentation on writing custom components, see
+https://prismatic.io/docs/custom-connectors/.
+
+## Optional npm usage
+
+This package is enabled for registry publishing. Run \`npm publish\` using your
+registry's authentication and configuration. npm visibility is independent of
+component visibility in Prismatic.
+
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
+
+This public platform component must already be published with the packaged
+artifact's signature. Publish from the unpacked npm tarball's \`dist/\` directory;
+packing can normalize file permissions that contribute to the signature.
+"
+`;
+
+exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/biome.json 1`] = `
 "{
   "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
+  "files": {
+    "includes": ["**", "!**/dist", "!**/npm-dist", "!**/node_modules"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
   "assist": {
     "actions": {
       "source": {
@@ -6419,32 +6409,12 @@ exports[`component generation tests > modern + internal - openApi - nested-objec
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
-      "style": {
-        "noRestrictedImports": {
-          "level": "error",
-          "options": {
-            "patterns": [
-              {
-                "group": [
-                  "@prismatic-io/spectral/dist",
-                  "@prismatic-io/spectral/dist/**"
-                ],
-                "message": "Import from @prismatic-io/spectral, @prismatic-io/spectral/http, or @prismatic-io/spectral/testing instead of dist/ paths."
-              }
-            ]
-          }
-        }
+      "preset": "recommended",
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noTsIgnore": "off"
       }
     }
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2
-  },
-  "files": {
-    "includes": ["**", "!**/dist", "!**/npm-dist"]
   }
 }
 "
@@ -6614,8 +6584,16 @@ exports[`component generation tests > modern + internal - openApi - nested-objec
 
 exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/package.json 1`] = `
 "{
-  "name": "@prismatic-io/components-nested-objects-modern-internal",
-  "version": "0.0.0",
+  "name": "@prismatic-io/components-nestedobjectsmoderninternal",
+  "version": "0.0.1",
+  "main": "./npm-dist/index.cjs",
+  "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "description": "API for testing nested object handling in code generation",
   "license": "Apache-2.0",
   "repository": {
@@ -6623,24 +6601,25 @@ exports[`component generation tests > modern + internal - openApi - nested-objec
     "url": "git+https://github.com/prismatic-io/components.git",
     "directory": "components/nested-objects-modern-internal"
   },
-  "main": "./npm-dist/index.cjs",
-  "types": "./npm-dist/index.d.cts",
-  "files": ["npm-dist", "dist"],
   "publishConfig": {
     "access": "public"
   },
+  "files": ["npm-dist", "dist"],
+  "prismatic": {
+    "component": "./dist/index.js"
+  },
   "scripts": {
-    "build": "npm run format && npm run lint && tsdown",
+    "build": "npm run typecheck && tsdown",
     "build:npm": "npm run build && node build-npm.mjs",
     "prepare": "npm run build:npm",
     "publish:platform": "npm run build && prism components:publish",
     "test": "vitest run",
-    "lint": "biome check --write .",
+    "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
     "format": "biome format --write ."
   },
-  "prismatic": {
-    "component": "./dist/index.js"
+  "engines": {
+    "node": ">=22.18.0"
   },
   "peerDependencies": {
     "@prismatic-io/spectral": "VERSION"
@@ -6648,7 +6627,7 @@ exports[`component generation tests > modern + internal - openApi - nested-objec
   "dependencies": {},
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
-    "@types/node": "^26",
+    "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
     "tsdown": "0.22.3",
     "typescript": "6.0.3",
@@ -6837,19 +6816,15 @@ export default component({
 exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/tsconfig.json 1`] = `
 "{
   "compilerOptions": {
-    "target": "es6",
-    "lib": ["esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "target": "es2022",
+    "lib": ["es2022"],
     "strict": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
 }
@@ -6864,22 +6839,28 @@ export default defineConfig({
   format: "cjs",
   outDir: "dist",
   platform: "node",
+  target: "node22",
   clean: true,
-  dts: false,
   minify: true,
+  dts: false,
+  checks: { legacyCjs: false },
   deps: {
     alwaysBundle: () => true,
     onlyBundle: false,
   },
   outExtensions: () => ({ js: ".js" }),
   outputOptions: { exports: "named", codeSplitting: false },
-  copy: [{ from: "assets/*", to: "dist" }],
+  loader: {
+    ".md": "text",
+  },
+  copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
 });
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - nested-objects > should match scaffolding snapshots > nested-objects-modern-internal/vitest.config.ts 1`] = `
 "import { defineConfig } from "vitest/config";
+
 export default defineConfig({
   test: {
     globals: true,
@@ -6889,78 +6870,68 @@ export default defineConfig({
 "
 `;
 
-exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/README.md 1`] = `
-"<div align="center">
-  <img src="https://prismatic.io/favicon-48x48.png" alt="Prismatic" />
-  <h1>@prismatic-io/components-petstore-expanded-modern-internal</h1>
-</div>
-
-A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3.0 specification. This package is Prismatic's petstore-expanded-modern-internal connector. Use it with your [code-native integration](https://prismatic.io/docs/integrations/code-native/).
-
-## Using petstore-expanded-modern-internal
-
-To install the petstore-expanded-modern-internal connector, run:
-
-\`\`\`bash
-npm install @prismatic-io/components-petstore-expanded-modern-internal
-\`\`\`
-
-Your integration must also depend on \`@prismatic-io/spectral\`, which this package declares as a peer dependency; both must resolve to a single copy of spectral.
-
-\`\`\`ts
-import petstoreExpandedModernInternal from "@prismatic-io/components-petstore-expanded-modern-internal";
-
-// Inside a flow's onExecution
-const result = await petstoreExpandedModernInternal.actions.<actionKey>({
-  connection: context.configVars["petstore-expanded-modern-internal Connection"],
-  // ...the action's other inputs, typed from its definition
-});
-\`\`\`
-
-Please see the [petstore-expanded-modern-internal connector documentation](https://prismatic.io/docs/components/petstoreExpandedModernInternal/) for its actions, triggers, data sources and connections.
-
-## What is Prismatic?
-
-Prismatic is the leading embedded iPaaS, enabling B2B SaaS teams to ship product integrations faster and with less dev time. The only embedded iPaaS that empowers both developers and non-developers with tools for the complete integration lifecycle, Prismatic includes low-code and code-native building options, deployment and management tooling, and self-serve customer tools.
-
-Prismatic's unparalleled versatility lets teams deliver any integration from simple to complex in one powerful platform. SaaS companies worldwide, from startups to Fortune 500s, trust Prismatic to help connect their products to the other products their customers use.
-
-With Prismatic, you can:
-
-- Build [integrations](https://prismatic.io/docs/integrations/) using our [intuitive low-code designer](https://prismatic.io/docs/integrations/low-code-integration-designer/) or [code-native](https://prismatic.io/docs/integrations/code-native/) approach in your preferred IDE
-- Leverage pre-built [connectors](https://prismatic.io/docs/components/) for common integration tasks, or develop custom connectors using our TypeScript SDK
-- Embed a native [integration marketplace](https://prismatic.io/docs/embed/) in your product for customer self-service
-- Configure and deploy customer-specific integration instances with powerful configuration tools
-- Support customers efficiently with comprehensive [logging, monitoring, and alerting](https://prismatic.io/docs/monitor-instances/)
-- Run integrations in a secure, scalable infrastructure designed for B2B SaaS
-- Customize the platform to fit your product, industry, and development workflows
-
-## Who uses Prismatic?
-
-Prismatic is built for B2B software companies that need to provide integrations to their customers. Whether you're a growing SaaS startup or an established enterprise, Prismatic's platform scales with your integration needs.
-
-Our platform is particularly powerful for teams serving specialized vertical markets. We provide the flexibility and tools to build exactly the integrations your customers need, regardless of the systems you're connecting to or how unique your integration requirements may be.
-
-## What kind of integrations can you build using Prismatic?
-
-Prismatic supports integrations of any complexity - from simple data syncs to sophisticated, industry-specific solutions. Teams use it to build integrations between any type of system, whether modern SaaS or legacy with standard or custom protocols. Here are some example use cases:
-
-- Connect your product with customers' ERPs, CRMs, and other business systems
-- Process data from multiple sources with customer-specific transformation requirements
-- Automate workflows with customizable triggers, actions, and schedules
-- Handle complex authentication flows and data mapping scenarios
-
-For information on the Prismatic platform, check out our [website](https://prismatic.io/) and [docs](https://prismatic.io/docs/).
-
-## License
-
-This package is Apache-2.0 licensed.
+exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/.vscode/extensions.json 1`] = `
+"{
+  "recommendations": ["biomejs.biome"]
+}
 "
 `;
 
-exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/biome.jsonc 1`] = `
+exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/.vscode/settings.json 1`] = `
+"{
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit"
+  }
+}
+"
+`;
+
+exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/README.md 1`] = `
+"# @prismatic-io/components-petstoreexpandedmoderninternal
+
+A Prismatic custom component, scaffolded by \`prism components:init\`.
+
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
+
+For documentation on writing custom components, see
+https://prismatic.io/docs/custom-connectors/.
+
+## Optional npm usage
+
+This package is enabled for registry publishing. Run \`npm publish\` using your
+registry's authentication and configuration. npm visibility is independent of
+component visibility in Prismatic.
+
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
+
+This public platform component must already be published with the packaged
+artifact's signature. Publish from the unpacked npm tarball's \`dist/\` directory;
+packing can normalize file permissions that contribute to the signature.
+"
+`;
+
+exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/biome.json 1`] = `
 "{
   "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
+  "files": {
+    "includes": ["**", "!**/dist", "!**/npm-dist", "!**/node_modules"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
   "assist": {
     "actions": {
       "source": {
@@ -6971,32 +6942,12 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
-      "style": {
-        "noRestrictedImports": {
-          "level": "error",
-          "options": {
-            "patterns": [
-              {
-                "group": [
-                  "@prismatic-io/spectral/dist",
-                  "@prismatic-io/spectral/dist/**"
-                ],
-                "message": "Import from @prismatic-io/spectral, @prismatic-io/spectral/http, or @prismatic-io/spectral/testing instead of dist/ paths."
-              }
-            ]
-          }
-        }
+      "preset": "recommended",
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noTsIgnore": "off"
       }
     }
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2
-  },
-  "files": {
-    "includes": ["**", "!**/dist", "!**/npm-dist"]
   }
 }
 "
@@ -7046,8 +6997,16 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
 
 exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/package.json 1`] = `
 "{
-  "name": "@prismatic-io/components-petstore-expanded-modern-internal",
-  "version": "0.0.0",
+  "name": "@prismatic-io/components-petstoreexpandedmoderninternal",
+  "version": "0.0.1",
+  "main": "./npm-dist/index.cjs",
+  "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "description": "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3.0 specification",
   "license": "Apache-2.0",
   "repository": {
@@ -7055,24 +7014,25 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
     "url": "git+https://github.com/prismatic-io/components.git",
     "directory": "components/petstore-expanded-modern-internal"
   },
-  "main": "./npm-dist/index.cjs",
-  "types": "./npm-dist/index.d.cts",
-  "files": ["npm-dist", "dist"],
   "publishConfig": {
     "access": "public"
   },
+  "files": ["npm-dist", "dist"],
+  "prismatic": {
+    "component": "./dist/index.js"
+  },
   "scripts": {
-    "build": "npm run format && npm run lint && tsdown",
+    "build": "npm run typecheck && tsdown",
     "build:npm": "npm run build && node build-npm.mjs",
     "prepare": "npm run build:npm",
     "publish:platform": "npm run build && prism components:publish",
     "test": "vitest run",
-    "lint": "biome check --write .",
+    "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
     "format": "biome format --write ."
   },
-  "prismatic": {
-    "component": "./dist/index.js"
+  "engines": {
+    "node": ">=22.18.0"
   },
   "peerDependencies": {
     "@prismatic-io/spectral": "VERSION"
@@ -7080,7 +7040,7 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
   "dependencies": {},
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
-    "@types/node": "^26",
+    "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
     "tsdown": "0.22.3",
     "typescript": "6.0.3",
@@ -7548,19 +7508,15 @@ export default component({
 exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/tsconfig.json 1`] = `
 "{
   "compilerOptions": {
-    "target": "es6",
-    "lib": ["esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "target": "es2022",
+    "lib": ["es2022"],
     "strict": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
 }
@@ -7575,22 +7531,28 @@ export default defineConfig({
   format: "cjs",
   outDir: "dist",
   platform: "node",
+  target: "node22",
   clean: true,
-  dts: false,
   minify: true,
+  dts: false,
+  checks: { legacyCjs: false },
   deps: {
     alwaysBundle: () => true,
     onlyBundle: false,
   },
   outExtensions: () => ({ js: ".js" }),
   outputOptions: { exports: "named", codeSplitting: false },
-  copy: [{ from: "assets/*", to: "dist" }],
+  loader: {
+    ".md": "text",
+  },
+  copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
 });
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - petstore-expanded > should match scaffolding snapshots > petstore-expanded-modern-internal/vitest.config.ts 1`] = `
 "import { defineConfig } from "vitest/config";
+
 export default defineConfig({
   test: {
     globals: true,
@@ -7600,78 +7562,68 @@ export default defineConfig({
 "
 `;
 
-exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/README.md 1`] = `
-"<div align="center">
-  <img src="https://prismatic.io/favicon-48x48.png" alt="Prismatic" />
-  <h1>@prismatic-io/components-petstore-expanded-uuid-paths-modern-internal</h1>
-</div>
-
-A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3.0 specification. This package is Prismatic's petstore-expanded-uuid-paths-modern-internal connector. Use it with your [code-native integration](https://prismatic.io/docs/integrations/code-native/).
-
-## Using petstore-expanded-uuid-paths-modern-internal
-
-To install the petstore-expanded-uuid-paths-modern-internal connector, run:
-
-\`\`\`bash
-npm install @prismatic-io/components-petstore-expanded-uuid-paths-modern-internal
-\`\`\`
-
-Your integration must also depend on \`@prismatic-io/spectral\`, which this package declares as a peer dependency; both must resolve to a single copy of spectral.
-
-\`\`\`ts
-import petstoreExpandedUuidPathsModernInternal from "@prismatic-io/components-petstore-expanded-uuid-paths-modern-internal";
-
-// Inside a flow's onExecution
-const result = await petstoreExpandedUuidPathsModernInternal.actions.<actionKey>({
-  connection: context.configVars["petstore-expanded-uuid-paths-modern-internal Connection"],
-  // ...the action's other inputs, typed from its definition
-});
-\`\`\`
-
-Please see the [petstore-expanded-uuid-paths-modern-internal connector documentation](https://prismatic.io/docs/components/petstoreExpandedUuidPathsModernInternal/) for its actions, triggers, data sources and connections.
-
-## What is Prismatic?
-
-Prismatic is the leading embedded iPaaS, enabling B2B SaaS teams to ship product integrations faster and with less dev time. The only embedded iPaaS that empowers both developers and non-developers with tools for the complete integration lifecycle, Prismatic includes low-code and code-native building options, deployment and management tooling, and self-serve customer tools.
-
-Prismatic's unparalleled versatility lets teams deliver any integration from simple to complex in one powerful platform. SaaS companies worldwide, from startups to Fortune 500s, trust Prismatic to help connect their products to the other products their customers use.
-
-With Prismatic, you can:
-
-- Build [integrations](https://prismatic.io/docs/integrations/) using our [intuitive low-code designer](https://prismatic.io/docs/integrations/low-code-integration-designer/) or [code-native](https://prismatic.io/docs/integrations/code-native/) approach in your preferred IDE
-- Leverage pre-built [connectors](https://prismatic.io/docs/components/) for common integration tasks, or develop custom connectors using our TypeScript SDK
-- Embed a native [integration marketplace](https://prismatic.io/docs/embed/) in your product for customer self-service
-- Configure and deploy customer-specific integration instances with powerful configuration tools
-- Support customers efficiently with comprehensive [logging, monitoring, and alerting](https://prismatic.io/docs/monitor-instances/)
-- Run integrations in a secure, scalable infrastructure designed for B2B SaaS
-- Customize the platform to fit your product, industry, and development workflows
-
-## Who uses Prismatic?
-
-Prismatic is built for B2B software companies that need to provide integrations to their customers. Whether you're a growing SaaS startup or an established enterprise, Prismatic's platform scales with your integration needs.
-
-Our platform is particularly powerful for teams serving specialized vertical markets. We provide the flexibility and tools to build exactly the integrations your customers need, regardless of the systems you're connecting to or how unique your integration requirements may be.
-
-## What kind of integrations can you build using Prismatic?
-
-Prismatic supports integrations of any complexity - from simple data syncs to sophisticated, industry-specific solutions. Teams use it to build integrations between any type of system, whether modern SaaS or legacy with standard or custom protocols. Here are some example use cases:
-
-- Connect your product with customers' ERPs, CRMs, and other business systems
-- Process data from multiple sources with customer-specific transformation requirements
-- Automate workflows with customizable triggers, actions, and schedules
-- Handle complex authentication flows and data mapping scenarios
-
-For information on the Prismatic platform, check out our [website](https://prismatic.io/) and [docs](https://prismatic.io/docs/).
-
-## License
-
-This package is Apache-2.0 licensed.
+exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/.vscode/extensions.json 1`] = `
+"{
+  "recommendations": ["biomejs.biome"]
+}
 "
 `;
 
-exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/biome.jsonc 1`] = `
+exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/.vscode/settings.json 1`] = `
+"{
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit"
+  }
+}
+"
+`;
+
+exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/README.md 1`] = `
+"# @prismatic-io/components-petstoreexpandeduuidpathsmoderninternal
+
+A Prismatic custom component, scaffolded by \`prism components:init\`.
+
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
+
+For documentation on writing custom components, see
+https://prismatic.io/docs/custom-connectors/.
+
+## Optional npm usage
+
+This package is enabled for registry publishing. Run \`npm publish\` using your
+registry's authentication and configuration. npm visibility is independent of
+component visibility in Prismatic.
+
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
+
+This public platform component must already be published with the packaged
+artifact's signature. Publish from the unpacked npm tarball's \`dist/\` directory;
+packing can normalize file permissions that contribute to the signature.
+"
+`;
+
+exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/biome.json 1`] = `
 "{
   "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
+  "files": {
+    "includes": ["**", "!**/dist", "!**/npm-dist", "!**/node_modules"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
   "assist": {
     "actions": {
       "source": {
@@ -7682,32 +7634,12 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
-      "style": {
-        "noRestrictedImports": {
-          "level": "error",
-          "options": {
-            "patterns": [
-              {
-                "group": [
-                  "@prismatic-io/spectral/dist",
-                  "@prismatic-io/spectral/dist/**"
-                ],
-                "message": "Import from @prismatic-io/spectral, @prismatic-io/spectral/http, or @prismatic-io/spectral/testing instead of dist/ paths."
-              }
-            ]
-          }
-        }
+      "preset": "recommended",
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noTsIgnore": "off"
       }
     }
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2
-  },
-  "files": {
-    "includes": ["**", "!**/dist", "!**/npm-dist"]
   }
 }
 "
@@ -7757,8 +7689,16 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
 
 exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/package.json 1`] = `
 "{
-  "name": "@prismatic-io/components-petstore-expanded-uuid-paths-modern-internal",
-  "version": "0.0.0",
+  "name": "@prismatic-io/components-petstoreexpandeduuidpathsmoderninternal",
+  "version": "0.0.1",
+  "main": "./npm-dist/index.cjs",
+  "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "description": "A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3.0 specification",
   "license": "Apache-2.0",
   "repository": {
@@ -7766,24 +7706,25 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
     "url": "git+https://github.com/prismatic-io/components.git",
     "directory": "components/petstore-expanded-uuid-paths-modern-internal"
   },
-  "main": "./npm-dist/index.cjs",
-  "types": "./npm-dist/index.d.cts",
-  "files": ["npm-dist", "dist"],
   "publishConfig": {
     "access": "public"
   },
+  "files": ["npm-dist", "dist"],
+  "prismatic": {
+    "component": "./dist/index.js"
+  },
   "scripts": {
-    "build": "npm run format && npm run lint && tsdown",
+    "build": "npm run typecheck && tsdown",
     "build:npm": "npm run build && node build-npm.mjs",
     "prepare": "npm run build:npm",
     "publish:platform": "npm run build && prism components:publish",
     "test": "vitest run",
-    "lint": "biome check --write .",
+    "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
     "format": "biome format --write ."
   },
-  "prismatic": {
-    "component": "./dist/index.js"
+  "engines": {
+    "node": ">=22.18.0"
   },
   "peerDependencies": {
     "@prismatic-io/spectral": "VERSION"
@@ -7791,7 +7732,7 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
   "dependencies": {},
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
-    "@types/node": "^26",
+    "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
     "tsdown": "0.22.3",
     "typescript": "6.0.3",
@@ -8264,19 +8205,15 @@ export default component({
 exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/tsconfig.json 1`] = `
 "{
   "compilerOptions": {
-    "target": "es6",
-    "lib": ["esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "target": "es2022",
+    "lib": ["es2022"],
     "strict": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
 }
@@ -8291,22 +8228,28 @@ export default defineConfig({
   format: "cjs",
   outDir: "dist",
   platform: "node",
+  target: "node22",
   clean: true,
-  dts: false,
   minify: true,
+  dts: false,
+  checks: { legacyCjs: false },
   deps: {
     alwaysBundle: () => true,
     onlyBundle: false,
   },
   outExtensions: () => ({ js: ".js" }),
   outputOptions: { exports: "named", codeSplitting: false },
-  copy: [{ from: "assets/*", to: "dist" }],
+  loader: {
+    ".md": "text",
+  },
+  copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
 });
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - petstore-expanded-uuid-paths > should match scaffolding snapshots > petstore-expanded-uuid-paths-modern-internal/vitest.config.ts 1`] = `
 "import { defineConfig } from "vitest/config";
+
 export default defineConfig({
   test: {
     globals: true,
@@ -8316,78 +8259,68 @@ export default defineConfig({
 "
 `;
 
-exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/README.md 1`] = `
-"<div align="center">
-  <img src="https://prismatic.io/favicon-48x48.png" alt="Prismatic" />
-  <h1>@prismatic-io/components-todo-api-modern-internal</h1>
-</div>
-
-A simple Todo API for testing component generation. This package is Prismatic's todo-api-modern-internal connector. Use it with your [code-native integration](https://prismatic.io/docs/integrations/code-native/).
-
-## Using todo-api-modern-internal
-
-To install the todo-api-modern-internal connector, run:
-
-\`\`\`bash
-npm install @prismatic-io/components-todo-api-modern-internal
-\`\`\`
-
-Your integration must also depend on \`@prismatic-io/spectral\`, which this package declares as a peer dependency; both must resolve to a single copy of spectral.
-
-\`\`\`ts
-import todoApiModernInternal from "@prismatic-io/components-todo-api-modern-internal";
-
-// Inside a flow's onExecution
-const result = await todoApiModernInternal.actions.<actionKey>({
-  connection: context.configVars["todo-api-modern-internal Connection"],
-  // ...the action's other inputs, typed from its definition
-});
-\`\`\`
-
-Please see the [todo-api-modern-internal connector documentation](https://prismatic.io/docs/components/todoApiModernInternal/) for its actions, triggers, data sources and connections.
-
-## What is Prismatic?
-
-Prismatic is the leading embedded iPaaS, enabling B2B SaaS teams to ship product integrations faster and with less dev time. The only embedded iPaaS that empowers both developers and non-developers with tools for the complete integration lifecycle, Prismatic includes low-code and code-native building options, deployment and management tooling, and self-serve customer tools.
-
-Prismatic's unparalleled versatility lets teams deliver any integration from simple to complex in one powerful platform. SaaS companies worldwide, from startups to Fortune 500s, trust Prismatic to help connect their products to the other products their customers use.
-
-With Prismatic, you can:
-
-- Build [integrations](https://prismatic.io/docs/integrations/) using our [intuitive low-code designer](https://prismatic.io/docs/integrations/low-code-integration-designer/) or [code-native](https://prismatic.io/docs/integrations/code-native/) approach in your preferred IDE
-- Leverage pre-built [connectors](https://prismatic.io/docs/components/) for common integration tasks, or develop custom connectors using our TypeScript SDK
-- Embed a native [integration marketplace](https://prismatic.io/docs/embed/) in your product for customer self-service
-- Configure and deploy customer-specific integration instances with powerful configuration tools
-- Support customers efficiently with comprehensive [logging, monitoring, and alerting](https://prismatic.io/docs/monitor-instances/)
-- Run integrations in a secure, scalable infrastructure designed for B2B SaaS
-- Customize the platform to fit your product, industry, and development workflows
-
-## Who uses Prismatic?
-
-Prismatic is built for B2B software companies that need to provide integrations to their customers. Whether you're a growing SaaS startup or an established enterprise, Prismatic's platform scales with your integration needs.
-
-Our platform is particularly powerful for teams serving specialized vertical markets. We provide the flexibility and tools to build exactly the integrations your customers need, regardless of the systems you're connecting to or how unique your integration requirements may be.
-
-## What kind of integrations can you build using Prismatic?
-
-Prismatic supports integrations of any complexity - from simple data syncs to sophisticated, industry-specific solutions. Teams use it to build integrations between any type of system, whether modern SaaS or legacy with standard or custom protocols. Here are some example use cases:
-
-- Connect your product with customers' ERPs, CRMs, and other business systems
-- Process data from multiple sources with customer-specific transformation requirements
-- Automate workflows with customizable triggers, actions, and schedules
-- Handle complex authentication flows and data mapping scenarios
-
-For information on the Prismatic platform, check out our [website](https://prismatic.io/) and [docs](https://prismatic.io/docs/).
-
-## License
-
-This package is Apache-2.0 licensed.
+exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/.vscode/extensions.json 1`] = `
+"{
+  "recommendations": ["biomejs.biome"]
+}
 "
 `;
 
-exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/biome.jsonc 1`] = `
+exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/.vscode/settings.json 1`] = `
+"{
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit"
+  }
+}
+"
+`;
+
+exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/README.md 1`] = `
+"# @prismatic-io/components-todoapimoderninternal
+
+A Prismatic custom component, scaffolded by \`prism components:init\`.
+
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
+
+For documentation on writing custom components, see
+https://prismatic.io/docs/custom-connectors/.
+
+## Optional npm usage
+
+This package is enabled for registry publishing. Run \`npm publish\` using your
+registry's authentication and configuration. npm visibility is independent of
+component visibility in Prismatic.
+
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
+
+This public platform component must already be published with the packaged
+artifact's signature. Publish from the unpacked npm tarball's \`dist/\` directory;
+packing can normalize file permissions that contribute to the signature.
+"
+`;
+
+exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/biome.json 1`] = `
 "{
   "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
+  "files": {
+    "includes": ["**", "!**/dist", "!**/npm-dist", "!**/node_modules"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
   "assist": {
     "actions": {
       "source": {
@@ -8398,32 +8331,12 @@ exports[`component generation tests > modern + internal - openApi - todo-api > s
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
-      "style": {
-        "noRestrictedImports": {
-          "level": "error",
-          "options": {
-            "patterns": [
-              {
-                "group": [
-                  "@prismatic-io/spectral/dist",
-                  "@prismatic-io/spectral/dist/**"
-                ],
-                "message": "Import from @prismatic-io/spectral, @prismatic-io/spectral/http, or @prismatic-io/spectral/testing instead of dist/ paths."
-              }
-            ]
-          }
-        }
+      "preset": "recommended",
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noTsIgnore": "off"
       }
     }
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2
-  },
-  "files": {
-    "includes": ["**", "!**/dist", "!**/npm-dist"]
   }
 }
 "
@@ -8479,8 +8392,16 @@ exports[`component generation tests > modern + internal - openApi - todo-api > s
 
 exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/package.json 1`] = `
 "{
-  "name": "@prismatic-io/components-todo-api-modern-internal",
-  "version": "0.0.0",
+  "name": "@prismatic-io/components-todoapimoderninternal",
+  "version": "0.0.1",
+  "main": "./npm-dist/index.cjs",
+  "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "description": "A simple Todo API for testing component generation",
   "license": "Apache-2.0",
   "repository": {
@@ -8488,24 +8409,25 @@ exports[`component generation tests > modern + internal - openApi - todo-api > s
     "url": "git+https://github.com/prismatic-io/components.git",
     "directory": "components/todo-api-modern-internal"
   },
-  "main": "./npm-dist/index.cjs",
-  "types": "./npm-dist/index.d.cts",
-  "files": ["npm-dist", "dist"],
   "publishConfig": {
     "access": "public"
   },
+  "files": ["npm-dist", "dist"],
+  "prismatic": {
+    "component": "./dist/index.js"
+  },
   "scripts": {
-    "build": "npm run format && npm run lint && tsdown",
+    "build": "npm run typecheck && tsdown",
     "build:npm": "npm run build && node build-npm.mjs",
     "prepare": "npm run build:npm",
     "publish:platform": "npm run build && prism components:publish",
     "test": "vitest run",
-    "lint": "biome check --write .",
+    "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
     "format": "biome format --write ."
   },
-  "prismatic": {
-    "component": "./dist/index.js"
+  "engines": {
+    "node": ">=22.18.0"
   },
   "peerDependencies": {
     "@prismatic-io/spectral": "VERSION"
@@ -8513,7 +8435,7 @@ exports[`component generation tests > modern + internal - openApi - todo-api > s
   "dependencies": {},
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
-    "@types/node": "^26",
+    "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
     "tsdown": "0.22.3",
     "typescript": "6.0.3",
@@ -9367,19 +9289,15 @@ exports[`component generation tests > modern + internal - openApi - todo-api > s
 exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/tsconfig.json 1`] = `
 "{
   "compilerOptions": {
-    "target": "es6",
-    "lib": ["esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "target": "es2022",
+    "lib": ["es2022"],
     "strict": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
 }
@@ -9394,22 +9312,28 @@ export default defineConfig({
   format: "cjs",
   outDir: "dist",
   platform: "node",
+  target: "node22",
   clean: true,
-  dts: false,
   minify: true,
+  dts: false,
+  checks: { legacyCjs: false },
   deps: {
     alwaysBundle: () => true,
     onlyBundle: false,
   },
   outExtensions: () => ({ js: ".js" }),
   outputOptions: { exports: "named", codeSplitting: false },
-  copy: [{ from: "assets/*", to: "dist" }],
+  loader: {
+    ".md": "text",
+  },
+  copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
 });
 "
 `;
 
 exports[`component generation tests > modern + internal - openApi - todo-api > should match scaffolding snapshots > todo-api-modern-internal/vitest.config.ts 1`] = `
 "import { defineConfig } from "vitest/config";
+
 export default defineConfig({
   test: {
     globals: true,
@@ -9420,83 +9344,73 @@ export default defineConfig({
 `;
 
 exports[`component generation tests > modern + internal - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern-internal/.env.testing 1`] = `
-"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
+"ACME_ENDPOINT=https://jsonplaceholder.typicode.com
+ACME_API_KEY=
+"
+`;
+
+exports[`component generation tests > modern + internal - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern-internal/.vscode/extensions.json 1`] = `
+"{
+  "recommendations": ["biomejs.biome"]
+}
+"
+`;
+
+exports[`component generation tests > modern + internal - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern-internal/.vscode/settings.json 1`] = `
+"{
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit"
+  }
+}
 "
 `;
 
 exports[`component generation tests > modern + internal - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern-internal/README.md 1`] = `
-"<div align="center">
-  <img src="https://prismatic.io/favicon-48x48.png" alt="Prismatic" />
-  <h1>@prismatic-io/components-countryinfoservice-modern-internal</h1>
-</div>
+"# @prismatic-io/components-countryinfoservicemoderninternal
 
-This package is Prismatic's countryinfoservice-modern-internal connector. Use it with your [code-native integration](https://prismatic.io/docs/integrations/code-native/).
+A Prismatic custom component, scaffolded by \`prism components:init\`.
 
-## Using countryinfoservice-modern-internal
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
 
-To install the countryinfoservice-modern-internal connector, run:
+For documentation on writing custom components, see
+https://prismatic.io/docs/custom-connectors/.
 
-\`\`\`bash
-npm install @prismatic-io/components-countryinfoservice-modern-internal
-\`\`\`
+## Optional npm usage
 
-Your integration must also depend on \`@prismatic-io/spectral\`, which this package declares as a peer dependency; both must resolve to a single copy of spectral.
+This package is enabled for registry publishing. Run \`npm publish\` using your
+registry's authentication and configuration. npm visibility is independent of
+component visibility in Prismatic.
 
-\`\`\`ts
-import countryinfoserviceModernInternal from "@prismatic-io/components-countryinfoservice-modern-internal";
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
 
-// Inside a flow's onExecution
-const result = await countryinfoserviceModernInternal.actions.<actionKey>({
-  connection: context.configVars["countryinfoservice-modern-internal Connection"],
-  // ...the action's other inputs, typed from its definition
-});
-\`\`\`
-
-Please see the [countryinfoservice-modern-internal connector documentation](https://prismatic.io/docs/components/countryinfoserviceModernInternal/) for its actions, triggers, data sources and connections.
-
-## What is Prismatic?
-
-Prismatic is the leading embedded iPaaS, enabling B2B SaaS teams to ship product integrations faster and with less dev time. The only embedded iPaaS that empowers both developers and non-developers with tools for the complete integration lifecycle, Prismatic includes low-code and code-native building options, deployment and management tooling, and self-serve customer tools.
-
-Prismatic's unparalleled versatility lets teams deliver any integration from simple to complex in one powerful platform. SaaS companies worldwide, from startups to Fortune 500s, trust Prismatic to help connect their products to the other products their customers use.
-
-With Prismatic, you can:
-
-- Build [integrations](https://prismatic.io/docs/integrations/) using our [intuitive low-code designer](https://prismatic.io/docs/integrations/low-code-integration-designer/) or [code-native](https://prismatic.io/docs/integrations/code-native/) approach in your preferred IDE
-- Leverage pre-built [connectors](https://prismatic.io/docs/components/) for common integration tasks, or develop custom connectors using our TypeScript SDK
-- Embed a native [integration marketplace](https://prismatic.io/docs/embed/) in your product for customer self-service
-- Configure and deploy customer-specific integration instances with powerful configuration tools
-- Support customers efficiently with comprehensive [logging, monitoring, and alerting](https://prismatic.io/docs/monitor-instances/)
-- Run integrations in a secure, scalable infrastructure designed for B2B SaaS
-- Customize the platform to fit your product, industry, and development workflows
-
-## Who uses Prismatic?
-
-Prismatic is built for B2B software companies that need to provide integrations to their customers. Whether you're a growing SaaS startup or an established enterprise, Prismatic's platform scales with your integration needs.
-
-Our platform is particularly powerful for teams serving specialized vertical markets. We provide the flexibility and tools to build exactly the integrations your customers need, regardless of the systems you're connecting to or how unique your integration requirements may be.
-
-## What kind of integrations can you build using Prismatic?
-
-Prismatic supports integrations of any complexity - from simple data syncs to sophisticated, industry-specific solutions. Teams use it to build integrations between any type of system, whether modern SaaS or legacy with standard or custom protocols. Here are some example use cases:
-
-- Connect your product with customers' ERPs, CRMs, and other business systems
-- Process data from multiple sources with customer-specific transformation requirements
-- Automate workflows with customizable triggers, actions, and schedules
-- Handle complex authentication flows and data mapping scenarios
-
-For information on the Prismatic platform, check out our [website](https://prismatic.io/) and [docs](https://prismatic.io/docs/).
-
-## License
-
-This package is Apache-2.0 licensed.
+This public platform component must already be published with the packaged
+artifact's signature. Publish from the unpacked npm tarball's \`dist/\` directory;
+packing can normalize file permissions that contribute to the signature.
 "
 `;
 
-exports[`component generation tests > modern + internal - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern-internal/biome.jsonc 1`] = `
+exports[`component generation tests > modern + internal - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern-internal/biome.json 1`] = `
 "{
   "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
+  "files": {
+    "includes": ["**", "!**/dist", "!**/npm-dist", "!**/node_modules"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
   "assist": {
     "actions": {
       "source": {
@@ -9507,32 +9421,12 @@ exports[`component generation tests > modern + internal - wsdl - countryinfoserv
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
-      "style": {
-        "noRestrictedImports": {
-          "level": "error",
-          "options": {
-            "patterns": [
-              {
-                "group": [
-                  "@prismatic-io/spectral/dist",
-                  "@prismatic-io/spectral/dist/**"
-                ],
-                "message": "Import from @prismatic-io/spectral, @prismatic-io/spectral/http, or @prismatic-io/spectral/testing instead of dist/ paths."
-              }
-            ]
-          }
-        }
+      "preset": "recommended",
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noTsIgnore": "off"
       }
     }
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2
-  },
-  "files": {
-    "includes": ["**", "!**/dist", "!**/npm-dist"]
   }
 }
 "
@@ -12290,8 +12184,16 @@ export interface CountryInfoService {
 
 exports[`component generation tests > modern + internal - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern-internal/package.json 1`] = `
 "{
-  "name": "@prismatic-io/components-countryinfoservice-modern-internal",
-  "version": "0.0.0",
+  "name": "@prismatic-io/components-countryinfoservicemoderninternal",
+  "version": "0.0.1",
+  "main": "./npm-dist/index.cjs",
+  "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "description": "Prism-generated Component",
   "license": "Apache-2.0",
   "repository": {
@@ -12299,24 +12201,25 @@ exports[`component generation tests > modern + internal - wsdl - countryinfoserv
     "url": "git+https://github.com/prismatic-io/components.git",
     "directory": "components/countryinfoservice-modern-internal"
   },
-  "main": "./npm-dist/index.cjs",
-  "types": "./npm-dist/index.d.cts",
-  "files": ["npm-dist", "dist"],
   "publishConfig": {
     "access": "public"
   },
+  "files": ["npm-dist", "dist"],
+  "prismatic": {
+    "component": "./dist/index.js"
+  },
   "scripts": {
-    "build": "npm run format && npm run lint && tsdown",
+    "build": "npm run typecheck && tsdown",
     "build:npm": "npm run build && node build-npm.mjs",
     "prepare": "npm run build:npm",
     "publish:platform": "npm run build && prism components:publish",
     "test": "vitest run",
-    "lint": "biome check --write .",
+    "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
     "format": "biome format --write ."
   },
-  "prismatic": {
-    "component": "./dist/index.js"
+  "engines": {
+    "node": ">=22.18.0"
   },
   "peerDependencies": {
     "@prismatic-io/spectral": "VERSION"
@@ -12326,7 +12229,7 @@ exports[`component generation tests > modern + internal - wsdl - countryinfoserv
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
-    "@types/node": "^26",
+    "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
     "tsdown": "0.22.3",
     "typescript": "6.0.3",
@@ -13048,19 +12951,15 @@ export const sLanguageName = input({
 exports[`component generation tests > modern + internal - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern-internal/tsconfig.json 1`] = `
 "{
   "compilerOptions": {
-    "target": "es6",
-    "lib": ["esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "target": "es2022",
+    "lib": ["es2022"],
     "strict": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
 }
@@ -13075,22 +12974,28 @@ export default defineConfig({
   format: "cjs",
   outDir: "dist",
   platform: "node",
+  target: "node22",
   clean: true,
-  dts: false,
   minify: true,
+  dts: false,
+  checks: { legacyCjs: false },
   deps: {
     alwaysBundle: () => true,
     onlyBundle: false,
   },
   outExtensions: () => ({ js: ".js" }),
   outputOptions: { exports: "named", codeSplitting: false },
-  copy: [{ from: "assets/*", to: "dist" }],
+  loader: {
+    ".md": "text",
+  },
+  copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
 });
 "
 `;
 
 exports[`component generation tests > modern + internal - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern-internal/vitest.config.ts 1`] = `
 "import { defineConfig } from "vitest/config";
+
 export default defineConfig({
   test: {
     globals: true,
@@ -13101,83 +13006,73 @@ export default defineConfig({
 `;
 
 exports[`component generation tests > modern + internal - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern-internal/.env.testing 1`] = `
-"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
+"ACME_ENDPOINT=https://jsonplaceholder.typicode.com
+ACME_API_KEY=
+"
+`;
+
+exports[`component generation tests > modern + internal - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern-internal/.vscode/extensions.json 1`] = `
+"{
+  "recommendations": ["biomejs.biome"]
+}
+"
+`;
+
+exports[`component generation tests > modern + internal - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern-internal/.vscode/settings.json 1`] = `
+"{
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit"
+  }
+}
 "
 `;
 
 exports[`component generation tests > modern + internal - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern-internal/README.md 1`] = `
-"<div align="center">
-  <img src="https://prismatic.io/favicon-48x48.png" alt="Prismatic" />
-  <h1>@prismatic-io/components-numberconversion-modern-internal</h1>
-</div>
+"# @prismatic-io/components-numberconversionmoderninternal
 
-This package is Prismatic's numberconversion-modern-internal connector. Use it with your [code-native integration](https://prismatic.io/docs/integrations/code-native/).
+A Prismatic custom component, scaffolded by \`prism components:init\`.
 
-## Using numberconversion-modern-internal
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
 
-To install the numberconversion-modern-internal connector, run:
+For documentation on writing custom components, see
+https://prismatic.io/docs/custom-connectors/.
 
-\`\`\`bash
-npm install @prismatic-io/components-numberconversion-modern-internal
-\`\`\`
+## Optional npm usage
 
-Your integration must also depend on \`@prismatic-io/spectral\`, which this package declares as a peer dependency; both must resolve to a single copy of spectral.
+This package is enabled for registry publishing. Run \`npm publish\` using your
+registry's authentication and configuration. npm visibility is independent of
+component visibility in Prismatic.
 
-\`\`\`ts
-import numberconversionModernInternal from "@prismatic-io/components-numberconversion-modern-internal";
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
 
-// Inside a flow's onExecution
-const result = await numberconversionModernInternal.actions.<actionKey>({
-  connection: context.configVars["numberconversion-modern-internal Connection"],
-  // ...the action's other inputs, typed from its definition
-});
-\`\`\`
-
-Please see the [numberconversion-modern-internal connector documentation](https://prismatic.io/docs/components/numberconversionModernInternal/) for its actions, triggers, data sources and connections.
-
-## What is Prismatic?
-
-Prismatic is the leading embedded iPaaS, enabling B2B SaaS teams to ship product integrations faster and with less dev time. The only embedded iPaaS that empowers both developers and non-developers with tools for the complete integration lifecycle, Prismatic includes low-code and code-native building options, deployment and management tooling, and self-serve customer tools.
-
-Prismatic's unparalleled versatility lets teams deliver any integration from simple to complex in one powerful platform. SaaS companies worldwide, from startups to Fortune 500s, trust Prismatic to help connect their products to the other products their customers use.
-
-With Prismatic, you can:
-
-- Build [integrations](https://prismatic.io/docs/integrations/) using our [intuitive low-code designer](https://prismatic.io/docs/integrations/low-code-integration-designer/) or [code-native](https://prismatic.io/docs/integrations/code-native/) approach in your preferred IDE
-- Leverage pre-built [connectors](https://prismatic.io/docs/components/) for common integration tasks, or develop custom connectors using our TypeScript SDK
-- Embed a native [integration marketplace](https://prismatic.io/docs/embed/) in your product for customer self-service
-- Configure and deploy customer-specific integration instances with powerful configuration tools
-- Support customers efficiently with comprehensive [logging, monitoring, and alerting](https://prismatic.io/docs/monitor-instances/)
-- Run integrations in a secure, scalable infrastructure designed for B2B SaaS
-- Customize the platform to fit your product, industry, and development workflows
-
-## Who uses Prismatic?
-
-Prismatic is built for B2B software companies that need to provide integrations to their customers. Whether you're a growing SaaS startup or an established enterprise, Prismatic's platform scales with your integration needs.
-
-Our platform is particularly powerful for teams serving specialized vertical markets. We provide the flexibility and tools to build exactly the integrations your customers need, regardless of the systems you're connecting to or how unique your integration requirements may be.
-
-## What kind of integrations can you build using Prismatic?
-
-Prismatic supports integrations of any complexity - from simple data syncs to sophisticated, industry-specific solutions. Teams use it to build integrations between any type of system, whether modern SaaS or legacy with standard or custom protocols. Here are some example use cases:
-
-- Connect your product with customers' ERPs, CRMs, and other business systems
-- Process data from multiple sources with customer-specific transformation requirements
-- Automate workflows with customizable triggers, actions, and schedules
-- Handle complex authentication flows and data mapping scenarios
-
-For information on the Prismatic platform, check out our [website](https://prismatic.io/) and [docs](https://prismatic.io/docs/).
-
-## License
-
-This package is Apache-2.0 licensed.
+This public platform component must already be published with the packaged
+artifact's signature. Publish from the unpacked npm tarball's \`dist/\` directory;
+packing can normalize file permissions that contribute to the signature.
 "
 `;
 
-exports[`component generation tests > modern + internal - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern-internal/biome.jsonc 1`] = `
+exports[`component generation tests > modern + internal - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern-internal/biome.json 1`] = `
 "{
   "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
+  "files": {
+    "includes": ["**", "!**/dist", "!**/npm-dist", "!**/node_modules"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
   "assist": {
     "actions": {
       "source": {
@@ -13188,32 +13083,12 @@ exports[`component generation tests > modern + internal - wsdl - numberconversio
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
-      "style": {
-        "noRestrictedImports": {
-          "level": "error",
-          "options": {
-            "patterns": [
-              {
-                "group": [
-                  "@prismatic-io/spectral/dist",
-                  "@prismatic-io/spectral/dist/**"
-                ],
-                "message": "Import from @prismatic-io/spectral, @prismatic-io/spectral/http, or @prismatic-io/spectral/testing instead of dist/ paths."
-              }
-            ]
-          }
-        }
+      "preset": "recommended",
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noTsIgnore": "off"
       }
     }
-  },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2
-  },
-  "files": {
-    "includes": ["**", "!**/dist", "!**/npm-dist"]
   }
 }
 "
@@ -13561,8 +13436,16 @@ export interface NumberConversion {
 
 exports[`component generation tests > modern + internal - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern-internal/package.json 1`] = `
 "{
-  "name": "@prismatic-io/components-numberconversion-modern-internal",
-  "version": "0.0.0",
+  "name": "@prismatic-io/components-numberconversionmoderninternal",
+  "version": "0.0.1",
+  "main": "./npm-dist/index.cjs",
+  "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "description": "Prism-generated Component",
   "license": "Apache-2.0",
   "repository": {
@@ -13570,24 +13453,25 @@ exports[`component generation tests > modern + internal - wsdl - numberconversio
     "url": "git+https://github.com/prismatic-io/components.git",
     "directory": "components/numberconversion-modern-internal"
   },
-  "main": "./npm-dist/index.cjs",
-  "types": "./npm-dist/index.d.cts",
-  "files": ["npm-dist", "dist"],
   "publishConfig": {
     "access": "public"
   },
+  "files": ["npm-dist", "dist"],
+  "prismatic": {
+    "component": "./dist/index.js"
+  },
   "scripts": {
-    "build": "npm run format && npm run lint && tsdown",
+    "build": "npm run typecheck && tsdown",
     "build:npm": "npm run build && node build-npm.mjs",
     "prepare": "npm run build:npm",
     "publish:platform": "npm run build && prism components:publish",
     "test": "vitest run",
-    "lint": "biome check --write .",
+    "lint": "biome lint .",
     "typecheck": "tsc --noEmit",
     "format": "biome format --write ."
   },
-  "prismatic": {
-    "component": "./dist/index.js"
+  "engines": {
+    "node": ">=22.18.0"
   },
   "peerDependencies": {
     "@prismatic-io/spectral": "VERSION"
@@ -13597,7 +13481,7 @@ exports[`component generation tests > modern + internal - wsdl - numberconversio
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.1",
-    "@types/node": "^26",
+    "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
     "tsdown": "0.22.3",
     "typescript": "6.0.3",
@@ -13738,19 +13622,15 @@ export const ubiNum = input({
 exports[`component generation tests > modern + internal - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern-internal/tsconfig.json 1`] = `
 "{
   "compilerOptions": {
-    "target": "es6",
-    "lib": ["esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "target": "es2022",
+    "lib": ["es2022"],
     "strict": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "module": "esnext",
     "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "skipLibCheck": true
   },
   "include": ["src", ".spectral/*"]
 }
@@ -13765,22 +13645,28 @@ export default defineConfig({
   format: "cjs",
   outDir: "dist",
   platform: "node",
+  target: "node22",
   clean: true,
-  dts: false,
   minify: true,
+  dts: false,
+  checks: { legacyCjs: false },
   deps: {
     alwaysBundle: () => true,
     onlyBundle: false,
   },
   outExtensions: () => ({ js: ".js" }),
   outputOptions: { exports: "named", codeSplitting: false },
-  copy: [{ from: "assets/*", to: "dist" }],
+  loader: {
+    ".md": "text",
+  },
+  copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
 });
 "
 `;
 
 exports[`component generation tests > modern + internal - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern-internal/vitest.config.ts 1`] = `
 "import { defineConfig } from "vitest/config";
+
 export default defineConfig({
   test: {
     globals: true,
@@ -13813,140 +13699,25 @@ exports[`component generation tests > modern - openApi - nested-objects > should
 
 A Prismatic custom component, scaffolded by \`prism components:init\`.
 
-| Command                    | What it does                                                        |
-| -------------------------- | ------------------------------------------------------------------- |
-| \`npm test\`                 | Runs the unit tests                                                 |
-| \`npm run build\`            | Bundles the component for the Prismatic platform (\`dist/\`)          |
-| \`npm run publish:platform\` | Builds, then publishes the component to Prismatic                   |
-| \`npm run build:npm\`        | Compiles the component as an npm package (\`npm-dist/\`), see below   |
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
 
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Using this component from a code-native integration
+## Optional npm usage
 
-Add the component to your integration's \`package.json\`. The integration must
-also depend on \`@prismatic-io/spectral\`.
+Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
+use \`--npm-package @your-org/component-name\`.
 
-You do not need to publish the component to Prismatic yourself.
-\`prism integrations:import\` publishes it whenever an integration depends on it
-(skipping the publish when nothing has changed). \`npm run publish:platform\`
-publishes it directly.
-
-### From a git repository (no registry needed)
-
-Pin a tag, branch, or commit. npm builds the package on install, so nothing
-needs to be committed or published.
-
-GitHub:
-
-\`\`\`json
-{
-  "dependencies": {
-    "nested-objects-modern": "github:your-org/nested-objects-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-GitLab (gitlab.com):
-
-\`\`\`json
-{
-  "dependencies": {
-    "nested-objects-modern": "gitlab:your-group/nested-objects-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-### From a tarball vendored into the integration
-
-\`\`\`sh
-npm pack                                  # in this directory, writes nested-objects-modern-0.0.1.tgz
-\`\`\`
-
-\`\`\`json
-{
-  "dependencies": {
-    "nested-objects-modern": "file:./vendor/nested-objects-modern-0.0.1.tgz"
-  }
-}
-\`\`\`
-
-### From a local checkout, while developing
-
-\`\`\`json
-{
-  "dependencies": {
-    "nested-objects-modern": "file:../nested-objects-modern"
-  }
-}
-\`\`\`
-
-npm does not build linked directories, so run \`npm run build:npm\` here after
-each change. Because the link resolves to this directory's \`node_modules\`, make
-sure both projects use the same \`@prismatic-io/spectral\` version.
-
-### From a workspace in an npm monorepo
-
-When the integration and this component live in the same repository, list both
-as npm workspaces in the repository's root \`package.json\`:
-
-\`\`\`json
-{
-  "private": true,
-  "workspaces": ["components/*", "integrations/*"]
-}
-\`\`\`
-
-Then depend on the component by name with an ordinary version range; npm links
-the workspace instead of fetching it from a registry:
-
-\`\`\`json
-{
-  "dependencies": {
-    "nested-objects-modern": "*"
-  }
-}
-\`\`\`
-
-Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
-script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
-to the root so the integration and the component share one copy, as long as
-their spectral ranges agree. After
-changing the component, rebuild it with \`npm run build:npm --workspace nested-objects-modern\`.
-npm does not support the \`workspace:*\` protocol that pnpm, Yarn and Bun use.
-
-### From an npm registry
-
-Remove \`"private": true\` from \`package.json\`, then \`npm publish\` to your registry
-and depend on the version as usual.
-
-### Using the component
-
-\`\`\`ts
-import { configPage, flow } from "@prismatic-io/spectral";
-import nestedObjectsModern from "nested-objects-modern";
-
-export const configPages = {
-  Configuration: configPage({
-    elements: {
-      // A connection config var, backed by the published component's connection.
-      "My Connection": nestedObjectsModern.connections.apiKey({ stableKey: "my-connection" }),
-    },
-  }),
-};
-
-export const myFlow = flow({
-  name: "My Flow",
-  stableKey: "my-flow",
-  onExecution: async (context) => ({
-    data: await nestedObjectsModern.actions.createEmployee({
-      connection: context.configVars["My Connection"],
-      // ...the action's other inputs, typed from its definition
-    }),
-  }),
-});
-\`\`\`
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
 "
 `;
 
@@ -14141,6 +13912,12 @@ exports[`component generation tests > modern - openApi - nested-objects > should
   "private": true,
   "main": "./npm-dist/index.cjs",
   "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "files": ["npm-dist", "dist"],
   "prismatic": {
     "component": "./dist/index.js"
@@ -14426,130 +14203,25 @@ exports[`component generation tests > modern - openApi - petstore-expanded > sho
 
 A Prismatic custom component, scaffolded by \`prism components:init\`.
 
-| Command                    | What it does                                                        |
-| -------------------------- | ------------------------------------------------------------------- |
-| \`npm test\`                 | Runs the unit tests                                                 |
-| \`npm run build\`            | Bundles the component for the Prismatic platform (\`dist/\`)          |
-| \`npm run publish:platform\` | Builds, then publishes the component to Prismatic                   |
-| \`npm run build:npm\`        | Compiles the component as an npm package (\`npm-dist/\`), see below   |
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
 
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Using this component from a code-native integration
+## Optional npm usage
 
-Add the component to your integration's \`package.json\`. The integration must
-also depend on \`@prismatic-io/spectral\`.
+Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
+use \`--npm-package @your-org/component-name\`.
 
-You do not need to publish the component to Prismatic yourself.
-\`prism integrations:import\` publishes it whenever an integration depends on it
-(skipping the publish when nothing has changed). \`npm run publish:platform\`
-publishes it directly.
-
-### From a git repository (no registry needed)
-
-Pin a tag, branch, or commit. npm builds the package on install, so nothing
-needs to be committed or published.
-
-GitHub:
-
-\`\`\`json
-{
-  "dependencies": {
-    "petstore-expanded-modern": "github:your-org/petstore-expanded-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-GitLab (gitlab.com):
-
-\`\`\`json
-{
-  "dependencies": {
-    "petstore-expanded-modern": "gitlab:your-group/petstore-expanded-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-### From a tarball vendored into the integration
-
-\`\`\`sh
-npm pack                                  # in this directory, writes petstore-expanded-modern-0.0.1.tgz
-\`\`\`
-
-\`\`\`json
-{
-  "dependencies": {
-    "petstore-expanded-modern": "file:./vendor/petstore-expanded-modern-0.0.1.tgz"
-  }
-}
-\`\`\`
-
-### From a local checkout, while developing
-
-\`\`\`json
-{
-  "dependencies": {
-    "petstore-expanded-modern": "file:../petstore-expanded-modern"
-  }
-}
-\`\`\`
-
-npm does not build linked directories, so run \`npm run build:npm\` here after
-each change. Because the link resolves to this directory's \`node_modules\`, make
-sure both projects use the same \`@prismatic-io/spectral\` version.
-
-### From a workspace in an npm monorepo
-
-When the integration and this component live in the same repository, list both
-as npm workspaces in the repository's root \`package.json\`:
-
-\`\`\`json
-{
-  "private": true,
-  "workspaces": ["components/*", "integrations/*"]
-}
-\`\`\`
-
-Then depend on the component by name with an ordinary version range; npm links
-the workspace instead of fetching it from a registry:
-
-\`\`\`json
-{
-  "dependencies": {
-    "petstore-expanded-modern": "*"
-  }
-}
-\`\`\`
-
-Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
-script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
-to the root so the integration and the component share one copy, as long as
-their spectral ranges agree. After
-changing the component, rebuild it with \`npm run build:npm --workspace petstore-expanded-modern\`.
-npm does not support the \`workspace:*\` protocol that pnpm, Yarn and Bun use.
-
-### From an npm registry
-
-Remove \`"private": true\` from \`package.json\`, then \`npm publish\` to your registry
-and depend on the version as usual.
-
-### Using the component
-
-\`\`\`ts
-import { configPage, flow } from "@prismatic-io/spectral";
-import petstoreExpandedModern from "petstore-expanded-modern";
-
-export const myFlow = flow({
-  name: "My Flow",
-  stableKey: "my-flow",
-  onExecution: async (context) => ({
-    data: await petstoreExpandedModern.actions.findPets({
-      // ...the action's other inputs, typed from its definition
-    }),
-  }),
-});
-\`\`\`
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
 "
 `;
 
@@ -14630,6 +14302,12 @@ exports[`component generation tests > modern - openApi - petstore-expanded > sho
   "private": true,
   "main": "./npm-dist/index.cjs",
   "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "files": ["npm-dist", "dist"],
   "prismatic": {
     "component": "./dist/index.js"
@@ -15194,130 +14872,25 @@ exports[`component generation tests > modern - openApi - petstore-expanded-uuid-
 
 A Prismatic custom component, scaffolded by \`prism components:init\`.
 
-| Command                    | What it does                                                        |
-| -------------------------- | ------------------------------------------------------------------- |
-| \`npm test\`                 | Runs the unit tests                                                 |
-| \`npm run build\`            | Bundles the component for the Prismatic platform (\`dist/\`)          |
-| \`npm run publish:platform\` | Builds, then publishes the component to Prismatic                   |
-| \`npm run build:npm\`        | Compiles the component as an npm package (\`npm-dist/\`), see below   |
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
 
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Using this component from a code-native integration
+## Optional npm usage
 
-Add the component to your integration's \`package.json\`. The integration must
-also depend on \`@prismatic-io/spectral\`.
+Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
+use \`--npm-package @your-org/component-name\`.
 
-You do not need to publish the component to Prismatic yourself.
-\`prism integrations:import\` publishes it whenever an integration depends on it
-(skipping the publish when nothing has changed). \`npm run publish:platform\`
-publishes it directly.
-
-### From a git repository (no registry needed)
-
-Pin a tag, branch, or commit. npm builds the package on install, so nothing
-needs to be committed or published.
-
-GitHub:
-
-\`\`\`json
-{
-  "dependencies": {
-    "petstore-expanded-uuid-paths-modern": "github:your-org/petstore-expanded-uuid-paths-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-GitLab (gitlab.com):
-
-\`\`\`json
-{
-  "dependencies": {
-    "petstore-expanded-uuid-paths-modern": "gitlab:your-group/petstore-expanded-uuid-paths-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-### From a tarball vendored into the integration
-
-\`\`\`sh
-npm pack                                  # in this directory, writes petstore-expanded-uuid-paths-modern-0.0.1.tgz
-\`\`\`
-
-\`\`\`json
-{
-  "dependencies": {
-    "petstore-expanded-uuid-paths-modern": "file:./vendor/petstore-expanded-uuid-paths-modern-0.0.1.tgz"
-  }
-}
-\`\`\`
-
-### From a local checkout, while developing
-
-\`\`\`json
-{
-  "dependencies": {
-    "petstore-expanded-uuid-paths-modern": "file:../petstore-expanded-uuid-paths-modern"
-  }
-}
-\`\`\`
-
-npm does not build linked directories, so run \`npm run build:npm\` here after
-each change. Because the link resolves to this directory's \`node_modules\`, make
-sure both projects use the same \`@prismatic-io/spectral\` version.
-
-### From a workspace in an npm monorepo
-
-When the integration and this component live in the same repository, list both
-as npm workspaces in the repository's root \`package.json\`:
-
-\`\`\`json
-{
-  "private": true,
-  "workspaces": ["components/*", "integrations/*"]
-}
-\`\`\`
-
-Then depend on the component by name with an ordinary version range; npm links
-the workspace instead of fetching it from a registry:
-
-\`\`\`json
-{
-  "dependencies": {
-    "petstore-expanded-uuid-paths-modern": "*"
-  }
-}
-\`\`\`
-
-Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
-script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
-to the root so the integration and the component share one copy, as long as
-their spectral ranges agree. After
-changing the component, rebuild it with \`npm run build:npm --workspace petstore-expanded-uuid-paths-modern\`.
-npm does not support the \`workspace:*\` protocol that pnpm, Yarn and Bun use.
-
-### From an npm registry
-
-Remove \`"private": true\` from \`package.json\`, then \`npm publish\` to your registry
-and depend on the version as usual.
-
-### Using the component
-
-\`\`\`ts
-import { configPage, flow } from "@prismatic-io/spectral";
-import petstoreExpandedUuidPathsModern from "petstore-expanded-uuid-paths-modern";
-
-export const myFlow = flow({
-  name: "My Flow",
-  stableKey: "my-flow",
-  onExecution: async (context) => ({
-    data: await petstoreExpandedUuidPathsModern.actions.findPets({
-      // ...the action's other inputs, typed from its definition
-    }),
-  }),
-});
-\`\`\`
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
 "
 `;
 
@@ -15398,6 +14971,12 @@ exports[`component generation tests > modern - openApi - petstore-expanded-uuid-
   "private": true,
   "main": "./npm-dist/index.cjs",
   "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "files": ["npm-dist", "dist"],
   "prismatic": {
     "component": "./dist/index.js"
@@ -15967,140 +15546,25 @@ exports[`component generation tests > modern - openApi - todo-api > should match
 
 A Prismatic custom component, scaffolded by \`prism components:init\`.
 
-| Command                    | What it does                                                        |
-| -------------------------- | ------------------------------------------------------------------- |
-| \`npm test\`                 | Runs the unit tests                                                 |
-| \`npm run build\`            | Bundles the component for the Prismatic platform (\`dist/\`)          |
-| \`npm run publish:platform\` | Builds, then publishes the component to Prismatic                   |
-| \`npm run build:npm\`        | Compiles the component as an npm package (\`npm-dist/\`), see below   |
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
 
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Using this component from a code-native integration
+## Optional npm usage
 
-Add the component to your integration's \`package.json\`. The integration must
-also depend on \`@prismatic-io/spectral\`.
+Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
+use \`--npm-package @your-org/component-name\`.
 
-You do not need to publish the component to Prismatic yourself.
-\`prism integrations:import\` publishes it whenever an integration depends on it
-(skipping the publish when nothing has changed). \`npm run publish:platform\`
-publishes it directly.
-
-### From a git repository (no registry needed)
-
-Pin a tag, branch, or commit. npm builds the package on install, so nothing
-needs to be committed or published.
-
-GitHub:
-
-\`\`\`json
-{
-  "dependencies": {
-    "todo-api-modern": "github:your-org/todo-api-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-GitLab (gitlab.com):
-
-\`\`\`json
-{
-  "dependencies": {
-    "todo-api-modern": "gitlab:your-group/todo-api-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-### From a tarball vendored into the integration
-
-\`\`\`sh
-npm pack                                  # in this directory, writes todo-api-modern-0.0.1.tgz
-\`\`\`
-
-\`\`\`json
-{
-  "dependencies": {
-    "todo-api-modern": "file:./vendor/todo-api-modern-0.0.1.tgz"
-  }
-}
-\`\`\`
-
-### From a local checkout, while developing
-
-\`\`\`json
-{
-  "dependencies": {
-    "todo-api-modern": "file:../todo-api-modern"
-  }
-}
-\`\`\`
-
-npm does not build linked directories, so run \`npm run build:npm\` here after
-each change. Because the link resolves to this directory's \`node_modules\`, make
-sure both projects use the same \`@prismatic-io/spectral\` version.
-
-### From a workspace in an npm monorepo
-
-When the integration and this component live in the same repository, list both
-as npm workspaces in the repository's root \`package.json\`:
-
-\`\`\`json
-{
-  "private": true,
-  "workspaces": ["components/*", "integrations/*"]
-}
-\`\`\`
-
-Then depend on the component by name with an ordinary version range; npm links
-the workspace instead of fetching it from a registry:
-
-\`\`\`json
-{
-  "dependencies": {
-    "todo-api-modern": "*"
-  }
-}
-\`\`\`
-
-Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
-script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
-to the root so the integration and the component share one copy, as long as
-their spectral ranges agree. After
-changing the component, rebuild it with \`npm run build:npm --workspace todo-api-modern\`.
-npm does not support the \`workspace:*\` protocol that pnpm, Yarn and Bun use.
-
-### From an npm registry
-
-Remove \`"private": true\` from \`package.json\`, then \`npm publish\` to your registry
-and depend on the version as usual.
-
-### Using the component
-
-\`\`\`ts
-import { configPage, flow } from "@prismatic-io/spectral";
-import todoApiModern from "todo-api-modern";
-
-export const configPages = {
-  Configuration: configPage({
-    elements: {
-      // A connection config var, backed by the published component's connection.
-      "My Connection": todoApiModern.connections.bearerAuth({ stableKey: "my-connection" }),
-    },
-  }),
-};
-
-export const myFlow = flow({
-  name: "My Flow",
-  stableKey: "my-flow",
-  onExecution: async (context) => ({
-    data: await todoApiModern.actions.listTodos({
-      connection: context.configVars["My Connection"],
-      // ...the action's other inputs, typed from its definition
-    }),
-  }),
-});
-\`\`\`
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
 "
 `;
 
@@ -16181,6 +15645,12 @@ exports[`component generation tests > modern - openApi - todo-api > should match
   "private": true,
   "main": "./npm-dist/index.cjs",
   "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "files": ["npm-dist", "dist"],
   "prismatic": {
     "component": "./dist/index.js"
@@ -17137,151 +16607,25 @@ exports[`component generation tests > modern - wsdl - countryinfoservice > shoul
 
 A Prismatic custom component, scaffolded by \`prism components:init\`.
 
-| Command                    | What it does                                                        |
-| -------------------------- | ------------------------------------------------------------------- |
-| \`npm test\`                 | Runs the unit tests                                                 |
-| \`npm run build\`            | Bundles the component for the Prismatic platform (\`dist/\`)          |
-| \`npm run publish:platform\` | Builds, then publishes the component to Prismatic                   |
-| \`npm run build:npm\`        | Compiles the component as an npm package (\`npm-dist/\`), see below   |
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
 
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Using this component from a code-native integration
+## Optional npm usage
 
-Add the component to your integration's \`package.json\`. The integration must
-also depend on \`@prismatic-io/spectral\`.
+Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
+use \`--npm-package @your-org/component-name\`.
 
-You do not need to publish the component to Prismatic yourself.
-\`prism integrations:import\` publishes it whenever an integration depends on it
-(skipping the publish when nothing has changed). \`npm run publish:platform\`
-publishes it directly.
-
-### From a git repository (no registry needed)
-
-Pin a tag, branch, or commit. npm builds the package on install, so nothing
-needs to be committed or published.
-
-GitHub:
-
-\`\`\`json
-{
-  "dependencies": {
-    "countryinfoservice-modern": "github:your-org/countryinfoservice-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-GitLab (gitlab.com):
-
-\`\`\`json
-{
-  "dependencies": {
-    "countryinfoservice-modern": "gitlab:your-group/countryinfoservice-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-### From a tarball vendored into the integration
-
-\`\`\`sh
-npm pack                                  # in this directory, writes countryinfoservice-modern-0.0.1.tgz
-\`\`\`
-
-\`\`\`json
-{
-  "dependencies": {
-    "countryinfoservice-modern": "file:./vendor/countryinfoservice-modern-0.0.1.tgz"
-  }
-}
-\`\`\`
-
-### From a local checkout, while developing
-
-\`\`\`json
-{
-  "dependencies": {
-    "countryinfoservice-modern": "file:../countryinfoservice-modern"
-  }
-}
-\`\`\`
-
-npm does not build linked directories, so run \`npm run build:npm\` here after
-each change. Because the link resolves to this directory's \`node_modules\`, make
-sure both projects use the same \`@prismatic-io/spectral\` version.
-
-### From a workspace in an npm monorepo
-
-When the integration and this component live in the same repository, list both
-as npm workspaces in the repository's root \`package.json\`:
-
-\`\`\`json
-{
-  "private": true,
-  "workspaces": ["components/*", "integrations/*"]
-}
-\`\`\`
-
-Then depend on the component by name with an ordinary version range; npm links
-the workspace instead of fetching it from a registry:
-
-\`\`\`json
-{
-  "dependencies": {
-    "countryinfoservice-modern": "*"
-  }
-}
-\`\`\`
-
-Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
-script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
-to the root so the integration and the component share one copy, as long as
-their spectral ranges agree. After
-changing the component, rebuild it with \`npm run build:npm --workspace countryinfoservice-modern\`.
-npm does not support the \`workspace:*\` protocol that pnpm, Yarn and Bun use.
-
-### From an npm registry
-
-Remove \`"private": true\` from \`package.json\`, then \`npm publish\` to your registry
-and depend on the version as usual.
-
-### Using the component
-
-\`\`\`ts
-import { configPage, flow } from "@prismatic-io/spectral";
-import countryinfoserviceModern from "countryinfoservice-modern";
-
-export const configPages = {
-  Configuration: configPage({
-    elements: {
-      // A connection config var, backed by the published component's connection.
-      "My Connection": countryinfoserviceModern.connections.apiKey({ stableKey: "my-connection" }),
-      // A data source config var, run in-process; its inputs bind like a trigger's.
-      "My Choice": countryinfoserviceModern.dataSources.selectItem({
-        stableKey: "my-choice",
-        values: { acmeConnection: { configVar: "My Connection" } },
-      }),
-    },
-  }),
-};
-
-export const myFlow = flow({
-  name: "My Flow",
-  stableKey: "my-flow",
-  // A component trigger bound to the flow. A \`configVar\` binding is read on each invocation;
-  // other inputs take their pre-clean values.
-  onTrigger: countryinfoserviceModern.triggers.exampleTrigger({ acmeConnection: { configVar: "My Connection" } }),
-  onExecution: async (context) => ({
-    data: await countryinfoserviceModern.actions.listItems({
-      acmeConnection: context.configVars["My Connection"],
-      // ...the action's other inputs, typed from its definition
-    }),
-  }),
-});
-\`\`\`
-
-A data source can also be called directly, \`await countryinfoserviceModern.dataSources.selectItem.perform({ ... })\`,
-from a \`dataSourceConfigVar\`'s \`perform\`.
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
 "
 `;
 
@@ -20075,6 +19419,12 @@ exports[`component generation tests > modern - wsdl - countryinfoservice > shoul
   "main": "./npm-dist/index.cjs",
   "private": true,
   "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "files": ["npm-dist", "dist"],
   "prismatic": {
     "component": "./dist/index.js"
@@ -20902,151 +20252,25 @@ exports[`component generation tests > modern - wsdl - numberconversion > should 
 
 A Prismatic custom component, scaffolded by \`prism components:init\`.
 
-| Command                    | What it does                                                        |
-| -------------------------- | ------------------------------------------------------------------- |
-| \`npm test\`                 | Runs the unit tests                                                 |
-| \`npm run build\`            | Bundles the component for the Prismatic platform (\`dist/\`)          |
-| \`npm run publish:platform\` | Builds, then publishes the component to Prismatic                   |
-| \`npm run build:npm\`        | Compiles the component as an npm package (\`npm-dist/\`), see below   |
+| Command | What it does |
+| --- | --- |
+| \`npm test\` | Runs the unit tests |
+| \`npm run build\` | Bundles the component for Prismatic |
+| \`npm run publish:platform\` | Builds and publishes the component to Prismatic |
 
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Using this component from a code-native integration
+## Optional npm usage
 
-Add the component to your integration's \`package.json\`. The integration must
-also depend on \`@prismatic-io/spectral\`.
+Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
+use \`--npm-package @your-org/component-name\`.
 
-You do not need to publish the component to Prismatic yourself.
-\`prism integrations:import\` publishes it whenever an integration depends on it
-(skipping the publish when nothing has changed). \`npm run publish:platform\`
-publishes it directly.
-
-### From a git repository (no registry needed)
-
-Pin a tag, branch, or commit. npm builds the package on install, so nothing
-needs to be committed or published.
-
-GitHub:
-
-\`\`\`json
-{
-  "dependencies": {
-    "numberconversion-modern": "github:your-org/numberconversion-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-GitLab (gitlab.com):
-
-\`\`\`json
-{
-  "dependencies": {
-    "numberconversion-modern": "gitlab:your-group/numberconversion-modern#v1.0.0"
-  }
-}
-\`\`\`
-
-### From a tarball vendored into the integration
-
-\`\`\`sh
-npm pack                                  # in this directory, writes numberconversion-modern-0.0.1.tgz
-\`\`\`
-
-\`\`\`json
-{
-  "dependencies": {
-    "numberconversion-modern": "file:./vendor/numberconversion-modern-0.0.1.tgz"
-  }
-}
-\`\`\`
-
-### From a local checkout, while developing
-
-\`\`\`json
-{
-  "dependencies": {
-    "numberconversion-modern": "file:../numberconversion-modern"
-  }
-}
-\`\`\`
-
-npm does not build linked directories, so run \`npm run build:npm\` here after
-each change. Because the link resolves to this directory's \`node_modules\`, make
-sure both projects use the same \`@prismatic-io/spectral\` version.
-
-### From a workspace in an npm monorepo
-
-When the integration and this component live in the same repository, list both
-as npm workspaces in the repository's root \`package.json\`:
-
-\`\`\`json
-{
-  "private": true,
-  "workspaces": ["components/*", "integrations/*"]
-}
-\`\`\`
-
-Then depend on the component by name with an ordinary version range; npm links
-the workspace instead of fetching it from a registry:
-
-\`\`\`json
-{
-  "dependencies": {
-    "numberconversion-modern": "*"
-  }
-}
-\`\`\`
-
-Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
-script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
-to the root so the integration and the component share one copy, as long as
-their spectral ranges agree. After
-changing the component, rebuild it with \`npm run build:npm --workspace numberconversion-modern\`.
-npm does not support the \`workspace:*\` protocol that pnpm, Yarn and Bun use.
-
-### From an npm registry
-
-Remove \`"private": true\` from \`package.json\`, then \`npm publish\` to your registry
-and depend on the version as usual.
-
-### Using the component
-
-\`\`\`ts
-import { configPage, flow } from "@prismatic-io/spectral";
-import numberconversionModern from "numberconversion-modern";
-
-export const configPages = {
-  Configuration: configPage({
-    elements: {
-      // A connection config var, backed by the published component's connection.
-      "My Connection": numberconversionModern.connections.apiKey({ stableKey: "my-connection" }),
-      // A data source config var, run in-process; its inputs bind like a trigger's.
-      "My Choice": numberconversionModern.dataSources.selectItem({
-        stableKey: "my-choice",
-        values: { acmeConnection: { configVar: "My Connection" } },
-      }),
-    },
-  }),
-};
-
-export const myFlow = flow({
-  name: "My Flow",
-  stableKey: "my-flow",
-  // A component trigger bound to the flow. A \`configVar\` binding is read on each invocation;
-  // other inputs take their pre-clean values.
-  onTrigger: numberconversionModern.triggers.exampleTrigger({ acmeConnection: { configVar: "My Connection" } }),
-  onExecution: async (context) => ({
-    data: await numberconversionModern.actions.listItems({
-      acmeConnection: context.configVars["My Connection"],
-      // ...the action's other inputs, typed from its definition
-    }),
-  }),
-});
-\`\`\`
-
-A data source can also be called directly, \`await numberconversionModern.dataSources.selectItem.perform({ ... })\`,
-from a \`dataSourceConfigVar\`'s \`perform\`.
+To use this component in a code-native integration without a registry, run
+\`npm pack\` and install the resulting tarball in the integration. The integration
+must also depend on \`@prismatic-io/spectral\`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
 "
 `;
 
@@ -21430,6 +20654,12 @@ exports[`component generation tests > modern - wsdl - numberconversion > should 
   "main": "./npm-dist/index.cjs",
   "private": true,
   "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
   "files": ["npm-dist", "dist"],
   "prismatic": {
     "component": "./dist/index.js"

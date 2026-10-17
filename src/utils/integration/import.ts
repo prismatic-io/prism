@@ -160,28 +160,12 @@ export const importCodeNativeIntegration = async (
   // resolves them by package signature, publishes missing private artifacts, and waits
   // for availability. YAML references use those signatures instead of LATEST.
   const packageRoot = await findPackageRoot("Code Native Integration");
-  const dependencyWarnings = await auditComponentDependencies(packageRoot);
-  const dependencyResults = await publishComponentDependencies(packageRoot, {
-    ...waitOptions,
-    timeoutSeconds: waitOptions?.timeoutSeconds ?? DEFAULT_WAIT_TIMEOUT_SECONDS,
-  });
-  const blockingDependencies = dependencyResults.filter(
-    ({ status }) => status === "failed" || status === "not-built" || status === "timed-out",
-  );
-  if (blockingDependencies.length > 0) {
-    throw new CommandFailedError({
-      message: `Not every component dependency is published and available: ${blockingDependencies
-        .map(({ name, detail }) => (detail ? `${name} (${detail})` : name))
-        .join(", ")}; the integration was not imported.`,
-    });
-  }
 
   return withWorkingDirectory(
     await getPackageEntrypointDirectory("Code Native Integration"),
     async () => {
       const { integrationDefinition, componentDefinition, publishingMetadata } =
         await loadCodeNativeIntegrationEntryPoint();
-      for (const warning of dependencyWarnings) writeCommandOutput(warning, "stderr");
 
       await validateDefinition(componentDefinition, {
         forCodeNativeIntegration: true,
@@ -209,6 +193,23 @@ export const importCodeNativeIntegration = async (
           }
         }
       }
+
+      const dependencyWarnings = await auditComponentDependencies(packageRoot);
+      const dependencyResults = await publishComponentDependencies(packageRoot, {
+        ...waitOptions,
+        timeoutSeconds: waitOptions?.timeoutSeconds ?? DEFAULT_WAIT_TIMEOUT_SECONDS,
+      });
+      const blockingDependencies = dependencyResults.filter(
+        ({ status }) => status === "failed" || status === "not-built" || status === "timed-out",
+      );
+      if (blockingDependencies.length > 0) {
+        throw new CommandFailedError({
+          message: `Not every component dependency is published and available: ${blockingDependencies
+            .map(({ name, detail }) => (detail ? `${name} (${detail})` : name))
+            .join(", ")}; the integration was not imported.`,
+        });
+      }
+      for (const warning of dependencyWarnings) writeCommandOutput(warning, "stderr");
 
       const packagePath = await createComponentPackage();
       const signatures: ComponentSignature[] = dependencyResults.map(

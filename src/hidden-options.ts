@@ -28,7 +28,8 @@ export const extractHiddenOptions = (
     const beforeDelimiter = delimiter < 0 || index < delimiter;
     const match = beforeDelimiter ? /^--([a-z0-9-]+)(?:=(true|false))?$/.exec(token) : null;
     if (match && names.includes(match[1] as string)) {
-      if (match[2] !== "false") set.add(match[1] as string);
+      if (match[2] === "false") set.delete(match[1] as string);
+      else set.add(match[1] as string);
       return;
     }
     remaining.push(token);

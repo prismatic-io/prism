@@ -2,158 +2,34 @@
 
 A Prismatic custom component, scaffolded by `prism components:init`.
 
-| Command                    | What it does                                                        |
-| -------------------------- | ------------------------------------------------------------------- |
-| `npm test`                 | Runs the unit tests                                                 |
-| `npm run build`            | Bundles the component for the Prismatic platform (`dist/`)          |
-| `npm run publish:platform` | Builds, then publishes the component to Prismatic                   |
-| `npm run build:npm`        | Compiles the component as an npm package (`npm-dist/`), see below   |
+| Command | What it does |
+| --- | --- |
+| `npm test` | Runs the unit tests |
+| `npm run build` | Bundles the component for Prismatic |
+| `npm run publish:platform` | Builds and publishes the component to Prismatic |
 
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Using this component from a code-native integration
+## Optional npm usage
 
-Add the component to your integration's `package.json`. The integration must
-also depend on `@prismatic-io/spectral`.
-
-You do not need to publish the component to Prismatic yourself.
-`prism integrations:import` publishes it whenever an integration depends on it
-(skipping the publish when nothing has changed). `npm run publish:platform`
-publishes it directly.
-
-### From a git repository (no registry needed)
-
-Pin a tag, branch, or commit. npm builds the package on install, so nothing
-needs to be committed or published.
-
-GitHub:
-
-```json
-{
-  "dependencies": {
-    "<%= name %>": "github:your-org/<%= name %>#v1.0.0"
-  }
-}
-```
-
-GitLab (gitlab.com):
-
-```json
-{
-  "dependencies": {
-    "<%= name %>": "gitlab:your-group/<%= name %>#v1.0.0"
-  }
-}
-```
-
-### From a tarball vendored into the integration
-
-```sh
-npm pack                                  # in this directory, writes <%= name %>-0.0.1.tgz
-```
-
-```json
-{
-  "dependencies": {
-    "<%= name %>": "file:./vendor/<%= name %>-0.0.1.tgz"
-  }
-}
-```
-
-### From a local checkout, while developing
-
-```json
-{
-  "dependencies": {
-    "<%= name %>": "file:../<%= directory %>"
-  }
-}
-```
-
-npm does not build linked directories, so run `npm run build:npm` here after
-each change. Because the link resolves to this directory's `node_modules`, make
-sure both projects use the same `@prismatic-io/spectral` version.
-
-### From a workspace in an npm monorepo
-
-When the integration and this component live in the same repository, list both
-as npm workspaces in the repository's root `package.json`:
-
-```json
-{
-  "private": true,
-  "workspaces": ["components/*", "integrations/*"]
-}
-```
-
-Then depend on the component by name with an ordinary version range; npm links
-the workspace instead of fetching it from a registry:
-
-```json
-{
-  "dependencies": {
-    "<%= name %>": "*"
-  }
-}
-```
-
-Run `npm install` from the repository root. npm runs this package's `prepare`
-script for the workspace, which builds it, and hoists `@prismatic-io/spectral`
-to the root so the integration and the component share one copy, as long as
-their spectral ranges agree. After
-changing the component, rebuild it with `npm run build:npm --workspace <%= name %>`.
-npm does not support the `workspace:*` protocol that pnpm, Yarn and Bun use.
-
-### From an npm registry
-
-Remove `"private": true` from `package.json`, then `npm publish` to your registry
-and depend on the version as usual.
-
-### Using the component
-
-```ts
-import { configPage, flow } from "@prismatic-io/spectral";
-import <%= key %> from "<%= name %>";
-<% if (example.connection) { -%>
-
-export const configPages = {
-  Configuration: configPage({
-    elements: {
-      // A connection config var, backed by the published component's connection.
-      "My Connection": <%= key %>.connections.<%= example.connection %>({ stableKey: "my-connection" }),
-<% if (example.dataSource) { -%>
-      // A data source config var, run in-process; its inputs bind like a trigger's.
-      "My Choice": <%= key %>.dataSources.<%= example.dataSource %>({
-        stableKey: "my-choice",
-        values: { <%= example.connectionInput %>: { configVar: "My Connection" } },
-      }),
-<% } -%>
-    },
-  }),
-};
+<% if (registryPublishing) { -%>
+This package is enabled for registry publishing. Run `npm publish` using your
+registry's authentication and configuration. npm visibility is independent of
+component visibility in Prismatic.
+<% } else { -%>
+Registry publishing is disabled by `"private": true`. To opt in when scaffolding,
+use `--npm-package @your-org/component-name`.
 <% } -%>
 
-export const myFlow = flow({
-  name: "My Flow",
-  stableKey: "my-flow",
-<% if (example.trigger) { -%>
-  // A component trigger bound to the flow. A `configVar` binding is read on each invocation;
-  // other inputs take their pre-clean values.
-  onTrigger: <%= key %>.triggers.<%= example.trigger %>({ <%= example.connectionInput %>: { configVar: "My Connection" } }),
-<% } -%>
-  onExecution: async (context) => ({
-    data: await <%= key %>.actions.<%= example.action %>({
-<% if (example.connection) { -%>
-      <%= example.connectionInput %>: context.configVars["My Connection"],
-<% } -%>
-      // ...the action's other inputs, typed from its definition
-    }),
-  }),
-});
-```
-<% if (example.dataSource) { -%>
+To use this component in a code-native integration without a registry, run
+`npm pack` and install the resulting tarball in the integration. The integration
+must also depend on `@prismatic-io/spectral`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes missing private component artifacts during integration import.
+<% if (internal) { -%>
 
-A data source can also be called directly, `await <%= key %>.dataSources.<%= example.dataSource %>.perform({ ... })`,
-from a `dataSourceConfigVar`'s `perform`.
+This public platform component must already be published with the packaged
+artifact's signature. Publish from the unpacked npm tarball's `dist/` directory;
+packing can normalize file permissions that contribute to the signature.
 <% } -%>

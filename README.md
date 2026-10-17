@@ -69,25 +69,17 @@ tenant switching still operate on the selected profile.
 For help with Prism, please see our [Prism documentation page](https://prismatic.io/docs/cli/).
 There, you will find information about the various subcommands you can run, troubleshooting tips, etc.
 
-### npm component dependencies
+### Optional npm publishing
 
-Component source keeps its conventional `export default component(...)` in
-`src/index.ts`, and tests continue to use that export. `build-npm.mjs` generates a
-temporary callable adapter for the npm build and removes it afterward; no authored
-wrapper, separate definition file, or connection tuple assertion is required.
-Spectral 10.36.0 or later retains the authoring data used by this adapter and must
-remain a peer dependency of the npm package.
+To publish a modern component scaffold to an npm registry, use
+`prism components:init acme --npm-package @your-org/acme`, then `npm publish`
+from the generated project. Registry and access settings follow your npm configuration;
+this does not change the component's visibility in Prismatic or how its TypeScript is authored.
+Without this option, registry publishing is disabled; `npm pack` remains available.
 
-When importing a code-native integration, Prism resolves marked component packages
-in its direct `dependencies` by the SHA-1 signature of their platform artifact.
-It reuses any matching published version, including older versions, and publishes
-missing private artifacts. Public artifacts must already have a matching published
-version. Prism waits for processing artifacts before importing the integration.
-
-The imported YAML uses `signature` selectors for these components and the generated
-integration component, rather than `LATEST` or numeric versions. Unrelated component
-references are preserved. Conflicting installed artifacts or existing signature
-selectors that disagree with the installed package cause the import to fail.
+Public platform components must already be published with the packaged artifact's
+signature. Publish their platform artifact from the unpacked npm tarball's `dist/`
+to preserve the exact contents and file permissions used in that signature.
 
 ## What is Prismatic?
 
