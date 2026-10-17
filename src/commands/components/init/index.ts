@@ -8,6 +8,7 @@ import { getWorkingDirectory, withWorkingDirectory } from "../../../command-cont
 import { CommandFailedError } from "../../../errors.js";
 import { generate } from "../../../generate/index.js";
 import { template, updatePackageJson } from "../../../generate/util.js";
+import { hiddenOption } from "../../../hidden-options.js";
 import { warningsOutput } from "../../../output.js";
 import { COMPONENT_PACKAGE_MARKER } from "../../../utils/component/dependencies.js";
 import { formatSourceFiles, getFilesToFormat, VALID_NAME_REGEX } from "../../../utils/generate.js";
@@ -27,6 +28,59 @@ const NPM_TYPES = `./${NPM_DIST}/index.d.cts`;
 const SPECTRAL = "@prismatic-io/spectral";
 const MINIMUM_SPECTRAL_VERSION = "10.36.0";
 const SPECTRAL_RANGE = `^${MINIMUM_SPECTRAL_VERSION}`;
+
+/** `--prismatic-internal`: the shape Prismatic's own components are published to npm in. */
+const INTERNAL_SCOPE = "@prismatic-io/components-";
+const INTERNAL_REPOSITORY_URL = "git+https://github.com/prismatic-io/components.git";
+const INTERNAL_LICENSE = "Apache-2.0";
+/**
+ * With no `private` flag, this is what refuses a stray `npm publish` from a checkout; the
+ * publish workflow sets NPM_PUBLISH_OK deliberately.
+ */
+const INTERNAL_PUBLISH_GUARD =
+  "node -e \"if (!process.env.NPM_PUBLISH_OK) { console.error('npm publish runs only from the GitHub publish workflow (NPM_PUBLISH_OK is unset)'); process.exit(1) }\"";
+
+/**
+ * Rewrite the scaffold's package.json into the internal, registry-publishable shape:
+ * scoped name, metadata npm shows, `publishConfig`, and the publish guard in place of
+ * `private`. Keys are written in a fixed order.
+ */
+const applyInternalPackageShape = async (
+  packageJsonPath: string,
+  { directory, description }: { directory: string; description: string },
+): Promise<void> => {
+  // `private` goes (the guard replaces it). The component marker and platform artifact stay:
+  // an integration's import loads the artifact to see the component is public and leave it alone.
+  const { private: _private, ...pkg } = JSON.parse(
+    await fs.readFile(packageJsonPath, "utf-8"),
+  ) as Record<string, unknown>;
+  const { name: _name, version: _version, main, types, files: _files, scripts, ...rest } = pkg;
+  const ordered = {
+    // The directory name is already the kebab form the key was derived from; npm scoped names
+    // must be lowercase, and the components repo keeps its directories lowercase to match.
+    name: `${INTERNAL_SCOPE}${directory.toLowerCase()}`,
+    version: "0.0.0",
+    description,
+    license: INTERNAL_LICENSE,
+    repository: {
+      type: "git",
+      url: INTERNAL_REPOSITORY_URL,
+      directory: `components/${directory.toLowerCase()}`,
+    },
+    main,
+    types,
+    files: [NPM_DIST, "dist"],
+    publishConfig: { access: "public" },
+    scripts: {
+      ...(scripts as Record<string, string>),
+      prepublishOnly: INTERNAL_PUBLISH_GUARD,
+    },
+    ...rest,
+  };
+  await fs.writeFile(packageJsonPath, JSON.stringify(ordered), "utf-8");
+  // Re-format the file the way every other scaffold write does.
+  await updatePackageJson({ path: packageJsonPath });
+};
 
 export default Cli.command({
   output: z.object({
@@ -89,7 +143,12 @@ export default Cli.command({
         toolchain: toolchainName,
       },
     } = context;
-    const toolchain = getToolchain(toolchainName);
+    // Hidden (see HIDDEN_OPTIONS): scaffolds one of Prismatic's own components, with the scoped
+    // @prismatic-io/components-* name, publishConfig and repository metadata, and the npm
+    // publish guard in place of `private`.
+    const internal = hiddenOption("prismatic-internal");
+
+    const toolchain = getToolchain(toolchainName, { internal });
     const wsdlPath = rawWsdlPath ? path.resolve(cwd, rawWsdlPath) : undefined;
     const openApiPath = rawOpenApiPath ? path.resolve(cwd, rawOpenApiPath) : undefined;
 
@@ -98,6 +157,11 @@ export default Cli.command({
       regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
       throw new CommandFailedError({
         message: `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
+      });
+    }
+    if (internal && !toolchain.npmPackage) {
+      throw new CommandFailedError({
+        message: `--prismatic-internal scaffolds an npm-publishable component, which only the modern toolchain supports (got --toolchain ${toolchain.name})`,
       });
     }
     if (wsdlPath && !wsdlPath?.includes(".wsdl")) {
@@ -119,12 +183,14 @@ export default Cli.command({
           name,
           openapi: openApiPath,
           toolchain: toolchain.name,
+          internal,
         }));
       } else {
         await generateComponent({
           name,
           description,
           toolchain: toolchain.name,
+          internal,
         });
 
         if (wsdlPath) {
@@ -189,13 +255,24 @@ export default Cli.command({
           },
           peerDependencies: { [SPECTRAL]: SPECTRAL_RANGE },
         });
-        await template(path.join("component", "README.md.ejs"), path.join(directory, "README.md"), {
-          name: packageName,
-          // The local-checkout example points at the directory, which keeps the typed case.
-          directory: name,
-          key: camelCase(name),
-          example,
-        });
+        if (internal) {
+          await applyInternalPackageShape(packageJsonPath, { directory: name, description });
+        } else {
+          // Internal components get the npm page README from their toolchain templates;
+          // everyone else gets the guide to depending on the component from a code-native
+          // integration.
+          await template(
+            path.join("component", "README.md.ejs"),
+            path.join(directory, "README.md"),
+            {
+              name: packageName,
+              // The local-checkout example points at the directory, which keeps the typed case.
+              directory: name,
+              key: camelCase(name),
+              example,
+            },
+          );
+        }
       } else {
         // Legacy toolchain retains the platform-only package.
         await updatePackageJson({

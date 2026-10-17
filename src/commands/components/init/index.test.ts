@@ -5,6 +5,7 @@ import { kebabCase } from "lodash-es";
 import path from "path";
 import { describe, expect, it } from "vitest";
 import { walkDir } from "../../../fs";
+import { HIDDEN_OPTIONS } from "../../../hidden-options.js";
 import { runCommand } from "../../../test-command.js";
 import InitializeComponent from ".";
 
@@ -33,14 +34,40 @@ const specs = (await readdir(`${componentsPath}/init/fixtures/specs`)).map<SpecM
   return { type, fileName, name };
 });
 
-/** The supported component scaffolds. */
+/** The scaffolds components:init produces. `--prismatic-internal` exists only on the modern toolchain. */
 const VARIANTS = [
   { name: "modern", toolchain: "modern", flags: [] },
+  { name: "modern + internal", toolchain: "modern", flags: ["--prismatic-internal"] },
   { name: "legacy", toolchain: "legacy", flags: [] },
 ] as const;
 
 describe("component generation tests", () => {
   const basePath = process.env.PWD ?? process.cwd();
+
+  it("refuses --prismatic-internal on the legacy toolchain", async () => {
+    process.chdir(tempPath);
+    try {
+      await expect(
+        runCommand(InitializeComponent, [
+          "legacy-internal",
+          "--toolchain",
+          "legacy",
+          "--prismatic-internal",
+        ]),
+      ).rejects.toThrow(/only the modern toolchain/);
+    } finally {
+      process.chdir(basePath);
+    }
+  });
+
+  it("keeps --prismatic-internal out of the options schema, so help, --schema and MCP never list it", () => {
+    const options = (
+      InitializeComponent as unknown as { options: { shape: Record<string, unknown> } }
+    ).options.shape;
+    expect(Object.keys(options)).not.toContain("prismatic-internal");
+    expect(Object.keys(options)).not.toContain("internal");
+    expect(HIDDEN_OPTIONS["components:init"]).toEqual(["prismatic-internal"]);
+  });
 
   describe("a mixed-case name", () => {
     const readJson = async (file: string) => JSON.parse(await readFile(file, "utf-8"));
@@ -79,6 +106,36 @@ describe("component generation tests", () => {
         );
         expect(connections).toContain("export default [acmeApiKey, authorizationCode];");
         expect(pkg.scripts["build:npm"]).toBe("npm run build && node build-npm.mjs");
+      } finally {
+        process.chdir(basePath);
+      }
+    });
+
+    it("scopes and lowercases the internal package, with the publish guard in place of private", async () => {
+      process.chdir(tempPath);
+      try {
+        await runCommand(InitializeComponent, ["MyInternal", "--prismatic-internal"]);
+        const pkg = await readJson(path.join(tempPath, "MyInternal", "package.json"));
+        expect(Object.keys(pkg).slice(0, 5)).toEqual([
+          "name",
+          "version",
+          "description",
+          "license",
+          "repository",
+        ]);
+        expect(pkg).toMatchObject({
+          name: "@prismatic-io/components-myinternal",
+          version: "0.0.0",
+          repository: { directory: "components/myinternal" },
+          files: ["npm-dist", "dist"],
+          publishConfig: { access: "public" },
+          prismatic: { component: "./dist/index.js" },
+          scripts: {
+            prepare: "npm run build:npm",
+            prepublishOnly: expect.stringContaining("NPM_PUBLISH_OK"),
+          },
+        });
+        expect(pkg.private).toBeUndefined();
       } finally {
         process.chdir(basePath);
       }

@@ -30,9 +30,14 @@ export abstract class Toolchain {
    */
   abstract readonly npmPackage: boolean;
 
-  /** Render this toolchain's config files into the project. */
+  /** Which templates/<dir>/ holds this toolchain's config files; defaults to its name. */
+  get templates(): string {
+    return this.name;
+  }
+
+  /** Render this toolchain's config files (templates/<templates>/) into the project. */
   renderTemplates(data: Record<string, unknown> = {}): Promise<void> {
-    return templateDirectory(this.name, data);
+    return templateDirectory(this.templates, data);
   }
 
   /**
