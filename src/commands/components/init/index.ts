@@ -34,22 +34,14 @@ const INTERNAL_SCOPE = "@prismatic-io/components-";
 const INTERNAL_REPOSITORY_URL = "git+https://github.com/prismatic-io/components.git";
 const INTERNAL_LICENSE = "Apache-2.0";
 /**
- * With no `private` flag, this is what refuses a stray `npm publish` from a checkout; the
- * publish workflow sets NPM_PUBLISH_OK deliberately.
- */
-const INTERNAL_PUBLISH_GUARD =
-  "node -e \"if (!process.env.NPM_PUBLISH_OK) { console.error('npm publish runs only from the GitHub publish workflow (NPM_PUBLISH_OK is unset)'); process.exit(1) }\"";
-
-/**
  * Rewrite the scaffold's package.json into the internal, registry-publishable shape:
- * scoped name, metadata npm shows, `publishConfig`, and the publish guard in place of
- * `private`. Keys are written in a fixed order.
+ * scoped name, metadata npm shows, and public npm publishing. Keys are written in a fixed order.
  */
 const applyInternalPackageShape = async (
   packageJsonPath: string,
   { directory, description }: { directory: string; description: string },
 ): Promise<void> => {
-  // `private` goes (the guard replaces it). The component marker and platform artifact stay:
+  // Remove `private` to allow npm publishing. Keep the component marker and platform artifact:
   // an integration's import loads the artifact to see the component is public and leave it alone.
   const { private: _private, ...pkg } = JSON.parse(
     await fs.readFile(packageJsonPath, "utf-8"),
@@ -71,10 +63,7 @@ const applyInternalPackageShape = async (
     types,
     files: [NPM_DIST, "dist"],
     publishConfig: { access: "public" },
-    scripts: {
-      ...(scripts as Record<string, string>),
-      prepublishOnly: INTERNAL_PUBLISH_GUARD,
-    },
+    scripts,
     ...rest,
   };
   await fs.writeFile(packageJsonPath, JSON.stringify(ordered), "utf-8");
@@ -144,8 +133,7 @@ export default Cli.command({
       },
     } = context;
     // Hidden (see HIDDEN_OPTIONS): scaffolds one of Prismatic's own components, with the scoped
-    // @prismatic-io/components-* name, publishConfig and repository metadata, and the npm
-    // publish guard in place of `private`.
+    // @prismatic-io/components-* name, publishConfig and repository metadata.
     const internal = hiddenOption("prismatic-internal");
 
     const toolchain = getToolchain(toolchainName, { internal });

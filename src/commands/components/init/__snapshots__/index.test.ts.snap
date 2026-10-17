@@ -6637,8 +6637,7 @@ exports[`component generation tests > modern + internal - openApi - nested-objec
     "test": "vitest run",
     "lint": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "format": "biome format --write .",
-    "prepublishOnly": "node -e \\"if (!process.env.NPM_PUBLISH_OK) { console.error('npm publish runs only from the GitHub publish workflow (NPM_PUBLISH_OK is unset)'); process.exit(1) }\\""
+    "format": "biome format --write ."
   },
   "prismatic": {
     "component": "./dist/index.js"
@@ -7070,8 +7069,7 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
     "test": "vitest run",
     "lint": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "format": "biome format --write .",
-    "prepublishOnly": "node -e \\"if (!process.env.NPM_PUBLISH_OK) { console.error('npm publish runs only from the GitHub publish workflow (NPM_PUBLISH_OK is unset)'); process.exit(1) }\\""
+    "format": "biome format --write ."
   },
   "prismatic": {
     "component": "./dist/index.js"
@@ -7782,8 +7780,7 @@ exports[`component generation tests > modern + internal - openApi - petstore-exp
     "test": "vitest run",
     "lint": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "format": "biome format --write .",
-    "prepublishOnly": "node -e \\"if (!process.env.NPM_PUBLISH_OK) { console.error('npm publish runs only from the GitHub publish workflow (NPM_PUBLISH_OK is unset)'); process.exit(1) }\\""
+    "format": "biome format --write ."
   },
   "prismatic": {
     "component": "./dist/index.js"
@@ -8505,8 +8502,7 @@ exports[`component generation tests > modern + internal - openApi - todo-api > s
     "test": "vitest run",
     "lint": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "format": "biome format --write .",
-    "prepublishOnly": "node -e \\"if (!process.env.NPM_PUBLISH_OK) { console.error('npm publish runs only from the GitHub publish workflow (NPM_PUBLISH_OK is unset)'); process.exit(1) }\\""
+    "format": "biome format --write ."
   },
   "prismatic": {
     "component": "./dist/index.js"
@@ -12317,8 +12313,7 @@ exports[`component generation tests > modern + internal - wsdl - countryinfoserv
     "test": "vitest run",
     "lint": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "format": "biome format --write .",
-    "prepublishOnly": "node -e \\"if (!process.env.NPM_PUBLISH_OK) { console.error('npm publish runs only from the GitHub publish workflow (NPM_PUBLISH_OK is unset)'); process.exit(1) }\\""
+    "format": "biome format --write ."
   },
   "prismatic": {
     "component": "./dist/index.js"
@@ -13589,8 +13584,7 @@ exports[`component generation tests > modern + internal - wsdl - numberconversio
     "test": "vitest run",
     "lint": "biome check --write .",
     "typecheck": "tsc --noEmit",
-    "format": "biome format --write .",
-    "prepublishOnly": "node -e \\"if (!process.env.NPM_PUBLISH_OK) { console.error('npm publish runs only from the GitHub publish workflow (NPM_PUBLISH_OK is unset)'); process.exit(1) }\\""
+    "format": "biome format --write ."
   },
   "prismatic": {
     "component": "./dist/index.js"

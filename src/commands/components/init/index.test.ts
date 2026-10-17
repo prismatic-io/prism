@@ -111,7 +111,7 @@ describe("component generation tests", () => {
       }
     });
 
-    it("scopes and lowercases the internal package, with the publish guard in place of private", async () => {
+    it("scopes and lowercases the internal package for public npm publishing", async () => {
       process.chdir(tempPath);
       try {
         await runCommand(InitializeComponent, ["MyInternal", "--prismatic-internal"]);
@@ -132,10 +132,10 @@ describe("component generation tests", () => {
           prismatic: { component: "./dist/index.js" },
           scripts: {
             prepare: "npm run build:npm",
-            prepublishOnly: expect.stringContaining("NPM_PUBLISH_OK"),
           },
         });
         expect(pkg.private).toBeUndefined();
+        expect(pkg.scripts.prepublishOnly).toBeUndefined();
       } finally {
         process.chdir(basePath);
       }
