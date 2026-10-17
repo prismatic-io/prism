@@ -12,7 +12,6 @@ import {
   schemaFieldName,
 } from "./command.js";
 import { ValidationError } from "./errors.js";
-import { extractHiddenOptions, HIDDEN_OPTIONS, runWithHiddenOptions } from "./hidden-options.js";
 import { Commands } from "./index.js";
 
 const topicDescriptions: Record<string, string> = {
@@ -612,8 +611,6 @@ export const serve = async (argv = process.argv.slice(2), environment = process.
     return;
   }
   const commandPath = resolveCommandPath(normalized);
-  const hidden = extractHiddenOptions(normalized, HIDDEN_OPTIONS[commandPath] ?? []);
-  normalized = hidden.argv;
   const command = Object.entries(Commands).find(([id]) => id === commandPath)?.[1];
   const hasLocalVersionAlias = Object.values(command?.contract.options ?? {}).some(
     (field) => field.char === "v",
@@ -685,11 +682,9 @@ export const serve = async (argv = process.argv.slice(2), environment = process.
           } else process.stdout.write(renderedOutput);
         },
       });
-    await runWithHiddenOptions(hidden.set, () =>
-      prismArguments.includes("--mcp")
-        ? runWithMcpTransport(invoke, parseMcpLaunchGlobals(normalized, environment))
-        : runWithAgentMode(agent, invoke),
-    );
+    await (prismArguments.includes("--mcp")
+      ? runWithMcpTransport(invoke, parseMcpLaunchGlobals(normalized, environment))
+      : runWithAgentMode(agent, invoke));
     if (usageError) process.exitCode = 2;
   } finally {
     if (descriptor) Object.defineProperty(process.stdout, "isTTY", descriptor);

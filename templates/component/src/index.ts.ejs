@@ -18,18 +18,10 @@ import connections from "./connections";
 
 export default component({
   key: "<%= component.key %>",
-<% if (component.public) { -%>
-  public: true,
-  documentationUrl: "https://prismatic.io/docs/components/<%= component.key %>/",
-<% } else { -%>
   public: false,
-<% } -%>
   display: {
     label: "<%= component.name %>",
     description: "<%= component.description %>",
-<% if (component.public) { -%>
-    category: "Application Connectors",
-<% } -%>
     iconPath: "icon.png",
   },
   actions,

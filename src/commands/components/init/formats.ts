@@ -18,8 +18,6 @@ export async function generateFormats(options: {
   icon?: string;
   public?: boolean;
   toolchain?: "modern" | "legacy";
-  /** One of Prismatic's own components (`components:init --prismatic-internal`); implies `public`. */
-  internal?: boolean;
 }): Promise<{
   name: string;
   path: string;
@@ -35,29 +33,16 @@ export async function generateFormats(options: {
     name,
     icon,
     openapi,
-    public: publicOption = false,
+    public: isPublic = false,
     toolchain: toolchainName = DEFAULT_TOOLCHAIN,
-    internal = false,
   } = options;
-  // Internal components are Prismatic's public ones.
-  const isPublic = publicOption || internal;
-  const toolchain = getToolchain(toolchainName, { internal });
+  const toolchain = getToolchain(toolchainName);
   const key = camelCase(name);
 
   const result = await read(openapi);
 
   const sharedFiles = [path.join("assets", "icon.png")];
-  const templateData = {
-    component: {
-      name,
-      key,
-      description: result.component.display.description,
-      summary: result.component.display.description,
-      public: isPublic,
-    },
-    npmPackage: toolchain.npmPackage,
-    spectralEntryPoints: true,
-  };
+  const templateData = { npmPackage: toolchain.npmPackage };
   await Promise.all([
     ...sharedFiles.map((f) =>
       template(

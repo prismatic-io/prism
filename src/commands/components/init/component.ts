@@ -41,15 +41,9 @@ export async function generateComponent(flags: {
   name?: string;
   description?: string;
   toolchain?: "modern" | "legacy";
-  /** One of Prismatic's own components (`components:init --prismatic-internal`): published to npm
-   * under the `@prismatic-io/components-*` scope, and public on the platform, so the
-   * definition gets `public: true`, `documentationUrl` and a category. */
-  internal?: boolean;
 }) {
   const directory = getWorkingDirectory();
-  const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN, {
-    internal: flags.internal,
-  });
+  const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
   if (!flags.name || !flags.description) {
     requireInteractiveInput(
       "Agent mode requires both --name and --description for components:init:component",
@@ -81,15 +75,9 @@ export async function generateComponent(flags: {
     component: {
       name,
       description,
-      // What a public page may say about the component: nothing, while the description is
-      // still the placeholder components:init writes.
-      summary: description === DEFAULT_COMPONENT_DESCRIPTION ? undefined : description,
       key: camelCase(name),
-      public: flags.internal === true,
     },
     npmPackage: toolchain.npmPackage,
-    // Only the modern scaffold's Biome config carries the rule forbidding spectral dist/ imports.
-    spectralEntryPoints: toolchain.npmPackage,
   };
   const sharedFiles = [
     path.join("assets", "icon.png"),

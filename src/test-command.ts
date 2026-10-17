@@ -7,7 +7,6 @@ import {
   globalOptions,
   preparedCommand,
 } from "./command.js";
-import { extractHiddenOptions, HIDDEN_OPTIONS, runWithHiddenOptions } from "./hidden-options.js";
 
 /** Exercise native parsing and middleware; never provide a synthetic handler context. */
 export async function runCommand<
@@ -38,9 +37,6 @@ export async function runCommand<
   argv: string[],
 ): Promise<unknown> {
   command = preparedCommand(command);
-  // As the CLI does: hidden flags never reach incur.
-  const hidden = extractHiddenOptions(argv, Object.values(HIDDEN_OPTIONS).flat());
-  argv = hidden.argv;
   let returned: unknown;
   let failure: unknown;
   let exitCode = 0;
@@ -108,17 +104,15 @@ export async function runCommand<
   const descriptor = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
   Object.defineProperty(process.stdout, "isTTY", { configurable: true, value: !agent });
   try {
-    await runWithHiddenOptions(hidden.set, () =>
-      native.serve(["run", ...argv, ...(agent ? ["--json"] : [])], {
-        stdout(value) {
-          output.push(value);
-          if (!agent) process.stdout.write(value);
-        },
-        exit(code) {
-          exitCode = code;
-        },
-      }),
-    );
+    await native.serve(["run", ...argv, ...(agent ? ["--json"] : [])], {
+      stdout(value) {
+        output.push(value);
+        if (!agent) process.stdout.write(value);
+      },
+      exit(code) {
+        exitCode = code;
+      },
+    });
   } finally {
     if (descriptor) Object.defineProperty(process.stdout, "isTTY", descriptor);
     else Reflect.deleteProperty(process.stdout, "isTTY");
