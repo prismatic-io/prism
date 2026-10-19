@@ -1,7 +1,7 @@
 /**
  * Your flows can be tested locally prior to publishing your
  * code-native integration. In this file, we invoke our flow
- * twice and describe the results we expect to see.
+ * with different selections and describe the results we expect to see.
  *
  * You can run this test with "npm run test"
  *
@@ -11,7 +11,7 @@
 
 import { invokeFlow } from "@prismatic-io/spectral/dist/testing";
 import dotenv from "dotenv";
-import { listPosts } from "./flows";
+import { getPost } from "./flows";
 
 dotenv.config({ path: ".env.testing" });
 
@@ -24,25 +24,26 @@ const acmeConnection = {
 };
 
 describe("Verify flow works as expected", () => {
-  test("Verify we get the correct set of posts back", async () => {
-    const { result } = await invokeFlow(listPosts, {
-      configVars: { "Acme Connection": acmeConnection, "Select Post": "2" },
+  test.each(["2", "3"])("Fetch the selected post %s", async (postId) => {
+    const { result } = await invokeFlow(getPost, {
+      configVars: { "Acme Connection": acmeConnection, "Select Post": postId },
     });
-    expect(result?.data).toHaveLength(100);
-    expect(result?.data).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: 1, userId: 1, title: expect.any(String), body: expect.any(String) }),
-    ]));
+    expect(result?.data).toMatchObject({
+      id: Number(postId),
+      title: expect.any(String),
+      body: expect.any(String),
+    });
   });
 
   test("Verify we see the expected log lines", async () => {
-    const { loggerMock } = await invokeFlow(listPosts, {
+    const { loggerMock } = await invokeFlow(getPost, {
       configVars: { "Acme Connection": acmeConnection, "Select Post": "2" },
     });
     expect(loggerMock.info).toHaveBeenCalledWith(
       'During configuration, the customer selected the post "2"',
     );
     expect(loggerMock.info).toHaveBeenCalledWith(
-      expect.stringContaining('with ID "1" belongs to user "1"'),
+      expect.stringContaining('with ID "2" belongs to user "1"'),
     );
   });
 });

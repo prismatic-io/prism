@@ -9,10 +9,10 @@ import { flow } from "@prismatic-io/spectral";
 import { createAcmeClient } from "./client";
 import type { Post } from "./configPages";
 
-export const listPosts = flow({
-  name: "List Posts",
+export const getPost = flow({
+  name: "Get Selected Post",
   stableKey: "<%= flow.stableKey %>",
-  description: "Fetch posts from an API",
+  description: "Fetch the post selected during configuration",
   onTrigger: async (context, payload, params) => {
     const { logger } = context;
 
@@ -31,14 +31,13 @@ export const listPosts = flow({
 
     // Create an authenticated reusable HTTP client from client.ts
     const acmeErpClient = createAcmeClient(context.configVars["Acme Connection"]);
-    const response = await acmeErpClient.get<Post[]>("/posts");
-    for (const post of response.data) {
-      context.logger.info(
-        `Post "${post.title}" with ID "${post.id}" belongs to user "${post.userId}"`,
-      );
-    }
-    return { data: response.data };
+    const postId = context.configVars["Select Post"];
+    const { data: post } = await acmeErpClient.get<Post>(`/posts/${postId}`);
+    context.logger.info(
+      `Post "${post.title}" with ID "${post.id}" belongs to user "${post.userId}"`,
+    );
+    return { data: post };
   },
 });
 
-export default [listPosts];
+export default [getPost];
