@@ -152,7 +152,7 @@ const writeActionExport = (project: Project, groupTags: string[]): SourceFile =>
 
   exportFile.addImportDeclarations([
     {
-      moduleSpecifier: "@prismatic-io/spectral/http",
+      moduleSpecifier: "@prismatic-io/spectral/dist/clients/http",
       namedImports: ["buildRawRequestAction"],
     },
     {
