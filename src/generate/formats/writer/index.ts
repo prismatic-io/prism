@@ -31,7 +31,7 @@ const writeComponentIndex = (
   file.addImportDeclarations([
     { moduleSpecifier: "@prismatic-io/spectral", namedImports: ["component"] },
     {
-      moduleSpecifier: "@prismatic-io/spectral/dist/clients/http",
+      moduleSpecifier: "@prismatic-io/spectral/http",
       namedImports: ["handleErrors"],
     },
     {
@@ -152,7 +152,7 @@ const writeClient = (project: Project, baseUrl: string, connections: Connection[
     `
 import { Buffer } from "node:buffer";
 import { Connection, ConnectionError, util } from "@prismatic-io/spectral";
-import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/dist/clients/http";
+import { HttpClient, createClient as createHttpClient } from "@prismatic-io/spectral/http";
 export const baseUrl = ${JSON.stringify(baseUrl)};
 export const createClient = async (connection?: Connection): Promise<HttpClient> => {
   if (!connection) return createHttpClient({ baseUrl, responseType: "json" });
