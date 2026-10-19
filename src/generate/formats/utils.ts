@@ -19,15 +19,13 @@ export const stripUndefined = <T extends Record<string, any>>(data: T): T =>
     return { ...result, [key]: value };
   }, {} as T);
 
-export const normalizeDescription = (text = ""): string => {
+export const createDescription = (text = ""): string => {
   const strippedText = stripTags(text);
   const nonEmptyLine = strippedText.split("\n").find((line) => line.trim()) ?? "";
   const [fragment] = nonEmptyLine.split(/[.!?]/g);
 
-  return fragment.replace(/\s+/g, " ").trim();
+  return escapeText(fragment);
 };
-
-export const createDescription = (text?: string): string => escapeText(normalizeDescription(text));
 
 export const escapeText = (text?: unknown): string => {
   if (!text) {

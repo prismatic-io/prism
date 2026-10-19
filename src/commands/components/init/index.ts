@@ -146,6 +146,7 @@ export default Cli.command({
       } else {
         ({ description } = await generateComponent({
           name,
+          description: "Prism-generated Component",
           toolchain: toolchain.name,
           public: internalPublishing,
         }));

@@ -18,7 +18,6 @@ export async function generateFormats(options: {
   name: string;
   path: string;
   toolchain: string;
-
   description: string;
 }> {
   const directory = getWorkingDirectory();

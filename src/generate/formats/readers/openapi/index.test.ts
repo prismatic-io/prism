@@ -6,13 +6,16 @@ import { read } from "./index.js";
 
 describe("component description", () => {
   it.each([
-    { description: undefined, expected: "Generated component for Acme 1" },
-    { description: "", expected: "Generated component for Acme 1" },
-    { description: " \n\t ", expected: "Generated component for Acme 1" },
-    { description: "<p> </p>", expected: "Generated component for Acme 1" },
+    { description: undefined, expected: "Generated component for Acme 1.2.3" },
+    { description: "", expected: "Generated component for Acme 1.2.3" },
+    { description: " \n\t ", expected: "Generated component for Acme 1.2.3" },
     {
       description: '<p>Acme "posts" API.</p> More details.',
-      expected: 'Acme "posts" API',
+      expected: '<p>Acme "posts" API.</p> More details.',
+    },
+    {
+      description: "First paragraph.\n\nSecond paragraph.",
+      expected: "First paragraph.\n\nSecond paragraph.",
     },
   ])("resolves $description to usable metadata", async ({ description, expected }) => {
     await temporaryDirectoryTask(async (directory) => {
@@ -21,7 +24,7 @@ describe("component description", () => {
         specPath,
         JSON.stringify({
           openapi: "3.0.3",
-          info: { title: "Acme", version: "1", description },
+          info: { title: "Acme", version: "1.2.3", description },
           servers: [{ url: "https://example.com" }],
           paths: {},
         }),

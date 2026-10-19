@@ -40,12 +40,12 @@ export async function generateComponent(flags: {
   toolchain?: "modern" | "legacy";
   public?: boolean;
 }) {
-  flags = { ...flags, description: flags.description?.trim() || "Prism-generated Component" };
-
   const directory = getWorkingDirectory();
   const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
-  if (!flags.name) {
-    requireInteractiveInput("Agent mode requires --name for components:init:component");
+  if (!flags.name || !flags.description) {
+    requireInteractiveInput(
+      "Agent mode requires both --name and --description for components:init:component",
+    );
   }
   const { name, description } = await inquirer.prompt<{
     name: string;
