@@ -1,6 +1,9 @@
 import { CommandFailedError } from "../../errors.js";
 import { dumpYaml, loadYaml } from "../serialize.js";
 
+// Wire protocol emitted by Spectral callable connections; resolved only during publication.
+export const COMPONENT_SELF_SIGNATURE = "__PRISMATIC_COMPONENT_SELF__";
+
 export interface ComponentSignature {
   key: string;
   isPublic: boolean;
@@ -20,10 +23,10 @@ const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
 export const pinComponentSignatures = (
   yaml: string,
   components: readonly ComponentSignature[],
+  cni?: ComponentSignature,
 ): string => {
-  if (!components.length) return yaml;
   const signatures = new Map<string, string>();
-  for (const component of components) {
+  for (const component of [...components, ...(cni ? [cni] : [])]) {
     const id = identity(component);
     const previous = signatures.get(id);
     if (previous && previous !== component.signature) {
@@ -39,11 +42,30 @@ export const pinComponentSignatures = (
 
   const pin = (value: unknown) => {
     const selector = object(value);
-    if (!selector || typeof selector.key !== "string" || typeof selector.isPublic !== "boolean")
+    if (!selector) return;
+    if (
+      typeof selector.key !== "string" ||
+      !selector.key ||
+      typeof selector.isPublic !== "boolean"
+    ) {
+      if (selector.signature === COMPONENT_SELF_SIGNATURE) {
+        throw new CommandFailedError({
+          message:
+            "A component self reference requires a nonempty key and explicit isPublic visibility.",
+        });
+      }
       return;
-    const signature = signatures.get(identity({ key: selector.key, isPublic: selector.isPublic }));
-    if (!signature) return;
-    if (typeof selector.signature === "string" && selector.signature !== signature) {
+    }
+    const id = identity({ key: selector.key, isPublic: selector.isPublic });
+    const isSelf = selector.signature === COMPONENT_SELF_SIGNATURE;
+    if (!isSelf && (!cni || id !== identity(cni))) return;
+    const signature = signatures.get(id);
+    if (!signature) {
+      throw new CommandFailedError({
+        message: `Component ${selector.key} references its own artifact, but no matching published package was found. Declare the component package as a dependency and rebuild the integration.`,
+      });
+    }
+    if (!isSelf && typeof selector.signature === "string" && selector.signature !== signature) {
       throw new CommandFailedError({
         message: `Component ${selector.key} references a different signature than its installed artifact; rebuild the integration with matching dependencies.`,
       });

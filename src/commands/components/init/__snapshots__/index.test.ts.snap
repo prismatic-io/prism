@@ -6378,7 +6378,8 @@ To use this component in a code-native integration without a registry, run
 \`npm pack\` and install the resulting tarball in the integration. The integration
 must also depend on \`@prismatic-io/spectral\`. Import the package's default export
 to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes missing private component artifacts during integration import.
+Prism publishes private component dependencies to Prismatic when you import the
+integration.
 "
 `;
 
@@ -6799,6 +6800,7 @@ export default defineConfig([
     clean: true,
     dts: { resolver: "tsc" },
     fixedExtension: true,
+    loader: { ".md": "text" },
     copy: [{ from: "assets/**/*", to: "npm-dist", flatten: false }],
     hooks: {
       "build:before": async () => {
@@ -6873,7 +6875,8 @@ To use this component in a code-native integration without a registry, run
 \`npm pack\` and install the resulting tarball in the integration. The integration
 must also depend on \`@prismatic-io/spectral\`. Import the package's default export
 to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes missing private component artifacts during integration import.
+Prism publishes private component dependencies to Prismatic when you import the
+integration.
 "
 `;
 
@@ -7459,6 +7462,7 @@ export default defineConfig([
     clean: true,
     dts: { resolver: "tsc" },
     fixedExtension: true,
+    loader: { ".md": "text" },
     copy: [{ from: "assets/**/*", to: "npm-dist", flatten: false }],
     hooks: {
       "build:before": async () => {
@@ -7533,7 +7537,8 @@ To use this component in a code-native integration without a registry, run
 \`npm pack\` and install the resulting tarball in the integration. The integration
 must also depend on \`@prismatic-io/spectral\`. Import the package's default export
 to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes missing private component artifacts during integration import.
+Prism publishes private component dependencies to Prismatic when you import the
+integration.
 "
 `;
 
@@ -8124,6 +8129,7 @@ export default defineConfig([
     clean: true,
     dts: { resolver: "tsc" },
     fixedExtension: true,
+    loader: { ".md": "text" },
     copy: [{ from: "assets/**/*", to: "npm-dist", flatten: false }],
     hooks: {
       "build:before": async () => {
@@ -8198,7 +8204,8 @@ To use this component in a code-native integration without a registry, run
 \`npm pack\` and install the resulting tarball in the integration. The integration
 must also depend on \`@prismatic-io/spectral\`. Import the package's default export
 to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes missing private component artifacts during integration import.
+Prism publishes private component dependencies to Prismatic when you import the
+integration.
 "
 `;
 
@@ -9170,6 +9177,7 @@ export default defineConfig([
     clean: true,
     dts: { resolver: "tsc" },
     fixedExtension: true,
+    loader: { ".md": "text" },
     copy: [{ from: "assets/**/*", to: "npm-dist", flatten: false }],
     hooks: {
       "build:before": async () => {
@@ -9250,7 +9258,8 @@ To use this component in a code-native integration without a registry, run
 \`npm pack\` and install the resulting tarball in the integration. The integration
 must also depend on \`@prismatic-io/spectral\`. Import the package's default export
 to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes missing private component artifacts during integration import.
+Prism publishes private component dependencies to Prismatic when you import the
+integration.
 "
 `;
 
@@ -12806,6 +12815,7 @@ export default defineConfig([
     clean: true,
     dts: { resolver: "tsc" },
     fixedExtension: true,
+    loader: { ".md": "text" },
     copy: [{ from: "assets/**/*", to: "npm-dist", flatten: false }],
     hooks: {
       "build:before": async () => {
@@ -12886,7 +12896,8 @@ To use this component in a code-native integration without a registry, run
 \`npm pack\` and install the resulting tarball in the integration. The integration
 must also depend on \`@prismatic-io/spectral\`. Import the package's default export
 to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes missing private component artifacts during integration import.
+Prism publishes private component dependencies to Prismatic when you import the
+integration.
 "
 `;
 
@@ -13451,6 +13462,7 @@ export default defineConfig([
     clean: true,
     dts: { resolver: "tsc" },
     fixedExtension: true,
+    loader: { ".md": "text" },
     copy: [{ from: "assets/**/*", to: "npm-dist", flatten: false }],
     hooks: {
       "build:before": async () => {

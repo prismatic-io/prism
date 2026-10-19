@@ -35,7 +35,7 @@ import { findPackageRoot, getPackageEntrypointDirectory } from "../import.js";
 import { startAction, stopAction } from "../progress.js";
 import { loadYaml } from "../serialize.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
-import { type ComponentSignature, pinComponentSignatures } from "./signatures.js";
+import { pinComponentSignatures } from "./signatures.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
 import { validateCodeNativeDefinition } from "./validate.js";
 
@@ -208,25 +208,19 @@ export const importCodeNativeIntegration = async (
       for (const warning of dependencyWarnings) writeCommandOutput(warning, "stderr");
 
       const packagePath = await createComponentPackage();
-      const signatures: ComponentSignature[] = dependencyResults.map(
-        ({ key, isPublic, signature, name }) => {
-          if (!key || isPublic === undefined || !signature) {
-            throw new CommandFailedError({
-              message: `Component dependency ${name} did not resolve to a package signature.`,
-            });
-          }
-          return { key, isPublic, signature };
-        },
-      );
-      // Pin the CNI artifact too, so concurrent imports cannot redirect its actions.
-      const pinnedDefinition = pinComponentSignatures(integrationDefinition, [
-        ...signatures,
-        {
-          key: componentDefinition.key,
-          isPublic: componentDefinition.public ?? false,
-          signature: await calculatePackageSignature(packagePath),
-        },
-      ]);
+      const dependencySignatures = dependencyResults.map(({ name, key, isPublic, signature }) => {
+        if (!key || isPublic === undefined || !signature) {
+          throw new CommandFailedError({
+            message: `Component dependency ${name} did not provide a published artifact signature.`,
+          });
+        }
+        return { key, isPublic, signature };
+      });
+      const pinnedDefinition = pinComponentSignatures(integrationDefinition, dependencySignatures, {
+        key: componentDefinition.key,
+        isPublic: componentDefinition.public ?? false,
+        signature: await calculatePackageSignature(packagePath),
+      });
 
       const { componentId, iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
         await publishComponentDefinition(componentDefinition, {

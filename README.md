@@ -69,17 +69,22 @@ tenant switching still operate on the selected profile.
 For help with Prism, please see our [Prism documentation page](https://prismatic.io/docs/cli/).
 There, you will find information about the various subcommands you can run, troubleshooting tips, etc.
 
-### Optional npm publishing
+### Share components through npm
 
-To publish a modern component scaffold to an npm registry, use
-`prism components:init acme --npm-package @your-org/acme`, then `npm publish`
-from the generated project. Registry and access settings follow your npm configuration;
-this does not change the component's visibility in Prismatic or how its TypeScript is authored.
-Without this option, registry publishing is disabled; `npm pack` remains available.
+Package a component for reuse in code-native integrations:
 
-Public platform components must already be published with the packaged artifact's
-signature. Publish their platform artifact from the unpacked npm tarball's `dist/`
-to preserve the exact contents and file permissions used in that signature.
+```bash
+$ prism components:init acme --npm-package @your-org/acme
+$ cd acme
+$ npm publish
+```
+
+Install the package in your integration and import it to use its actions and
+connections. Prism publishes private component dependencies to Prismatic when
+you import the integration. Your npm package's access settings are separate from
+its visibility in Prismatic.
+
+To share a package locally without a registry, use `npm pack`.
 
 ## What is Prismatic?
 

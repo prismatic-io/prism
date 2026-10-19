@@ -35,6 +35,7 @@ export default defineConfig([
     clean: true,
     dts: { resolver: "tsc" },
     fixedExtension: true,
+    loader: { ".md": "text" },
     copy: [{ from: "assets/**/*", to: "npm-dist", flatten: false }],
     hooks: {
       "build:before": async () => {

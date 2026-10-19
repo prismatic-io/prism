@@ -6,6 +6,7 @@ import { withWorkingDirectory } from "../../command-context.js";
 import { calculatePackageSignature } from "../component/signature.js";
 import { dumpYaml, loadYaml } from "../serialize.js";
 import { importCodeNativeIntegration } from "./import.js";
+import { COMPONENT_SELF_SIGNATURE } from "./signatures.js";
 
 const mocks = vi.hoisted(() => ({
   dependencies: vi.fn(),
@@ -34,12 +35,12 @@ vi.mock("../availability.js", async (original) => ({
 }));
 vi.mock("../../graphql.js", () => ({ gqlRequest: mocks.gql }));
 
-it("imports YAML pinned to dependency and CNI package signatures, without changing the bundled artifact", async () => {
+it("resolves dependency self references at publication and pins the CNI without changing its bundled artifact", async () => {
   await temporaryDirectoryTask(async (root) => {
     await mkdir(join(root, "dist"));
     await mkdir(join(root, ".spectral"));
     await writeFile(join(root, "package.json"), '{"name":"integration"}');
-    const dependency = { key: "dependency", isPublic: false, version: "LATEST" };
+    const dependency = { key: "dependency", isPublic: false, signature: COMPONENT_SELF_SIGNATURE };
     const cni = { key: "cni", isPublic: false, version: "LATEST" };
     const yaml = dumpYaml({
       isCodeNative: true,
@@ -48,6 +49,14 @@ it("imports YAML pinned to dependency and CNI package signatures, without changi
           key: "Connection",
           dataType: "connection",
           connection: { key: "apiKey", component: dependency },
+        },
+        {
+          key: "Manifest Connection",
+          dataType: "connection",
+          connection: {
+            key: "apiKey",
+            component: { key: "dependency", isPublic: false, version: 2 },
+          },
         },
       ],
       flows: [
@@ -98,6 +107,11 @@ it("imports YAML pinned to dependency and CNI package signatures, without changi
       key: "dependency",
       isPublic: false,
       signature: "dependency-hash",
+    });
+    expect(imported.requiredConfigVars[1].connection.component).toEqual({
+      key: "dependency",
+      isPublic: false,
+      version: 2,
     });
     expect(imported.flows[0].supplementalComponents[0]).toEqual({
       key: "dependency",

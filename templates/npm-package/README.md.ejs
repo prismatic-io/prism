@@ -26,10 +26,10 @@ To use this component in a code-native integration without a registry, run
 `npm pack` and install the resulting tarball in the integration. The integration
 must also depend on `@prismatic-io/spectral`. Import the package's default export
 to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes missing private component artifacts during integration import.
+Prism publishes private component dependencies to Prismatic when you import the
+integration.
 <% if (internalPublishing) { -%>
 
-This public platform component must already be published with the packaged
-artifact's signature. Publish from the unpacked npm tarball's `dist/` directory;
-packing can normalize file permissions that contribute to the signature.
+Before using this public component in an integration, publish it to Prismatic
+from the unpacked npm package's `dist/` directory.
 <% } -%>
