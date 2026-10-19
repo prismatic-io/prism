@@ -23,11 +23,7 @@ export abstract class Toolchain {
   abstract readonly packageJson: Record<string, unknown>;
   /** devDependencies required to build, test, and lint the scaffold. */
   abstract readonly devDependencies: Record<string, string>;
-  /**
-   * Whether a component scaffold on this toolchain is also built as an npm package
-   * (a generated callable adapter and an npm packaging script).
-   * Only the modern toolchain; legacy scaffolds are unchanged.
-   */
+  /** Supports the callable npm build. */
   abstract readonly npmPackage: boolean;
 
   /** Render this toolchain's config files into the project. */
@@ -35,11 +31,6 @@ export abstract class Toolchain {
     return templateDirectory(this.name, data);
   }
 
-  /**
-   * Render the npm package build on top of the component scaffold (templates/npm-package/):
-   * the npm packaging script.
-   * No-op unless {@link npmPackage}.
-   */
   async renderNpmPackageTemplates(data: Record<string, unknown> = {}): Promise<void> {
     if (this.npmPackage) {
       await templateDirectory("npm-package", data);

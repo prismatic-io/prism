@@ -2,9 +2,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { build } from "tsdown";
 
-// Keep src/index.ts and the component's tests unchanged. A temporary build entry
-// adapts the conventional component export using Spectral's retained authoring data.
-// It lives inside the project so TypeScript resolves the project's dependencies.
+// Keep the adapter inside the project for TypeScript dependency resolution.
 const directory = await mkdtemp(join(process.cwd(), ".prism-npm-"));
 try {
   const entry = join(directory, "index.ts");
@@ -22,10 +20,9 @@ try {
     target: "node22",
     outDir: "npm-dist",
     clean: true,
-    // Resolve declaration imports as TypeScript does (including Axios ESM types).
+    // Required for Axios ESM declaration resolution.
     dts: { resolver: "tsc" },
     fixedExtension: true,
-    // Spectral must remain external so consumers supply the execution context.
     copy: [{ from: "assets/**/*", to: "npm-dist", flatten: false }],
   });
 } finally {

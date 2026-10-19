@@ -14,13 +14,13 @@ export async function generateFormats(options: {
   icon?: string;
   public?: boolean;
   toolchain?: "modern" | "legacy";
-  /** One of Prismatic's own components (`components:init --prismatic-internal`); implies `public`. */
+
   internal?: boolean;
 }): Promise<{
   name: string;
   path: string;
   toolchain: string;
-  /** The description the spec gives the component. */
+
   description: string;
 }> {
   const directory = getWorkingDirectory();
@@ -32,7 +32,6 @@ export async function generateFormats(options: {
     toolchain: toolchainName = DEFAULT_TOOLCHAIN,
     internal = false,
   } = options;
-  // Internal components are Prismatic's public ones.
   const isPublic = publicOption || internal;
   const toolchain = getToolchain(toolchainName);
   const key = camelCase(name);
@@ -48,7 +47,6 @@ export async function generateFormats(options: {
         path.join(directory, f),
       ),
     ),
-    // Render the selected build and packaging configurations.
     toolchain.renderTemplates(templateData),
     toolchain.renderNpmPackageTemplates(templateData),
   ]);

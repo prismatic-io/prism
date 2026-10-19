@@ -21,14 +21,12 @@ import { DEFAULT_COMPONENT_DESCRIPTION, generateComponent } from "./component.js
 import { generateFormats } from "./formats.js";
 
 const NPM_DIST = "npm-dist";
-// What build-npm.mjs emits (CommonJS with `fixedExtension`).
 const NPM_MAIN = `./${NPM_DIST}/index.cjs`;
 const NPM_TYPES = `./${NPM_DIST}/index.d.cts`;
 const SPECTRAL = "@prismatic-io/spectral";
 const MINIMUM_SPECTRAL_VERSION = "10.36.0";
 const SPECTRAL_RANGE = `^${MINIMUM_SPECTRAL_VERSION}`;
 
-/** `--prismatic-internal`: the shape Prismatic's own components are published to npm in. */
 const INTERNAL_SCOPE = "@prismatic-io/components-";
 const INTERNAL_REPOSITORY_URL = "git+https://github.com/prismatic-io/components.git";
 const INTERNAL_LICENSE = "Apache-2.0";
@@ -101,7 +99,6 @@ export default Cli.command({
       },
     } = context;
 
-    // Keep Prismatic's internal publishing preset out of customer-facing schemas and help.
     const internal = hiddenOption("prismatic-internal");
 
     const toolchain = getToolchain(toolchainName);
@@ -187,10 +184,7 @@ export default Cli.command({
         format: toolchain.scripts.format,
       };
       if (toolchain.npmPackage) {
-        // A modern component scaffold is also buildable as an npm package (npm-dist/) so a
-        // code-native integration can depend on it, from a registry, a git URL, or a tarball.
-        // npm rejects uppercase in new package names; the directory and display label keep
-        // the name as typed.
+        // npm names must be lowercase; preserve the directory and display label.
         const packageName = internal
           ? `${INTERNAL_SCOPE}${camelCase(name).toLowerCase()}`
           : (npmPackage ?? name.toLowerCase());
@@ -215,27 +209,20 @@ export default Cli.command({
                 publishConfig: { access: "public" },
               }
             : {}),
-          // The platform bundle (dist/, with the icon copied in by the build) ships too, so
-          // `prism integrations:import` can publish the component from the installed package.
+          // Ship the platform artifact for publication during CNI import.
           files: [NPM_DIST, "dist"],
-          // How `prism integrations:import` tells component packages from other dependencies.
           prismatic: COMPONENT_PACKAGE_MARKER,
           scripts: {
             build: toolchain.scripts.build,
             "build:npm": "npm run build && node build-npm.mjs",
-            // `prepare` is what npm runs before packing, before publishing, and when installing
-            // the package from a git URL, so every consumer gets freshly built dist/ and npm-dist/.
             prepare: "npm run build:npm",
-            // `publish` is an npm lifecycle hook (it would run after `npm publish`), so the
-            // platform publish lives under its own name.
+            // Avoid npm's `publish` lifecycle hook for platform publication.
             "publish:platform": "npm run build && prism components:publish",
             ...sharedScripts,
           },
           ...toolchain.packageJson,
           dependencies: wsdlPath ? { soap: "1.1.10" } : {},
-          // spectral is a peer dependency so a code-native integration that installs this
-          // component as an npm package shares its own copy; the dev pin is what builds and
-          // tests the component locally.
+          // Share the consumer's Spectral execution context through a peer dependency.
           devDependencies: {
             ...toolchain.devDependencies,
             [SPECTRAL]: SPECTRAL_RANGE,
@@ -254,7 +241,6 @@ export default Cli.command({
           internal,
         });
       } else {
-        // Legacy toolchain retains the platform-only package.
         await updatePackageJson({
           path: packageJsonPath,
           scripts: {

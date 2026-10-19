@@ -34,16 +34,13 @@ export default Cli.command({
   alias: { description: "d", name: "n" },
 });
 
-/** The description `components:init` gives a component until its author writes one. */
 export const DEFAULT_COMPONENT_DESCRIPTION = "Prism-generated Component";
 
 export async function generateComponent(flags: {
   name?: string;
   description?: string;
   toolchain?: "modern" | "legacy";
-  /** One of Prismatic's own components (`components:init --prismatic-internal`): published to npm
-   * under the `@prismatic-io/components-*` scope, and public on the platform, so the
-   * definition gets `public: true`, `documentationUrl` and a category. */
+  /** Apply Prismatic publishing defaults. */
   internal?: boolean;
 }) {
   const directory = getWorkingDirectory();
@@ -74,7 +71,6 @@ export async function generateComponent(flags: {
     flags,
   );
 
-  // Source authoring is shared by platform and npm builds.
   const context = {
     component: {
       name,

@@ -223,7 +223,6 @@ describe("component generation tests", () => {
     }
   });
 
-  // Cases are [title, case] so `%s` names each describe exactly as before (snapshot keys depend on it).
   const cases = VARIANTS.flatMap((variant) =>
     specs.map(({ type, fileName, name }) => {
       const title = `${variant.name} - ${type} - ${name}`;
@@ -259,7 +258,6 @@ describe("component generation tests", () => {
       const targets = await walkDir(projectName, [".png", "webpack.config.js"]);
       for (const target of targets) {
         const contents = withoutSpectralRange(await readFile(target, "utf-8"));
-        // Soft, so one stale file reports every other mismatch in the scaffold too.
         expect.soft(contents).toMatchSnapshot(target.split(path.sep).join("/"));
       }
 

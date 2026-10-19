@@ -155,10 +155,6 @@ export const importCodeNativeIntegration = async (
   testApiKeyFlags?: string[],
   waitOptions?: WaitOptions,
 ): Promise<{ integrationId: string; componentId: string }> => {
-  // Components the integration depends on as npm packages run inside its bundle, but their
-  // connections and the low-code designer need them on the platform too, so the import
-  // resolves them by package signature, publishes missing private artifacts, and waits
-  // for availability. YAML references use those signatures instead of LATEST.
   const packageRoot = await findPackageRoot("Code Native Integration");
 
   return withWorkingDirectory(
@@ -222,8 +218,7 @@ export const importCodeNativeIntegration = async (
           return { key, isPublic, signature };
         },
       );
-      // The generated CNI component is also selected by its uploaded artifact, so a
-      // concurrent import cannot redirect its execution actions to another version.
+      // Pin the CNI artifact too, so concurrent imports cannot redirect its actions.
       const pinnedDefinition = pinComponentSignatures(integrationDefinition, [
         ...signatures,
         {

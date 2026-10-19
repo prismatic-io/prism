@@ -10,35 +10,18 @@ import { createComponentPackage, loadEntrypoint, validateDefinition } from "./in
 import { uploadComponentVersion } from "./publish.js";
 import { calculatePackageSignature, findComponentBySignature } from "./signature.js";
 
-/**
- * `prism components:init` marks the package.json of every component it scaffolds with
- * `"prismatic": { "component": "./dist/index.js" }`, which is how a code-native integration's
- * dependencies are told apart from ordinary packages.
- */
+/** Identifies the packaged platform artifact in package.json. */
 export const COMPONENT_PACKAGE_MARKER = { component: "./dist/index.js" } as const;
 
-/**
- * The marker that makes a package a component package: the package-relative path of its
- * platform bundle. Anything else under `prismatic`, or a marker that is not a non-empty
- * string, leaves the package an ordinary dependency.
- */
 export const ComponentMarkerSchema = z.object({ component: z.string().min(1) });
 
-/**
- * The fields read from an installed dependency's package.json. Third-party packages are not
- * held to any shape: a field that is not what discovery expects reads as absent rather than
- * failing the import over a package that has nothing to do with Prismatic.
- */
+/** Ignore unrelated or malformed metadata in third-party packages. */
 const InstalledPackageSchema = z.looseObject({
   name: z.string().optional().catch(undefined),
   version: z.string().optional().catch(undefined),
   prismatic: z.unknown().optional(),
 });
 
-/**
- * The fields read from the integration's own package.json. These are the author's, so a
- * malformed dependency list fails with a message instead of being skipped silently.
- */
 const IntegrationPackageSchema = z.looseObject({
   dependencies: z.record(z.string(), z.string()).optional(),
   devDependencies: z.record(z.string(), z.string()).optional(),
@@ -48,7 +31,6 @@ export const isComponentPackage = (pkg: unknown): boolean =>
   ComponentMarkerSchema.safeParse((pkg as { prismatic?: unknown } | null)?.prismatic).success;
 
 export interface ComponentDependency {
-  /** The npm package name, as it appears in the integration's dependencies. */
   name: string;
   version: string;
   /** Absolute path of the installed package. */
@@ -78,11 +60,6 @@ const readIntegrationPackageJson = async (root: string) => {
   return parsed.data;
 };
 
-/**
- * Where `name` is installed, as seen from the package at `root`: Node's own resolution, so a
- * dependency hoisted to an ancestor node_modules (npm, Bun and Yarn workspaces) is found as
- * well as one installed locally. Undefined when it is not installed at all.
- */
 const resolvePackageDirectory = async (root: string, name: string): Promise<string | undefined> => {
   const require = createRequire(resolve(root, "package.json"));
   try {
@@ -109,11 +86,7 @@ const resolvePackageDirectory = async (root: string, name: string): Promise<stri
   }
 };
 
-/**
- * The installed direct dependencies of the package at `root` that are Prismatic components
- * (see {@link COMPONENT_PACKAGE_MARKER}), resolved the way Node resolves them from `root`, so
- * hoisted workspace installs count. Dependencies that are not installed are ignored.
- */
+/** Discover installed component packages in direct dependencies only. */
 export const findComponentDependencies = async (root: string): Promise<ComponentDependency[]> => {
   const rootPackage = await readIntegrationPackageJson(root);
   const found: ComponentDependency[] = [];
@@ -134,12 +107,7 @@ export const findComponentDependencies = async (root: string): Promise<Component
   return found;
 };
 
-/**
- * What the integration at `root` declares that the import cannot act on: dependencies that are
- * not installed (a component package among them would go unpublished and unpinned), and
- * component packages listed under devDependencies, which bundle into the integration like any
- * import but are not treated as dependencies. Returned as warnings for the import to report.
- */
+/** Warn about missing installs and components listed only in devDependencies. */
 export const auditComponentDependencies = async (root: string): Promise<string[]> => {
   const rootPackage = await readIntegrationPackageJson(root);
   const warnings: string[] = [];
@@ -182,12 +150,6 @@ export interface DependencyPublishResult extends ComponentDependency {
   detail?: string;
 }
 
-/**
- * Publish one component dependency from the platform bundle (`dist/`) shipped in its
- * package, the same way `prism components:publish` does from a component checkout: the
- * bundle directory becomes the working directory, because the publish helpers resolve the
- * entrypoint, icon and zip relative to it.
- */
 const publishComponentDependency = async (
   dependency: ComponentDependency,
   wait?: WaitOptions,
@@ -220,8 +182,7 @@ const publishComponentDependency = async (
     const existing = await findComponentBySignature(definition, signature);
     const result = { ...dependency, key, isPublic, signature };
 
-    // Public artifacts must already have been published by Prismatic. Never silently
-    // substitute LATEST when the installed package has a different signature.
+    // Public artifacts must be published separately with a matching signature.
     if (!existing && isPublic) {
       return {
         ...result,
@@ -236,8 +197,7 @@ const publishComponentDependency = async (
           comment: `Published by prism integrations:import from ${dependency.name}@${dependency.version}`,
         });
     const componentId = published.componentId;
-    // A retry can find a matching version that is still processing. Wait for that
-    // exact artifact just as we do for a newly published one.
+    // A matching artifact may still be processing.
     if (
       !existing?.versionIsAvailable &&
       wait &&
@@ -261,14 +221,7 @@ const publishComponentDependency = async (
   });
 };
 
-/**
- * Publish every private component the code-native integration at `root` depends on, so the
- * components exist on the platform (for their connections and the low-code designer)
- * without a separate `publish:platform` step. A package matching any published
- * signature is reused, including public components (which this command never publishes). A component that fails to publish, or whose
- * published version is not available within the wait, does not stop the others; it is
- * reported in its result for the caller to act on.
- */
+/** Reuse matching signatures or publish private artifacts; return failures per dependency. */
 export const publishComponentDependencies = async (
   root: string,
   wait?: WaitOptions,
