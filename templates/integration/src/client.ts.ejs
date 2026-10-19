@@ -21,7 +21,7 @@ export function createAcmeClient(acmeConnection: Connection) {
     baseUrl: util.types.toString(baseUrl),
     headers: {
       Accept: "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
     },
   });
 }
