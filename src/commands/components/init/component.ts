@@ -34,20 +34,18 @@ export default Cli.command({
   alias: { description: "d", name: "n" },
 });
 
-export const DEFAULT_COMPONENT_DESCRIPTION = "Prism-generated Component";
-
 export async function generateComponent(flags: {
   name?: string;
   description?: string;
   toolchain?: "modern" | "legacy";
   public?: boolean;
 }) {
+  flags = { ...flags, description: flags.description?.trim() || "Prism-generated Component" };
+
   const directory = getWorkingDirectory();
   const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
-  if (!flags.name || !flags.description) {
-    requireInteractiveInput(
-      "Agent mode requires both --name and --description for components:init:component",
-    );
+  if (!flags.name) {
+    requireInteractiveInput("Agent mode requires --name for components:init:component");
   }
   const { name, description } = await inquirer.prompt<{
     name: string;
@@ -103,5 +101,5 @@ export async function generateComponent(flags: {
     ),
     toolchain.renderTemplates(context),
   ]);
-  return { name, path: directory, toolchain: toolchain.name };
+  return { name, description, path: directory, toolchain: toolchain.name };
 }

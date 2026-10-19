@@ -4,6 +4,7 @@ import {
   type Action,
   type Component,
   type Connection,
+  normalizeDescription,
   type Result,
   stripUndefined,
 } from "../../utils.js";
@@ -27,7 +28,8 @@ const buildComponent = (api: OpenAPI.Document): Component => {
     display: {
       label: api.info.title,
       description:
-        api.info.description ?? `Generated component for ${api.info.title} ${api.info.version}`,
+        normalizeDescription(api.info.description) ||
+        normalizeDescription(`Generated component for ${api.info.title} ${api.info.version}`),
       iconPath: "icon.png",
     },
   });

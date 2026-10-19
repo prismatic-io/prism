@@ -16,7 +16,7 @@ import {
   getToolchain,
   TOOLCHAIN_NAMES,
 } from "../../../utils/toolchain/index.js";
-import { DEFAULT_COMPONENT_DESCRIPTION, generateComponent } from "./component.js";
+import { generateComponent } from "./component.js";
 import { generateFormats } from "./formats.js";
 
 export default Cli.command({
@@ -131,10 +131,11 @@ export default Cli.command({
     writeCommandStatus(`Creating component directory for "${name}"...`);
 
     const directory = path.resolve(cwd, name);
-    let description = DEFAULT_COMPONENT_DESCRIPTION;
     await fs.mkdir(directory);
 
     return withWorkingDirectory(directory, async () => {
+      let description: string;
+
       if (openApiPath) {
         ({ description } = await generateFormats({
           name,
@@ -143,12 +144,11 @@ export default Cli.command({
           public: internalPublishing,
         }));
       } else {
-        await generateComponent({
+        ({ description } = await generateComponent({
           name,
-          description,
           toolchain: toolchain.name,
           public: internalPublishing,
-        });
+        }));
 
         if (wsdlPath) {
           const [wsdlName] = path.basename(wsdlPath).split(".wsdl");
