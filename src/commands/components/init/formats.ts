@@ -14,8 +14,6 @@ export async function generateFormats(options: {
   icon?: string;
   public?: boolean;
   toolchain?: "modern" | "legacy";
-
-  internalPublishing?: boolean;
 }): Promise<{
   name: string;
   path: string;
@@ -28,18 +26,16 @@ export async function generateFormats(options: {
     name,
     icon,
     openapi,
-    public: publicOption = false,
+    public: isPublic = false,
     toolchain: toolchainName = DEFAULT_TOOLCHAIN,
-    internalPublishing = false,
   } = options;
-  const isPublic = publicOption || internalPublishing;
   const toolchain = getToolchain(toolchainName);
   const key = camelCase(name);
 
   const result = await read(openapi);
 
   const sharedFiles = [path.join("assets", "icon.png")];
-  const templateData = { npmPackage: toolchain.npmPackage };
+  const templateData = { npmPackage: toolchain.name === "modern" };
   await Promise.all([
     ...sharedFiles.map((f) =>
       template(
@@ -48,7 +44,6 @@ export async function generateFormats(options: {
       ),
     ),
     toolchain.renderTemplates(templateData),
-    toolchain.renderNpmPackageTemplates(templateData),
   ]);
 
   await write(key, isPublic, result);

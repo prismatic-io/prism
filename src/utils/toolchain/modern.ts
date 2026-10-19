@@ -7,7 +7,6 @@ import { Toolchain, type ToolchainName } from "./types.js";
  */
 export class ModernToolchain extends Toolchain {
   readonly name: ToolchainName = "modern";
-  readonly npmPackage = true;
 
   readonly scripts = {
     build: "npm run typecheck && tsdown",

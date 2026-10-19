@@ -40,8 +40,7 @@ export async function generateComponent(flags: {
   name?: string;
   description?: string;
   toolchain?: "modern" | "legacy";
-  /** Apply Prismatic publishing defaults. */
-  internalPublishing?: boolean;
+  public?: boolean;
 }) {
   const directory = getWorkingDirectory();
   const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
@@ -76,9 +75,9 @@ export async function generateComponent(flags: {
       name,
       description,
       key: camelCase(name),
-      public: flags.internalPublishing === true,
+      public: flags.public === true,
     },
-    npmPackage: toolchain.npmPackage,
+    npmPackage: toolchain.name === "modern",
   };
   const sharedFiles = [
     path.join("assets", "icon.png"),
@@ -103,7 +102,6 @@ export async function generateComponent(flags: {
       ),
     ),
     toolchain.renderTemplates(context),
-    toolchain.renderNpmPackageTemplates(context),
   ]);
   return { name, path: directory, toolchain: toolchain.name };
 }

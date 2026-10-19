@@ -10,9 +10,6 @@ import { createComponentPackage, loadEntrypoint, validateDefinition } from "./in
 import { uploadComponentVersion } from "./publish.js";
 import { calculatePackageSignature, findComponentBySignature } from "./signature.js";
 
-/** Identifies the packaged platform artifact in package.json. */
-export const COMPONENT_PACKAGE_MARKER = { component: "./dist/index.js" } as const;
-
 export const ComponentMarkerSchema = z.object({ component: z.string().min(1) });
 
 /** Ignore unrelated or malformed metadata in third-party packages. */

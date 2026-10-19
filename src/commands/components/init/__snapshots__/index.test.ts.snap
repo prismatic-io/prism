@@ -12062,8 +12062,8 @@ exports[`component generation tests > modern - wsdl - countryinfoservice > shoul
 "{
   "name": "countryinfoservice-modern",
   "version": "0.0.1",
-  "main": "./npm-dist/index.cjs",
   "private": true,
+  "main": "./npm-dist/index.cjs",
   "types": "./npm-dist/index.d.cts",
   "exports": {
     ".": {
@@ -13294,8 +13294,8 @@ exports[`component generation tests > modern - wsdl - numberconversion > should 
 "{
   "name": "numberconversion-modern",
   "version": "0.0.1",
-  "main": "./npm-dist/index.cjs",
   "private": true,
+  "main": "./npm-dist/index.cjs",
   "types": "./npm-dist/index.d.cts",
   "exports": {
     ".": {

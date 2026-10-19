@@ -6,7 +6,6 @@ import { Toolchain, type ToolchainName } from "./types.js";
  */
 export class LegacyToolchain extends Toolchain {
   readonly name: ToolchainName = "legacy";
-  readonly npmPackage = false;
 
   readonly scripts = {
     build: "webpack",

@@ -23,17 +23,9 @@ export abstract class Toolchain {
   abstract readonly packageJson: Record<string, unknown>;
   /** devDependencies required to build, test, and lint the scaffold. */
   abstract readonly devDependencies: Record<string, string>;
-  /** Supports the callable npm build. */
-  abstract readonly npmPackage: boolean;
 
   /** Render this toolchain's config files into the project. */
   renderTemplates(data: Record<string, unknown> = {}): Promise<void> {
     return templateDirectory(this.name, data);
-  }
-
-  async renderNpmPackageTemplates(data: Record<string, unknown> = {}): Promise<void> {
-    if (this.npmPackage) {
-      await templateDirectory("npm-package", data);
-    }
   }
 }
