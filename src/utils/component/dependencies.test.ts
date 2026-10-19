@@ -12,20 +12,24 @@ const mocks = vi.hoisted(() => ({
   validateDefinition: vi.fn(),
   waitForComponentVersion: vi.fn(),
 }));
+
 vi.mock(import("./publish.js"), async (importOriginal) => ({
   ...(await importOriginal()),
   uploadComponentVersion: mocks.uploadComponentVersion,
 }));
+
 vi.mock(import("./signature.js"), async (importOriginal) => ({
   ...(await importOriginal()),
   findComponentBySignature: mocks.findComponentBySignature,
   calculatePackageSignature: mocks.calculatePackageSignature,
 }));
+
 vi.mock(import("./index.js"), async (importOriginal) => ({
   ...(await importOriginal()),
   createComponentPackage: mocks.createComponentPackage,
   validateDefinition: mocks.validateDefinition,
 }));
+
 vi.mock(import("../availability.js"), async (importOriginal) => ({
   ...(await importOriginal()),
   waitForComponentVersion: mocks.waitForComponentVersion,
@@ -106,7 +110,9 @@ describe("findComponentDependencies", () => {
           ghost: "*",
         },
       });
+
       const found = await findComponentDependencies(root);
+
       expect(found.map(({ name, version }) => `${name}@${version}`)).toEqual([
         "my-component@1.2.3",
         "@acme/other-component@1.2.3",
@@ -198,6 +204,7 @@ describe("findComponentDependencies", () => {
           platformEntrypoint: "./dist/index.js",
         },
       ]);
+
       expect(await auditComponentDependencies(root)).toEqual([]);
     });
   });
@@ -211,7 +218,9 @@ describe("findComponentDependencies", () => {
         version: 7,
         prismatic: "yes",
       });
+
       const found = await findComponentDependencies(root);
+
       expect(found.map(({ name }) => name)).toEqual(["my-component"]);
     });
   });
@@ -219,6 +228,7 @@ describe("findComponentDependencies", () => {
   it("fails clearly on an integration package.json whose dependencies are malformed", async () => {
     await temporaryDirectoryTask(async (root) => {
       await writeJson(path.join(root, "package.json"), { dependencies: ["my-component"] });
+
       await expect(findComponentDependencies(root)).rejects.toThrow(
         /package\.json is not a valid package\.json[\s\S]*dependencies/,
       );
@@ -228,9 +238,11 @@ describe("findComponentDependencies", () => {
   it("ignores devDependencies and a missing package.json", async () => {
     await temporaryDirectoryTask(async (root) => {
       expect(await findComponentDependencies(root)).toEqual([]);
+
       await writeJson(path.join(root, "package.json"), {
         devDependencies: { "my-component": "*" },
       });
+
       expect(await findComponentDependencies(root)).toEqual([]);
     });
   });
@@ -262,6 +274,7 @@ describe("auditComponentDependencies", () => {
   it("is quiet when everything declared is installed where it belongs", async () => {
     await temporaryDirectoryTask(async (root) => {
       await integrationWith(root, { "my-component": {}, lodash: { marker: false } });
+
       expect(await auditComponentDependencies(root)).toEqual([]);
       expect(await auditComponentDependencies(path.join(root, "missing"))).toEqual([]);
     });
@@ -314,8 +327,10 @@ describe("publishComponentDependencies", () => {
         "changedComponent",
       ]);
       expect(mocks.uploadComponentVersion).toHaveBeenCalledTimes(1);
+
       const [publishedDefinition, packagePath, options] =
         mocks.uploadComponentVersion.mock.calls[0];
+
       expect(publishedDefinition.key).toBe("changedComponent");
       expect(packagePath).toBe("/tmp/package.zip");
       expect(options.comment).toContain("changed-component@1.2.3");

@@ -21,6 +21,7 @@ describe("extractHiddenOptions", () => {
         ["prismatic-internal"],
       ).set.size,
     ).toBe(0);
+
     expect(
       extractHiddenOptions(
         ["--prismatic-internal=false", "--prismatic-internal=true"],
@@ -34,6 +35,7 @@ describe("extractHiddenOptions", () => {
       ["init", "--prismatic-internal=false", "--internal"],
       ["prismatic-internal"],
     );
+
     expect(argv).toEqual(["init", "--internal"]);
     expect(set.size).toBe(0);
   });
@@ -42,10 +44,13 @@ describe("extractHiddenOptions", () => {
 describe("hiddenOption", () => {
   it("is scoped to the run it was set for", async () => {
     expect(hiddenOption("prismatic-internal")).toBe(false);
+
     await runWithHiddenOptions(new Set(["prismatic-internal"]), async () => {
       await Promise.resolve();
+
       expect(hiddenOption("prismatic-internal")).toBe(true);
     });
+
     expect(hiddenOption("prismatic-internal")).toBe(false);
   });
 });
