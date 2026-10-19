@@ -34,10 +34,9 @@ const specs = (await readdir(`${componentsPath}/init/fixtures/specs`)).map<SpecM
   return { type, fileName, name };
 });
 
-/** The scaffolds components:init produces. `--prismatic-internal` exists only on the modern toolchain. */
+// Snapshot each toolchain once; focused tests below cover the internal preset.
 const VARIANTS = [
   { name: "modern", toolchain: "modern", flags: [] },
-  { name: "modern + internal", toolchain: "modern", flags: ["--prismatic-internal"] },
   { name: "legacy", toolchain: "legacy", flags: [] },
 ] as const;
 
@@ -110,15 +109,29 @@ describe("component generation tests", () => {
       }
     });
 
-    it("scopes and lowercases the internal package for public npm publishing", async () => {
+    it.each([
+      false,
+      true,
+    ])("applies internal publishing metadata (OpenAPI: %s)", async (openApi) => {
       process.chdir(tempPath);
       try {
-        await runCommand(InitializeComponent, ["MyInternal", "--prismatic-internal"]);
-        const pkg = await readJson(path.join(tempPath, "MyInternal", "package.json"));
+        const name = openApi ? "MyInternalOpenApi" : "MyInternal";
+        await runCommand(InitializeComponent, [
+          name,
+          "--prismatic-internal",
+          ...(openApi ? ["--open-api-path", "../fixtures/specs/todo-api.json"] : []),
+        ]);
+        const pkg = await readJson(path.join(tempPath, name, "package.json"));
         expect(pkg).toMatchObject({
-          name: "@prismatic-io/components-myinternal",
+          name: `@prismatic-io/components-${name.toLowerCase()}`,
           version: "0.0.1",
-          repository: { directory: "components/MyInternal" },
+          license: "Apache-2.0",
+          repository: {
+            type: "git",
+            url: "git+https://github.com/prismatic-io/components.git",
+            directory: `components/${name}`,
+          },
+          exports: { ".": { types: "./npm-dist/index.d.cts", default: "./npm-dist/index.cjs" } },
           files: ["npm-dist", "dist"],
           publishConfig: { access: "public" },
           prismatic: { component: "./dist/index.js" },
@@ -128,6 +141,9 @@ describe("component generation tests", () => {
         });
         expect(pkg.private).toBeUndefined();
         expect(pkg.scripts.prepublishOnly).toBeUndefined();
+        expect(await readFile(path.join(tempPath, name, "src/index.ts"), "utf-8")).toContain(
+          "public: true",
+        );
       } finally {
         process.chdir(basePath);
       }
