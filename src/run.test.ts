@@ -1,7 +1,10 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// These tests launch the full CLI; cold startup under CI load can exceed five seconds.
+vi.setConfig({ testTimeout: 30_000 });
 
 const projectRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
