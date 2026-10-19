@@ -101,11 +101,10 @@ describe("component generation tests", () => {
           exports: { ".": { types: "./npm-dist/index.d.cts", default: "./npm-dist/index.cjs" } },
           files: ["npm-dist", "dist"],
           prismatic: { component: "./dist/index.js" },
-          scripts: { prepare: "npm run build:npm", "publish:platform": expect.any(String) },
+          scripts: { prepare: "npm run build", "publish:platform": expect.any(String) },
           peerDependencies: { "@prismatic-io/spectral": expect.any(String) },
         });
         expect(pkg.scripts.publish).toBeUndefined();
-        expect(pkg.scripts["build:npm"]).toBe("npm run build && node build-npm.mjs");
 
         const readme = await readFile(path.join(tempPath, "MyComponent", "README.md"), "utf-8");
 
@@ -163,7 +162,7 @@ describe("component generation tests", () => {
           publishConfig: { access: "public" },
           prismatic: { component: "./dist/index.js" },
           scripts: {
-            prepare: "npm run build:npm",
+            prepare: "npm run build",
           },
         });
         expect(pkg.private).toBeUndefined();

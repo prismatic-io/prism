@@ -26,8 +26,7 @@
   "prismatic": { "component": "./dist/index.js" },
   "scripts": {
     "build": <%- JSON.stringify(toolchain.scripts.build) %>,
-    "build:npm": "npm run build && node build-npm.mjs",
-    "prepare": "npm run build:npm",
+    "prepare": "npm run build",
     "publish:platform": "npm run build && prism components:publish",
     "test": <%- JSON.stringify(toolchain.scripts.test) %>,
     "lint": <%- JSON.stringify(toolchain.scripts.lint) %>,

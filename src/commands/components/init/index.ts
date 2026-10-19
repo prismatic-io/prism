@@ -214,7 +214,7 @@ To install dependencies, run either "npm install" or "yarn install"
 To test the component, run "npm run test" or "yarn test"
 To build the component, run "npm run build" or "yarn build"
 To publish the component, run "prism components:publish"
-${toolchain.name === "modern" ? 'To build it as an npm package for code-native integrations, run "npm run build:npm"\n' : ""}
+
 For documentation on writing custom components, visit https://prismatic.io/docs/custom-connectors/
         `);
       return { name, path: directory, toolchain: toolchain.name };
