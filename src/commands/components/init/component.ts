@@ -41,7 +41,7 @@ export async function generateComponent(flags: {
   description?: string;
   toolchain?: "modern" | "legacy";
   /** Apply Prismatic publishing defaults. */
-  internal?: boolean;
+  internalPublishing?: boolean;
 }) {
   const directory = getWorkingDirectory();
   const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
@@ -76,7 +76,7 @@ export async function generateComponent(flags: {
       name,
       description,
       key: camelCase(name),
-      public: flags.internal === true,
+      public: flags.internalPublishing === true,
     },
     npmPackage: toolchain.npmPackage,
   };

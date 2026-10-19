@@ -99,7 +99,7 @@ export default Cli.command({
       },
     } = context;
 
-    const internal = hiddenOption("prismatic-internal");
+    const internalPublishing = hiddenOption("prismatic-internal");
 
     const toolchain = getToolchain(toolchainName);
     const wsdlPath = rawWsdlPath ? path.resolve(cwd, rawWsdlPath) : undefined;
@@ -112,12 +112,12 @@ export default Cli.command({
         message: `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
       });
     }
-    if (internal && npmPackage !== undefined) {
+    if (internalPublishing && npmPackage !== undefined) {
       throw new CommandFailedError({
         message: "--npm-package and --prismatic-internal cannot be combined.",
       });
     }
-    if ((internal || npmPackage !== undefined) && !toolchain.npmPackage) {
+    if ((internalPublishing || npmPackage !== undefined) && !toolchain.npmPackage) {
       throw new CommandFailedError({
         message:
           "npm publishing is supported only by the modern toolchain; use --toolchain modern.",
@@ -151,14 +151,14 @@ export default Cli.command({
           name,
           openapi: openApiPath,
           toolchain: toolchain.name,
-          internal,
+          internalPublishing,
         }));
       } else {
         await generateComponent({
           name,
           description,
           toolchain: toolchain.name,
-          internal,
+          internalPublishing,
         });
 
         if (wsdlPath) {
@@ -185,10 +185,10 @@ export default Cli.command({
       };
       if (toolchain.npmPackage) {
         // npm names must be lowercase; preserve the directory and display label.
-        const packageName = internal
+        const packageName = internalPublishing
           ? `${INTERNAL_SCOPE}${camelCase(name).toLowerCase()}`
           : (npmPackage ?? name.toLowerCase());
-        const registryPublishing = internal || npmPackage !== undefined;
+        const registryPublishing = internalPublishing || npmPackage !== undefined;
         await updatePackageJson({
           path: packageJsonPath,
           name: packageName,
@@ -197,7 +197,7 @@ export default Cli.command({
           main: NPM_MAIN,
           types: NPM_TYPES,
           exports: { ".": { types: NPM_TYPES, default: NPM_MAIN } },
-          ...(internal
+          ...(internalPublishing
             ? {
                 description,
                 license: INTERNAL_LICENSE,
@@ -238,7 +238,7 @@ export default Cli.command({
         await template(path.join("component", "README.md.ejs"), path.join(directory, "README.md"), {
           name: packageName,
           registryPublishing,
-          internal,
+          internalPublishing,
         });
       } else {
         await updatePackageJson({

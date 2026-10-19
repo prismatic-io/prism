@@ -15,7 +15,7 @@ export async function generateFormats(options: {
   public?: boolean;
   toolchain?: "modern" | "legacy";
 
-  internal?: boolean;
+  internalPublishing?: boolean;
 }): Promise<{
   name: string;
   path: string;
@@ -30,9 +30,9 @@ export async function generateFormats(options: {
     openapi,
     public: publicOption = false,
     toolchain: toolchainName = DEFAULT_TOOLCHAIN,
-    internal = false,
+    internalPublishing = false,
   } = options;
-  const isPublic = publicOption || internal;
+  const isPublic = publicOption || internalPublishing;
   const toolchain = getToolchain(toolchainName);
   const key = camelCase(name);
 
