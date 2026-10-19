@@ -24,15 +24,15 @@ export const acmeApiKey = connection({
       label: "Acme Base URL",
       type: "string",
       required: true,
-      default: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
+      default: "https://jsonplaceholder.typicode.com",
       example: "https://my-company.api.acme.com/",
     },
     apiKey: {
       label: "Acme API Key",
       placeholder: "Acme API Key",
       type: "password",
-      required: true,
-      comments: "Generate at https://app.acme.com/settings/api-keys",
+      required: false,
+      comments: "JSONPlaceholder needs no API key. Set this when adapting the component to an authenticated API.",
     },
   },
 });

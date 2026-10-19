@@ -19,19 +19,16 @@ dotenv.config({ path: ".env.testing" });
 const harness = createHarness(myComponent);
 
 const acmeConnection = createConnection(acmeApiKey, {
-  baseUrl: process.env.ACME_ENDPOINT,
-  apiKey: process.env.ACME_API_KEY,
+  baseUrl: process.env.ACME_ENDPOINT ?? acmeApiKey.inputs.baseUrl.default,
+  apiKey: process.env.ACME_API_KEY ?? "",
 });
 
 describe("Test DataSource", () => {
-  test("Test selectItem dropdown menu datasource", async () => {
-    const { result } = await harness.dataSource("selectItem", {
+  test("Test selectPost dropdown menu datasource", async () => {
+    const { result } = await harness.dataSource("selectPost", {
       acmeConnection,
     });
-    expect(result).toStrictEqual([
-      { key: "1", label: "Widgets" },
-      { key: "2", label: "Whatsits" },
-      { key: "3", label: "Gadgets" },
-    ]);
+    expect(result).toHaveLength(100);
+    expect(result).toEqual(expect.arrayContaining([{ key: "1", label: expect.any(String) }]));
   });
 });

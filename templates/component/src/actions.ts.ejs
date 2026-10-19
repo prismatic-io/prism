@@ -15,10 +15,11 @@ import {
 } from "@prismatic-io/spectral/dist/clients/http";
 import { createAcmeClient } from "./client";
 
-interface Item {
+interface Post {
   id: number;
-  name: string;
-  quantity: number;
+  userId: number;
+  title: string;
+  body: string;
 }
 
 export const connectionInput = input({
@@ -27,18 +28,18 @@ export const connectionInput = input({
   type: "connection",
 });
 
-export const itemIdInput = input({
-  label: "Item ID",
+export const postIdInput = input({
+  label: "Post ID",
   required: true,
   type: "string",
   clean: util.types.toNumber,
 });
 
-/* List all items in inventory */
-const listItems = action({
+/* List all posts in JSONPlaceholder */
+const listPosts = action({
   display: {
-    label: "List All Items",
-    description: "List all items in our inventory",
+    label: "List All Posts",
+    description: "List all posts from JSONPlaceholder",
   },
   inputs: {
     // Declare an input for this action
@@ -48,8 +49,8 @@ const listItems = action({
     // Initialize our reusable HTTP client
     const acmeClient = createAcmeClient(acmeConnection);
 
-    // Make a synchronous GET call to "{ baseUrl }/items":
-    const response = await acmeClient.get<Item[]>("/items");
+    // Make a synchronous GET call to "{ baseUrl }/posts":
+    const response = await acmeClient.get<Post[]>("/posts");
 
     // Return the data that we got back
     return { data: response.data };
@@ -59,71 +60,77 @@ const listItems = action({
     data: [
       {
         id: 1,
-        name: "Widgets",
-        quantity: 20,
+        userId: 1,
+        title: "Example post",
+        body: "Example body",
       },
       {
         id: 2,
-        name: "Whatsits",
-        quantity: 100,
+        userId: 1,
+        title: "Another post",
+        body: "Another body",
       },
     ],
   },
 });
 
-/* Get a specific item from inventory by ID */
-const getItem = action({
+/* Get a specific post from JSONPlaceholder by ID */
+const getPost = action({
   display: {
-    label: "Get Item",
-    description: "Get an Item by ID",
+    label: "Get Post",
+    description: "Get a post by ID",
   },
   inputs: {
     acmeConnection: connectionInput,
-    itemId: itemIdInput,
+    postId: postIdInput,
   },
-  perform: async (context, { acmeConnection, itemId }) => {
+  perform: async (context, { acmeConnection, postId }) => {
     const acmeClient = createAcmeClient(acmeConnection);
-    const response = await acmeClient.get<Item>(`/items/${itemId}`);
+    const response = await acmeClient.get<Post>(`/posts/${postId}`);
     return { data: response.data };
   },
   examplePayload: {
     data: {
       id: 1,
-      name: "Widgets",
-      quantity: 20,
+      userId: 1,
+      title: "Example post",
+      body: "Example body",
     },
   },
 });
 
-/* Add a new item to inventory */
-const addItem = action({
+/* Add a new post to JSONPlaceholder */
+const addPost = action({
   display: {
-    label: "Add Item",
-    description: "Add an Item to Inventory",
+    label: "Add Post",
+    description: "Create a sample post (JSONPlaceholder simulates writes without saving them)",
   },
   // We can define some inputs inline if they're not reused:
   inputs: {
     acmeConnection: connectionInput,
-    name: input({ label: "Item Name", type: "string" }),
-    quantity: input({
-      label: "Item Quantity",
+    title: input({ label: "Post Title", type: "string" }),
+    body: input({ label: "Post Body", type: "string" }),
+    userId: input({
+      label: "User ID",
       type: "string",
       clean: util.types.toNumber,
     }),
   },
-  perform: async (context, { acmeConnection, name, quantity }) => {
+  perform: async (context, { acmeConnection, title, body, userId }) => {
     const acmeClient = createAcmeClient(acmeConnection);
-    const response = await acmeClient.post<Item>("/items/", {
-      name,
-      quantity,
+    const response = await acmeClient.post<Post>("/posts", {
+      title,
+      body,
+      userId,
     });
     return { data: response.data };
   },
   examplePayload: {
     data: {
       id: 1,
-      name: "Widgets",
-      quantity: 20,
+      userId: 1,
+      title: "Example post",
+      body: "Example body",
     },
   },
 });
@@ -140,18 +147,20 @@ const rawRequest = action({
       // Optional; this adds component-specific instructions to the URL input
       ...httpClientInputs.url,
       comments:
-        "The base URL from your connection is already included (https://my-json-server.typicode.com/prismatic-io/placeholder-data). For example, to connect to https://my-json-server.typicode.com/prismatic-io/placeholder-data/items, only /items is entered in this field.",
-      example: "/items",
+        "The base URL from your connection is already included (https://jsonplaceholder.typicode.com). For example, to connect to https://jsonplaceholder.typicode.com/posts, only /posts is entered in this field.",
+      example: "/posts",
     },
   },
   perform: async (context, { acmeConnection, ...httpClientInputs }) => {
     const { data } = await sendRawRequest(
       util.types.toString(acmeConnection.fields.baseUrl),
       httpClientInputs,
-      { Authorization: `Bearer ${acmeConnection.fields.apiKey}` }, // Authorization methods vary by API
+      acmeConnection.fields.apiKey
+        ? { Authorization: `Bearer ${acmeConnection.fields.apiKey}` }
+        : {}, // JSONPlaceholder does not require authentication
     );
     return { data };
   },
 });
 
-export default { addItem, getItem, listItems, rawRequest };
+export default { addPost, getPost, listPosts, rawRequest };

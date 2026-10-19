@@ -11,20 +11,21 @@
 import { type Element, dataSource, input } from "@prismatic-io/spectral";
 import { createAcmeClient } from "./client";
 
-interface Item {
+interface Post {
   id: number;
-  name: string;
-  quantity: number;
+  userId: number;
+  title: string;
+  body: string;
 }
 
 /**
- * Create a dropdown menu, populated with items
+ * Create a dropdown menu, populated with posts
  * from an API, for use in the config wizard
  */
-export const selectItem = dataSource({
+export const selectPost = dataSource({
   display: {
-    label: "Select Item",
-    description: "This data source fetches a list of items, and presents them as a dropdown menu",
+    label: "Select Post",
+    description: "This data source fetches a list of posts, and presents them as a dropdown menu",
   },
   dataSourceType: "picklist",
   inputs: {
@@ -36,20 +37,19 @@ export const selectItem = dataSource({
   },
   perform: async (context, { acmeConnection }) => {
     const client = createAcmeClient(acmeConnection);
-    const { data: items } = await client.get<Item[]>("/items");
-    const options: Element[] = items.map((item) => ({
-      key: `${item.id}`,
-      label: item.name,
+    const { data: posts } = await client.get<Post[]>("/posts");
+    const options: Element[] = posts.map((post) => ({
+      key: `${post.id}`,
+      label: post.title,
     }));
     return { result: options };
   },
   examplePayload: {
     result: [
-      { key: "1", label: "Widgets" },
-      { key: "2", label: "Whatsits" },
-      { key: "3", label: "Gadgets" },
+      { key: "1", label: "Example post" },
+      { key: "2", label: "Another post" },
     ],
   },
 });
 
-export default { selectItem };
+export default { selectPost };

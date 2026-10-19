@@ -20,59 +20,45 @@ dotenv.config({ path: ".env.testing" });
 const harness = createHarness(myComponent);
 
 const acmeConnection = createConnection(acmeApiKey, {
-  baseUrl: process.env.ACME_ENDPOINT,
-  apiKey: process.env.ACME_API_KEY,
+  baseUrl: process.env.ACME_ENDPOINT ?? acmeApiKey.inputs.baseUrl.default,
+  apiKey: process.env.ACME_API_KEY ?? "",
 });
 
-const expectedItems = [
-  {
-    id: 1,
-    name: "Widgets",
-    quantity: 20,
-  },
-  {
-    id: 2,
-    name: "Whatsits",
-    quantity: 100,
-  },
-  {
-    id: 3,
-    name: "Gadgets",
-    quantity: 5,
-  },
-];
-
 describe("Test Actions", () => {
-  test("Verify listItems returns the correct number of items", async () => {
-    const result = await harness.action("listItems", { acmeConnection });
-    expect(result?.data).toStrictEqual(expectedItems);
+  test("Verify listPosts returns the correct number of posts", async () => {
+    const result = await harness.action("listPosts", { acmeConnection });
+    expect(result?.data).toHaveLength(100);
+    expect(result?.data).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 1, userId: 1, title: expect.any(String), body: expect.any(String) }),
+    ]));
   });
 
-  test("Verify getItem returns the correct item", async () => {
-    const result = await harness.action("getItem", {
+  test("Verify getPost returns the correct post", async () => {
+    const result = await harness.action("getPost", {
       acmeConnection,
-      itemId: "3",
+      postId: "3",
     });
-    expect(result?.data).toStrictEqual(expectedItems[2]);
+    expect(result?.data).toMatchObject({ id: 3, userId: 1, title: expect.any(String), body: expect.any(String) });
   });
 
-  test("Verify addItem adds an item to inventory", async () => {
-    const result = await harness.action("addItem", {
+  test("Verify addPost creates a sample post to JSONPlaceholder", async () => {
+    const result = await harness.action("addPost", {
       acmeConnection,
-      name: "My New Item",
-      quantity: "50",
+      title: "My New Post",
+      body: "Example body",
+      userId: "1",
     });
-    expect(result?.data).toMatchObject({ name: "My New Item", quantity: 50 });
+    expect(result?.data).toMatchObject({ id: 101, title: "My New Post", body: "Example body", userId: 1 });
   });
 
   test("Verify raw request works as expected", async () => {
     const result = await harness.action("rawRequest", {
       acmeConnection,
-      url: "/items",
+      url: "/posts",
       method: "get",
       responseType: "json",
       queryParams: [{ key: "id", value: "2" }],
     });
-    expect(result?.data).toStrictEqual([expectedItems[1]]);
+    expect(result?.data).toEqual([expect.objectContaining({ id: 2, userId: 1 })]);
   });
 });

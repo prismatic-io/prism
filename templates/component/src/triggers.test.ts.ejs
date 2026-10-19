@@ -23,8 +23,8 @@ dotenv.config({ path: ".env.testing" });
 const harness = createHarness(myComponent);
 
 const acmeConnection = createConnection(acmeApiKey, {
-  baseUrl: process.env.ACME_ENDPOINT,
-  apiKey: process.env.ACME_API_KEY,
+  baseUrl: process.env.ACME_ENDPOINT ?? acmeApiKey.inputs.baseUrl.default,
+  apiKey: "test-secret", // Fixed signing key for the sample webhook test
 });
 
 describe("Test Trigger", () => {
@@ -34,7 +34,7 @@ describe("Test Trigger", () => {
     // Create a valid HMAC signature for our payload
     payload.rawBody.data = JSON.stringify({ foo: "bar", baz: "buz" });
     payload.headers["x-hmac-256"] =
-      "bbcf73f3e4ab75f3a42c28b0304a3cd1568b6ceba56513116749415fa3a12ad7";
+      "dd25a478a2223919faf2c3c9ad59ff0e4d57a881f6d199025f3a7ad740bf11fc";
 
     const result = await harness.trigger("exampleTrigger", payload, {
       acmeConnection,

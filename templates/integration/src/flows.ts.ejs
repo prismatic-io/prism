@@ -7,12 +7,12 @@
 
 import { flow } from "@prismatic-io/spectral";
 import { createAcmeClient } from "./client";
-import type { Item } from "./configPages";
+import type { Post } from "./configPages";
 
-export const listItems = flow({
-  name: "List Items",
+export const listPosts = flow({
+  name: "List Posts",
   stableKey: "<%= flow.stableKey %>",
-  description: "Fetch items from an API",
+  description: "Fetch posts from an API",
   onTrigger: async (context, payload, params) => {
     const { logger } = context;
 
@@ -26,19 +26,19 @@ export const listItems = flow({
   },
   onExecution: async (context, params) => {
     context.logger.info(
-      `During configuration, the customer selected the item "${context.configVars["Select Item"]}"`,
+      `During configuration, the customer selected the post "${context.configVars["Select Post"]}"`,
     );
 
     // Create an authenticated reusable HTTP client from client.ts
     const acmeErpClient = createAcmeClient(context.configVars["Acme Connection"]);
-    const response = await acmeErpClient.get<Item[]>("/items");
-    for (const item of response.data) {
+    const response = await acmeErpClient.get<Post[]>("/posts");
+    for (const post of response.data) {
       context.logger.info(
-        `Item "${item.name}" with ID "${item.id}" has quantity "${item.quantity}"`,
+        `Post "${post.title}" with ID "${post.id}" belongs to user "${post.userId}"`,
       );
     }
     return { data: response.data };
   },
 });
 
-export default [listItems];
+export default [listPosts];

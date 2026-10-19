@@ -1,8 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`integrations:init > legacy toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-legacy/.env.testing 1`] = `
-ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
+ACME_ENDPOINT=https://jsonplaceholder.typicode.com
+ACME_API_KEY=
 
 `;
 
@@ -298,8 +298,8 @@ exports[`integrations:init > legacy toolchain > clean scaffold generation > shou
 `;
 
 exports[`integrations:init > legacy toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-legacy/.env.testing 1`] = `
-ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
+ACME_ENDPOINT=https://jsonplaceholder.typicode.com
+ACME_API_KEY=
 
 `;
 
@@ -443,7 +443,7 @@ export function createAcmeClient(acmeConnection: Connection) {
     baseUrl: util.types.toString(baseUrl),
     headers: {
       Accept: "application/json",
-      Authorization: \`Bearer \${apiKey}\`,
+      ...(apiKey ? { Authorization: \`Bearer \${apiKey}\` } : {}),
     },
   });
 }
@@ -487,10 +487,11 @@ import {
 } from "@prismatic-io/spectral";
 import { createAcmeClient } from "./client";
 
-export interface Item {
+export interface Post {
   id: number;
-  name: string;
-  quantity: number;
+  userId: number;
+  title: string;
+  body: string;
 }
 
 export const configPages = {
@@ -505,36 +506,36 @@ export const configPages = {
             label: "Acme Base URL",
             type: "string",
             required: true,
-            default: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
+            default: "https://jsonplaceholder.typicode.com",
             example: "https://my-company.api.acme.com/",
           },
           apiKey: {
             label: "Acme API Key",
             placeholder: "Acme API Key",
             type: "password",
-            required: true,
-            comments: "You can enter any value here for this mock API.",
+            required: false,
+            comments: "JSONPlaceholder needs no API key.",
           },
         },
       }),
     },
   }),
-  "Item Configuration": configPage({
+  "Post Configuration": configPage({
     elements: {
       /**
        * Dynamically fetch data using the existing connection, and present the
        * data as a dropdown menu in the config wizard.
        */
-      "Select Item": dataSourceConfigVar({
+      "Select Post": dataSourceConfigVar({
         stableKey: "00000000-0000-0000-0000-000000000000",
         dataSourceType: "picklist",
         perform: async (context) => {
           // Create an authenticated reusable HTTP client from client.ts
           const client = createAcmeClient(context.configVars["Acme Connection"] as Connection);
-          const { data: items } = await client.get<Item[]>("/items");
-          const options: Element[] = items.map((item) => ({
-            key: \`\${item.id}\`,
-            label: item.name,
+          const { data: posts } = await client.get<Post[]>("/posts");
+          const options: Element[] = posts.map((post) => ({
+            key: \`\${post.id}\`,
+            label: post.title,
           }));
           return { result: options };
         },
@@ -559,7 +560,7 @@ exports[`integrations:init > legacy toolchain > scaffold generation > should mat
 
 import { invokeFlow } from "@prismatic-io/spectral/dist/testing";
 import dotenv from "dotenv";
-import { listItems } from "./flows";
+import { listPosts } from "./flows";
 
 dotenv.config({ path: ".env.testing" });
 
@@ -572,25 +573,26 @@ const acmeConnection = {
 };
 
 describe("Verify flow works as expected", () => {
-  test("Verify we get the correct set of items back", async () => {
-    const { result } = await invokeFlow(listItems, {
-      configVars: { "Acme Connection": acmeConnection, "Select Item": "2" },
+  test("Verify we get the correct set of posts back", async () => {
+    const { result } = await invokeFlow(listPosts, {
+      configVars: { "Acme Connection": acmeConnection, "Select Post": "2" },
     });
-    expect(result?.data).toStrictEqual([
-      { id: 1, name: "Widgets", quantity: 20 },
-      { id: 2, name: "Whatsits", quantity: 100 },
-      { id: 3, name: "Gadgets", quantity: 5 },
-    ]);
+    expect(result?.data).toHaveLength(100);
+    expect(result?.data).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 1, userId: 1, title: expect.any(String), body: expect.any(String) }),
+    ]));
   });
 
   test("Verify we see the expected log lines", async () => {
-    const { loggerMock } = await invokeFlow(listItems, {
-      configVars: { "Acme Connection": acmeConnection, "Select Item": "2" },
+    const { loggerMock } = await invokeFlow(listPosts, {
+      configVars: { "Acme Connection": acmeConnection, "Select Post": "2" },
     });
     expect(loggerMock.info).toHaveBeenCalledWith(
-      'During configuration, the customer selected the item "2"',
+      'During configuration, the customer selected the post "2"',
     );
-    expect(loggerMock.info).toHaveBeenCalledWith('Item "Widgets" with ID "1" has quantity "20"');
+    expect(loggerMock.info).toHaveBeenCalledWith(
+      expect.stringContaining('with ID "1" belongs to user "1"'),
+    );
   });
 });
 
@@ -606,12 +608,12 @@ exports[`integrations:init > legacy toolchain > scaffold generation > should mat
 
 import { flow } from "@prismatic-io/spectral";
 import { createAcmeClient } from "./client";
-import type { Item } from "./configPages";
+import type { Post } from "./configPages";
 
-export const listItems = flow({
-  name: "List Items",
+export const listPosts = flow({
+  name: "List Posts",
   stableKey: "00000000-0000-0000-0000-000000000000",
-  description: "Fetch items from an API",
+  description: "Fetch posts from an API",
   onTrigger: async (context, payload, params) => {
     const { logger } = context;
 
@@ -625,22 +627,22 @@ export const listItems = flow({
   },
   onExecution: async (context, params) => {
     context.logger.info(
-      \`During configuration, the customer selected the item "\${context.configVars["Select Item"]}"\`,
+      \`During configuration, the customer selected the post "\${context.configVars["Select Post"]}"\`,
     );
 
     // Create an authenticated reusable HTTP client from client.ts
     const acmeErpClient = createAcmeClient(context.configVars["Acme Connection"]);
-    const response = await acmeErpClient.get<Item[]>("/items");
-    for (const item of response.data) {
+    const response = await acmeErpClient.get<Post[]>("/posts");
+    for (const post of response.data) {
       context.logger.info(
-        \`Item "\${item.name}" with ID "\${item.id}" has quantity "\${item.quantity}"\`,
+        \`Post "\${post.title}" with ID "\${post.id}" belongs to user "\${post.userId}"\`,
       );
     }
     return { data: response.data };
   },
 });
 
-export default [listItems];
+export default [listPosts];
 
 `;
 
@@ -703,8 +705,8 @@ exports[`integrations:init > legacy toolchain > scaffold generation > should mat
 `;
 
 exports[`integrations:init > modern toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-modern/.env.testing 1`] = `
-ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
+ACME_ENDPOINT=https://jsonplaceholder.typicode.com
+ACME_API_KEY=
 
 `;
 
@@ -1062,8 +1064,8 @@ export default defineConfig({
 `;
 
 exports[`integrations:init > modern toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-modern/.env.testing 1`] = `
-ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
+ACME_ENDPOINT=https://jsonplaceholder.typicode.com
+ACME_API_KEY=
 
 `;
 
@@ -1228,7 +1230,7 @@ export function createAcmeClient(acmeConnection: Connection) {
     baseUrl: util.types.toString(baseUrl),
     headers: {
       Accept: "application/json",
-      Authorization: \`Bearer \${apiKey}\`,
+      ...(apiKey ? { Authorization: \`Bearer \${apiKey}\` } : {}),
     },
   });
 }
@@ -1272,10 +1274,11 @@ import {
 } from "@prismatic-io/spectral";
 import { createAcmeClient } from "./client";
 
-export interface Item {
+export interface Post {
   id: number;
-  name: string;
-  quantity: number;
+  userId: number;
+  title: string;
+  body: string;
 }
 
 export const configPages = {
@@ -1290,36 +1293,36 @@ export const configPages = {
             label: "Acme Base URL",
             type: "string",
             required: true,
-            default: "https://my-json-server.typicode.com/prismatic-io/placeholder-data",
+            default: "https://jsonplaceholder.typicode.com",
             example: "https://my-company.api.acme.com/",
           },
           apiKey: {
             label: "Acme API Key",
             placeholder: "Acme API Key",
             type: "password",
-            required: true,
-            comments: "You can enter any value here for this mock API.",
+            required: false,
+            comments: "JSONPlaceholder needs no API key.",
           },
         },
       }),
     },
   }),
-  "Item Configuration": configPage({
+  "Post Configuration": configPage({
     elements: {
       /**
        * Dynamically fetch data using the existing connection, and present the
        * data as a dropdown menu in the config wizard.
        */
-      "Select Item": dataSourceConfigVar({
+      "Select Post": dataSourceConfigVar({
         stableKey: "00000000-0000-0000-0000-000000000000",
         dataSourceType: "picklist",
         perform: async (context) => {
           // Create an authenticated reusable HTTP client from client.ts
           const client = createAcmeClient(context.configVars["Acme Connection"] as Connection);
-          const { data: items } = await client.get<Item[]>("/items");
-          const options: Element[] = items.map((item) => ({
-            key: \`\${item.id}\`,
-            label: item.name,
+          const { data: posts } = await client.get<Post[]>("/posts");
+          const options: Element[] = posts.map((post) => ({
+            key: \`\${post.id}\`,
+            label: post.title,
           }));
           return { result: options };
         },
@@ -1344,7 +1347,7 @@ exports[`integrations:init > modern toolchain > scaffold generation > should mat
 
 import { invokeFlow } from "@prismatic-io/spectral/dist/testing";
 import dotenv from "dotenv";
-import { listItems } from "./flows";
+import { listPosts } from "./flows";
 
 dotenv.config({ path: ".env.testing" });
 
@@ -1357,25 +1360,26 @@ const acmeConnection = {
 };
 
 describe("Verify flow works as expected", () => {
-  test("Verify we get the correct set of items back", async () => {
-    const { result } = await invokeFlow(listItems, {
-      configVars: { "Acme Connection": acmeConnection, "Select Item": "2" },
+  test("Verify we get the correct set of posts back", async () => {
+    const { result } = await invokeFlow(listPosts, {
+      configVars: { "Acme Connection": acmeConnection, "Select Post": "2" },
     });
-    expect(result?.data).toStrictEqual([
-      { id: 1, name: "Widgets", quantity: 20 },
-      { id: 2, name: "Whatsits", quantity: 100 },
-      { id: 3, name: "Gadgets", quantity: 5 },
-    ]);
+    expect(result?.data).toHaveLength(100);
+    expect(result?.data).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: 1, userId: 1, title: expect.any(String), body: expect.any(String) }),
+    ]));
   });
 
   test("Verify we see the expected log lines", async () => {
-    const { loggerMock } = await invokeFlow(listItems, {
-      configVars: { "Acme Connection": acmeConnection, "Select Item": "2" },
+    const { loggerMock } = await invokeFlow(listPosts, {
+      configVars: { "Acme Connection": acmeConnection, "Select Post": "2" },
     });
     expect(loggerMock.info).toHaveBeenCalledWith(
-      'During configuration, the customer selected the item "2"',
+      'During configuration, the customer selected the post "2"',
     );
-    expect(loggerMock.info).toHaveBeenCalledWith('Item "Widgets" with ID "1" has quantity "20"');
+    expect(loggerMock.info).toHaveBeenCalledWith(
+      expect.stringContaining('with ID "1" belongs to user "1"'),
+    );
   });
 });
 
@@ -1391,12 +1395,12 @@ exports[`integrations:init > modern toolchain > scaffold generation > should mat
 
 import { flow } from "@prismatic-io/spectral";
 import { createAcmeClient } from "./client";
-import type { Item } from "./configPages";
+import type { Post } from "./configPages";
 
-export const listItems = flow({
-  name: "List Items",
+export const listPosts = flow({
+  name: "List Posts",
   stableKey: "00000000-0000-0000-0000-000000000000",
-  description: "Fetch items from an API",
+  description: "Fetch posts from an API",
   onTrigger: async (context, payload, params) => {
     const { logger } = context;
 
@@ -1410,22 +1414,22 @@ export const listItems = flow({
   },
   onExecution: async (context, params) => {
     context.logger.info(
-      \`During configuration, the customer selected the item "\${context.configVars["Select Item"]}"\`,
+      \`During configuration, the customer selected the post "\${context.configVars["Select Post"]}"\`,
     );
 
     // Create an authenticated reusable HTTP client from client.ts
     const acmeErpClient = createAcmeClient(context.configVars["Acme Connection"]);
-    const response = await acmeErpClient.get<Item[]>("/items");
-    for (const item of response.data) {
+    const response = await acmeErpClient.get<Post[]>("/posts");
+    for (const post of response.data) {
       context.logger.info(
-        \`Item "\${item.name}" with ID "\${item.id}" has quantity "\${item.quantity}"\`,
+        \`Post "\${post.title}" with ID "\${post.id}" belongs to user "\${post.userId}"\`,
       );
     }
     return { data: response.data };
   },
 });
 
-export default [listItems];
+export default [listPosts];
 
 `;
 

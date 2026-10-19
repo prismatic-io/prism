@@ -2183,8 +2183,8 @@ exports[`component generation tests > legacy - openApi - todo-api > should match
 `;
 
 exports[`component generation tests > legacy - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-legacy/.env.testing 1`] = `
-"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
+"ACME_ENDPOINT=https://jsonplaceholder.typicode.com
+ACME_API_KEY=
 "
 `;
 
@@ -5646,8 +5646,8 @@ exports[`component generation tests > legacy - wsdl - countryinfoservice > shoul
 `;
 
 exports[`component generation tests > legacy - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-legacy/.env.testing 1`] = `
-"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
+"ACME_ENDPOINT=https://jsonplaceholder.typicode.com
+ACME_API_KEY=
 "
 `;
 
@@ -8576,8 +8576,8 @@ export default defineConfig({
 `;
 
 exports[`component generation tests > modern - wsdl - countryinfoservice > should match scaffolding snapshots > countryinfoservice-modern/.env.testing 1`] = `
-"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
+"ACME_ENDPOINT=https://jsonplaceholder.typicode.com
+ACME_API_KEY=
 "
 `;
 
@@ -12108,8 +12108,8 @@ export default defineConfig({
 `;
 
 exports[`component generation tests > modern - wsdl - numberconversion > should match scaffolding snapshots > numberconversion-modern/.env.testing 1`] = `
-"ACME_ENDPOINT=https://my-json-server.typicode.com/prismatic-io/placeholder-data
-ACME_API_KEY=P@s$W0rD
+"ACME_ENDPOINT=https://jsonplaceholder.typicode.com
+ACME_API_KEY=
 "
 `;
 
