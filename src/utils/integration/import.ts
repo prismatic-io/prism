@@ -35,7 +35,7 @@ import { findPackageRoot, getPackageEntrypointDirectory } from "../import.js";
 import { startAction, stopAction } from "../progress.js";
 import { loadYaml } from "../serialize.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
-import { pinComponentSignatures } from "./signatures.js";
+import { mixedComponentWarnings, pinComponentSignatures } from "./signatures.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
 import { validateCodeNativeDefinition } from "./validate.js";
 
@@ -214,8 +214,11 @@ export const importCodeNativeIntegration = async (
             message: `Component dependency ${name} did not provide a published artifact signature.`,
           });
         }
-        return { key, isPublic, signature };
+        return { name, key, isPublic, signature };
       });
+      for (const warning of mixedComponentWarnings(integrationDefinition, dependencySignatures)) {
+        writeCommandOutput(warning, "stderr");
+      }
       const pinnedDefinition = pinComponentSignatures(integrationDefinition, dependencySignatures, {
         key: componentDefinition.key,
         isPublic: componentDefinition.public ?? false,

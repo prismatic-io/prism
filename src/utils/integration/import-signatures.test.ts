@@ -10,6 +10,7 @@ import { COMPONENT_SELF_SIGNATURE } from "./signatures.js";
 
 const mocks = vi.hoisted(() => ({
   dependencies: vi.fn(),
+  output: vi.fn(),
   publish: vi.fn(async () => ({
     componentId: "cni-id",
     packageUploadUrl: "upload-url",
@@ -18,6 +19,10 @@ const mocks = vi.hoisted(() => ({
   upload: vi.fn(),
   wait: vi.fn(async () => true),
   gql: vi.fn(),
+}));
+vi.mock("../../command.js", async (original) => ({
+  ...(await original<typeof import("../../command.js")>()),
+  writeCommandOutput: mocks.output,
 }));
 vi.mock("../component/dependencies.js", async (original) => ({
   ...(await original<typeof import("../component/dependencies.js")>()),
@@ -99,6 +104,10 @@ it("resolves dependency self references at publication and pins the CNI without 
       integrationId: "integration-id",
       componentId: "cni-id",
     });
+    expect(mocks.output).toHaveBeenCalledWith(
+      expect.stringContaining('npm package "dependency-package"'),
+      "stderr",
+    );
     const uploadedPackage = mocks.upload.mock.calls[0][0] as string;
     const cniSignature = await calculatePackageSignature(uploadedPackage);
     const [{ variables }] = mocks.gql.mock.calls[0];
