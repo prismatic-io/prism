@@ -24,7 +24,7 @@ export abstract class Toolchain {
   /** devDependencies required to build, test, and lint the scaffold. */
   abstract readonly devDependencies: Record<string, string>;
 
-  /** Render this toolchain's config files (templates/<name>/) into the project. */
+  /** Render this toolchain's config files into the project. */
   renderTemplates(data: Record<string, unknown> = {}): Promise<void> {
     return templateDirectory(this.name, data);
   }

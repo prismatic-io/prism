@@ -2,14 +2,83 @@ import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { temporaryDirectoryTask } from "tempy";
 import { describe, expect, it, vi } from "vitest";
+import { withWorkingDirectory } from "../../command-context.js";
+import type { DependencyPublishResult } from "../component/dependencies.js";
 import { dumpYaml } from "../serialize.js";
 import {
   compareConfigVars,
   getIntegrationDefinition,
+  importCodeNativeIntegration,
   importDefinition,
   loadCodeNativeIntegrationEntryPoint,
   parseTestApiKeys,
 } from "./import.js";
+
+const mocks = vi.hoisted(() => ({
+  publishComponentDependencies: vi.fn(),
+}));
+vi.mock(import("../component/dependencies.js"), async (importOriginal) => ({
+  ...(await importOriginal()),
+  publishComponentDependencies: mocks.publishComponentDependencies,
+}));
+
+const dependency = (name: string, key: string): DependencyPublishResult => ({
+  name,
+  version: "1.0.0",
+  directory: `/components/${name}`,
+  platformEntrypoint: "./dist/index.js",
+  key,
+  isPublic: false,
+  status: "unchanged",
+});
+
+describe("importCodeNativeIntegration", () => {
+  it("does not import when a dependency failed to publish", async () => {
+    mocks.publishComponentDependencies.mockResolvedValueOnce([
+      { ...dependency("broken-component", "broken"), status: "failed", detail: "boom" },
+      { ...dependency("fine-component", "fine"), status: "published" },
+    ]);
+
+    await temporaryDirectoryTask(async (root) => {
+      await writeFile(path.join(root, "package.json"), '{"name":"integration"}');
+      const yaml = dumpYaml({
+        isCodeNative: true,
+        flows: [
+          {
+            name: "Flow",
+            steps: [
+              { isTrigger: true, action: { key: "trigger", component: { key: "cni" } } },
+              { action: { key: "execute", component: { key: "cni" } } },
+            ],
+          },
+        ],
+      });
+      await writeFile(
+        path.join(root, "index.js"),
+        `module.exports = { default: {
+        key: "cni", display: { label: "CNI", description: "Test" },
+        triggers: { trigger: { perform() {} } }, actions: { execute: { perform() {} } },
+        codeNativeIntegrationYAML: ${JSON.stringify(yaml)}
+      } };`,
+      );
+      await expect(withWorkingDirectory(root, () => importCodeNativeIntegration())).rejects.toThrow(
+        /broken-component \(boom\); the integration was not imported/,
+      );
+    });
+  });
+
+  it("validates the CNI before publishing any component dependencies", async () => {
+    mocks.publishComponentDependencies.mockClear();
+    await temporaryDirectoryTask(async (root) => {
+      await writeFile(path.join(root, "package.json"), '{"name":"integration"}');
+      await writeFile(path.join(root, "index.js"), "module.exports = { default: {} };");
+      await expect(withWorkingDirectory(root, () => importCodeNativeIntegration())).rejects.toThrow(
+        /Failed to find Code Native Integration definition/,
+      );
+      expect(mocks.publishComponentDependencies).not.toHaveBeenCalled();
+    });
+  });
+});
 
 const mockGqlRequest = vi.fn();
 vi.mock(import("../../graphql.js"), async (importOriginal) => {

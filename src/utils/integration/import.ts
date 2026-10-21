@@ -17,6 +17,10 @@ import {
   waitForComponentVersion,
 } from "../availability.js";
 import {
+  auditComponentDependencies,
+  publishComponentDependencies,
+} from "../component/dependencies.js";
+import {
   type ComponentDefinition,
   createComponentPackage,
   validateDefinition,
@@ -26,10 +30,12 @@ import {
   uploadConnectionIcons,
   uploadFile,
 } from "../component/publish.js";
-import { getPackageEntrypointDirectory } from "../import.js";
+import { calculatePackageSignature } from "../component/signature.js";
+import { findPackageRoot, getPackageEntrypointDirectory } from "../import.js";
 import { startAction, stopAction } from "../progress.js";
 import { loadYaml } from "../serialize.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
+import { pinComponentSignatures } from "./signatures.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
 import { validateCodeNativeDefinition } from "./validate.js";
 
@@ -149,6 +155,8 @@ export const importCodeNativeIntegration = async (
   testApiKeyFlags?: string[],
   waitOptions?: WaitOptions,
 ): Promise<{ integrationId: string; componentId: string }> => {
+  const packageRoot = await findPackageRoot("Code Native Integration");
+
   return withWorkingDirectory(
     await getPackageEntrypointDirectory("Code Native Integration"),
     async () => {
@@ -182,7 +190,37 @@ export const importCodeNativeIntegration = async (
         }
       }
 
+      const dependencyWarnings = await auditComponentDependencies(packageRoot);
+      const dependencyResults = await publishComponentDependencies(packageRoot, {
+        ...waitOptions,
+        timeoutSeconds: waitOptions?.timeoutSeconds ?? DEFAULT_WAIT_TIMEOUT_SECONDS,
+      });
+      const blockingDependencies = dependencyResults.filter(
+        ({ status }) => status === "failed" || status === "not-built" || status === "timed-out",
+      );
+      if (blockingDependencies.length > 0) {
+        throw new CommandFailedError({
+          message: `Not every component dependency is published and available: ${blockingDependencies
+            .map(({ name, detail }) => (detail ? `${name} (${detail})` : name))
+            .join(", ")}; the integration was not imported.`,
+        });
+      }
+      for (const warning of dependencyWarnings) writeCommandOutput(warning, "stderr");
+
       const packagePath = await createComponentPackage();
+      const dependencySignatures = dependencyResults.map(({ name, key, isPublic, signature }) => {
+        if (!key || isPublic === undefined || !signature) {
+          throw new CommandFailedError({
+            message: `Component dependency ${name} did not provide a published artifact signature.`,
+          });
+        }
+        return { key, isPublic, signature };
+      });
+      const pinnedDefinition = pinComponentSignatures(integrationDefinition, dependencySignatures, {
+        key: componentDefinition.key,
+        isPublic: componentDefinition.public ?? false,
+        signature: await calculatePackageSignature(packagePath),
+      });
 
       const { componentId, iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
         await publishComponentDefinition(componentDefinition, {
@@ -204,7 +242,7 @@ export const importCodeNativeIntegration = async (
 
       startAction("Importing definition for Code Native Integration into Prismatic");
       const { integrationId: integrationImportId, systemInstance } = await importDefinition(
-        integrationDefinition,
+        pinnedDefinition,
         integrationId,
         replace,
       );

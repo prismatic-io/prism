@@ -1,5 +1,4 @@
 import { resolve } from "node:path";
-import crypto from "crypto";
 import mimetypes from "mime-types";
 import { extname } from "path";
 import { writeCommandStatus } from "../../command.js";
@@ -12,6 +11,7 @@ import { gqlRequest } from "../../graphql.js";
 import { fetch } from "../http.js";
 import { confirm as confirmPrompt } from "../prompts.js";
 import type { ComponentDefinition } from "./index.js";
+import { calculatePackageSignature } from "./signature.js";
 
 const componentDefinitionShape: Partial<Record<keyof ComponentDefinition, true>> = {
   actions: true,
@@ -46,10 +46,7 @@ export const checkPackageSignature = async (
   } = results;
 
   // Generate the signature of the package so we may compare it against the existing one.
-  const packageSignature = crypto
-    .createHash("sha1")
-    .update(await fs.readFile(packagePath))
-    .digest("hex");
+  const packageSignature = await calculatePackageSignature(packagePath);
 
   return existingSignature === packageSignature;
 };
@@ -200,6 +197,36 @@ export const publishDefinition = async (
     connectionIconUploadUrls: uploadUrls,
     versionNumber,
   };
+};
+
+/**
+ * Publishes a new version of the component in the working directory and uploads its package,
+ * icon, connection icons and, when given, its source: what `prism components:publish` and the
+ * dependency publish in `prism integrations:import` both do once they have decided to publish.
+ */
+export const uploadComponentVersion = async (
+  definition: ComponentDefinition,
+  packagePath: string,
+  options: Parameters<typeof publishDefinition>[1] & { sourceCodePath?: string },
+): Promise<{ componentId: string; versionNumber: number }> => {
+  const { sourceCodePath, ...publishOptions } = options;
+  const {
+    componentId,
+    iconUploadUrl,
+    packageUploadUrl,
+    sourceUploadUrl,
+    connectionIconUploadUrls,
+    versionNumber,
+  } = await publishDefinition(definition, publishOptions);
+  await uploadFile(packagePath, packageUploadUrl);
+  if (definition.display.iconPath) {
+    await uploadFile(resolve(getWorkingDirectory(), definition.display.iconPath), iconUploadUrl);
+  }
+  if (sourceCodePath && sourceUploadUrl) {
+    await uploadFile(sourceCodePath, sourceUploadUrl);
+  }
+  await uploadConnectionIcons(definition, connectionIconUploadUrls);
+  return { componentId, versionNumber };
 };
 
 export const uploadFile = async (filePath: string, destinationUrl: string) => {

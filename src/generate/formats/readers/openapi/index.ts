@@ -27,7 +27,8 @@ const buildComponent = (api: OpenAPI.Document): Component => {
     display: {
       label: api.info.title,
       description:
-        api.info.description ?? `Generated component for ${api.info.title} ${api.info.version}`,
+        api.info.description?.trim() ||
+        `Generated component for ${api.info.title} ${api.info.version}`,
       iconPath: "icon.png",
     },
   });

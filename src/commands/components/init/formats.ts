@@ -14,7 +14,12 @@ export async function generateFormats(options: {
   icon?: string;
   public?: boolean;
   toolchain?: "modern" | "legacy";
-}) {
+}): Promise<{
+  name: string;
+  path: string;
+  toolchain: string;
+  description: string;
+}> {
   const directory = getWorkingDirectory();
   const {
     name,
@@ -26,7 +31,10 @@ export async function generateFormats(options: {
   const toolchain = getToolchain(toolchainName);
   const key = camelCase(name);
 
+  const result = await read(openapi);
+
   const sharedFiles = [path.join("assets", "icon.png")];
+  const templateData = { npmPackage: toolchain.name === "modern" };
   await Promise.all([
     ...sharedFiles.map((f) =>
       template(
@@ -34,10 +42,9 @@ export async function generateFormats(options: {
         path.join(directory, f),
       ),
     ),
-    toolchain.renderTemplates(),
+    toolchain.renderTemplates(templateData),
   ]);
 
-  const result = await read(openapi);
   await write(key, isPublic, result);
   await copy(openapi, path.join(directory, `${key}-openapi-spec${extname(openapi)}`));
 
@@ -54,5 +61,10 @@ To publish the component, run "prism components:publish"
 
 For documentation on writing custom components, visit https://prismatic.io/docs/custom-connectors/
     `);
-  return { name, path: directory, toolchain: toolchain.name };
+  return {
+    name,
+    path: directory,
+    toolchain: toolchain.name,
+    description: result.component.display.description,
+  };
 }

@@ -19,14 +19,11 @@ export const stripUndefined = <T extends Record<string, any>>(data: T): T =>
     return { ...result, [key]: value };
   }, {} as T);
 
-export const createDescription = (text?: string): string => {
-  if (!text) {
-    return "";
-  }
-
+export const createDescription = (text = ""): string => {
   const strippedText = stripTags(text);
-  const [nonEmptyLine] = strippedText.split("\n").filter((t) => t.trim() !== "");
+  const nonEmptyLine = strippedText.split("\n").find((line) => line.trim()) ?? "";
   const [fragment] = nonEmptyLine.split(/[.!?]/g);
+
   return escapeText(fragment);
 };
 

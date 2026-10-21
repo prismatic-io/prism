@@ -1,12 +1,14 @@
 import { promises as fs } from "fs";
 import { Cli, z } from "incur";
+import { camelCase } from "lodash-es";
 import * as path from "path";
 import { parseAndGenerate } from "wsdl-tsclient";
 import { writeCommandStatus } from "../../../command.js";
 import { getWorkingDirectory, withWorkingDirectory } from "../../../command-context.js";
 import { CommandFailedError } from "../../../errors.js";
 import { generate } from "../../../generate/index.js";
-import { updatePackageJson } from "../../../generate/util.js";
+import { templateDirectory, updatePackageJson } from "../../../generate/util.js";
+import { hiddenOption } from "../../../hidden-options.js";
 import { warningsOutput } from "../../../output.js";
 import { formatSourceFiles, getFilesToFormat, VALID_NAME_REGEX } from "../../../utils/generate.js";
 import {
@@ -38,6 +40,12 @@ export default Cli.command({
     },
   ],
   options: z.object({
+    "npm-package": z
+      .string()
+      .optional()
+      .describe(
+        "Enable npm registry publishing with this package name (for example @your-org/acme); does not make the platform component public",
+      ),
     "wsdl-path": z
       .string()
       .optional()
@@ -73,11 +81,14 @@ export default Cli.command({
       args: { name },
       options: {
         verbose,
+        "npm-package": npmPackage,
         "wsdl-path": rawWsdlPath,
         "open-api-path": rawOpenApiPath,
         toolchain: toolchainName,
       },
     } = context;
+
+    const internalPublishing = hiddenOption("prismatic-internal");
 
     const toolchain = getToolchain(toolchainName);
     const wsdlPath = rawWsdlPath ? path.resolve(cwd, rawWsdlPath) : undefined;
@@ -88,6 +99,28 @@ export default Cli.command({
       regexUrl.searchParams.set("regex", VALID_NAME_REGEX.source);
       throw new CommandFailedError({
         message: `'${name}' contains invalid characters. Please select a component name that starts and ends with alphanumeric characters, and contains only alphanumeric characters, hyphens, and underscores. See ${regexUrl}`,
+      });
+    }
+    if (internalPublishing && npmPackage !== undefined) {
+      throw new CommandFailedError({
+        message: "--npm-package and --prismatic-internal cannot be combined.",
+      });
+    }
+    if ((internalPublishing || npmPackage !== undefined) && toolchain.name !== "modern") {
+      throw new CommandFailedError({
+        message:
+          "npm publishing is supported only by the modern toolchain; use --toolchain modern.",
+      });
+    }
+    if (
+      npmPackage !== undefined &&
+      (npmPackage.length > 214 ||
+        !/^(@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/.test(npmPackage) ||
+        ["node_modules", "favicon.ico"].includes(npmPackage))
+    ) {
+      throw new CommandFailedError({
+        message:
+          "Invalid --npm-package name. Use a lowercase npm name such as acme or @your-org/acme.",
       });
     }
     if (wsdlPath && !wsdlPath?.includes(".wsdl")) {
@@ -101,18 +134,22 @@ export default Cli.command({
     await fs.mkdir(directory);
 
     return withWorkingDirectory(directory, async () => {
+      let description: string;
+
       if (openApiPath) {
-        await generateFormats({
+        ({ description } = await generateFormats({
           name,
           openapi: openApiPath,
           toolchain: toolchain.name,
-        });
+          public: internalPublishing,
+        }));
       } else {
-        await generateComponent({
+        ({ description } = await generateComponent({
           name,
           description: "Prism-generated Component",
           toolchain: toolchain.name,
-        });
+          public: internalPublishing,
+        }));
 
         if (wsdlPath) {
           const [wsdlName] = path.basename(wsdlPath).split(".wsdl");
@@ -129,23 +166,45 @@ export default Cli.command({
         }
       }
 
-      await updatePackageJson({
-        path: path.join(directory, "package.json"),
-        scripts: {
-          build: toolchain.scripts.build,
-          publish: "npm run build && prism components:publish",
-          test: toolchain.scripts.test,
-          lint: toolchain.scripts.lint,
-          typecheck: toolchain.scripts.typecheck,
-          format: toolchain.scripts.format,
-        },
-        ...toolchain.packageJson,
-        dependencies: {
-          "@prismatic-io/spectral": "*",
-          ...(wsdlPath ? { soap: "1.1.10" } : {}),
-        },
-        devDependencies: toolchain.devDependencies,
-      });
+      const packageJsonPath = path.join(directory, "package.json");
+      const sharedScripts = {
+        test: toolchain.scripts.test,
+        lint: toolchain.scripts.lint,
+        typecheck: toolchain.scripts.typecheck,
+        format: toolchain.scripts.format,
+      };
+      if (toolchain.name === "modern") {
+        await templateDirectory("npm-package", {
+          name,
+          packageName: internalPublishing
+            ? `@prismatic-io/components-${camelCase(name).toLowerCase()}`
+            : (npmPackage ?? name.toLowerCase()),
+          description,
+          internalPublishing,
+          registryPublishing: internalPublishing || npmPackage !== undefined,
+          toolchain,
+          wsdl: Boolean(wsdlPath),
+        });
+        const { dependencies, devDependencies } = JSON.parse(
+          await fs.readFile(packageJsonPath, "utf-8"),
+        );
+        await updatePackageJson({ path: packageJsonPath, dependencies, devDependencies });
+      } else {
+        await updatePackageJson({
+          path: packageJsonPath,
+          scripts: {
+            build: toolchain.scripts.build,
+            publish: "npm run build && prism components:publish",
+            ...sharedScripts,
+          },
+          ...toolchain.packageJson,
+          dependencies: {
+            "@prismatic-io/spectral": "*",
+            ...(wsdlPath ? { soap: "1.1.10" } : {}),
+          },
+          devDependencies: toolchain.devDependencies,
+        });
+      }
 
       const filesToFormat = await getFilesToFormat(path.join(directory, "package.json"));
       await formatSourceFiles(path.join(directory, "package.json"), filesToFormat);

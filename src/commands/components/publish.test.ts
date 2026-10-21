@@ -37,9 +37,15 @@ vi.mock(import("../../utils/component/index.js"), () => ({
 vi.mock(import("../../utils/component/publish.js"), () => ({
   checkPackageSignature: vi.fn(() => Promise.resolve(false)),
   confirmPublish: vi.fn(() => Promise.resolve(true)),
-  publishDefinition: (...args: unknown[]) => mockPublishDefinition(...args),
-  uploadConnectionIcons: vi.fn(() => Promise.resolve()),
-  uploadFile: vi.fn(() => Promise.resolve()),
+  // The shared upload helper, reduced to the publish call the tests below assert on.
+  uploadComponentVersion: async (
+    definition: unknown,
+    _packagePath: string,
+    { sourceCodePath: _sourceCodePath, ...options }: Record<string, unknown>,
+  ) => {
+    const { componentId, versionNumber } = await mockPublishDefinition(definition, options);
+    return { componentId, versionNumber };
+  },
 }));
 
 vi.mock(import("../../utils/availability.js"), async (importOriginal) => {

@@ -45,7 +45,7 @@
         "@graphql-codegen/typescript": "^6.1.0",
         "@graphql-codegen/typescript-operations": "^6.1.6",
         "@graphql-typed-document-node/core": "^3.2.0",
-        "@prismatic-io/spectral": "^10.35.1",
+        "@prismatic-io/spectral": "^10.36.0",
         "@types/ejs": "^3.1.5",
         "@types/fs-extra": "^11.0.4",
         "@types/js-yaml": "^4.0.9",
@@ -302,7 +302,7 @@
 
     "@paralleldrive/cuid2": ["@paralleldrive/cuid2@2.3.1", "", { "dependencies": { "@noble/hashes": "^1.1.5" } }, "sha512-XO7cAxhnTZl0Yggq6jOgjiOHhbgcO4NqFqwSmQpjK3b6TEE6Uj/jfSk6wzYyemh3+I0sHirKSetjQwn5cZktFw=="],
 
-    "@prismatic-io/spectral": ["@prismatic-io/spectral@10.35.1", "", { "dependencies": { "axios": "^1.20.0", "axios-retry": "^4.5.0", "date-fns": "^4.4.0", "ejs": "^6.0.1", "form-data": "^4.0.6", "jest-mock": "^30.5.2", "json-schema-to-ts": "^3.1.1", "lodash": "^4.18.1", "object-sizeof": "^2.6.4", "prettier": "^3.9.9", "safe-stable-stringify": "^2.5.0", "valid-url": "1.0.9", "yaml": "^2.9.1", "zod": "^4.6.5" }, "bin": { "component-manifest": "bin/component-manifest.js", "cni-component-manifest": "bin/cni-component-manifest.js" } }, "sha512-0H3k9n2HuNS7c0LOUzTeuoytJq11y2ZuOxGlHeNqB+HEKjpS3i7MajvtoKxMNgnbNlbMcAg54ee6HU+bRtgy+Q=="],
+    "@prismatic-io/spectral": ["@prismatic-io/spectral@10.36.0", "", { "dependencies": { "axios": "^1.20.0", "axios-retry": "^4.5.0", "date-fns": "^4.4.0", "ejs": "^6.0.1", "form-data": "^4.0.6", "jest-mock": "^30.5.2", "json-schema-to-ts": "^3.1.1", "lodash": "^4.18.1", "object-sizeof": "^2.6.4", "prettier": "^3.9.9", "safe-stable-stringify": "^2.5.0", "valid-url": "1.0.9", "yaml": "^2.9.1", "zod": "^4.6.5" }, "bin": { "component-manifest": "bin/component-manifest.js", "cni-component-manifest": "bin/cni-component-manifest.js" } }, "sha512-47PcSrbjh/muB0Qhu9jQ9V62R2RMYnXh+UpyfCHniWhVGZCEuXMGASJrNJlm+76e/CGuVJJqxlmb+duhd4lEZA=="],
 
     "@repeaterjs/repeater": ["@repeaterjs/repeater@3.0.6", "", {}, "sha512-Javneu5lsuhwNCryN+pXH93VPQ8g0dBX7wItHFgYiwQmzE1sVdg5tWHiOgHywzL2W21XQopa7IwIEnNbmeUJYA=="],
 

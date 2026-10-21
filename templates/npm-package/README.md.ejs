@@ -1,0 +1,35 @@
+# <%= packageName %>
+
+A Prismatic custom component, scaffolded by `prism components:init`.
+
+| Command | What it does |
+| --- | --- |
+| `npm test` | Runs the unit tests |
+| `npm run build` | Bundles the component for Prismatic and npm |
+| `npm run publish:platform` | Builds and publishes the component to Prismatic |
+
+For documentation on writing custom components, see
+https://prismatic.io/docs/custom-connectors/.
+
+## Optional npm usage
+
+<% if (registryPublishing) { -%>
+This package is enabled for registry publishing. Run `npm publish` using your
+registry's authentication and configuration. npm visibility is independent of
+component visibility in Prismatic.
+<% } else { -%>
+Registry publishing is disabled by `"private": true`. To opt in when scaffolding,
+use `--npm-package @your-org/component-name`.
+<% } -%>
+
+To use this component in a code-native integration without a registry, run
+`npm pack` and install the resulting tarball in the integration. The integration
+must also depend on `@prismatic-io/spectral`. Import the package's default export
+to access its callable actions, triggers, data sources, and connection factories.
+Prism publishes private component dependencies to Prismatic when you import the
+integration.
+<% if (internalPublishing) { -%>
+
+Before using this public component in an integration, publish it to Prismatic
+from the unpacked npm package's `dist/` directory.
+<% } -%>

@@ -9,9 +9,12 @@ import type { TypedDocumentNode as DocumentNode } from "@graphql-typed-document-
 export type Component3QueryVariables = Exact<{
   key: string;
   public: boolean;
+  signature: string;
 }>;
 
-export type Component3Query = { components: { nodes: Array<{ signature: string }> } };
+export type Component3Query = {
+  components: { nodes: Array<{ id: string; signature: string; versionIsAvailable: boolean }> };
+};
 
 export const Component3Document = {
   kind: "Document",
@@ -37,6 +40,14 @@ export const Component3Document = {
             type: { kind: "NamedType", name: { kind: "Name", value: "Boolean" } },
           },
         },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "signature" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+          },
+        },
       ],
       selectionSet: {
         kind: "SelectionSet",
@@ -55,6 +66,21 @@ export const Component3Document = {
                 name: { kind: "Name", value: "public" },
                 value: { kind: "Variable", name: { kind: "Name", value: "public" } },
               },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "signature" },
+                value: { kind: "Variable", name: { kind: "Name", value: "signature" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "allVersions" },
+                value: { kind: "BooleanValue", value: true },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "first" },
+                value: { kind: "IntValue", value: "1" },
+              },
             ],
             selectionSet: {
               kind: "SelectionSet",
@@ -64,7 +90,11 @@ export const Component3Document = {
                   name: { kind: "Name", value: "nodes" },
                   selectionSet: {
                     kind: "SelectionSet",
-                    selections: [{ kind: "Field", name: { kind: "Name", value: "signature" } }],
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "id" } },
+                      { kind: "Field", name: { kind: "Name", value: "signature" } },
+                      { kind: "Field", name: { kind: "Name", value: "versionIsAvailable" } },
+                    ],
                   },
                 },
               ],

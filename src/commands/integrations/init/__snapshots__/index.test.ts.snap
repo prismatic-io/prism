@@ -1027,27 +1027,29 @@ exports[`integrations:init > modern toolchain > clean scaffold generation > shou
 exports[`integrations:init > modern toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-modern/tsdown.config.mts 1`] = `
 import { defineConfig } from "tsdown";
 
-export default defineConfig({
-  entry: { index: "src/index.ts" },
-  format: "cjs",
-  outDir: "dist",
-  platform: "node",
-  target: "node22",
-  clean: true,
-  minify: true,
-  dts: false,
-  checks: { legacyCjs: false },
-  deps: {
-    alwaysBundle: () => true,
-    onlyBundle: false,
+export default defineConfig([
+  {
+    entry: { index: "src/index.ts" },
+    format: "cjs",
+    outDir: "dist",
+    platform: "node",
+    target: "node22",
+    clean: true,
+    minify: true,
+    dts: false,
+    checks: { legacyCjs: false },
+    deps: {
+      alwaysBundle: () => true,
+      onlyBundle: false,
+    },
+    outExtensions: () => ({ js: ".js" }),
+    outputOptions: { exports: "named", codeSplitting: false },
+    loader: {
+      ".md": "text",
+    },
+    copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
   },
-  outExtensions: () => ({ js: ".js" }),
-  outputOptions: { exports: "named", codeSplitting: false },
-  loader: {
-    ".md": "text",
-  },
-  copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
-});
+]);
 
 `;
 
@@ -1496,27 +1498,29 @@ exports[`integrations:init > modern toolchain > scaffold generation > should mat
 exports[`integrations:init > modern toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-modern/tsdown.config.mts 1`] = `
 import { defineConfig } from "tsdown";
 
-export default defineConfig({
-  entry: { index: "src/index.ts" },
-  format: "cjs",
-  outDir: "dist",
-  platform: "node",
-  target: "node22",
-  clean: true,
-  minify: true,
-  dts: false,
-  checks: { legacyCjs: false },
-  deps: {
-    alwaysBundle: () => true,
-    onlyBundle: false,
+export default defineConfig([
+  {
+    entry: { index: "src/index.ts" },
+    format: "cjs",
+    outDir: "dist",
+    platform: "node",
+    target: "node22",
+    clean: true,
+    minify: true,
+    dts: false,
+    checks: { legacyCjs: false },
+    deps: {
+      alwaysBundle: () => true,
+      onlyBundle: false,
+    },
+    outExtensions: () => ({ js: ".js" }),
+    outputOptions: { exports: "named", codeSplitting: false },
+    loader: {
+      ".md": "text",
+    },
+    copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
   },
-  outExtensions: () => ({ js: ".js" }),
-  outputOptions: { exports: "named", codeSplitting: false },
-  loader: {
-    ".md": "text",
-  },
-  copy: [{ from: "assets/**/*", to: "dist", flatten: false }],
-});
+]);
 
 `;
 

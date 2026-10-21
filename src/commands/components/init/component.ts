@@ -38,6 +38,7 @@ export async function generateComponent(flags: {
   name?: string;
   description?: string;
   toolchain?: "modern" | "legacy";
+  public?: boolean;
 }) {
   const directory = getWorkingDirectory();
   const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
@@ -67,7 +68,15 @@ export async function generateComponent(flags: {
     flags,
   );
 
-  const context = { component: { name, description, key: camelCase(name) } };
+  const context = {
+    component: {
+      name,
+      description,
+      key: camelCase(name),
+      public: flags.public === true,
+    },
+    npmPackage: toolchain.name === "modern",
+  };
   const sharedFiles = [
     path.join("assets", "icon.png"),
     path.join("src", "actions.test.ts"),
@@ -92,5 +101,5 @@ export async function generateComponent(flags: {
     ),
     toolchain.renderTemplates(context),
   ]);
-  return { name, path: directory, toolchain: toolchain.name };
+  return { name, description, path: directory, toolchain: toolchain.name };
 }

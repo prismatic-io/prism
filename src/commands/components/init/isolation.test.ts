@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { expect, it } from "vitest";
@@ -37,6 +37,36 @@ it("generates independent component scaffolds concurrently without changing cwd"
       ).not.toBe("");
     }
     expect(process.cwd()).toBe(originalDirectory);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+it("keeps component TypeScript identical with and without npm packaging", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "prism-scaffold-authoring-"));
+  try {
+    for (const toolchain of ["modern", "legacy"] as const) {
+      const directory = path.join(root, toolchain);
+      await mkdir(directory);
+      await withWorkingDirectory(directory, () =>
+        generateComponent({
+          name: "example",
+          description: "Example",
+          toolchain,
+        }),
+      );
+    }
+    const modern = path.join(root, "modern", "src");
+    const legacy = path.join(root, "legacy", "src");
+    const files = (await readdir(modern)).sort();
+    expect(files).toEqual((await readdir(legacy)).sort());
+    expect(files).not.toContain("definition.ts");
+    expect(files).not.toContain("platform.ts");
+    for (const file of files) {
+      expect(await readFile(path.join(modern, file), "utf8")).toBe(
+        await readFile(path.join(legacy, file), "utf8"),
+      );
+    }
   } finally {
     await rm(root, { recursive: true, force: true });
   }

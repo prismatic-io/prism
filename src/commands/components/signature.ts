@@ -1,14 +1,15 @@
-import crypto from "crypto";
 import { Cli, z } from "incur";
 import { withWorkingDirectory } from "../../command-context.js";
-import { fs } from "../../fs.js";
 import { warningsOutput } from "../../output.js";
 import {
   createComponentPackage,
   loadEntrypoint,
   validateDefinition,
 } from "../../utils/component/index.js";
-import { getPackageSignatureFromApi } from "../../utils/component/signature.js";
+import {
+  calculatePackageSignature,
+  getPackageSignatureFromApi,
+} from "../../utils/component/signature.js";
 import { getPackageEntrypointDirectory } from "../../utils/import.js";
 
 export default Cli.command({
@@ -32,10 +33,7 @@ export default Cli.command({
       await validateDefinition(componentDefinition);
       const packagePath = await createComponentPackage();
 
-      const packageSignature = crypto
-        .createHash("sha1")
-        .update(await fs.readFile(packagePath))
-        .digest("hex");
+      const packageSignature = await calculatePackageSignature(packagePath);
 
       if (skipSignatureVerify) {
         return { signature: packageSignature };

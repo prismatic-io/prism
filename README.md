@@ -69,6 +69,23 @@ tenant switching still operate on the selected profile.
 For help with Prism, please see our [Prism documentation page](https://prismatic.io/docs/cli/).
 There, you will find information about the various subcommands you can run, troubleshooting tips, etc.
 
+### Share components through npm
+
+Package a component for reuse in code-native integrations:
+
+```bash
+$ prism components:init acme --npm-package @your-org/acme
+$ cd acme
+$ npm publish
+```
+
+Install the package in your integration and import it to use its actions and
+connections. Prism publishes private component dependencies to Prismatic when
+you import the integration. Your npm package's access settings are separate from
+its visibility in Prismatic.
+
+To share a package locally without a registry, use `npm pack`.
+
 ## What is Prismatic?
 
 Prismatic is the leading embedded iPaaS, enabling B2B SaaS teams to ship product integrations faster and with less dev time. The only embedded iPaaS that empowers both developers and non-developers with tools for the complete integration lifecycle, Prismatic includes low-code and code-native building options, deployment and management tooling, and self-serve customer tools.

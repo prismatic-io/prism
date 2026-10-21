@@ -1,0 +1,40 @@
+{
+  "name": <%- JSON.stringify(packageName) %>,
+  "version": "0.0.1",
+<% if (!registryPublishing) { -%>
+  "private": true,
+<% } -%>
+  "main": "./npm-dist/index.cjs",
+  "types": "./npm-dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./npm-dist/index.d.cts",
+      "default": "./npm-dist/index.cjs"
+    }
+  },
+<% if (internalPublishing) { -%>
+  "description": <%- JSON.stringify(description) %>,
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prismatic-io/components.git",
+    "directory": <%- JSON.stringify(`components/${name}`) %>
+  },
+  "publishConfig": { "access": "public" },
+<% } -%>
+  "files": ["npm-dist", "dist"],
+  "prismatic": { "component": "./dist/index.js" },
+  "scripts": {
+    "build": <%- JSON.stringify(toolchain.scripts.build) %>,
+    "prepare": "npm run build",
+    "publish:platform": "npm run build && prism components:publish",
+    "test": <%- JSON.stringify(toolchain.scripts.test) %>,
+    "lint": <%- JSON.stringify(toolchain.scripts.lint) %>,
+    "typecheck": <%- JSON.stringify(toolchain.scripts.typecheck) %>,
+    "format": <%- JSON.stringify(toolchain.scripts.format) %>
+  },
+  "engines": <%- JSON.stringify(toolchain.packageJson.engines) %>,
+  "peerDependencies": { "@prismatic-io/spectral": "^10.36.0" },
+  "dependencies": <%- JSON.stringify(wsdl ? { soap: "1.1.10" } : {}) %>,
+  "devDependencies": <%- JSON.stringify({ ...toolchain.devDependencies, "@prismatic-io/spectral": "^10.36.0" }) %>
+}

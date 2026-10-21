@@ -71,6 +71,7 @@ const additiveOptionNames = new Set([
   ...additivePublishWaitNames,
 ]);
 const additiveCommandOptions: Record<string, Set<string>> = {
+  "components:init": new Set(["npm-package"]),
   "components:list": new Set([
     "category",
     "dataSourceType",
