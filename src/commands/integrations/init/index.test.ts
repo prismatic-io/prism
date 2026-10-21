@@ -88,6 +88,51 @@ describe("integrations:init", () => {
         });
       }
 
+      for (const configurationType of ["hosted", "headless"]) {
+        for (const clean of [false, true]) {
+          for (const includeManifests of [true, false]) {
+            it(`generates ${configurationType} with clean=${clean}, includeManifests=${includeManifests}`, async () => {
+              const name = `manifests-${toolchain}-${configurationType}-${clean}-${includeManifests}`;
+              process.chdir(tempPath);
+              try {
+                await runCommand(InitializeIntegration, [
+                  name,
+                  "--toolchain",
+                  toolchain,
+                  "--configuration-type",
+                  configurationType,
+                  ...(clean ? ["--clean"] : []),
+                  ...(includeManifests ? [] : ["--no-include-manifests"]),
+                ]);
+                const directory = path.join(tempPath, name);
+                expect(existsSync(path.join(directory, "src/componentRegistry.ts"))).toBe(
+                  includeManifests,
+                );
+                const index = await readFile(path.join(directory, "src/index.ts"), "utf-8");
+                const augmentation = await readFile(
+                  path.join(directory, ".spectral/index.ts"),
+                  "utf-8",
+                );
+                if (includeManifests) {
+                  expect(index).toContain("import { componentRegistry }");
+                  expect(index).toContain("export { componentRegistry }");
+                  expect(index).toContain("  componentRegistry,");
+                  expect(augmentation).toContain("IntegrationDefinitionComponentRegistry");
+                } else {
+                  for (const file of await walkDir(directory, [".png"])) {
+                    expect(await readFile(file, "utf-8"), file).not.toMatch(
+                      /componentRegistry|ComponentRegistry|componentManifests|ComponentManifest/,
+                    );
+                  }
+                }
+              } finally {
+                await rm(path.join(tempPath, name), { recursive: true, force: true });
+              }
+            });
+          }
+        }
+      }
+
       describe("scaffold generation", () => {
         const integrationName = `test-integration-${toolchain}`;
 

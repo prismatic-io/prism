@@ -1,10 +1,12 @@
-import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
+import type { <% if (includeManifests) { %>ComponentManifest, <% } %>ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
 
 import type {
   // @ts-ignore
   configPages,
+<% if (includeManifests) { -%>
   // @ts-ignore
   componentRegistry,
+<% } -%>
   // @ts-ignore
   userLevelConfigPages,
   // @ts-ignore
@@ -21,10 +23,12 @@ type TUserLevelConfigPages = IsAny<typeof userLevelConfigPages> extends true
   ? { [key: string]: ConfigPage }
   : typeof userLevelConfigPages;
 
+<% if (includeManifests) { -%>
 type TComponentRegistry = IsAny<typeof componentRegistry> extends true
   ? { [key: string]: ComponentManifest }
   : typeof componentRegistry;
 
+<% } -%>
 type TScopedConfigVarMap = IsAny<typeof scopedConfigVars> extends true
   ? { [key: string]: ScopedConfigVar }
   : typeof scopedConfigVars;
@@ -34,7 +38,9 @@ declare module "@prismatic-io/spectral" {
 
   interface IntegrationDefinitionUserLevelConfigPages extends TUserLevelConfigPages {}
 
+<% if (includeManifests) { -%>
   interface IntegrationDefinitionComponentRegistry extends TComponentRegistry {}
 
+<% } -%>
   interface IntegrationDefinitionScopedConfigVars extends TScopedConfigVarMap {}
 }

@@ -56,6 +56,10 @@ export default Cli.command({
       .enum(["hosted", "headless"])
       .default("hosted")
       .describe("Configuration experience to scaffold"),
+    "include-manifests": z
+      .boolean()
+      .default(true)
+      .describe("Include component manifest registry support (use --no-include-manifests to omit)"),
     clean: z.boolean().default(false).describe("Generate clean scaffold without example code"),
     toolchain: z
       .enum(TOOLCHAIN_NAMES)
@@ -67,7 +71,12 @@ export default Cli.command({
   async run(context) {
     const {
       args: { name },
-      options: { clean, toolchain: toolchainName, "configuration-type": configurationType },
+      options: {
+        clean,
+        toolchain: toolchainName,
+        "configuration-type": configurationType,
+        "include-manifests": includeManifests,
+      },
     } = context;
 
     const toolchain = getToolchain(toolchainName);
@@ -86,6 +95,7 @@ export default Cli.command({
     return withWorkingDirectory(directory, async () => {
       const templateContext = {
         configurationType,
+        includeManifests,
         integration: { name, description: "Prism-generated Integration", key: camelCase(name) },
         flow: {
           stableKey: uuid4(),
@@ -125,7 +135,7 @@ export default Cli.command({
         path.join("src", "flows.ts"),
         path.join("src", "flows.test.ts"),
         path.join("src", configurationType === "headless" ? "configuration.ts" : "configPages.ts"),
-        path.join("src", "componentRegistry.ts"),
+        ...(includeManifests ? [path.join("src", "componentRegistry.ts")] : []),
         path.join("src", "markdown.d.ts"),
         path.join(".spectral", "index.ts"),
         ".env.testing",
