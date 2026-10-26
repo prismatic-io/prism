@@ -22,9 +22,7 @@ afterEach(async () => {
 it("visits every registered port exactly once, wrapping at the upper boundary", () => {
   const ports = callbackPorts(50);
   expect(ports.slice(0, 3)).toEqual([59450, 59400, 59401]);
-  expect(new Set(ports).size).toBe(51);
-  expect(Math.min(...ports)).toBe(59400);
-  expect(Math.max(...ports)).toBe(59450);
+  expect(ports.toSorted()).toEqual(Array.from({ length: 51 }, (_, index) => 59400 + index));
 });
 
 it("retains a successful bind and moves past an occupied port", async () => {
@@ -33,7 +31,7 @@ it("retains a successful bind and moves past an occupied port", async () => {
   servers.push(occupied, listener);
   const occupiedRedirect = await bindCallbackServer(occupied, new AbortController().signal);
   const redirect = await bindCallbackServer(listener, new AbortController().signal);
-  expect(redirect.hostname).toBe("localhost");
+  expect(redirect).toMatchObject({ protocol: "http:", hostname: "localhost", pathname: "/" });
   expect(redirect.port).not.toBe(occupiedRedirect.port);
   expect(Number(redirect.port)).toBeGreaterThanOrEqual(59400);
   expect(Number(redirect.port)).toBeLessThanOrEqual(59450);

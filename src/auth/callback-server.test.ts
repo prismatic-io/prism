@@ -58,10 +58,14 @@ it("accepts a decoded code once and reports success only after completion", asyn
   expect(responded).toBe(false);
   await callback.complete(true);
   const response = await browser;
-  expect(response.status).toBe(302);
-  expect(response.headers.location).toBe("https://prismatic.io");
-  expect(response.headers["cache-control"]).toBe("no-store");
-  expect(response.headers["referrer-policy"]).toBe("no-referrer");
+  expect(response).toMatchObject({
+    status: 302,
+    headers: {
+      location: "https://prismatic.io",
+      "cache-control": "no-store",
+      "referrer-policy": "no-referrer",
+    },
+  });
   expect(response.body).not.toContain("a+b/c=");
 });
 
@@ -91,8 +95,7 @@ it("handles a state-bound OAuth error without reflecting provider text", async (
     `${callback.redirectUri}?state=expected&error=access_denied&error_description=secret`,
   );
   await denied;
-  expect(response.status).toBe(400);
-  expect(response.body).not.toContain("secret");
+  expect(response).toMatchObject({ status: 400, body: expect.not.stringContaining("secret") });
 });
 
 it("reports token exchange failure without a success redirect", async () => {
@@ -100,8 +103,10 @@ it("reports token exchange failure without a success redirect", async () => {
   const browser = visit(`${callback.redirectUri}?state=expected&code=abc`);
   await callback.code;
   await callback.complete(false);
-  expect(await browser).toMatchObject({ status: 400 });
-  expect((await browser).headers.location).toBeUndefined();
+  await expect(browser).resolves.toMatchObject({
+    status: 400,
+    headers: expect.not.objectContaining({ location: expect.any(String) }),
+  });
 });
 
 it("cancellation rejects the pending code and closes the listener", async () => {

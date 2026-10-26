@@ -289,7 +289,7 @@ it("builds browser URLs with standard query encoding", () => {
       redirectUri: input.redirectUri,
     }),
   );
-  expect(url.origin).toBe("https://auth.example.com");
+  expect(url).toMatchObject({ origin: "https://auth.example.com", pathname: "/authorize" });
   expect(Object.fromEntries(url.searchParams)).toEqual({
     response_type: "code",
     code_challenge: "challenge",
@@ -300,7 +300,12 @@ it("builds browser URLs with standard query encoding", () => {
     state: "state",
     audience: options.audience,
   });
-  expect(new URL(logoutUrl(options)).searchParams.get("returnTo")).toBe("https://prismatic.io");
+  const logout = new URL(logoutUrl(options));
+  expect(logout).toMatchObject({ origin: "https://auth.example.com", pathname: "/logout" });
+  expect(Object.fromEntries(logout.searchParams)).toEqual({
+    client_id: options.clientId,
+    returnTo: options.successRedirectUri,
+  });
 });
 
 it("accepts the case-insensitive Bearer token type", async () => {

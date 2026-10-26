@@ -1,12 +1,18 @@
 import { Cli, z } from "incur";
 import {
+  planTenantSwitch,
+  type TenantAccess,
+  type TenantSelection,
+  tenantAccess,
+} from "../../auth/tenants.js";
+import {
   fetchUserTenants,
   getAuthenticatedContext,
   isLoggedIn,
   refresh,
   selectTenant,
 } from "../../auth.js";
-import { writeCommandStatus } from "../../command.js";
+import { commandSignal, writeCommandStatus } from "../../command.js";
 import { getProfileAuthContext, saveProfileCredentials } from "../../context.js";
 import { ValidationError } from "../../errors.js";
 import { whoAmI } from "../../utils/user/query.js";
@@ -55,65 +61,24 @@ export default Cli.command({
       currentTenantId = user.tenantId;
     }
 
-    const currentTenant = tenants.find((t) => t.tenantId === currentTenantId);
-    const currentTenantSuspended = currentTenant?.systemSuspended ?? false;
-    const activeTenants = tenants.filter((t) => !t.systemSuspended);
-
-    const requestedTenant =
-      tenantId !== undefined
-        ? activeTenants.find((tenant) => tenant.tenantId === tenantId)
-        : undefined;
-    if (tenantId !== undefined && !requestedTenant) {
+    const access = tenantAccess(tenants, currentTenantId);
+    let selection: TenantSelection;
+    try {
+      selection = planTenantSwitch(access, { tenantId, nonInteractive: context.agent });
+    } catch (error) {
       return context.error(
         new ValidationError({
           retryable: false,
-          message: `Tenant '${tenantId}' is not available to this profile.`,
+          message: (error as Error).message,
         }).toResult(),
       );
     }
-
-    if (
-      !currentTenantSuspended &&
-      activeTenants.length <= 1 &&
-      (!requestedTenant || requestedTenant.tenantId === currentTenantId)
-    ) {
-      const message =
-        activeTenants.length === 1
+    if (selection.kind === "keep") {
+      writeCommandStatus(
+        access.active.length === 1
           ? "This is the only tenant available to this profile."
-          : "No tenants are available to this profile.";
-      writeCommandStatus(message);
-      return {
-        profile: profileName,
-        tenantId: currentTenantId,
-        switched: false,
-        authenticated: true,
-      };
-    }
-
-    if (!currentTenantSuspended && currentTenant) {
-      writeCommandStatus(`Current tenant: ${currentTenant.orgName} (${currentTenant.url})\n`);
-    }
-
-    if (context.agent && !requestedTenant) {
-      return context.error(
-        new ValidationError({
-          retryable: false,
-          message: "Agent mode requires --tenant-id when more than one tenant is available.",
-        }).toResult(),
+          : "No tenants are available to this profile.",
       );
-    }
-    const selectedTenantId =
-      requestedTenant?.tenantId ??
-      (await selectTenant(tenants, {
-        currentTenantId,
-        message: "Select a tenant to switch to:",
-      }));
-
-    if (!selectedTenantId || selectedTenantId === currentTenantId) {
-      if (currentTenantId && !currentTenantSuspended) {
-        await saveProfileCredentials({ ...config, tenantId: currentTenantId });
-        writeCommandStatus(`Active tenant: ${currentTenant?.orgName} (${currentTenant?.url})`);
-      }
       return {
         profile: profileName,
         tenantId: currentTenantId,
@@ -122,16 +87,42 @@ export default Cli.command({
       };
     }
 
-    writeCommandStatus("\nSwitching tenant...");
-    await refresh(selectedTenantId);
+    if (!access.currentSuspended && access.current) {
+      writeCommandStatus(`Current tenant: ${access.current.orgName} (${access.current.url})\n`);
+    }
 
-    const selectedTenant = tenants.find((t) => t.tenantId === selectedTenantId);
-    writeCommandStatus(`Switched to: ${selectedTenant?.orgName} (${selectedTenant?.url})`);
+    const selectedTenantId =
+      selection.kind === "select"
+        ? selection.tenantId
+        : await selectTenant(tenants, {
+            currentTenantId,
+            message: "Select a tenant to switch to:",
+            signal: commandSignal(),
+          });
     return {
       profile: profileName,
-      tenantId: selectedTenantId,
-      switched: true,
       authenticated: true,
+      ...(await applyTenantSwitch(access, selectedTenantId)),
     };
   },
 });
+
+/** Keep the active session on cancellation, or renew it for the selected tenant. */
+const applyTenantSwitch = async (access: TenantAccess, selectedTenantId?: string) => {
+  const { currentTenantId, current, currentSuspended } = access;
+  if (!selectedTenantId || selectedTenantId === currentTenantId) {
+    if (currentTenantId && !currentSuspended) {
+      const { profile } = await getProfileAuthContext();
+      commandSignal()?.throwIfAborted();
+      if (!profile) throw new Error("Authentication profile is no longer available.");
+      await saveProfileCredentials({ ...profile, tenantId: currentTenantId });
+      writeCommandStatus(`Active tenant: ${current?.orgName} (${current?.url})`);
+    }
+    return { tenantId: currentTenantId, switched: false };
+  }
+  writeCommandStatus("\nSwitching tenant...");
+  await refresh(selectedTenantId);
+  const selected = access.active.find((tenant) => tenant.tenantId === selectedTenantId);
+  writeCommandStatus(`Switched to: ${selected?.orgName} (${selected?.url})`);
+  return { tenantId: selectedTenantId, switched: true };
+};

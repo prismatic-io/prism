@@ -87,12 +87,16 @@ it("completes a real loopback PKCE exchange with matching verifier and decoded c
     }),
   );
   const login = await start();
-  expect(login.challenge.origin).toBe("https://auth.example.test");
-  expect(login.challenge.searchParams.get("response_type")).toBe("code");
-  expect(login.challenge.searchParams.get("code_challenge_method")).toBe("S256");
-  expect(login.challenge.searchParams.get("state")).toMatch(/^[A-Za-z0-9_-]{43}$/);
-  expect(login.redirect.hostname).toBe("localhost");
-  expect(login.redirect.pathname).toBe("/");
+  expect(login.challenge).toMatchObject({
+    origin: "https://auth.example.test",
+    pathname: "/authorize",
+  });
+  expect(Object.fromEntries(login.challenge.searchParams)).toMatchObject({
+    response_type: "code",
+    code_challenge_method: "S256",
+    state: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
+  });
+  expect(login.redirect).toMatchObject({ protocol: "http:", hostname: "localhost", pathname: "/" });
   expect(Number(login.redirect.port)).toBeGreaterThanOrEqual(59400);
   expect(Number(login.redirect.port)).toBeLessThanOrEqual(59450);
   login.callback.searchParams.set("code", "a+b/c= with spaces");
@@ -101,19 +105,25 @@ it("completes a real loopback PKCE exchange with matching verifier and decoded c
     accessToken: tokens.access_token,
     refreshToken: tokens.refresh_token,
   });
-  expect(submitted?.get("code")).toBe("a+b/c= with spaces");
-  expect(submitted?.get("client_id")).toBe(options.clientId);
-  expect(submitted?.get("grant_type")).toBe("authorization_code");
-  expect(submitted?.get("redirect_uri")).toBe(login.redirect.href);
+  expect(Object.fromEntries(required(submitted))).toEqual({
+    code: "a+b/c= with spaces",
+    client_id: options.clientId,
+    grant_type: "authorization_code",
+    redirect_uri: login.redirect.href,
+    code_verifier: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
+  });
   const verifier = required(submitted?.get("code_verifier"));
-  expect(verifier).toMatch(/^[A-Za-z0-9_-]{43}$/);
   expect(createHash("sha256").update(verifier).digest("base64url")).toBe(
     login.challenge.searchParams.get("code_challenge"),
   );
-  expect(response.status).toBe(302);
-  expect(response.headers.location).toBe(options.successRedirectUri);
-  expect(response.headers["cache-control"]).toBe("no-store");
-  expect(response.headers["referrer-policy"]).toBe("no-referrer");
+  expect(response).toMatchObject({
+    status: 302,
+    headers: {
+      location: options.successRedirectUri,
+      "cache-control": "no-store",
+      "referrer-policy": "no-referrer",
+    },
+  });
   expect(response.body).not.toContain(verifier);
   expect(response.body).not.toContain(tokens.access_token);
 });
@@ -128,13 +138,13 @@ it("rejects unrelated and invalid callbacks without consuming login", async () =
   );
   const login = await start();
   const unrelated = new URL("/favicon.ico", login.redirect);
-  expect((await request(unrelated)).status).toBeGreaterThanOrEqual(400);
   const wrongState = new URL(login.callback);
   wrongState.searchParams.set("state", "wrong");
-  expect((await request(wrongState)).status).toBeGreaterThanOrEqual(400);
   const duplicate = new URL(login.callback);
   duplicate.searchParams.append("code", "second-code");
-  expect((await request(duplicate)).status).toBeGreaterThanOrEqual(400);
+  await expect(Promise.all([unrelated, wrongState, duplicate].map(request))).resolves.toMatchObject(
+    [{ status: 400 }, { status: 400 }, { status: 400 }],
+  );
   expect(exchanges).toBe(0);
   await request(login.callback);
   await expect(login.result).resolves.toMatchObject({ accessToken: tokens.access_token });
@@ -151,9 +161,11 @@ it("handles a state-bound OAuth denial without redeeming a code or redirecting t
   const response = await request(login.callback);
   await expect(login.result).rejects.toThrow();
   expect(exchange).not.toHaveBeenCalled();
-  expect(response.status).toBeGreaterThanOrEqual(400);
-  expect(response.headers.location).toBeUndefined();
-  expect(response.body).not.toContain("untrusted");
+  expect(response).toMatchObject({
+    status: 400,
+    headers: expect.not.objectContaining({ location: expect.any(String) }),
+    body: expect.not.stringContaining("untrusted"),
+  });
 });
 
 it("closes the listener when cancelled while awaiting the callback", async () => {
@@ -240,9 +252,11 @@ it("does not show browser success when the token endpoint rejects the code", asy
   const login = await start();
   const response = await request(login.callback);
   await expect(login.result).rejects.toThrow();
-  expect(response.status).toBeGreaterThanOrEqual(400);
-  expect(response.headers.location).toBeUndefined();
-  expect(response.body).not.toContain("secret detail");
+  expect(response).toMatchObject({
+    status: 400,
+    headers: expect.not.objectContaining({ location: expect.any(String) }),
+    body: expect.not.stringContaining("secret detail"),
+  });
 });
 
 it("cleans up the callback server if opening the browser fails", async () => {
@@ -264,6 +278,8 @@ it("isolates simultaneous logins on the same Authenticate instance", async () =>
     second.challenge.searchParams.get("state"),
   );
   await Promise.all([request(first.callback), request(second.callback)]);
-  await expect(first.result).resolves.toMatchObject({ accessToken: tokens.access_token });
-  await expect(second.result).resolves.toMatchObject({ accessToken: tokens.access_token });
+  await expect(Promise.all([first.result, second.result])).resolves.toMatchObject([
+    { accessToken: tokens.access_token },
+    { accessToken: tokens.access_token },
+  ]);
 });

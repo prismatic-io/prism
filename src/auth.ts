@@ -1,16 +1,11 @@
+import { jwtDecode } from "jwt-decode";
+
 import { Authenticate } from "./auth/authenticate.js";
 import { withAuthOperation } from "./auth/operation.js";
+import { completeTenantLogin } from "./auth/tenant-session.js";
 import { getAuthOptions, revokeToken } from "./auth/transport.js";
 import type { Auth } from "./auth/types.js";
-
-export { Authenticate } from "./auth/authenticate.js";
-export { createRequestParams } from "./auth/transport.js";
-export type { Auth, AuthenticationOptions } from "./auth/types.js";
-
-import chalk from "chalk";
-import inquirer from "inquirer";
-import { jwtDecode } from "jwt-decode";
-import { commandSignal, writeCommandOutput } from "./command.js";
+import { commandSignal } from "./command.js";
 import { requireCommandContext } from "./command-context.js";
 import {
   type AuthContext,
@@ -22,86 +17,14 @@ import {
   setAuthContext,
 } from "./context.js";
 import { AuthenticatedUserQueryDocument as AUTHENTICATED_USER_QUERY } from "./graphql/operations/AuthenticatedUserQuery.generated.js";
-import { ListUserTenantsDocument as LIST_USER_TENANTS } from "./graphql/operations/ListUserTenants.generated.js";
 import { gqlRequest } from "./graphql.js";
-import { whoAmI } from "./utils/user/query.js";
 
-export interface Tenant {
-  tenantId: string;
-  url: string;
-  orgName: string;
-  awsRegion: string;
-  systemSuspended: boolean | null;
-}
-
-export const fetchUserTenants = async (signal?: AbortSignal): Promise<Tenant[]> => {
-  const result = await gqlRequest({
-    document: LIST_USER_TENANTS,
-    signal,
-  });
-
-  return result.listUserTenants.nodes;
-};
-
-export const selectTenant = async (
-  tenants: Tenant[],
-  options: {
-    currentTenantId?: string;
-    message?: string;
-    signal?: AbortSignal;
-  } = {},
-): Promise<string | undefined> => {
-  const { currentTenantId, message = "Select a tenant:", signal } = options;
-  signal?.throwIfAborted();
-
-  const currentTenant = tenants.find((t) => t.tenantId === currentTenantId);
-  const currentTenantSuspended = currentTenant?.systemSuspended ?? false;
-
-  const activeTenants = tenants.filter((t) => !t.systemSuspended);
-  if (activeTenants.length === 0) {
-    writeCommandOutput(
-      chalk.red(
-        "You have no active tenants on this stack. Please contact Prismatic support for assistance.",
-      ),
-    );
-    return;
-  }
-
-  const effectiveCurrentId = currentTenantSuspended ? undefined : currentTenantId;
-
-  const choices = activeTenants.map((tenant) => {
-    const isCurrent = tenant.tenantId === effectiveCurrentId;
-    const checkmark = isCurrent ? chalk.green("✓ ") : "  ";
-    const label = `${tenant.orgName} - ${tenant.url} (${tenant.awsRegion})`;
-    const displayName = isCurrent ? chalk.green(label) : label;
-
-    return {
-      name: `${checkmark}${displayName}`,
-      value: tenant.tenantId,
-      short: tenant.orgName,
-    };
-  });
-
-  try {
-    const prompt = signal ? inquirer.createPromptModule({ signal }) : inquirer.prompt;
-    const { tenantId } = await prompt<{ tenantId: string }>([
-      {
-        type: "select",
-        name: "tenantId",
-        message,
-        choices,
-        default: effectiveCurrentId,
-      },
-    ]);
-
-    return tenantId;
-    // biome-ignore lint/correctness/noUnusedVariables: TODO
-  } catch (error) {
-    signal?.throwIfAborted();
-    // User cancelled tenant selection
-    return;
-  }
-};
+export { Authenticate } from "./auth/authenticate.js";
+export { selectTenant } from "./auth/tenant-prompt.js";
+export { fetchUserTenants } from "./auth/tenant-session.js";
+export type { Tenant } from "./auth/tenants.js";
+export { createRequestParams } from "./auth/transport.js";
+export type { Auth, AuthenticationOptions } from "./auth/types.js";
 
 export const login = async (props?: {
   signal?: AbortSignal;
@@ -124,57 +47,7 @@ export const login = async (props?: {
     signal.throwIfAborted();
     await saveProfileCredentials(initialAuth, { replace: false });
 
-    const tenants = await fetchUserTenants(signal);
-
-    const user = await whoAmI(signal);
-    signal.throwIfAborted();
-    // Follow-up API calls may have refreshed and rotated the initial credentials.
-    const sessionProfile = (await getProfileAuthContext()).profile;
-    if (!sessionProfile) throw new Error("Authentication profile is no longer available.");
-    const { prismaticUrl: _prismaticUrl, ...sessionAuth } = sessionProfile;
-    signal.throwIfAborted();
-    const initialTenantId = user.tenantId;
-    const initialTenant = tenants.find((t) => t.tenantId === initialTenantId);
-    const initialTenantSuspended = initialTenant?.systemSuspended ?? false;
-
-    if (!initialTenantSuspended && initialTenantId) {
-      await saveProfileCredentials({ ...sessionAuth, tenantId: initialTenantId });
-    }
-
-    const activeTenants = tenants.filter((t) => !t.systemSuspended);
-    const requestedTenant = props?.tenantId
-      ? activeTenants.find((tenant) => tenant.tenantId === props.tenantId)
-      : undefined;
-    if (props?.tenantId && !requestedTenant) {
-      throw new Error(`Tenant '${props.tenantId}' is not available to this profile.`);
-    }
-    if (!initialTenantSuspended && activeTenants.length <= 1) {
-      return;
-    }
-    if (props?.nonInteractive && !requestedTenant) {
-      throw new Error(
-        `Multiple tenants are available. Re-run with --tenant-id (${activeTenants
-          .map((tenant) => tenant.tenantId)
-          .join(", ")}).`,
-      );
-    }
-    const selectedTenantId =
-      requestedTenant?.tenantId ??
-      (await selectTenant(tenants, {
-        currentTenantId: initialTenantId,
-        signal,
-      }));
-
-    if (selectedTenantId) {
-      const tenantAuth = await auth.refresh(sessionAuth.refreshToken, selectedTenantId, signal);
-      signal.throwIfAborted();
-      await saveProfileCredentials(tenantAuth);
-    } else if (initialTenantSuspended) {
-      signal.throwIfAborted();
-      await deleteAuthProfile();
-    }
-
-    return;
+    await completeTenantLogin(auth, { ...props, signal });
   });
 
 const refreshAuthentication = async (
