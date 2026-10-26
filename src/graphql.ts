@@ -1,9 +1,9 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { print } from "graphql";
-import { URL } from "url";
 import { z } from "zod";
+import { stackEndpoint } from "./auth/transport.js";
 import { getAuthenticatedContext } from "./auth.js";
-import { writeCommandStatus } from "./command.js";
+import { commandSignal, writeCommandStatus } from "./command.js";
 import { CommandFailedError, NotFoundError } from "./errors.js";
 import { isPrintRequestsEnabled } from "./runtime.js";
 import { fetch } from "./utils/http.js";
@@ -11,6 +11,7 @@ import { fetch } from "./utils/http.js";
 interface GQLRequest<TData, TVariables = Record<string, unknown>> {
   document: string | TypedDocumentNode<TData, TVariables>;
   variables?: TVariables;
+  signal?: AbortSignal;
 }
 
 interface GraphQLResponse<T> {
@@ -111,9 +112,10 @@ export const requireOperationResult = <T>(value: T | null | undefined, message: 
 export const gqlRequest = async <T = unknown, TVariables = Record<string, unknown>>({
   document,
   variables,
+  signal = commandSignal(),
 }: GQLRequest<T, TVariables>): Promise<T> => {
-  const { accessToken, url: endpoint } = await getAuthenticatedContext();
-  const url = new URL("/api", endpoint).toString();
+  const { accessToken, url: endpoint } = await getAuthenticatedContext(signal);
+  const url = stackEndpoint(endpoint, "/api").toString();
 
   const query = typeof document === "string" ? document : print(document);
 
@@ -128,6 +130,8 @@ export const gqlRequest = async <T = unknown, TVariables = Record<string, unknow
   try {
     response = await fetch(url, {
       method: "POST",
+      signal,
+      redirect: "error",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,

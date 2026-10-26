@@ -1,10 +1,15 @@
+import { Authenticate } from "./auth/authenticate.js";
+import { withAuthOperation } from "./auth/operation.js";
+import { getAuthOptions, revokeToken } from "./auth/transport.js";
+import type { Auth } from "./auth/types.js";
+
+export { Authenticate } from "./auth/authenticate.js";
+export { createRequestParams } from "./auth/transport.js";
+export type { Auth, AuthenticationOptions } from "./auth/types.js";
+
 import chalk from "chalk";
-import crypto from "crypto";
-import http from "http";
 import inquirer from "inquirer";
 import { jwtDecode } from "jwt-decode";
-import open from "open";
-import { z } from "zod";
 import { commandSignal, writeCommandOutput } from "./command.js";
 import { requireCommandContext } from "./command-context.js";
 import {
@@ -19,354 +24,7 @@ import {
 import { AuthenticatedUserQueryDocument as AUTHENTICATED_USER_QUERY } from "./graphql/operations/AuthenticatedUserQuery.generated.js";
 import { ListUserTenantsDocument as LIST_USER_TENANTS } from "./graphql/operations/ListUserTenants.generated.js";
 import { gqlRequest } from "./graphql.js";
-import { fetch } from "./utils/http.js";
 import { whoAmI } from "./utils/user/query.js";
-
-const tokenResponseSchema = z.object({
-  access_token: z.string(),
-  expires_in: z.number(),
-  refresh_token: z.string().optional(),
-  scope: z.string().default(""),
-  token_type: z.string(),
-});
-
-const tokenErrorResponseSchema = z.object({
-  error: z.string(),
-  error_description: z.string().optional(),
-});
-
-const authConfigSchema = z.object({
-  domain: z.string(),
-  clientId: z.string(),
-  audience: z.string(),
-});
-
-const urlEncodeBase64 = (value: Buffer | string): string => {
-  const buffer = typeof value === "string" ? Buffer.from(value) : value;
-
-  return buffer.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
-};
-
-const codeVerifier = (): string => urlEncodeBase64(crypto.randomBytes(32));
-
-const sha256 = (buffer: Buffer | string): Buffer =>
-  crypto.createHash("sha256").update(buffer).digest();
-
-const codeChallenge = (verifier: string): string => urlEncodeBase64(sha256(verifier));
-
-const codeState = (): string => urlEncodeBase64(crypto.randomBytes(12));
-
-const httpsUrl = (host: string, pathname: string): URL => {
-  const result = new URL("https://localhost");
-  result.host = host;
-  result.pathname = pathname;
-  return result;
-};
-
-const randomPort = (low: number, high: number): number =>
-  Math.floor(Math.random() * (high - low + 1) + low);
-
-const extractRequestParams = (url: string): Record<string, string> => {
-  const paramRegex = new RegExp(/([a-z]+)=([^=&]+)/, "g");
-  const params: Record<string, string> = {};
-  let param: RegExpExecArray | null;
-  // biome-ignore lint/suspicious/noAssignInExpressions: TODO
-  while ((param = paramRegex.exec(url)) !== null) {
-    params[`${param[1]}`] = param[2];
-  }
-
-  return params;
-};
-
-export const createRequestParams = (data: Record<string, string | undefined>): string =>
-  Object.entries(data).reduce((result, [key, value]) => {
-    if (value === undefined) return result;
-
-    const part = `${key}=${encodeURIComponent(value)}`;
-    if (result === "") {
-      return `${part}`;
-    }
-
-    return `${result}&${part}`;
-  }, "");
-
-const validateAuthorizationToken = async (url: string, expectedState: string): Promise<string> => {
-  const { code, state } = extractRequestParams(url);
-
-  if (state !== expectedState) {
-    throw new Error("Unexpected state value returned.");
-  }
-
-  if (code === undefined) {
-    throw new Error("Did not receive authorization code");
-  }
-
-  return code;
-};
-
-/** Auth payload containing authentication information */
-export interface Auth {
-  /** Access token to use for authorizing user */
-  accessToken: string;
-  /** Token expiration in seconds */
-  expiresIn: number;
-  /** Refresh token for offline token renewal */
-  refreshToken: string;
-  /** Acquired scopes for the token */
-  scope: string;
-  /** Type of token */
-  tokenType: string;
-  /** Tenant ID for multi-tenant support */
-  tenantId?: string;
-}
-
-/**
- * Defines options that Authenticate accepts.
- */
-export interface AuthenticationOptions {
-  /** Auth0 domain for client specified with clientId */
-  domain: string;
-  /** Auth0 Client Identifier specifying client to use for auth attempts */
-  clientId: string;
-  /** Auth0 API Audience to specify the API to authorize for */
-  audience: string;
-  /** Array of scopes to request */
-  scopes: string[];
-  /** Uri to redirect user to upon successful auth */
-  successRedirectUri: string;
-}
-
-/** Auth0's
- * @see {@link https://auth0.com/docs/flows/concepts/auth-code-pkce | Authorization Code Flow with Proof Key for Code Exchange (PKCE)}
- * authentication flow.
- */
-export class Authenticate {
-  private readonly options: AuthenticationOptions;
-  private redirectServer!: http.Server;
-
-  /**
-   * Create new Authenticate instance
-   * @param options Authentication options to configure Auth0 PKCE flow
-   */
-  constructor(options: AuthenticationOptions) {
-    this.options = options;
-  }
-
-  /**
-   * Start the PKCE authentication flow
-   * @returns Promise containing authentication result
-   */
-  async login(props?: {
-    url?: boolean;
-    signal?: AbortSignal;
-    onChallenge?: (url: string) => void;
-  }): Promise<Auth> {
-    const verifier = codeVerifier();
-    const challenge = codeChallenge(verifier);
-    const state = codeState();
-
-    const redirectUri = await this.createRedirectServer();
-
-    return new Promise<Auth>((resolve, reject) => {
-      const signal = props?.signal ?? commandSignal();
-      const cleanup = () => {
-        clearTimeout(timeoutHandle);
-        signal?.removeEventListener("abort", aborted);
-        this.redirectServer.close();
-      };
-      const fail = (error: unknown) => {
-        cleanup();
-        reject(error);
-      };
-      const aborted = () => fail(signal?.reason ?? new Error("Authentication cancelled."));
-      const timeoutHandle = setTimeout(
-        () => fail(new Error("Authentication timed out after 3 minutes.")),
-        3 * 60 * 1000,
-      );
-      signal?.addEventListener("abort", aborted, { once: true });
-      if (signal?.aborted) {
-        aborted();
-        return;
-      }
-
-      this.redirectServer.once("request", (request, response) => {
-        response.writeHead(301, { Location: this.options.successRedirectUri });
-        response.end();
-        cleanup();
-        validateAuthorizationToken(request.url || "", state)
-          .then((authorizationToken) =>
-            this.retrieveAuthenticationToken(verifier, authorizationToken, redirectUri),
-          )
-          .then(resolve, reject);
-      });
-
-      const presentChallenge = props?.url
-        ? this.getChallengeUrl(challenge, state, redirectUri).then((url) =>
-            props?.onChallenge ? props.onChallenge(url) : writeCommandOutput(url),
-          )
-        : this.openChallengeBrowser(challenge, state, redirectUri);
-      void presentChallenge.catch(fail);
-    });
-  }
-
-  async refresh(refreshToken: string, tenantId?: string): Promise<Auth> {
-    const data = {
-      grant_type: "refresh_token",
-      client_id: this.options.clientId,
-      refresh_token: refreshToken,
-      tenant_id: tenantId,
-    };
-
-    const fetchResponse = await fetch(httpsUrl(this.options.domain, "/oauth/token").toString(), {
-      method: "POST",
-      body: createRequestParams(data),
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
-
-    const responseBody = await fetchResponse.json();
-    const errorResponse = tokenErrorResponseSchema.safeParse(responseBody);
-
-    if (errorResponse.success && errorResponse.data.error === "access_denied") {
-      const description =
-        errorResponse.data.error_description || "You do not have access to the specified tenant.";
-      throw new Error(
-        `Access denied${tenantId ? ` for tenant ID '${tenantId}'` : ""}. ${description}`,
-      );
-    }
-
-    const response = tokenResponseSchema.parse(responseBody);
-
-    return {
-      accessToken: response.access_token,
-      expiresIn: response.expires_in,
-      refreshToken,
-      scope: response.scope,
-      tokenType: response.token_type,
-      tenantId,
-    };
-  }
-
-  async logout(): Promise<void> {
-    const params = {
-      client_id: this.options.clientId,
-      returnTo: this.options.successRedirectUri,
-    };
-    const logoutUrl = httpsUrl(this.options.domain, "/logout");
-    logoutUrl.search = new URLSearchParams(params).toString();
-    await open(logoutUrl.toString());
-  }
-
-  private async attemptServerCreate(): Promise<http.Server> {
-    return new Promise<http.Server>((resolve, reject) => {
-      const server = http
-        .createServer()
-        .on("error", (e) => {
-          server.close();
-          reject(e);
-        })
-        .listen(randomPort(59400, 59450), "localhost", () => resolve(server));
-    });
-  }
-
-  private async retry<T>(retries: number, fn: () => Promise<T>): Promise<T> {
-    return fn().catch(async (e) => (retries > 1 ? this.retry(retries - 1, fn) : Promise.reject(e)));
-  }
-
-  private async createRedirectServer(): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
-      this.retry(5, this.attemptServerCreate)
-        .then((server) => {
-          this.redirectServer = server;
-          const info = server.address();
-          if (info === null || typeof info === "string") {
-            reject(new Error("Redirect server did not provide a TCP address."));
-            return;
-          }
-          const redirectUrl = new URL("http://localhost");
-          redirectUrl.port = String(info.port);
-          resolve(redirectUrl.toString());
-        })
-        .catch(reject);
-    });
-  }
-
-  private async retrieveAuthenticationToken(
-    verifier: string,
-    code: string,
-    redirectUri: string,
-  ): Promise<Auth> {
-    const data = {
-      grant_type: "authorization_code",
-      client_id: this.options.clientId,
-      code_verifier: verifier,
-      code,
-      redirect_uri: redirectUri,
-    };
-
-    const fetchResponse = await fetch(httpsUrl(this.options.domain, "/oauth/token").toString(), {
-      method: "POST",
-      body: createRequestParams(data),
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
-    const response = tokenResponseSchema
-      .extend({ refresh_token: z.string() })
-      .parse(await fetchResponse.json());
-    return {
-      accessToken: response.access_token,
-      expiresIn: response.expires_in,
-      refreshToken: response.refresh_token,
-      scope: response.scope,
-      tokenType: response.token_type,
-    };
-  }
-
-  private async openChallengeBrowser(
-    challenge: string,
-    state: string,
-    redirectUri: string,
-  ): Promise<void> {
-    const challengeUrl = await this.getChallengeUrl(challenge, state, redirectUri);
-
-    await open(challengeUrl);
-  }
-
-  private async getChallengeUrl(challenge: string, state: string, redirectUri: string) {
-    const { clientId, audience, scopes } = this.options;
-    const params = {
-      response_type: "code",
-      code_challenge: challenge,
-      code_challenge_method: "S256",
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      scope: scopes.join(" "),
-      state,
-      audience,
-    };
-    const authorizeUrl = httpsUrl(this.options.domain, "/authorize");
-    authorizeUrl.search = new URLSearchParams(params).toString();
-    return authorizeUrl.toString();
-  }
-}
-
-// TODO: Need to factor this out if we look to open source this auth logic.
-const getAuthOptions = async (prismaticUrl?: string) => {
-  const resolvedUrl = prismaticUrl ?? (await getPrismaticUrl());
-  const fetchResponse = await fetch(new URL("/auth/meta", resolvedUrl).toString());
-  const authConfig = authConfigSchema.parse(await fetchResponse.json());
-
-  const { domain, clientId, audience } = authConfig;
-  return {
-    domain,
-    clientId,
-    audience,
-    scopes: ["openid", "profile", "email", "offline_access"],
-    successRedirectUri: "https://prismatic.io",
-  };
-};
 
 export interface Tenant {
   tenantId: string;
@@ -376,9 +34,10 @@ export interface Tenant {
   systemSuspended: boolean | null;
 }
 
-export const fetchUserTenants = async (): Promise<Tenant[]> => {
+export const fetchUserTenants = async (signal?: AbortSignal): Promise<Tenant[]> => {
   const result = await gqlRequest({
     document: LIST_USER_TENANTS,
+    signal,
   });
 
   return result.listUserTenants.nodes;
@@ -389,9 +48,11 @@ export const selectTenant = async (
   options: {
     currentTenantId?: string;
     message?: string;
+    signal?: AbortSignal;
   } = {},
 ): Promise<string | undefined> => {
-  const { currentTenantId, message = "Select a tenant:" } = options;
+  const { currentTenantId, message = "Select a tenant:", signal } = options;
+  signal?.throwIfAborted();
 
   const currentTenant = tenants.find((t) => t.tenantId === currentTenantId);
   const currentTenantSuspended = currentTenant?.systemSuspended ?? false;
@@ -422,7 +83,8 @@ export const selectTenant = async (
   });
 
   try {
-    const { tenantId } = await inquirer.prompt<{ tenantId: string }>([
+    const prompt = signal ? inquirer.createPromptModule({ signal }) : inquirer.prompt;
+    const { tenantId } = await prompt<{ tenantId: string }>([
       {
         type: "select",
         name: "tenantId",
@@ -435,6 +97,7 @@ export const selectTenant = async (
     return tenantId;
     // biome-ignore lint/correctness/noUnusedVariables: TODO
   } catch (error) {
+    signal?.throwIfAborted();
     // User cancelled tenant selection
     return;
   }
@@ -446,80 +109,98 @@ export const login = async (props?: {
   nonInteractive?: boolean;
   tenantId?: string;
   url: boolean;
-}) => {
-  const target = await getProfileAuthContext();
-  const { url: prismaticUrl } = target;
-  const authOptions = await getAuthOptions(prismaticUrl);
-  const auth = new Authenticate(authOptions);
+}) =>
+  withAuthOperation(props?.signal ?? commandSignal(), async (signal) => {
+    const target = await getProfileAuthContext();
+    const { url: prismaticUrl } = target;
+    const authOptions = await getAuthOptions(prismaticUrl, signal);
+    const auth = new Authenticate(authOptions);
 
-  const initialAuth = await auth.login({
-    url: props?.url,
-    signal: props?.signal,
-    onChallenge: props?.onChallenge,
-  });
-  await saveProfileCredentials(initialAuth, { replace: false });
+    const initialAuth = await auth.login({
+      url: props?.url,
+      signal,
+      onChallenge: props?.onChallenge,
+    });
+    signal.throwIfAborted();
+    await saveProfileCredentials(initialAuth, { replace: false });
 
-  const tenants = await fetchUserTenants();
+    const tenants = await fetchUserTenants(signal);
 
-  const user = await whoAmI();
-  const initialTenantId = user.tenantId;
-  const initialTenant = tenants.find((t) => t.tenantId === initialTenantId);
-  const initialTenantSuspended = initialTenant?.systemSuspended ?? false;
+    const user = await whoAmI(signal);
+    signal.throwIfAborted();
+    // Follow-up API calls may have refreshed and rotated the initial credentials.
+    const sessionProfile = (await getProfileAuthContext()).profile;
+    if (!sessionProfile) throw new Error("Authentication profile is no longer available.");
+    const { prismaticUrl: _prismaticUrl, ...sessionAuth } = sessionProfile;
+    signal.throwIfAborted();
+    const initialTenantId = user.tenantId;
+    const initialTenant = tenants.find((t) => t.tenantId === initialTenantId);
+    const initialTenantSuspended = initialTenant?.systemSuspended ?? false;
 
-  if (!initialTenantSuspended && initialTenantId) {
-    await saveProfileCredentials({ ...initialAuth, tenantId: initialTenantId });
-  }
+    if (!initialTenantSuspended && initialTenantId) {
+      await saveProfileCredentials({ ...sessionAuth, tenantId: initialTenantId });
+    }
 
-  const activeTenants = tenants.filter((t) => !t.systemSuspended);
-  const requestedTenant = props?.tenantId
-    ? activeTenants.find((tenant) => tenant.tenantId === props.tenantId)
-    : undefined;
-  if (props?.tenantId && !requestedTenant) {
-    throw new Error(`Tenant '${props.tenantId}' is not available to this profile.`);
-  }
-  if (!initialTenantSuspended && activeTenants.length <= 1) {
+    const activeTenants = tenants.filter((t) => !t.systemSuspended);
+    const requestedTenant = props?.tenantId
+      ? activeTenants.find((tenant) => tenant.tenantId === props.tenantId)
+      : undefined;
+    if (props?.tenantId && !requestedTenant) {
+      throw new Error(`Tenant '${props.tenantId}' is not available to this profile.`);
+    }
+    if (!initialTenantSuspended && activeTenants.length <= 1) {
+      return;
+    }
+    if (props?.nonInteractive && !requestedTenant) {
+      throw new Error(
+        `Multiple tenants are available. Re-run with --tenant-id (${activeTenants
+          .map((tenant) => tenant.tenantId)
+          .join(", ")}).`,
+      );
+    }
+    const selectedTenantId =
+      requestedTenant?.tenantId ??
+      (await selectTenant(tenants, {
+        currentTenantId: initialTenantId,
+        signal,
+      }));
+
+    if (selectedTenantId) {
+      const tenantAuth = await auth.refresh(sessionAuth.refreshToken, selectedTenantId, signal);
+      signal.throwIfAborted();
+      await saveProfileCredentials(tenantAuth);
+    } else if (initialTenantSuspended) {
+      signal.throwIfAborted();
+      await deleteAuthProfile();
+    }
+
     return;
-  }
-  if (props?.nonInteractive && !requestedTenant) {
-    throw new Error(
-      `Multiple tenants are available. Re-run with --tenant-id (${activeTenants
-        .map((tenant) => tenant.tenantId)
-        .join(", ")}).`,
-    );
-  }
-  const selectedTenantId =
-    requestedTenant?.tenantId ??
-    (await selectTenant(tenants, {
-      currentTenantId: initialTenantId,
-    }));
+  });
 
-  if (selectedTenantId) {
-    const tenantAuth = await auth.refresh(initialAuth.refreshToken, selectedTenantId);
-    await saveProfileCredentials(tenantAuth);
-  } else if (initialTenantSuspended) {
-    await deleteAuthProfile();
-  }
-
-  return;
-};
-
-const refreshAuthentication = async (refreshToken: string, tenantId?: string, url?: string) => {
-  const authOptions = await getAuthOptions(url);
-  const auth = new Authenticate(authOptions);
-
-  return auth.refresh(refreshToken, tenantId);
-};
+const refreshAuthentication = async (
+  refreshToken: string,
+  tenantId?: string,
+  url?: string,
+  parentSignal = commandSignal(),
+) =>
+  withAuthOperation(parentSignal, async (signal) => {
+    const authOptions = await getAuthOptions(url ?? (await getPrismaticUrl()), signal);
+    return new Authenticate(authOptions).refresh(refreshToken, tenantId, signal);
+  });
 
 export const refresh = async (tenantId?: string): Promise<Auth> => {
   const target = await getProfileAuthContext();
   if (!target.profile) throw new Error(`Profile "${target.profileName}" does not exist.`);
   const response = await refreshAuthentication(target.profile.refreshToken, tenantId, target.url);
+  commandSignal()?.throwIfAborted();
   await saveProfileCredentials(response);
   return response;
 };
 
 export const logout = async () => {
-  const authOptions = await getAuthOptions();
+  const authOptions = await withAuthOperation(commandSignal(), async (signal) =>
+    getAuthOptions(await getPrismaticUrl(), signal),
+  );
   const auth = new Authenticate(authOptions);
   await auth.logout();
 };
@@ -530,15 +211,24 @@ export const logout = async () => {
  * but will use the config file values if those are not set. This function will
  * also refresh the access token using the provided refresh token if possible.
  */
-const authenticate = async (): Promise<AuthContext> => {
+const authenticate = async (signal = commandSignal()): Promise<AuthContext> => {
+  signal?.throwIfAborted();
   const context = await getAuthContext();
   const { accessToken, refreshToken, tenantId, url } = context;
   if (!refreshToken) return context;
-  const needsRefresh =
-    !accessToken ||
-    jwtDecode<{ exp: number }>(accessToken).exp - Math.floor(Date.now() / 1000) < 5 * 60;
+  let needsRefresh = true;
+  if (accessToken) {
+    try {
+      const { exp } = jwtDecode<{ exp?: number }>(accessToken);
+      needsRefresh =
+        typeof exp !== "number" || !Number.isFinite(exp) || exp - Date.now() / 1000 < 300;
+    } catch {
+      // Opaque or malformed tokens cannot supply a reliable renewal time.
+    }
+  }
   if (!needsRefresh) return context;
-  const refreshed = await refreshAuthentication(refreshToken, tenantId, url);
+  const refreshed = await refreshAuthentication(refreshToken, tenantId, url, signal);
+  signal?.throwIfAborted();
   if (context.source === "profile") {
     await saveProfileCredentials(refreshed);
     return {
@@ -553,14 +243,17 @@ const authenticate = async (): Promise<AuthContext> => {
   return updated;
 };
 
-export const getAuthenticatedContext = (): Promise<AuthContext> => {
+export const getAuthenticatedContext = (signal = commandSignal()): Promise<AuthContext> => {
   const command = requireCommandContext();
   if (!command.authentication) {
-    command.authentication = authenticate().finally(() => {
+    command.authentication = authenticate(signal).finally(() => {
       command.authentication = undefined;
     });
   }
-  return command.authentication;
+  return command.authentication.then((context) => {
+    signal?.throwIfAborted();
+    return context;
+  });
 };
 
 export const getAccessToken = async (): Promise<string | undefined> =>
@@ -596,15 +289,9 @@ export const revokeRefreshToken = async (): Promise<AuthContext["source"]> => {
   }
 
   const authContext = await getAuthContext();
-  await fetch(new URL("/auth/revoke", authContext.url).toString(), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      refresh_token: authContext.refreshToken,
-    }),
-  });
+  const token = authContext.refreshToken;
+  if (!token) throw new Error("No refresh token is available to revoke.");
+  await withAuthOperation(commandSignal(), (signal) => revokeToken(authContext.url, token, signal));
   if (authContext.source === "profile" && authContext.profileName) {
     await deleteAuthProfile();
   }

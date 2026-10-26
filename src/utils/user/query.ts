@@ -27,9 +27,10 @@ interface CustomerUser {
 
 type User = OrgUser | CustomerUser;
 
-export const whoAmI = async (): Promise<User> => {
+export const whoAmI = async (signal?: AbortSignal): Promise<User> => {
   const { authenticatedUser } = await gqlRequest({
     document: WHOAMI,
+    signal,
   });
   if (authenticatedUser.org) {
     return {

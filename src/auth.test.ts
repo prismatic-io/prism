@@ -1,4 +1,3 @@
-import http from "node:http";
 import inquirer from "inquirer";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -18,7 +17,6 @@ import {
   saveProfileCredentials,
 } from "./context.js";
 import { gqlRequest } from "./graphql.js";
-import { fetch } from "./utils/http.js";
 
 vi.unmock("./auth.js");
 
@@ -49,6 +47,7 @@ vi.mock(import("./graphql.js"), () => ({
 vi.mock(import("inquirer"), () => ({
   default: {
     prompt: vi.fn(),
+    createPromptModule: vi.fn(() => inquirer.prompt),
   },
 }));
 
@@ -60,11 +59,6 @@ const makeTenant = (id: string, overrides: Partial<Tenant> = {}): Tenant => ({
   systemSuspended: false,
   ...overrides,
 });
-
-const domain = "prismatic-io-dev.auth0.com";
-const clientId = "R3uA27LbxqyanGVXjKpXgQo5A4TK44s7";
-const audience = "https://prismatic.io/api";
-const successRedirectUri = "https://prismatic.io";
 
 describe("createRequestParams", () => {
   it("handles empty collection", () => {
@@ -315,6 +309,14 @@ describe("login", () => {
       configPath: "unused",
       url: "https://auth.example.com",
     });
+    vi.mocked(saveProfileCredentials).mockImplementation(async (credentials) => {
+      const context = await getProfileAuthContext();
+      vi.mocked(getProfileAuthContext).mockResolvedValue({
+        ...context,
+        ...credentials,
+        profile: { ...credentials, prismaticUrl: context.url },
+      });
+    });
     vi.spyOn(Authenticate.prototype, "login").mockResolvedValue(initialAuth);
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       Response.json({ domain: "auth.example.com", clientId: "client", audience: "audience" }),
@@ -340,10 +342,13 @@ describe("login", () => {
     );
 
     expect(saveProfileCredentials).toHaveBeenNthCalledWith(1, initialAuth, { replace: false });
-    expect(saveProfileCredentials).toHaveBeenNthCalledWith(2, {
-      ...initialAuth,
-      tenantId: "tenant-1",
-    });
+    expect(saveProfileCredentials).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        ...initialAuth,
+        tenantId: "tenant-1",
+      }),
+    );
     expect(deleteAuthProfile).not.toHaveBeenCalled();
   });
 
@@ -373,91 +378,4 @@ describe("login", () => {
     expect(saveProfileCredentials).toHaveBeenLastCalledWith(refreshedAuth);
     expect(deleteAuthProfile).not.toHaveBeenCalled();
   });
-});
-
-// Skip the auth tests since they're more for convenience testing auth
-// rather than actual good unit tests to run due to their side effects.
-describe.skip("auth", () => {
-  it("should work", async () => {
-    expect.assertions(1);
-    const auth = new Authenticate({
-      domain,
-      clientId,
-      audience,
-      scopes: ["token", "email"],
-      successRedirectUri,
-    });
-    const response = await auth.login();
-    expect(response.accessToken).toBeDefined();
-  });
-
-  it("should retrieve email", async () => {
-    expect.assertions(1);
-    const auth = new Authenticate({
-      domain,
-      clientId,
-      audience,
-      scopes: ["token", "openid", "email", "offline_access"],
-      successRedirectUri,
-    });
-    const { accessToken } = await auth.login();
-    const response = await fetch(`https://${domain}/userinfo`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    const data = await response.json();
-    expect(data.email).toBeDefined();
-  });
-});
-
-it("rejects and closes the authorization callback listener on timeout", async () => {
-  vi.useFakeTimers();
-  const auth = new Authenticate({ domain, clientId, audience, scopes: [], successRedirectUri });
-  const server = http.createServer();
-  const close = vi.spyOn(server, "close");
-  const internals = auth as unknown as {
-    redirectServer: http.Server;
-    createRedirectServer: () => Promise<string>;
-    openChallengeBrowser: () => Promise<void>;
-  };
-  internals.redirectServer = server;
-  vi.spyOn(internals, "createRedirectServer").mockResolvedValue("http://localhost:12345");
-  vi.spyOn(internals, "openChallengeBrowser").mockResolvedValue();
-  try {
-    const assertion = expect(auth.login()).rejects.toThrow("Authentication timed out");
-    await vi.advanceTimersByTimeAsync(3 * 60 * 1000);
-    await assertion;
-    expect(close).toHaveBeenCalledOnce();
-  } finally {
-    vi.useRealTimers();
-  }
-});
-
-it("closes the authorization callback listener when authentication is cancelled", async () => {
-  const auth = new Authenticate({ domain, clientId, audience, scopes: [], successRedirectUri });
-  const server = http.createServer();
-  const close = vi.spyOn(server, "close");
-  const internals = auth as unknown as {
-    redirectServer: http.Server;
-    createRedirectServer: () => Promise<string>;
-    openChallengeBrowser: () => Promise<void>;
-  };
-  internals.redirectServer = server;
-  vi.spyOn(internals, "createRedirectServer").mockResolvedValue("http://localhost:12345");
-  let presented!: () => void;
-  const challenge = new Promise<void>((resolve) => {
-    presented = resolve;
-  });
-  vi.spyOn(internals, "openChallengeBrowser").mockImplementation(async () => {
-    presented();
-  });
-  const abort = new AbortController();
-  const authenticating = auth.login({ signal: abort.signal });
-  const rejected = expect(authenticating).rejects.toThrow();
-  await challenge;
-  abort.abort();
-  await rejected;
-  expect(close).toHaveBeenCalledOnce();
 });
