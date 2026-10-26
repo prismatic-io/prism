@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 import { extname, resolve } from "node:path";
-import type { Component as ComponentDefinitionTemplate } from "@prismatic-io/spectral/dist/serverTypes/index.js";
+import type { component } from "@prismatic-io/spectral";
 import { getWorkingDirectory } from "../../command-context.js";
 import { CommandFailedError } from "../../errors.js";
 import { exists } from "../../fs.js";
@@ -9,6 +9,9 @@ import { TOOLCHAIN_CONFIG_OUTPUTS } from "../toolchain/index.js";
 import { createZip } from "../zip.js";
 
 const require = createRequire(import.meta.url);
+
+// Derive the runtime definition from the public factory, rather than authoring types.
+type ComponentDefinitionTemplate = ReturnType<typeof component>;
 
 /** Type defining leftover legacy backwards compat keys. */
 type LegacyDefinition = {

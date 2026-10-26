@@ -1,5 +1,4 @@
 import { resolve } from "node:path";
-import type serverTypes from "@prismatic-io/spectral/dist/serverTypes/index.js";
 import dotenv from "dotenv";
 import { Cli, z } from "incur";
 import inquirer, { type Answers, type Question } from "inquirer";
@@ -13,6 +12,7 @@ import { exists, fs } from "../../../fs.js";
 import { getRuntimeEnvironment, runWithEnvironment } from "../../../runtime.js";
 import { deleteComponentByKey } from "../../../utils/component/deleteByKey.js";
 import {
+  type ComponentDefinition,
   createComponentPackage,
   loadEntrypoint,
   validateDefinition,
@@ -43,6 +43,10 @@ import { startAction, stopAction } from "../../../utils/progress.js";
 import { pressAnyKey } from "../../../utils/prompts.js";
 import { hyperlink } from "../../../utils/terminal.js";
 import { whoAmI } from "../../../utils/user/query.js";
+
+type ComponentAction = ComponentDefinition["actions"][string];
+type ComponentConnection = ComponentDefinition["connections"][number];
+type ComponentInput = ComponentAction["inputs"][number];
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -75,7 +79,7 @@ const getInputQuestion = ({
   type,
   collection,
   default: defaultValue,
-}: serverTypes.Input): InputQuestion => {
+}: ComponentInput): InputQuestion => {
   const questionBase = {
     type: toInquirerInputType(type, collection),
     name: key,
@@ -132,9 +136,9 @@ const getInputQuestion = ({
 };
 
 interface PromptAnswers {
-  action: serverTypes.Action;
+  action: ComponentAction;
   actionInputs: Record<string, Expression>;
-  connection?: serverTypes.Connection;
+  connection?: ComponentConnection;
   connectionInputs?: Record<string, Expression>;
 }
 
@@ -300,7 +304,7 @@ export default Cli.command({
 
         const actions = definition.actions || {};
 
-        let action: serverTypes.Action;
+        let action: ComponentAction;
         let actionInputs: Answers;
         if (context.agent) {
           const selected = actionKey ? actions[actionKey] : undefined;
@@ -312,7 +316,7 @@ export default Cli.command({
           action = selected;
           actionInputs = inputValues(action.inputs, suppliedActionInputs);
         } else {
-          ({ action } = await inquirer.prompt<{ action: serverTypes.Action }>({
+          ({ action } = await inquirer.prompt<{ action: ComponentAction }>({
             type: "select",
             name: "action",
             message: "Action:",
@@ -345,7 +349,7 @@ export default Cli.command({
         const hasConnection = inputs.some(({ type }) => type === "connection");
         if (hasConnection) {
           const connections = definition.connections || [];
-          let connection: serverTypes.Connection;
+          let connection: ComponentConnection;
           let connectionInputs: Answers;
           if (context.agent) {
             if (!connectionKey) {
@@ -363,7 +367,7 @@ export default Cli.command({
             connectionInputs = inputValues(connection.inputs, suppliedConnectionInputs);
           } else {
             ({ connection } = await inquirer.prompt<{
-              connection: serverTypes.Connection;
+              connection: ComponentConnection;
             }>({
               type: "select",
               name: "connection",
@@ -497,7 +501,7 @@ const parseInputObject = (raw: string | undefined, flag: string): Record<string,
   }
 };
 
-const inputValues = (inputs: serverTypes.Input[], provided: Record<string, unknown>): Answers =>
+const inputValues = (inputs: ComponentInput[], provided: Record<string, unknown>): Answers =>
   Object.fromEntries(
     inputs.flatMap((input) => {
       const value = provided[input.key] ?? input.default;
