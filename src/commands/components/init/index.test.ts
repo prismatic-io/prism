@@ -171,6 +171,28 @@ describe("component generation tests", () => {
         const source = await readFile(path.join(tempPath, name, "src/index.ts"), "utf-8");
         expect(source).toContain("public: true");
         expect(source).toContain(`key: "${name}"`);
+
+        const readme = await readFile(path.join(tempPath, name, "README.md"), "utf-8");
+        const packageName = `@prismatic-io/components-${name}`;
+        expect(readme.startsWith('<div align="center">')).toBe(true);
+        expect(readme).toContain(`<h1>${packageName}</h1>`);
+        expect(readme).toContain(`npm install ${packageName}`);
+        expect(readme).toContain(
+          openApi
+            ? `import myInternalOpenApi from "${packageName}";`
+            : `import myInternal from "${packageName}";`,
+        );
+        expect(readme).toContain(`(https://prismatic.io/docs/components/${name}/)`);
+        for (const heading of [
+          "## What is Prismatic?",
+          "## Who uses Prismatic?",
+          "## What kind of integrations can you build using Prismatic?",
+          "## License",
+        ]) {
+          expect(readme).toContain(heading);
+        }
+        expect(readme).toContain("This package is Apache-2.0 licensed.");
+        expect(readme).not.toContain("scaffolded by `prism components:init`");
       } finally {
         process.chdir(basePath);
       }

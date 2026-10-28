@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import { Cli, z } from "incur";
+import { camelCase } from "lodash-es";
 import * as path from "path";
 import { parseAndGenerate } from "wsdl-tsclient";
 import { writeCommandStatus } from "../../../command.js";
@@ -137,9 +138,11 @@ export default Cli.command({
 
     return withWorkingDirectory(directory, async () => {
       let description: string;
+      // The component's display label: the name, or the spec's title for OpenAPI.
+      let label = name;
 
       if (openApiPath) {
-        ({ description } = await generateFormats({
+        ({ description, label } = await generateFormats({
           name,
           openapi: openApiPath,
           toolchain: toolchain.name,
@@ -184,6 +187,8 @@ export default Cli.command({
             ? `@prismatic-io/components-${name.toLowerCase()}`
             : (npmPackage ?? name.toLowerCase()),
           description,
+          label,
+          importName: camelCase(name),
           internalPublishing,
           registryPublishing: internalPublishing || npmPackage !== undefined,
           toolchain,
