@@ -138,7 +138,7 @@ describe("component generation tests", () => {
       process.chdir(tempPath);
 
       try {
-        const name = openApi ? "MyInternalOpenApi" : "MyInternal";
+        const name = openApi ? "my-internal-open-api" : "my-internal";
 
         await runCommand(InitializeComponent, [
           name,
@@ -168,9 +168,9 @@ describe("component generation tests", () => {
         expect(pkg.private).toBeUndefined();
         expect(pkg.scripts.prepublishOnly).toBeUndefined();
 
-        expect(await readFile(path.join(tempPath, name, "src/index.ts"), "utf-8")).toContain(
-          "public: true",
-        );
+        const source = await readFile(path.join(tempPath, name, "src/index.ts"), "utf-8");
+        expect(source).toContain("public: true");
+        expect(source).toContain(`key: "${name}"`);
       } finally {
         process.chdir(basePath);
       }
@@ -210,7 +210,7 @@ describe("component generation tests", () => {
     }
   });
 
-  it("derives internal naming from the component key and uses the standard toolchain", async () => {
+  it("keys an internal component by its name as given and names the package after it", async () => {
     process.chdir(tempPath);
 
     try {
@@ -220,13 +220,13 @@ describe("component generation tests", () => {
         await readFile(path.join(tempPath, "internal-example/package.json"), "utf-8"),
       );
 
-      expect(pkg.name).toBe("@prismatic-io/components-internalexample");
+      expect(pkg.name).toBe("@prismatic-io/components-internal-example");
       expect(pkg.scripts.build).toBe("npm run typecheck && tsdown");
       expect(pkg.publishConfig).toEqual({ access: "public" });
 
       const source = await readFile(path.join(tempPath, "internal-example/src/index.ts"), "utf-8");
 
-      expect(source).toContain('key: "internalExample"');
+      expect(source).toContain('key: "internal-example"');
       expect(source).toContain("public: true");
     } finally {
       process.chdir(basePath);
