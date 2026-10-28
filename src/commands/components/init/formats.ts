@@ -14,6 +14,8 @@ export async function generateFormats(options: {
   icon?: string;
   public?: boolean;
   toolchain?: "modern" | "legacy";
+  /** The component key; defaults to the name in camelCase. */
+  key?: string;
 }): Promise<{
   name: string;
   path: string;
@@ -29,7 +31,7 @@ export async function generateFormats(options: {
     toolchain: toolchainName = DEFAULT_TOOLCHAIN,
   } = options;
   const toolchain = getToolchain(toolchainName);
-  const key = camelCase(name);
+  const key = options.key ?? camelCase(name);
 
   const result = await read(openapi);
 

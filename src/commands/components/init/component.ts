@@ -39,6 +39,8 @@ export async function generateComponent(flags: {
   description?: string;
   toolchain?: "modern" | "legacy";
   public?: boolean;
+  /** The component key; defaults to the name in camelCase. */
+  key?: string;
 }) {
   const directory = getWorkingDirectory();
   const toolchain = getToolchain(flags.toolchain ?? DEFAULT_TOOLCHAIN);
@@ -72,7 +74,7 @@ export async function generateComponent(flags: {
     component: {
       name,
       description,
-      key: camelCase(name),
+      key: flags.key ?? camelCase(name),
       public: flags.public === true,
     },
     npmPackage: toolchain.name === "modern",

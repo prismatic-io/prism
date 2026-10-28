@@ -1,6 +1,5 @@
 import { promises as fs } from "fs";
 import { Cli, z } from "incur";
-import { camelCase } from "lodash-es";
 import * as path from "path";
 import { parseAndGenerate } from "wsdl-tsclient";
 import { writeCommandStatus } from "../../../command.js";
@@ -89,6 +88,9 @@ export default Cli.command({
     } = context;
 
     const internalPublishing = hiddenOption("prismatic-internal");
+    // An internal component keeps the name as given for its key, so the key,
+    // directory and package name match, rather than camelCasing it.
+    const key = internalPublishing ? name : undefined;
 
     const toolchain = getToolchain(toolchainName);
     const wsdlPath = rawWsdlPath ? path.resolve(cwd, rawWsdlPath) : undefined;
@@ -142,6 +144,7 @@ export default Cli.command({
           openapi: openApiPath,
           toolchain: toolchain.name,
           public: internalPublishing,
+          key,
         }));
       } else {
         ({ description } = await generateComponent({
@@ -149,6 +152,7 @@ export default Cli.command({
           description: "Prism-generated Component",
           toolchain: toolchain.name,
           public: internalPublishing,
+          key,
         }));
 
         if (wsdlPath) {
@@ -177,7 +181,7 @@ export default Cli.command({
         await templateDirectory("npm-package", {
           name,
           packageName: internalPublishing
-            ? `@prismatic-io/components-${camelCase(name).toLowerCase()}`
+            ? `@prismatic-io/components-${name.toLowerCase()}`
             : (npmPackage ?? name.toLowerCase()),
           description,
           internalPublishing,
