@@ -21,6 +21,7 @@ export async function generateFormats(options: {
   path: string;
   toolchain: string;
   description: string;
+  label: string;
 }> {
   const directory = getWorkingDirectory();
   const {
@@ -68,5 +69,6 @@ For documentation on writing custom components, visit https://prismatic.io/docs/
     path: directory,
     toolchain: toolchain.name,
     description: result.component.display.description,
+    label: result.component.display.label,
   };
 }
