@@ -39,12 +39,13 @@ Profile: default
 
 ### Component manifests in code-native integrations
 
-New integrations omit component manifest scaffolding by default. Import callable npm
-component packages directly; no component registry is required for those imports.
-Use `prism integrations:init my-integration --include-manifests` to opt in at creation.
+New integrations start without component manifest scaffolding, so you can import callable
+npm component packages directly without configuring a registry. If you also need manifests,
+you can include support when creating the integration with
+`prism integrations:init my-integration --include-manifests`, or add it later.
 
-To add manifests to an existing integration, run these commands from its root after
-installing its dependencies:
+After installing the integration's dependencies, run these commands from its root directory
+to add, list, or remove manifests:
 
 ```bash
 prism integrations:manifests:add slack
@@ -52,15 +53,16 @@ prism integrations:manifests:list
 prism integrations:manifests:remove slack
 ```
 
-The first addition creates the registry and wires it into the integration and Spectral
-TypeScript declarations. Npm component imports can coexist with registered manifests.
-`--no-register` generates manifest files without adding registry scaffolding.
+Adding your first manifest creates the component registry and connects it to the integration
+and its Spectral TypeScript declarations. You can then use registered manifests alongside
+npm component imports. If you prefer to manage registration yourself, pass `--no-register`
+to generate only the manifest files.
 
-Remove manifest usages from your code before running `remove`. Removing the last local
-manifest also removes the empty registry, its integration wiring, and manifest-specific
-type declarations. Configuration typing and npm dependencies remain. Customized wiring
-that Prism cannot safely edit requires manual cleanup; it reports the issue before
-removing files. Removal does not unpublish platform components.
+Before removing a manifest, remove references to it from your code. When you remove the last
+manifest, Prism also removes the empty registry and its integration and type declarations,
+while preserving configuration typing and npm dependencies. If customized code prevents safe
+cleanup, Prism explains what needs attention before removing files. These commands manage
+local manifests; removing one does not unpublish the component from Prismatic.
 
 ### Profiles
 
