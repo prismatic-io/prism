@@ -106,9 +106,15 @@ configPages:
 
       const result = await runCommand(ImportCommand, []);
 
-      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, undefined, {
-        timeoutSeconds: 300,
-      });
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(
+        undefined,
+        false,
+        undefined,
+        {
+          timeoutSeconds: 300,
+        },
+        undefined,
+      );
       expect(logSpy).toHaveBeenCalledWith("imported-cni-id");
       expect(result).toEqual({ integrationId: "imported-cni-id", componentId: "comp_1" });
     });
@@ -124,6 +130,7 @@ configPages:
         false,
         ['myFlow="key123"'],
         { timeoutSeconds: 300 },
+        undefined,
       );
     });
 
@@ -133,9 +140,27 @@ configPages:
     ])("passes the prerequisite timeout with flags %j", async ({ flags }) => {
       const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
       await runCommand(ImportCommand, [...flags, "--wait-timeout", "600"]);
-      expect(importCodeNativeIntegration).toHaveBeenCalledWith(undefined, false, undefined, {
-        timeoutSeconds: 600,
-      });
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(
+        undefined,
+        false,
+        undefined,
+        {
+          timeoutSeconds: 600,
+        },
+        undefined,
+      );
+    });
+
+    it("passes agent provenance through import metadata", async () => {
+      const { importCodeNativeIntegration } = await import("../../utils/integration/import.js");
+      await runCommand(ImportCommand, ["--agent", "--yes", "--no-wait"]);
+      expect(importCodeNativeIntegration).toHaveBeenCalledWith(
+        undefined,
+        false,
+        undefined,
+        { timeoutSeconds: 300 },
+        { provenance: { modified: "prism-agent" } },
+      );
     });
 
     it("does not publish a component for YAML imports", async () => {

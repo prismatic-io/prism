@@ -35,7 +35,7 @@ import { findPackageRoot, getPackageEntrypointDirectory } from "../import.js";
 import { startAction, stopAction } from "../progress.js";
 import { loadYaml } from "../serialize.js";
 import { getPrismMetadata, writePrismMetadata } from "./metadata.js";
-import { pinComponentSignatures } from "./signatures.js";
+import { type ImportMetadata, pinComponentSignatures } from "./signatures.js";
 import type { IntegrationObjectFromYAML } from "./types.js";
 import { validateCodeNativeDefinition } from "./validate.js";
 
@@ -154,6 +154,7 @@ export const importCodeNativeIntegration = async (
   replace?: boolean,
   testApiKeyFlags?: string[],
   waitOptions?: WaitOptions,
+  importMetadata?: ImportMetadata,
 ): Promise<{ integrationId: string; componentId: string }> => {
   const packageRoot = await findPackageRoot("Code Native Integration");
 
@@ -216,11 +217,16 @@ export const importCodeNativeIntegration = async (
         }
         return { key, isPublic, signature };
       });
-      const pinnedDefinition = pinComponentSignatures(integrationDefinition, dependencySignatures, {
-        key: componentDefinition.key,
-        isPublic: componentDefinition.public ?? false,
-        signature: await calculatePackageSignature(packagePath),
-      });
+      const pinnedDefinition = pinComponentSignatures(
+        integrationDefinition,
+        dependencySignatures,
+        {
+          key: componentDefinition.key,
+          isPublic: componentDefinition.public ?? false,
+          signature: await calculatePackageSignature(packagePath),
+        },
+        importMetadata,
+      );
 
       const { componentId, iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
         await publishComponentDefinition(componentDefinition, {

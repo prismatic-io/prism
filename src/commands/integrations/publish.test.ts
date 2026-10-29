@@ -44,10 +44,7 @@ describe("integrations publish", () => {
     mockWaitForIntegrationVersion.mockReset();
   });
 
-  it.each([
-    false,
-    true,
-  ])("adds agent provenance without losing commit attributes (agent=%s)", async (agent) => {
+  it.each([false, true])("publishes supplied commit attributes (agent=%s)", async (agent) => {
     mockPlatform();
     await runCommand(PublishCommand, [
       "int_1",
@@ -59,14 +56,7 @@ describe("integrations publish", () => {
     const attributes = JSON.parse(mockGqlRequest.mock.calls[1][0].variables.attributes);
     expect(attributes).toEqual({
       commitHash: "abc123",
-      ...(agent ? { provenance: { modified: "prism-agent" } } : {}),
     });
-  });
-
-  it("does not collect agent provenance for low-code integrations", async () => {
-    mockPlatform(false);
-    await runCommand(PublishCommand, ["int_1", "--no-wait", "--agent", "--yes"]);
-    expect(mockGqlRequest.mock.calls[1][0].variables.attributes).toBeUndefined();
   });
 
   it("publishes and waits for the new version to become available", async () => {
