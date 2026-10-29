@@ -10,6 +10,17 @@ export interface ComponentSignature {
   signature: string;
 }
 
+export interface ImportProvenance {
+  modified: string;
+}
+
+export interface ImportMetadata {
+  provenance?: ImportProvenance;
+  convertedFromLowCode?: boolean;
+  callableComponents?: readonly ComponentSignature[];
+  [key: string]: unknown;
+}
+
 const identity = ({ key, isPublic }: Pick<ComponentSignature, "key" | "isPublic">) =>
   JSON.stringify([key, isPublic]);
 
@@ -24,6 +35,7 @@ export const pinComponentSignatures = (
   yaml: string,
   components: readonly ComponentSignature[],
   cni?: ComponentSignature,
+  metadata?: ImportMetadata,
 ): string => {
   const signatures = new Map<string, string>();
   for (const component of [...components, ...(cni ? [cni] : [])]) {
@@ -93,5 +105,18 @@ export const pinComponentSignatures = (
     pin(object(variable?.connection)?.component);
     pin(object(variable?.dataSource)?.component);
   }
+  const importMetadata: ImportMetadata = {
+    ...object(definition.importMetadata),
+    ...metadata,
+    callableComponents: [
+      ...new Map(
+        components.map(({ key, isPublic, signature }) => [
+          identity({ key, isPublic }),
+          { key, isPublic, signature },
+        ]),
+      ).values(),
+    ],
+  };
+  definition.importMetadata = importMetadata;
   return dumpYaml(definition);
 };

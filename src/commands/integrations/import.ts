@@ -137,7 +137,13 @@ There will be no way to restore the existing draft. If you wish to save it, eith
       ? {
           integrationId: await importYamlIntegration(path, integrationId, iconPath, replace),
         }
-      : await importCodeNativeIntegration(integrationId, replace, testApiKey, componentWait);
+      : await importCodeNativeIntegration(
+          integrationId,
+          replace,
+          testApiKey,
+          componentWait,
+          context.agent ? { provenance: { modified: "prism-agent" } } : undefined,
+        );
 
     const { integrationId: integrationImportId } = imported;
     writeCommandStatus(integrationImportId);
