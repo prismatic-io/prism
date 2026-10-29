@@ -130,7 +130,7 @@ it("redacts native manifest-generator failure diagnostics in agent and human mod
     for (const mode of ["--agent", "--no-agent"]) {
       const result = await promisify(execFile)(
         process.execPath,
-        [entrypoint, "integrations", "manifests", "add", "slack", mode, "--yes"],
+        [entrypoint, "integrations", "manifests", "add", "slack", "--no-register", mode, "--yes"],
         {
           cwd: directory,
           timeout: 15_000,

@@ -16,6 +16,10 @@ import {
   registryLines,
 } from "../../../utils/integration/componentRegistry.js";
 import {
+  prepareManifestScaffolding,
+  validateManifestKeys,
+} from "../../../utils/integration/manifestScaffolding.js";
+import {
   MANIFEST_GENERATOR,
   MINIMUM_SPECTRAL_VERSION,
   manifestDirectory,
@@ -75,11 +79,14 @@ export default Cli.command({
     register: z
       .boolean()
       .default(true)
-      .describe("Register each manifest in src/componentRegistry.ts (use --no-register to skip)"),
+      .describe(
+        "Enable manifest support and register each manifest in src/componentRegistry.ts (use --no-register to skip)",
+      ),
   }),
   async run(context) {
     const { args, options: flags } = context;
     const projectDir = getWorkingDirectory();
+    validateManifestKeys(args.componentKeys);
     if (!(await exists(path.join(projectDir, "package.json")))) {
       throw new ValidationError({
         message: `No package.json exists in ${projectDir}. Run this command from the root of a Code Native Integration.`,
@@ -97,6 +104,11 @@ export default Cli.command({
         message: `@prismatic-io/spectral ${generator.version} does not provide ${MANIFEST_GENERATOR}. Upgrade to ${MINIMUM_SPECTRAL_VERSION} or later.`,
       });
     }
+
+    const installScaffolding = flags.register
+      ? await prepareManifestScaffolding(projectDir)
+      : async () => {};
+    let scaffoldingInstalled = false;
 
     const components: ComponentIdentity[] = [];
     for (const componentKey of args.componentKeys) {
@@ -128,6 +140,10 @@ export default Cli.command({
         });
       }
 
+      if (!scaffoldingInstalled) {
+        await installScaffolding();
+        scaffoldingInstalled = true;
+      }
       const registration = flags.register
         ? await registerManifest(projectDir, component.key)
         : "skipped";

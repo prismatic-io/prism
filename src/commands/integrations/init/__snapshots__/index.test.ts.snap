@@ -7,13 +7,11 @@ ACME_API_KEY=
 `;
 
 exports[`integrations:init > legacy toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-legacy/.spectral/index.ts 1`] = `
-import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
+import type { ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
 
 import type {
   // @ts-ignore
   configPages,
-  // @ts-ignore
-  componentRegistry,
   // @ts-ignore
   userLevelConfigPages,
   // @ts-ignore
@@ -30,10 +28,6 @@ type TUserLevelConfigPages = IsAny<typeof userLevelConfigPages> extends true
   ? { [key: string]: ConfigPage }
   : typeof userLevelConfigPages;
 
-type TComponentRegistry = IsAny<typeof componentRegistry> extends true
-  ? { [key: string]: ComponentManifest }
-  : typeof componentRegistry;
-
 type TScopedConfigVarMap = IsAny<typeof scopedConfigVars> extends true
   ? { [key: string]: ScopedConfigVar }
   : typeof scopedConfigVars;
@@ -42,8 +36,6 @@ declare module "@prismatic-io/spectral" {
   interface IntegrationDefinitionConfigPages extends TConfigPages {}
 
   interface IntegrationDefinitionUserLevelConfigPages extends TUserLevelConfigPages {}
-
-  interface IntegrationDefinitionComponentRegistry extends TComponentRegistry {}
 
   interface IntegrationDefinitionScopedConfigVars extends TScopedConfigVarMap {}
 }
@@ -148,22 +140,6 @@ export function createApiClient(connection: Connection) {
 }
 `;
 
-exports[`integrations:init > legacy toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-legacy/src/componentRegistry.ts 1`] = `
-/**
- * Your code-native integration can invoke existing connectors.
- * This is where you declare which connectors your code-native
- * integration uses. For more information, see
- * https://prismatic.io/docs/integrations/code-native/existing-components/
- */
-
-import { componentManifests } from "@prismatic-io/spectral";
-
-export const componentRegistry = componentManifests({
-  // This is where you'll register your component manifests
-});
-
-`;
-
 exports[`integrations:init > legacy toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-legacy/src/configPages.ts 1`] = `
 /**
  * When a customer deploys an instance of your integration,
@@ -252,11 +228,9 @@ exports[`integrations:init > legacy toolchain > clean scaffold generation > shou
 import { integration } from "@prismatic-io/spectral";
 import flows from "./flows";
 import { configPages } from "./configPages";
-import { componentRegistry } from "./componentRegistry";
 import documentation from "../documentation.md";
 
 export { configPages } from "./configPages";
-export { componentRegistry } from "./componentRegistry";
 
 export default integration({
   name: "clean-test-integration-legacy",
@@ -265,7 +239,6 @@ export default integration({
   documentation,
   flows,
   configPages,
-  componentRegistry,
 });
 
 `;
@@ -304,13 +277,11 @@ ACME_API_KEY=
 `;
 
 exports[`integrations:init > legacy toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-legacy/.spectral/index.ts 1`] = `
-import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
+import type { ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
 
 import type {
   // @ts-ignore
   configPages,
-  // @ts-ignore
-  componentRegistry,
   // @ts-ignore
   userLevelConfigPages,
   // @ts-ignore
@@ -327,10 +298,6 @@ type TUserLevelConfigPages = IsAny<typeof userLevelConfigPages> extends true
   ? { [key: string]: ConfigPage }
   : typeof userLevelConfigPages;
 
-type TComponentRegistry = IsAny<typeof componentRegistry> extends true
-  ? { [key: string]: ComponentManifest }
-  : typeof componentRegistry;
-
 type TScopedConfigVarMap = IsAny<typeof scopedConfigVars> extends true
   ? { [key: string]: ScopedConfigVar }
   : typeof scopedConfigVars;
@@ -339,8 +306,6 @@ declare module "@prismatic-io/spectral" {
   interface IntegrationDefinitionConfigPages extends TConfigPages {}
 
   interface IntegrationDefinitionUserLevelConfigPages extends TUserLevelConfigPages {}
-
-  interface IntegrationDefinitionComponentRegistry extends TComponentRegistry {}
 
   interface IntegrationDefinitionScopedConfigVars extends TScopedConfigVarMap {}
 }
@@ -447,22 +412,6 @@ export function createAcmeClient(acmeConnection: Connection) {
     },
   });
 }
-
-`;
-
-exports[`integrations:init > legacy toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-legacy/src/componentRegistry.ts 1`] = `
-/**
- * Your code-native integration can invoke existing connectors.
- * This is where you declare which connectors your code-native
- * integration uses. For more information, see
- * https://prismatic.io/docs/integrations/code-native/existing-components/
- */
-
-import { componentManifests } from "@prismatic-io/spectral";
-
-export const componentRegistry = componentManifests({
-  // This is where you'll register your component manifests
-});
 
 `;
 
@@ -659,11 +608,9 @@ exports[`integrations:init > legacy toolchain > scaffold generation > should mat
 import { integration } from "@prismatic-io/spectral";
 import flows from "./flows";
 import { configPages } from "./configPages";
-import { componentRegistry } from "./componentRegistry";
 import documentation from "../documentation.md";
 
 export { configPages } from "./configPages";
-export { componentRegistry } from "./componentRegistry";
 
 export default integration({
   name: "test-integration-legacy",
@@ -672,7 +619,6 @@ export default integration({
   documentation,
   flows,
   configPages,
-  componentRegistry,
 });
 
 `;
@@ -711,13 +657,11 @@ ACME_API_KEY=
 `;
 
 exports[`integrations:init > modern toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-modern/.spectral/index.ts 1`] = `
-import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
+import type { ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
 
 import type {
   // @ts-ignore
   configPages,
-  // @ts-ignore
-  componentRegistry,
   // @ts-ignore
   userLevelConfigPages,
   // @ts-ignore
@@ -734,10 +678,6 @@ type TUserLevelConfigPages = IsAny<typeof userLevelConfigPages> extends true
   ? { [key: string]: ConfigPage }
   : typeof userLevelConfigPages;
 
-type TComponentRegistry = IsAny<typeof componentRegistry> extends true
-  ? { [key: string]: ComponentManifest }
-  : typeof componentRegistry;
-
 type TScopedConfigVarMap = IsAny<typeof scopedConfigVars> extends true
   ? { [key: string]: ScopedConfigVar }
   : typeof scopedConfigVars;
@@ -746,8 +686,6 @@ declare module "@prismatic-io/spectral" {
   interface IntegrationDefinitionConfigPages extends TConfigPages {}
 
   interface IntegrationDefinitionUserLevelConfigPages extends TUserLevelConfigPages {}
-
-  interface IntegrationDefinitionComponentRegistry extends TComponentRegistry {}
 
   interface IntegrationDefinitionScopedConfigVars extends TScopedConfigVarMap {}
 }
@@ -873,22 +811,6 @@ export function createApiClient(connection: Connection) {
 }
 `;
 
-exports[`integrations:init > modern toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-modern/src/componentRegistry.ts 1`] = `
-/**
- * Your code-native integration can invoke existing connectors.
- * This is where you declare which connectors your code-native
- * integration uses. For more information, see
- * https://prismatic.io/docs/integrations/code-native/existing-components/
- */
-
-import { componentManifests } from "@prismatic-io/spectral";
-
-export const componentRegistry = componentManifests({
-  // This is where you'll register your component manifests
-});
-
-`;
-
 exports[`integrations:init > modern toolchain > clean scaffold generation > should match scaffolding snapshots for clean template > clean-clean-test-integration-modern/src/configPages.ts 1`] = `
 /**
  * When a customer deploys an instance of your integration,
@@ -977,11 +899,9 @@ exports[`integrations:init > modern toolchain > clean scaffold generation > shou
 import { integration } from "@prismatic-io/spectral";
 import flows from "./flows";
 import { configPages } from "./configPages";
-import { componentRegistry } from "./componentRegistry";
 import documentation from "../documentation.md";
 
 export { configPages } from "./configPages";
-export { componentRegistry } from "./componentRegistry";
 
 export default integration({
   name: "clean-test-integration-modern",
@@ -990,7 +910,6 @@ export default integration({
   documentation,
   flows,
   configPages,
-  componentRegistry,
 });
 
 `;
@@ -1072,13 +991,11 @@ ACME_API_KEY=
 `;
 
 exports[`integrations:init > modern toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-modern/.spectral/index.ts 1`] = `
-import type { ComponentManifest, ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
+import type { ConfigPage, ScopedConfigVar } from "@prismatic-io/spectral";
 
 import type {
   // @ts-ignore
   configPages,
-  // @ts-ignore
-  componentRegistry,
   // @ts-ignore
   userLevelConfigPages,
   // @ts-ignore
@@ -1095,10 +1012,6 @@ type TUserLevelConfigPages = IsAny<typeof userLevelConfigPages> extends true
   ? { [key: string]: ConfigPage }
   : typeof userLevelConfigPages;
 
-type TComponentRegistry = IsAny<typeof componentRegistry> extends true
-  ? { [key: string]: ComponentManifest }
-  : typeof componentRegistry;
-
 type TScopedConfigVarMap = IsAny<typeof scopedConfigVars> extends true
   ? { [key: string]: ScopedConfigVar }
   : typeof scopedConfigVars;
@@ -1107,8 +1020,6 @@ declare module "@prismatic-io/spectral" {
   interface IntegrationDefinitionConfigPages extends TConfigPages {}
 
   interface IntegrationDefinitionUserLevelConfigPages extends TUserLevelConfigPages {}
-
-  interface IntegrationDefinitionComponentRegistry extends TComponentRegistry {}
 
   interface IntegrationDefinitionScopedConfigVars extends TScopedConfigVarMap {}
 }
@@ -1236,22 +1147,6 @@ export function createAcmeClient(acmeConnection: Connection) {
     },
   });
 }
-
-`;
-
-exports[`integrations:init > modern toolchain > scaffold generation > should match scaffolding snapshots for default template > test-integration-modern/src/componentRegistry.ts 1`] = `
-/**
- * Your code-native integration can invoke existing connectors.
- * This is where you declare which connectors your code-native
- * integration uses. For more information, see
- * https://prismatic.io/docs/integrations/code-native/existing-components/
- */
-
-import { componentManifests } from "@prismatic-io/spectral";
-
-export const componentRegistry = componentManifests({
-  // This is where you'll register your component manifests
-});
 
 `;
 
@@ -1448,11 +1343,9 @@ exports[`integrations:init > modern toolchain > scaffold generation > should mat
 import { integration } from "@prismatic-io/spectral";
 import flows from "./flows";
 import { configPages } from "./configPages";
-import { componentRegistry } from "./componentRegistry";
 import documentation from "../documentation.md";
 
 export { configPages } from "./configPages";
-export { componentRegistry } from "./componentRegistry";
 
 export default integration({
   name: "test-integration-modern",
@@ -1461,7 +1354,6 @@ export default integration({
   documentation,
   flows,
   configPages,
-  componentRegistry,
 });
 
 `;

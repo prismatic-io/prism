@@ -58,8 +58,8 @@ export default Cli.command({
       .describe("Configuration experience to scaffold"),
     "include-manifests": z
       .boolean()
-      .default(true)
-      .describe("Include component manifest registry support (use --no-include-manifests to omit)"),
+      .default(false)
+      .describe("Include component manifest registry support (omitted by default)"),
     clean: z.boolean().default(false).describe("Generate clean scaffold without example code"),
     toolchain: z
       .enum(TOOLCHAIN_NAMES)
