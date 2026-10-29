@@ -298,3 +298,18 @@ describe("optional integration import readiness", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 });
+
+it.each([false, true])("collects provenance during CNI import (agent=%s)", async (agent) => {
+  emulateProcessing(0);
+  const pending = runCommand(ImportCommand, ["--no-wait", ...(agent ? ["--agent", "--yes"] : [])]);
+  await vi.runAllTimersAsync();
+  await pending;
+  const request = state.gql.mock.calls.find(
+    ([request]) => request.document === ImportIntegrationDocument,
+  )?.[0];
+  const { loadYaml } = await import("../../utils/serialize.js");
+  expect(loadYaml<any>(request.variables.definition).importMetadata).toEqual({
+    componentDependencies: [],
+    ...(agent ? { provenance: { modified: "prism-agent" } } : {}),
+  });
+});

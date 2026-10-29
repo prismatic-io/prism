@@ -24,6 +24,7 @@ export const pinComponentSignatures = (
   yaml: string,
   components: readonly ComponentSignature[],
   cni?: ComponentSignature,
+  importMetadata?: Record<string, unknown>,
 ): string => {
   const signatures = new Map<string, string>();
   for (const component of [...components, ...(cni ? [cni] : [])]) {
@@ -93,5 +94,19 @@ export const pinComponentSignatures = (
     pin(object(variable?.connection)?.component);
     pin(object(variable?.dataSource)?.component);
   }
+  // Record declared dependencies even when no platform selector references them.
+  // Aliased packages may resolve to the same component artifact.
+  definition.importMetadata = {
+    ...object(definition.importMetadata),
+    ...importMetadata,
+    componentDependencies: [
+      ...new Map(
+        components.map(({ key, isPublic, signature }) => [
+          identity({ key, isPublic }),
+          { key, isPublic, signature },
+        ]),
+      ).values(),
+    ],
+  };
   return dumpYaml(definition);
 };

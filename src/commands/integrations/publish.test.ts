@@ -47,7 +47,7 @@ describe("integrations publish", () => {
   it.each([
     false,
     true,
-  ])("adds agent provenance without losing commit attributes (agent=%s)", async (agent) => {
+  ])("keeps publication attributes limited to user-supplied commit information (agent=%s)", async (agent) => {
     mockPlatform();
     await runCommand(PublishCommand, [
       "int_1",
@@ -59,7 +59,6 @@ describe("integrations publish", () => {
     const attributes = JSON.parse(mockGqlRequest.mock.calls[1][0].variables.attributes);
     expect(attributes).toEqual({
       commitHash: "abc123",
-      ...(agent ? { provenance: { modified: "prism-agent" } } : {}),
     });
   });
 

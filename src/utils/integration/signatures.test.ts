@@ -118,3 +118,28 @@ describe("pinComponentSignatures", () => {
     expect(result.flows[0].steps.map((step: any) => step.action.component)).toEqual([cni, pinned]);
   });
 });
+
+it("records declared components without selectors and preserves other import metadata", () => {
+  const result = loadYaml<any>(
+    pinComponentSignatures(
+      dumpYaml({
+        flows: [],
+        importMetadata: { convertedFromLowCode: true, componentDependencies: [{ key: "stale" }] },
+      }),
+      [pinned, pinned, { ...pinned, isPublic: true }],
+      {
+        key: "cni",
+        isPublic: false,
+        signature: "wrapper",
+      },
+    ),
+  );
+  expect(result.importMetadata).toEqual({
+    convertedFromLowCode: true,
+    componentDependencies: [pinned, { ...pinned, isPublic: true }],
+  });
+  expect(loadYaml<any>(pinComponentSignatures(dumpYaml(result), [])).importMetadata).toEqual({
+    convertedFromLowCode: true,
+    componentDependencies: [],
+  });
+});

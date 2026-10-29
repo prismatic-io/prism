@@ -154,6 +154,7 @@ export const importCodeNativeIntegration = async (
   replace?: boolean,
   testApiKeyFlags?: string[],
   waitOptions?: WaitOptions,
+  agent = false,
 ): Promise<{ integrationId: string; componentId: string }> => {
   const packageRoot = await findPackageRoot("Code Native Integration");
 
@@ -216,11 +217,16 @@ export const importCodeNativeIntegration = async (
         }
         return { key, isPublic, signature };
       });
-      const pinnedDefinition = pinComponentSignatures(integrationDefinition, dependencySignatures, {
-        key: componentDefinition.key,
-        isPublic: componentDefinition.public ?? false,
-        signature: await calculatePackageSignature(packagePath),
-      });
+      const pinnedDefinition = pinComponentSignatures(
+        integrationDefinition,
+        dependencySignatures,
+        {
+          key: componentDefinition.key,
+          isPublic: componentDefinition.public ?? false,
+          signature: await calculatePackageSignature(packagePath),
+        },
+        agent ? { provenance: { modified: "prism-agent" } } : undefined,
+      );
 
       const { componentId, iconUploadUrl, packageUploadUrl, connectionIconUploadUrls } =
         await publishComponentDefinition(componentDefinition, {
