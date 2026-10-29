@@ -102,7 +102,7 @@ describe("integrations:init", () => {
                   "--configuration-type",
                   configurationType,
                   ...(clean ? ["--clean"] : []),
-                  ...(includeManifests ? [] : ["--no-include-manifests"]),
+                  ...(includeManifests ? ["--include-manifests"] : []),
                 ]);
                 const directory = path.join(tempPath, name);
                 expect(existsSync(path.join(directory, "src/componentRegistry.ts"))).toBe(

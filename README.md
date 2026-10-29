@@ -37,6 +37,33 @@ Authentication: Profile
 Profile: default
 ```
 
+### Component manifests in code-native integrations
+
+New integrations start without component manifest scaffolding, so you can import callable
+npm component packages directly without configuring a registry. If you also need manifests,
+you can include support when creating the integration with
+`prism integrations:init my-integration --include-manifests`, or add it later.
+
+After installing the integration's dependencies, run these commands from its root directory
+to add, list, or remove manifests:
+
+```bash
+prism integrations:manifests:add slack
+prism integrations:manifests:list
+prism integrations:manifests:remove slack
+```
+
+Adding your first manifest creates the component registry and connects it to the integration
+and its Spectral TypeScript declarations. You can then use registered manifests alongside
+npm component imports. If you prefer to manage registration yourself, pass `--no-register`
+to generate only the manifest files.
+
+Before removing a manifest, remove references to it from your code. When you remove the last
+manifest, Prism also removes the empty registry and its integration and type declarations,
+while preserving configuration typing and npm dependencies. If customized code prevents safe
+cleanup, Prism explains what needs attention before removing files. These commands manage
+local manifests; removing one does not unpublish the component from Prismatic.
+
 ### Profiles
 
 Profiles let Prism stay logged in to multiple stacks or tenants at once. Each

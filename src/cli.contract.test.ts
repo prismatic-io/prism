@@ -114,6 +114,7 @@ const additiveCommandIds = new Set([
   "executions:steps",
   "integrations:manifests:add",
   "integrations:manifests:list",
+  "integrations:manifests:remove",
   "logs:list",
   "organization:theme:get",
   "organization:theme:color:set",
