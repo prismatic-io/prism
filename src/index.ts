@@ -73,6 +73,7 @@ import IntegrationsInitCommand from "./commands/integrations/init/index.js";
 import IntegrationsListCommand from "./commands/integrations/list.js";
 import IntegrationsManifestsAddCommand from "./commands/integrations/manifests/add.js";
 import IntegrationsManifestsListCommand from "./commands/integrations/manifests/list.js";
+import IntegrationsManifestsRemoveCommand from "./commands/integrations/manifests/remove.js";
 import IntegrationsMarketplaceCommand from "./commands/integrations/marketplace.js";
 import IntegrationsOpenCommand from "./commands/integrations/open.js";
 import IntegrationsPublishCommand from "./commands/integrations/publish.js";
@@ -327,6 +328,9 @@ export const Commands = {
   }),
   "integrations:init": prepareCommand(IntegrationsInitCommand, { mutates: true }),
   "integrations:manifests:add": prepareCommand(IntegrationsManifestsAddCommand, { mutates: true }),
+  "integrations:manifests:remove": prepareCommand(IntegrationsManifestsRemoveCommand, {
+    mutates: true,
+  }),
   "integrations:manifests:list": prepareCommand(IntegrationsManifestsListCommand, {}),
   "integrations:versions": prepareCommand(IntegrationsVersionsCommand, {}),
   "logs:list": prepareCommand(LogsListCommand, {}),
