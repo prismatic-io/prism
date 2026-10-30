@@ -14,6 +14,7 @@ import {
 import { ValidationError } from "./errors.js";
 import { extractHiddenOptions, HIDDEN_OPTIONS, runWithHiddenOptions } from "./hidden-options.js";
 import { Commands } from "./index.js";
+import { updateNotifier } from "./plugins/update-notifier.js";
 
 const topicDescriptions: Record<string, string> = {
   alerts: "Manage Alerting resources",
@@ -115,6 +116,7 @@ export const cli = Cli.create("prism", {
     title: "Prismatic CLI",
   },
   outputPolicy: "all",
+  ...updateNotifier.cliOptions,
   version: packageJson.version,
 });
 
@@ -649,6 +651,7 @@ export const serve = async (argv = process.argv.slice(2), environment = process.
     const target = defaultWithArguments
       ? Cli.create(`prism ${route.path.replaceAll(":", " ")}`, {
           ...route.command,
+          ...updateNotifier.cliOptions,
           globals: globalOptions,
           env: environmentOptions,
           vars: commandVars,
@@ -691,6 +694,11 @@ export const serve = async (argv = process.argv.slice(2), environment = process.
         : runWithAgentMode(agent, invoke),
     );
     if (usageError) process.exitCode = 2;
+    await updateNotifier.afterCommand({
+      agent: agent || prismArguments.includes("--mcp"),
+      exitCode: process.exitCode,
+      environment,
+    });
   } finally {
     if (descriptor) Object.defineProperty(process.stdout, "isTTY", descriptor);
   }
