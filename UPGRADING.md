@@ -12,6 +12,8 @@ Resource create/update/publish commands retain bare IDs, resource deletes retain
 
 ## Changes requiring attention
 
+Prism disables incur's built-in update notifier and writes its own update notices directly to stderr, keeping `me:token` stdout pipeable. Registry checks run at most once a day with a one-second timeout, with results cached under `$XDG_CACHE_HOME/prism/update.json` (or `~/.cache/prism/update.json`). Human output flags do not suppress stderr notices. Agent mode and MCP skip notification checks. Set `NO_UPDATE_NOTIFIER=1` or `npm_config_update_notifier=false` to disable notices and registry checks. Update checks never install packages.
+
 - **Node.js 22.19.0+** replaces Node 20 support.
 - `--confirm` on `components:publish`, `integrations:import`, and `me:token:revoke` is removed. Use global `--yes` to approve prompts; `--no-confirm` remains an alias for `--yes` only on `components:publish` and `integrations:import` in non-agent CLI invocations (including CI/CD). Agent mode requires `--yes`; MCP uses `context.yes`.
 - `integrations:flows:listen --no-prompt` is removed; use `--yes`. Its old conflicting `-n` alias belongs to `--flow-name`.

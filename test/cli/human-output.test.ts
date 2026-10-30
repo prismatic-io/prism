@@ -1,5 +1,8 @@
 import { execFile } from "node:child_process";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { afterAll, beforeAll, expect, it } from "vitest";
@@ -67,7 +70,7 @@ afterAll(async () => {
   await new Promise<void>((resolve) => server.close(() => resolve()));
 });
 
-const run = async (args: string[]) =>
+const run = async (args: string[], environment: NodeJS.ProcessEnv = {}) =>
   promisify(execFile)(process.execPath, [entrypoint, ...args], {
     timeout: 30_000,
     env: {
@@ -78,8 +81,76 @@ const run = async (args: string[]) =>
       PRISM_REFRESH_TOKEN: "",
       PRISM_CONFIG_FILE: "/nonexistent/prism-audit.yml",
       NO_PROXY: "127.0.0.1",
+      NO_UPDATE_NOTIFIER: "1",
+      ...environment,
     },
   });
+
+it.for([
+  ["me:token"],
+  ["me", "token"],
+  ["me:token", "--type", "access"],
+  ["me:token", "--no-agent"],
+])("%j prints only the access token to piped stdout", async (args) => {
+  const result = await run(args);
+  expect(result.stdout).toBe("synthetic-audit-token\n");
+  expect(result.stderr).toBe("");
+});
+
+it("prints only the refresh token to piped stdout", async () => {
+  const result = await run(["me:token", "--type", "refresh"], {
+    PRISM_REFRESH_TOKEN: "synthetic-refresh-token",
+  });
+  expect(result.stdout).toBe("synthetic-refresh-token\n");
+  expect(result.stderr).toBe("");
+});
+
+it("prints an available update on stderr without contaminating the token", async () => {
+  const cache = await mkdtemp(join(tmpdir(), "prism-update-notice-"));
+  try {
+    const updates = join(cache, "prism");
+    await mkdir(updates, { recursive: true });
+    await writeFile(
+      join(updates, "update.json"),
+      JSON.stringify({ checkedAt: Date.now(), latest: "999.0.0" }),
+    );
+    const environment = {
+      XDG_CACHE_HOME: cache,
+      CI: "false",
+      NO_UPDATE_NOTIFIER: "",
+      npm_config_update_notifier: "true",
+    };
+    const result = await run(["me:token"], environment);
+    expect(result.stdout).toBe("synthetic-audit-token\n");
+    expect(result.stderr).toContain("Update available for @prismatic-io/prism:");
+    expect(result.stderr).toContain("npm install -g @prismatic-io/prism");
+    expect(result.stderr).toContain("→ 999.0.0");
+    for (const mode of ["--json", "--full-output", "--help", "--version"]) {
+      const structured = await run(["me:token", mode], environment);
+      expect(structured.stdout).not.toContain("Update available");
+      expect(structured.stderr).toContain("→ 999.0.0");
+    }
+    const incurCache = join(cache, "incur", "updates");
+    await mkdir(incurCache, { recursive: true });
+    await writeFile(
+      join(incurCache, `${encodeURIComponent("@prismatic-io/prism")}.json`),
+      JSON.stringify({ checkedAt: Date.now(), latest: "998.0.0" }),
+    );
+    const disabled = await run(["me:token"], environment);
+    expect(disabled.stdout).toBe("synthetic-audit-token\n");
+    expect(disabled.stderr).not.toContain("998.0.0");
+    expect(disabled.stderr).toContain("999.0.0");
+    const quiet = await run(["me:token", "--quiet"], environment);
+    expect(quiet.stdout).toBe("synthetic-audit-token\n");
+    expect(quiet.stderr).toContain("→ 999.0.0");
+    expect((await run(["help", "me:token"], environment)).stderr).toContain("→ 999.0.0");
+    const agent = await run(["me:token", "--agent", "--json"], environment);
+    expect(JSON.parse(agent.stdout)).toEqual({ token: "synthetic-audit-token", type: "access" });
+    expect(agent.stderr).toBe("");
+  } finally {
+    await rm(cache, { recursive: true, force: true });
+  }
+});
 
 const idCases = [
   ["customers:create", "--name", "Fixture"],
