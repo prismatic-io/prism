@@ -78,23 +78,169 @@ A Prismatic custom component, scaffolded by `prism components:init`.
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Optional npm usage
+## Using this component from a code-native integration
+
+Add the component to your integration's `package.json`. The integration must
+also depend on `@prismatic-io/spectral`, which this package declares as a peer
+dependency; both must resolve to a single copy of spectral.
+
+You do not need to publish the component to Prismatic yourself.
+`prism integrations:import` publishes it whenever an integration depends on it
+(skipping the publish when nothing has changed). `npm run publish:platform`
+publishes it directly.
+<% const tarball = `${packageName.replace(/^@/, "").replace("/", "-")}-0.0.1.tgz`; -%>
+
+### From a git repository (no registry needed)
+
+Pin a tag, branch, or commit. npm runs this package's `prepare` script on install,
+which builds it, so nothing needs to be committed or published. npm 11 warns that
+the script is not covered by `allowScripts`; run
+`npm install-scripts approve <%= packageName %>` in the integration to allow it.
+
+GitHub:
+
+```json
+{
+  "dependencies": {
+    "<%= packageName %>": "github:your-org/<%= name %>#v1.0.0"
+  }
+}
+```
+
+GitLab (gitlab.com):
+
+```json
+{
+  "dependencies": {
+    "<%= packageName %>": "gitlab:your-group/<%= name %>#v1.0.0"
+  }
+}
+```
+
+### From a tarball vendored into the integration
+
+```sh
+npm pack                                  # in this directory, writes <%= tarball %>
+```
+
+```json
+{
+  "dependencies": {
+    "<%= packageName %>": "file:./vendor/<%= tarball %>"
+  }
+}
+```
+
+### From a local checkout, while developing
+
+```json
+{
+  "dependencies": {
+    "<%= packageName %>": "file:../<%= name %>"
+  }
+}
+```
+
+npm builds the linked directory when it installs it, but not after you change
+it, so run `npm run build` here after each change. Because the link resolves to
+this directory's `node_modules`, make sure both projects use the same
+`@prismatic-io/spectral` version.
+
+### From a workspace in an npm monorepo
+
+When the integration and this component live in the same repository, list both
+as npm workspaces in the repository's root `package.json`:
+
+```json
+{
+  "private": true,
+  "workspaces": ["components/*", "integrations/*"]
+}
+```
+
+Then depend on the component by name with an ordinary version range; npm links
+the workspace instead of fetching it from a registry:
+
+```json
+{
+  "dependencies": {
+    "<%= packageName %>": "*"
+  }
+}
+```
+
+Run `npm install` from the repository root. npm runs this package's `prepare`
+script for the workspace, which builds it, and hoists `@prismatic-io/spectral`
+to the root so the integration and the component share one copy, as long as
+their spectral ranges agree. After changing the component, rebuild it with
+`npm run build --workspace <%= packageName %>`. npm does not support the
+`workspace:*` protocol that pnpm, Yarn and Bun use.
+
+### From an npm registry
 
 <% if (registryPublishing) { -%>
 This package is enabled for registry publishing. Run `npm publish` using your
-registry's authentication and configuration. npm visibility is independent of
-component visibility in Prismatic.
+registry's authentication and configuration, then depend on the version as
+usual. npm visibility is independent of component visibility in Prismatic.
 <% } else { -%>
 Registry publishing is disabled by `"private": true`. To opt in when scaffolding,
-use `--npm-package @your-org/component-name`.
+use `--npm-package @your-org/component-name`; or set a name, remove
+`"private": true` from `package.json`, and run `npm publish`. Then depend on the
+version as usual.
 <% } -%>
 
-To use this component in a code-native integration without a registry, run
-`npm pack` and install the resulting tarball in the integration. The integration
-must also depend on `@prismatic-io/spectral`. Import the package's default export
-to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes private component dependencies to Prismatic when you import the
-integration.
+### Using the component
+
+<% if (example) { -%>
+```ts
+import { configPage, flow } from "@prismatic-io/spectral";
+import <%= importName %> from "<%= packageName %>";
+
+export const configPages = {
+  Configuration: configPage({
+    elements: {
+      // A connection config var, backed by the published component's connection.
+      "My Connection": <%= importName %>.connections.<%= example.connection %>({ stableKey: "my-connection" }),
+      // A data source config var, run in-process; its inputs bind like a trigger's.
+      "My Choice": <%= importName %>.dataSources.<%= example.dataSource %>({
+        stableKey: "my-choice",
+        values: { <%= example.connectionInput %>: { configVar: "My Connection" } },
+      }),
+    },
+  }),
+};
+
+export const myFlow = flow({
+  name: "My Flow",
+  stableKey: "my-flow",
+  // A component trigger bound to the flow. A `configVar` binding is read on each invocation;
+  // other inputs take their pre-clean values.
+  onTrigger: <%= importName %>.triggers.<%= example.trigger %>({ <%= example.connectionInput %>: { configVar: "My Connection" } }),
+  onExecution: async (context) => ({
+    data: await <%= importName %>.actions.<%= example.action %>({
+      <%= example.connectionInput %>: context.configVars["My Connection"],
+      // ...the action's other inputs, typed from its definition
+    }),
+  }),
+});
+```
+
+A data source can also be called directly,
+`await <%= importName %>.dataSources.<%= example.dataSource %>.perform({ ... })`, from a
+`dataSourceConfigVar`'s `perform`.
+<% } else { -%>
+Import the package's default export to reach the component's callable actions,
+triggers, data sources and connection factories:
+
+```ts
+import <%= importName %> from "<%= packageName %>";
+
+// Inside a flow's onExecution
+const result = await <%= importName %>.actions.<actionKey>({
+  // ...the action's inputs, typed from its definition
+});
+```
+<% } -%>
 <% if (internalPublishing) { -%>
 
 Before using this public component in an integration, publish it to Prismatic

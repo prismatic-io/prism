@@ -6369,17 +6369,123 @@ A Prismatic custom component, scaffolded by \`prism components:init\`.
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Optional npm usage
+## Using this component from a code-native integration
+
+Add the component to your integration's \`package.json\`. The integration must
+also depend on \`@prismatic-io/spectral\`, which this package declares as a peer
+dependency; both must resolve to a single copy of spectral.
+
+You do not need to publish the component to Prismatic yourself.
+\`prism integrations:import\` publishes it whenever an integration depends on it
+(skipping the publish when nothing has changed). \`npm run publish:platform\`
+publishes it directly.
+
+### From a git repository (no registry needed)
+
+Pin a tag, branch, or commit. npm runs this package's \`prepare\` script on install,
+which builds it, so nothing needs to be committed or published. npm 11 warns that
+the script is not covered by \`allowScripts\`; run
+\`npm install-scripts approve nested-objects-modern\` in the integration to allow it.
+
+GitHub:
+
+\`\`\`json
+{
+  "dependencies": {
+    "nested-objects-modern": "github:your-org/nested-objects-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+GitLab (gitlab.com):
+
+\`\`\`json
+{
+  "dependencies": {
+    "nested-objects-modern": "gitlab:your-group/nested-objects-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+### From a tarball vendored into the integration
+
+\`\`\`sh
+npm pack                                  # in this directory, writes nested-objects-modern-0.0.1.tgz
+\`\`\`
+
+\`\`\`json
+{
+  "dependencies": {
+    "nested-objects-modern": "file:./vendor/nested-objects-modern-0.0.1.tgz"
+  }
+}
+\`\`\`
+
+### From a local checkout, while developing
+
+\`\`\`json
+{
+  "dependencies": {
+    "nested-objects-modern": "file:../nested-objects-modern"
+  }
+}
+\`\`\`
+
+npm builds the linked directory when it installs it, but not after you change
+it, so run \`npm run build\` here after each change. Because the link resolves to
+this directory's \`node_modules\`, make sure both projects use the same
+\`@prismatic-io/spectral\` version.
+
+### From a workspace in an npm monorepo
+
+When the integration and this component live in the same repository, list both
+as npm workspaces in the repository's root \`package.json\`:
+
+\`\`\`json
+{
+  "private": true,
+  "workspaces": ["components/*", "integrations/*"]
+}
+\`\`\`
+
+Then depend on the component by name with an ordinary version range; npm links
+the workspace instead of fetching it from a registry:
+
+\`\`\`json
+{
+  "dependencies": {
+    "nested-objects-modern": "*"
+  }
+}
+\`\`\`
+
+Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
+script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
+to the root so the integration and the component share one copy, as long as
+their spectral ranges agree. After changing the component, rebuild it with
+\`npm run build --workspace nested-objects-modern\`. npm does not support the
+\`workspace:*\` protocol that pnpm, Yarn and Bun use.
+
+### From an npm registry
 
 Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
-use \`--npm-package @your-org/component-name\`.
+use \`--npm-package @your-org/component-name\`; or set a name, remove
+\`"private": true\` from \`package.json\`, and run \`npm publish\`. Then depend on the
+version as usual.
 
-To use this component in a code-native integration without a registry, run
-\`npm pack\` and install the resulting tarball in the integration. The integration
-must also depend on \`@prismatic-io/spectral\`. Import the package's default export
-to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes private component dependencies to Prismatic when you import the
-integration.
+### Using the component
+
+Import the package's default export to reach the component's callable actions,
+triggers, data sources and connection factories:
+
+\`\`\`ts
+import nestedObjectsModern from "nested-objects-modern";
+
+// Inside a flow's onExecution
+const result = await nestedObjectsModern.actions.<actionKey>({
+  // ...the action's inputs, typed from its definition
+});
+\`\`\`
 "
 `;
 
@@ -6866,17 +6972,123 @@ A Prismatic custom component, scaffolded by \`prism components:init\`.
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Optional npm usage
+## Using this component from a code-native integration
+
+Add the component to your integration's \`package.json\`. The integration must
+also depend on \`@prismatic-io/spectral\`, which this package declares as a peer
+dependency; both must resolve to a single copy of spectral.
+
+You do not need to publish the component to Prismatic yourself.
+\`prism integrations:import\` publishes it whenever an integration depends on it
+(skipping the publish when nothing has changed). \`npm run publish:platform\`
+publishes it directly.
+
+### From a git repository (no registry needed)
+
+Pin a tag, branch, or commit. npm runs this package's \`prepare\` script on install,
+which builds it, so nothing needs to be committed or published. npm 11 warns that
+the script is not covered by \`allowScripts\`; run
+\`npm install-scripts approve petstore-expanded-modern\` in the integration to allow it.
+
+GitHub:
+
+\`\`\`json
+{
+  "dependencies": {
+    "petstore-expanded-modern": "github:your-org/petstore-expanded-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+GitLab (gitlab.com):
+
+\`\`\`json
+{
+  "dependencies": {
+    "petstore-expanded-modern": "gitlab:your-group/petstore-expanded-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+### From a tarball vendored into the integration
+
+\`\`\`sh
+npm pack                                  # in this directory, writes petstore-expanded-modern-0.0.1.tgz
+\`\`\`
+
+\`\`\`json
+{
+  "dependencies": {
+    "petstore-expanded-modern": "file:./vendor/petstore-expanded-modern-0.0.1.tgz"
+  }
+}
+\`\`\`
+
+### From a local checkout, while developing
+
+\`\`\`json
+{
+  "dependencies": {
+    "petstore-expanded-modern": "file:../petstore-expanded-modern"
+  }
+}
+\`\`\`
+
+npm builds the linked directory when it installs it, but not after you change
+it, so run \`npm run build\` here after each change. Because the link resolves to
+this directory's \`node_modules\`, make sure both projects use the same
+\`@prismatic-io/spectral\` version.
+
+### From a workspace in an npm monorepo
+
+When the integration and this component live in the same repository, list both
+as npm workspaces in the repository's root \`package.json\`:
+
+\`\`\`json
+{
+  "private": true,
+  "workspaces": ["components/*", "integrations/*"]
+}
+\`\`\`
+
+Then depend on the component by name with an ordinary version range; npm links
+the workspace instead of fetching it from a registry:
+
+\`\`\`json
+{
+  "dependencies": {
+    "petstore-expanded-modern": "*"
+  }
+}
+\`\`\`
+
+Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
+script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
+to the root so the integration and the component share one copy, as long as
+their spectral ranges agree. After changing the component, rebuild it with
+\`npm run build --workspace petstore-expanded-modern\`. npm does not support the
+\`workspace:*\` protocol that pnpm, Yarn and Bun use.
+
+### From an npm registry
 
 Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
-use \`--npm-package @your-org/component-name\`.
+use \`--npm-package @your-org/component-name\`; or set a name, remove
+\`"private": true\` from \`package.json\`, and run \`npm publish\`. Then depend on the
+version as usual.
 
-To use this component in a code-native integration without a registry, run
-\`npm pack\` and install the resulting tarball in the integration. The integration
-must also depend on \`@prismatic-io/spectral\`. Import the package's default export
-to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes private component dependencies to Prismatic when you import the
-integration.
+### Using the component
+
+Import the package's default export to reach the component's callable actions,
+triggers, data sources and connection factories:
+
+\`\`\`ts
+import petstoreExpandedModern from "petstore-expanded-modern";
+
+// Inside a flow's onExecution
+const result = await petstoreExpandedModern.actions.<actionKey>({
+  // ...the action's inputs, typed from its definition
+});
+\`\`\`
 "
 `;
 
@@ -7528,17 +7740,123 @@ A Prismatic custom component, scaffolded by \`prism components:init\`.
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Optional npm usage
+## Using this component from a code-native integration
+
+Add the component to your integration's \`package.json\`. The integration must
+also depend on \`@prismatic-io/spectral\`, which this package declares as a peer
+dependency; both must resolve to a single copy of spectral.
+
+You do not need to publish the component to Prismatic yourself.
+\`prism integrations:import\` publishes it whenever an integration depends on it
+(skipping the publish when nothing has changed). \`npm run publish:platform\`
+publishes it directly.
+
+### From a git repository (no registry needed)
+
+Pin a tag, branch, or commit. npm runs this package's \`prepare\` script on install,
+which builds it, so nothing needs to be committed or published. npm 11 warns that
+the script is not covered by \`allowScripts\`; run
+\`npm install-scripts approve petstore-expanded-uuid-paths-modern\` in the integration to allow it.
+
+GitHub:
+
+\`\`\`json
+{
+  "dependencies": {
+    "petstore-expanded-uuid-paths-modern": "github:your-org/petstore-expanded-uuid-paths-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+GitLab (gitlab.com):
+
+\`\`\`json
+{
+  "dependencies": {
+    "petstore-expanded-uuid-paths-modern": "gitlab:your-group/petstore-expanded-uuid-paths-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+### From a tarball vendored into the integration
+
+\`\`\`sh
+npm pack                                  # in this directory, writes petstore-expanded-uuid-paths-modern-0.0.1.tgz
+\`\`\`
+
+\`\`\`json
+{
+  "dependencies": {
+    "petstore-expanded-uuid-paths-modern": "file:./vendor/petstore-expanded-uuid-paths-modern-0.0.1.tgz"
+  }
+}
+\`\`\`
+
+### From a local checkout, while developing
+
+\`\`\`json
+{
+  "dependencies": {
+    "petstore-expanded-uuid-paths-modern": "file:../petstore-expanded-uuid-paths-modern"
+  }
+}
+\`\`\`
+
+npm builds the linked directory when it installs it, but not after you change
+it, so run \`npm run build\` here after each change. Because the link resolves to
+this directory's \`node_modules\`, make sure both projects use the same
+\`@prismatic-io/spectral\` version.
+
+### From a workspace in an npm monorepo
+
+When the integration and this component live in the same repository, list both
+as npm workspaces in the repository's root \`package.json\`:
+
+\`\`\`json
+{
+  "private": true,
+  "workspaces": ["components/*", "integrations/*"]
+}
+\`\`\`
+
+Then depend on the component by name with an ordinary version range; npm links
+the workspace instead of fetching it from a registry:
+
+\`\`\`json
+{
+  "dependencies": {
+    "petstore-expanded-uuid-paths-modern": "*"
+  }
+}
+\`\`\`
+
+Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
+script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
+to the root so the integration and the component share one copy, as long as
+their spectral ranges agree. After changing the component, rebuild it with
+\`npm run build --workspace petstore-expanded-uuid-paths-modern\`. npm does not support the
+\`workspace:*\` protocol that pnpm, Yarn and Bun use.
+
+### From an npm registry
 
 Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
-use \`--npm-package @your-org/component-name\`.
+use \`--npm-package @your-org/component-name\`; or set a name, remove
+\`"private": true\` from \`package.json\`, and run \`npm publish\`. Then depend on the
+version as usual.
 
-To use this component in a code-native integration without a registry, run
-\`npm pack\` and install the resulting tarball in the integration. The integration
-must also depend on \`@prismatic-io/spectral\`. Import the package's default export
-to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes private component dependencies to Prismatic when you import the
-integration.
+### Using the component
+
+Import the package's default export to reach the component's callable actions,
+triggers, data sources and connection factories:
+
+\`\`\`ts
+import petstoreExpandedUuidPathsModern from "petstore-expanded-uuid-paths-modern";
+
+// Inside a flow's onExecution
+const result = await petstoreExpandedUuidPathsModern.actions.<actionKey>({
+  // ...the action's inputs, typed from its definition
+});
+\`\`\`
 "
 `;
 
@@ -8195,17 +8513,123 @@ A Prismatic custom component, scaffolded by \`prism components:init\`.
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Optional npm usage
+## Using this component from a code-native integration
+
+Add the component to your integration's \`package.json\`. The integration must
+also depend on \`@prismatic-io/spectral\`, which this package declares as a peer
+dependency; both must resolve to a single copy of spectral.
+
+You do not need to publish the component to Prismatic yourself.
+\`prism integrations:import\` publishes it whenever an integration depends on it
+(skipping the publish when nothing has changed). \`npm run publish:platform\`
+publishes it directly.
+
+### From a git repository (no registry needed)
+
+Pin a tag, branch, or commit. npm runs this package's \`prepare\` script on install,
+which builds it, so nothing needs to be committed or published. npm 11 warns that
+the script is not covered by \`allowScripts\`; run
+\`npm install-scripts approve todo-api-modern\` in the integration to allow it.
+
+GitHub:
+
+\`\`\`json
+{
+  "dependencies": {
+    "todo-api-modern": "github:your-org/todo-api-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+GitLab (gitlab.com):
+
+\`\`\`json
+{
+  "dependencies": {
+    "todo-api-modern": "gitlab:your-group/todo-api-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+### From a tarball vendored into the integration
+
+\`\`\`sh
+npm pack                                  # in this directory, writes todo-api-modern-0.0.1.tgz
+\`\`\`
+
+\`\`\`json
+{
+  "dependencies": {
+    "todo-api-modern": "file:./vendor/todo-api-modern-0.0.1.tgz"
+  }
+}
+\`\`\`
+
+### From a local checkout, while developing
+
+\`\`\`json
+{
+  "dependencies": {
+    "todo-api-modern": "file:../todo-api-modern"
+  }
+}
+\`\`\`
+
+npm builds the linked directory when it installs it, but not after you change
+it, so run \`npm run build\` here after each change. Because the link resolves to
+this directory's \`node_modules\`, make sure both projects use the same
+\`@prismatic-io/spectral\` version.
+
+### From a workspace in an npm monorepo
+
+When the integration and this component live in the same repository, list both
+as npm workspaces in the repository's root \`package.json\`:
+
+\`\`\`json
+{
+  "private": true,
+  "workspaces": ["components/*", "integrations/*"]
+}
+\`\`\`
+
+Then depend on the component by name with an ordinary version range; npm links
+the workspace instead of fetching it from a registry:
+
+\`\`\`json
+{
+  "dependencies": {
+    "todo-api-modern": "*"
+  }
+}
+\`\`\`
+
+Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
+script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
+to the root so the integration and the component share one copy, as long as
+their spectral ranges agree. After changing the component, rebuild it with
+\`npm run build --workspace todo-api-modern\`. npm does not support the
+\`workspace:*\` protocol that pnpm, Yarn and Bun use.
+
+### From an npm registry
 
 Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
-use \`--npm-package @your-org/component-name\`.
+use \`--npm-package @your-org/component-name\`; or set a name, remove
+\`"private": true\` from \`package.json\`, and run \`npm publish\`. Then depend on the
+version as usual.
 
-To use this component in a code-native integration without a registry, run
-\`npm pack\` and install the resulting tarball in the integration. The integration
-must also depend on \`@prismatic-io/spectral\`. Import the package's default export
-to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes private component dependencies to Prismatic when you import the
-integration.
+### Using the component
+
+Import the package's default export to reach the component's callable actions,
+triggers, data sources and connection factories:
+
+\`\`\`ts
+import todoApiModern from "todo-api-modern";
+
+// Inside a flow's onExecution
+const result = await todoApiModern.actions.<actionKey>({
+  // ...the action's inputs, typed from its definition
+});
+\`\`\`
 "
 `;
 
@@ -9249,17 +9673,123 @@ A Prismatic custom component, scaffolded by \`prism components:init\`.
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Optional npm usage
+## Using this component from a code-native integration
+
+Add the component to your integration's \`package.json\`. The integration must
+also depend on \`@prismatic-io/spectral\`, which this package declares as a peer
+dependency; both must resolve to a single copy of spectral.
+
+You do not need to publish the component to Prismatic yourself.
+\`prism integrations:import\` publishes it whenever an integration depends on it
+(skipping the publish when nothing has changed). \`npm run publish:platform\`
+publishes it directly.
+
+### From a git repository (no registry needed)
+
+Pin a tag, branch, or commit. npm runs this package's \`prepare\` script on install,
+which builds it, so nothing needs to be committed or published. npm 11 warns that
+the script is not covered by \`allowScripts\`; run
+\`npm install-scripts approve countryinfoservice-modern\` in the integration to allow it.
+
+GitHub:
+
+\`\`\`json
+{
+  "dependencies": {
+    "countryinfoservice-modern": "github:your-org/countryinfoservice-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+GitLab (gitlab.com):
+
+\`\`\`json
+{
+  "dependencies": {
+    "countryinfoservice-modern": "gitlab:your-group/countryinfoservice-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+### From a tarball vendored into the integration
+
+\`\`\`sh
+npm pack                                  # in this directory, writes countryinfoservice-modern-0.0.1.tgz
+\`\`\`
+
+\`\`\`json
+{
+  "dependencies": {
+    "countryinfoservice-modern": "file:./vendor/countryinfoservice-modern-0.0.1.tgz"
+  }
+}
+\`\`\`
+
+### From a local checkout, while developing
+
+\`\`\`json
+{
+  "dependencies": {
+    "countryinfoservice-modern": "file:../countryinfoservice-modern"
+  }
+}
+\`\`\`
+
+npm builds the linked directory when it installs it, but not after you change
+it, so run \`npm run build\` here after each change. Because the link resolves to
+this directory's \`node_modules\`, make sure both projects use the same
+\`@prismatic-io/spectral\` version.
+
+### From a workspace in an npm monorepo
+
+When the integration and this component live in the same repository, list both
+as npm workspaces in the repository's root \`package.json\`:
+
+\`\`\`json
+{
+  "private": true,
+  "workspaces": ["components/*", "integrations/*"]
+}
+\`\`\`
+
+Then depend on the component by name with an ordinary version range; npm links
+the workspace instead of fetching it from a registry:
+
+\`\`\`json
+{
+  "dependencies": {
+    "countryinfoservice-modern": "*"
+  }
+}
+\`\`\`
+
+Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
+script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
+to the root so the integration and the component share one copy, as long as
+their spectral ranges agree. After changing the component, rebuild it with
+\`npm run build --workspace countryinfoservice-modern\`. npm does not support the
+\`workspace:*\` protocol that pnpm, Yarn and Bun use.
+
+### From an npm registry
 
 Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
-use \`--npm-package @your-org/component-name\`.
+use \`--npm-package @your-org/component-name\`; or set a name, remove
+\`"private": true\` from \`package.json\`, and run \`npm publish\`. Then depend on the
+version as usual.
 
-To use this component in a code-native integration without a registry, run
-\`npm pack\` and install the resulting tarball in the integration. The integration
-must also depend on \`@prismatic-io/spectral\`. Import the package's default export
-to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes private component dependencies to Prismatic when you import the
-integration.
+### Using the component
+
+Import the package's default export to reach the component's callable actions,
+triggers, data sources and connection factories:
+
+\`\`\`ts
+import countryinfoserviceModern from "countryinfoservice-modern";
+
+// Inside a flow's onExecution
+const result = await countryinfoserviceModern.actions.<actionKey>({
+  // ...the action's inputs, typed from its definition
+});
+\`\`\`
 "
 `;
 
@@ -12887,17 +13417,123 @@ A Prismatic custom component, scaffolded by \`prism components:init\`.
 For documentation on writing custom components, see
 https://prismatic.io/docs/custom-connectors/.
 
-## Optional npm usage
+## Using this component from a code-native integration
+
+Add the component to your integration's \`package.json\`. The integration must
+also depend on \`@prismatic-io/spectral\`, which this package declares as a peer
+dependency; both must resolve to a single copy of spectral.
+
+You do not need to publish the component to Prismatic yourself.
+\`prism integrations:import\` publishes it whenever an integration depends on it
+(skipping the publish when nothing has changed). \`npm run publish:platform\`
+publishes it directly.
+
+### From a git repository (no registry needed)
+
+Pin a tag, branch, or commit. npm runs this package's \`prepare\` script on install,
+which builds it, so nothing needs to be committed or published. npm 11 warns that
+the script is not covered by \`allowScripts\`; run
+\`npm install-scripts approve numberconversion-modern\` in the integration to allow it.
+
+GitHub:
+
+\`\`\`json
+{
+  "dependencies": {
+    "numberconversion-modern": "github:your-org/numberconversion-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+GitLab (gitlab.com):
+
+\`\`\`json
+{
+  "dependencies": {
+    "numberconversion-modern": "gitlab:your-group/numberconversion-modern#v1.0.0"
+  }
+}
+\`\`\`
+
+### From a tarball vendored into the integration
+
+\`\`\`sh
+npm pack                                  # in this directory, writes numberconversion-modern-0.0.1.tgz
+\`\`\`
+
+\`\`\`json
+{
+  "dependencies": {
+    "numberconversion-modern": "file:./vendor/numberconversion-modern-0.0.1.tgz"
+  }
+}
+\`\`\`
+
+### From a local checkout, while developing
+
+\`\`\`json
+{
+  "dependencies": {
+    "numberconversion-modern": "file:../numberconversion-modern"
+  }
+}
+\`\`\`
+
+npm builds the linked directory when it installs it, but not after you change
+it, so run \`npm run build\` here after each change. Because the link resolves to
+this directory's \`node_modules\`, make sure both projects use the same
+\`@prismatic-io/spectral\` version.
+
+### From a workspace in an npm monorepo
+
+When the integration and this component live in the same repository, list both
+as npm workspaces in the repository's root \`package.json\`:
+
+\`\`\`json
+{
+  "private": true,
+  "workspaces": ["components/*", "integrations/*"]
+}
+\`\`\`
+
+Then depend on the component by name with an ordinary version range; npm links
+the workspace instead of fetching it from a registry:
+
+\`\`\`json
+{
+  "dependencies": {
+    "numberconversion-modern": "*"
+  }
+}
+\`\`\`
+
+Run \`npm install\` from the repository root. npm runs this package's \`prepare\`
+script for the workspace, which builds it, and hoists \`@prismatic-io/spectral\`
+to the root so the integration and the component share one copy, as long as
+their spectral ranges agree. After changing the component, rebuild it with
+\`npm run build --workspace numberconversion-modern\`. npm does not support the
+\`workspace:*\` protocol that pnpm, Yarn and Bun use.
+
+### From an npm registry
 
 Registry publishing is disabled by \`"private": true\`. To opt in when scaffolding,
-use \`--npm-package @your-org/component-name\`.
+use \`--npm-package @your-org/component-name\`; or set a name, remove
+\`"private": true\` from \`package.json\`, and run \`npm publish\`. Then depend on the
+version as usual.
 
-To use this component in a code-native integration without a registry, run
-\`npm pack\` and install the resulting tarball in the integration. The integration
-must also depend on \`@prismatic-io/spectral\`. Import the package's default export
-to access its callable actions, triggers, data sources, and connection factories.
-Prism publishes private component dependencies to Prismatic when you import the
-integration.
+### Using the component
+
+Import the package's default export to reach the component's callable actions,
+triggers, data sources and connection factories:
+
+\`\`\`ts
+import numberconversionModern from "numberconversion-modern";
+
+// Inside a flow's onExecution
+const result = await numberconversionModern.actions.<actionKey>({
+  // ...the action's inputs, typed from its definition
+});
+\`\`\`
 "
 `;
 

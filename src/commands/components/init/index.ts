@@ -18,6 +18,7 @@ import {
 } from "../../../utils/toolchain/index.js";
 import { generateComponent } from "./component.js";
 import { generateFormats } from "./formats.js";
+import { COMPONENT_TEMPLATE_EXAMPLE } from "./readme.js";
 
 export default Cli.command({
   output: z.object({
@@ -193,6 +194,8 @@ export default Cli.command({
           registryPublishing: internalPublishing || npmPackage !== undefined,
           toolchain,
           wsdl: Boolean(wsdlPath),
+          // Generated components (OpenAPI, WSDL) have their own keys, not the sample's.
+          example: openApiPath || wsdlPath ? undefined : COMPONENT_TEMPLATE_EXAMPLE,
         });
         const { dependencies, devDependencies } = JSON.parse(
           await fs.readFile(packageJsonPath, "utf-8"),
