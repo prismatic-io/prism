@@ -109,6 +109,15 @@ describe("component generation tests", () => {
         const readme = await readFile(path.join(tempPath, "MyComponent", "README.md"), "utf-8");
 
         expect(readme).toContain('Registry publishing is disabled by `"private": true`');
+        // How an integration installs the component, and the sample component's entities.
+        expect(readme).toContain('"mycomponent": "github:your-org/MyComponent#v1.0.0"');
+        expect(readme).toContain('"mycomponent": "file:../MyComponent"');
+        expect(readme).toContain("npm run build --workspace mycomponent");
+        expect(readme).toContain('import myComponent from "mycomponent";');
+        expect(readme).toContain("myComponent.connections.apiKey(");
+        expect(readme).toContain("myComponent.dataSources.selectPost(");
+        expect(readme).toContain("myComponent.triggers.exampleTrigger(");
+        expect(readme).toContain("myComponent.actions.listPosts(");
         expect(fileExists(path.join(tempPath, "MyComponent", "src", "platform.ts"))).toBe(false);
         expect(fileExists(path.join(tempPath, "MyComponent", "src", "definition.ts"))).toBe(false);
 
@@ -227,6 +236,8 @@ describe("component generation tests", () => {
       const readme = await readFile(path.join(tempPath, directory, "README.md"), "utf-8");
 
       expect(readme).toContain("This package is enabled for registry publishing");
+      expect(readme).toContain("writes customer-acme-0.0.1.tgz");
+      expect(readme).toContain(`"${packageName}": "file:./vendor/customer-acme-0.0.1.tgz"`);
     } finally {
       process.chdir(basePath);
     }
