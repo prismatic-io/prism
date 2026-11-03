@@ -98,7 +98,10 @@ describe("component generation tests", () => {
           private: true,
           main: "./npm-dist/index.cjs",
           types: "./npm-dist/index.d.cts",
-          exports: { ".": { types: "./npm-dist/index.d.cts", default: "./npm-dist/index.cjs" } },
+          exports: {
+            ".": { types: "./npm-dist/index.d.cts", default: "./npm-dist/index.cjs" },
+            "./package.json": "./package.json",
+          },
           files: ["npm-dist", "dist"],
           prismatic: { component: "./dist/index.js" },
           scripts: { prepare: "npm run build", "publish:platform": expect.any(String) },
@@ -166,7 +169,10 @@ describe("component generation tests", () => {
             url: "git+https://github.com/prismatic-io/components.git",
             directory: `components/${name}`,
           },
-          exports: { ".": { types: "./npm-dist/index.d.cts", default: "./npm-dist/index.cjs" } },
+          exports: {
+            ".": { types: "./npm-dist/index.d.cts", default: "./npm-dist/index.cjs" },
+            "./package.json": "./package.json",
+          },
           files: ["npm-dist", "dist"],
           publishConfig: { access: "public" },
           prismatic: { component: "./dist/index.js" },
@@ -227,6 +233,7 @@ describe("component generation tests", () => {
       expect(pkg.publishConfig).toBeUndefined();
       expect(pkg.exports).toEqual({
         ".": { types: "./npm-dist/index.d.cts", default: "./npm-dist/index.cjs" },
+        "./package.json": "./package.json",
       });
 
       expect(await readFile(path.join(tempPath, directory, "src/index.ts"), "utf-8")).toContain(

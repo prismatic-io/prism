@@ -6647,7 +6647,8 @@ exports[`component generation tests > modern - openApi - nested-objects > should
     ".": {
       "types": "./npm-dist/index.d.cts",
       "default": "./npm-dist/index.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": ["npm-dist", "dist"],
   "prismatic": {
@@ -7136,7 +7137,8 @@ exports[`component generation tests > modern - openApi - petstore-expanded > sho
     ".": {
       "types": "./npm-dist/index.d.cts",
       "default": "./npm-dist/index.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": ["npm-dist", "dist"],
   "prismatic": {
@@ -7904,7 +7906,8 @@ exports[`component generation tests > modern - openApi - petstore-expanded-uuid-
     ".": {
       "types": "./npm-dist/index.d.cts",
       "default": "./npm-dist/index.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": ["npm-dist", "dist"],
   "prismatic": {
@@ -8677,7 +8680,8 @@ exports[`component generation tests > modern - openApi - todo-api > should match
     ".": {
       "types": "./npm-dist/index.d.cts",
       "default": "./npm-dist/index.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": ["npm-dist", "dist"],
   "prismatic": {
@@ -12550,7 +12554,8 @@ exports[`component generation tests > modern - wsdl - countryinfoservice > shoul
     ".": {
       "types": "./npm-dist/index.d.cts",
       "default": "./npm-dist/index.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": ["npm-dist", "dist"],
   "prismatic": {
@@ -13884,7 +13889,8 @@ exports[`component generation tests > modern - wsdl - numberconversion > should 
     ".": {
       "types": "./npm-dist/index.d.cts",
       "default": "./npm-dist/index.cjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": ["npm-dist", "dist"],
   "prismatic": {
