@@ -4,7 +4,11 @@ import { temporaryWrite } from "tempy";
 import yazl from "yazl";
 
 const EPOCH = new Date(0);
-const ENTRY_OPTS = { mtime: EPOCH, compressionLevel: 9 } as const;
+// The signature is the SHA-1 of this zip, so the entries must not record values from the local
+// file system. Without a fixed mode, a file with mode 0666 or 0755 gives a different signature
+// than the same file with mode 0644. 0644 is the mode that npm gives to package files.
+const FILE_MODE = 0o100644;
+const ENTRY_OPTS = { mtime: EPOCH, mode: FILE_MODE, compressionLevel: 9 } as const;
 
 const toArchivePath = (p: string): string => (sep === "/" ? p : p.split(sep).join("/"));
 
