@@ -4,7 +4,9 @@ import { temporaryWrite } from "tempy";
 import yazl from "yazl";
 
 const EPOCH = new Date(0);
-const ENTRY_OPTS = { mtime: EPOCH, compressionLevel: 9 } as const;
+// Give all entries the same permissions, so that the signature is consistent.
+const FILE_MODE = 0o100644;
+const ENTRY_OPTS = { mtime: EPOCH, mode: FILE_MODE, compressionLevel: 9 } as const;
 
 const toArchivePath = (p: string): string => (sep === "/" ? p : p.split(sep).join("/"));
 

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, utimes, writeFile } from "node:fs/promises";
+import { chmod, mkdir, mkdtemp, readFile, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -17,6 +17,7 @@ interface ReadEntry {
   content: string;
   mtime: Date;
   method: number;
+  mode: number;
 }
 
 const readZip = async (path: string): Promise<ReadEntry[]> => {
@@ -36,6 +37,7 @@ const readZip = async (path: string): Promise<ReadEntry[]> => {
             content: Buffer.concat(chunks).toString("utf8"),
             mtime: entry.getLastModDate(),
             method: entry.compressionMethod,
+            mode: entry.externalFileAttributes >>> 16,
           });
           zip.readEntry();
         });
@@ -114,6 +116,30 @@ describe("createZip", () => {
     await utimes(join(srcDir, "sub", "nested.ts"), future, future);
     const after = await createZip((zip) => zip.addDirectory(srcDir));
     expect(await sha1(before)).toBe(await sha1(after));
+  });
+
+  it("ignores source-file modes (a chmod does not change zip bytes)", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "zip-test-mode-"));
+    await writeFile(join(dir, "index.js"), "console.log('hi');");
+    await writeFile(join(dir, "icon.png"), "png");
+    await chmod(join(dir, "index.js"), 0o644);
+    await chmod(join(dir, "icon.png"), 0o644);
+    const before = await createZip((zip) => zip.addDirectory(dir));
+    await chmod(join(dir, "index.js"), 0o755);
+    await chmod(join(dir, "icon.png"), 0o666);
+    const after = await createZip((zip) => zip.addDirectory(dir));
+    expect(await sha1(before)).toBe(await sha1(after));
+  });
+
+  it("records each file as a regular file with mode 0644", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "zip-test-mode-"));
+    await writeFile(join(dir, "index.js"), "console.log('hi');");
+    await writeFile(join(dir, "icon.png"), "png");
+    await chmod(join(dir, "index.js"), 0o755);
+    await chmod(join(dir, "icon.png"), 0o666);
+    const zipPath = await createZip((zip) => zip.addDirectory(dir));
+    const modes = (await readZip(zipPath)).map((e) => e.mode);
+    expect(modes).toEqual([0o100644, 0o100644]);
   });
 
   it("uses deflate compression", async () => {
