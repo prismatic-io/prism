@@ -112,6 +112,7 @@ const additiveCommandIds = new Set([
   "executions:list",
   "executions:logs",
   "executions:steps",
+  "instances:executions:cancel-queued",
   "integrations:manifests:add",
   "integrations:manifests:list",
   "integrations:manifests:remove",
@@ -197,7 +198,7 @@ describe("legacy command contract", () => {
 
   it("classifies every command with an unambiguously mutating verb", () => {
     const mutationVerb =
-      /(?:^|:)(?:clear|create|delete|deploy|disable|enable|fork|generate|import|publish|revoke|set-debug|update|updateAvatarUrl)$/;
+      /(?:^|:)(?:cancel-queued|clear|create|delete|deploy|disable|enable|fork|generate|import|publish|revoke|set-debug|update|updateAvatarUrl)$/;
     const obviousMutations = Object.keys(Commands).filter((id) => mutationVerb.test(id));
     expect(obviousMutations.filter((id) => !mutatingCommandIds.has(id))).toEqual([]);
   });
