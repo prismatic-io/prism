@@ -6,7 +6,7 @@ import { warningsOutput } from "../../../output.js";
 export default Cli.command({
   output: z.object({ instanceId: z.string() }).extend(warningsOutput),
   description:
-    "Cancel all queued executions of an Instance.\nThis cancels the executions that are in the queue of each flow when you send the request. The cancellation is asynchronous. Executions that are queued after the request still run. Executions that are running continue until they stop.",
+    "Cancel all queued executions for all Flows of an Instance.\nRunning executions are not canceled. Executions that are queued after the cancellation still run. The cancellation is asynchronous.",
   args: z.object({
     instance: z.string().describe("ID of an instance"),
   }),
