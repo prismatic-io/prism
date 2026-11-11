@@ -1,0 +1,11 @@
+mutation cancelAllQueuedExecutionsForInstance($id: ID!) {
+  cancelAllQueuedExecutionsForInstance(input: { id: $id }) {
+    instance {
+      id
+    }
+    errors {
+      field
+      messages
+    }
+  }
+}

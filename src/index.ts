@@ -55,6 +55,7 @@ import InstancesDeleteCommand from "./commands/instances/delete.js";
 import InstancesDeployCommand from "./commands/instances/deploy.js";
 import InstancesDisableCommand from "./commands/instances/disable.js";
 import InstancesEnableCommand from "./commands/instances/enable.js";
+import InstancesExecutionsCancelQueuedCommand from "./commands/instances/executions/cancel-queued.js";
 import InstancesFlowConfigsListCommand from "./commands/instances/flow-configs/list.js";
 import InstancesFlowConfigsTestCommand from "./commands/instances/flow-configs/test.js";
 import InstancesListCommand from "./commands/instances/list.js";
@@ -314,6 +315,10 @@ export const Commands = {
   "executions:step-result:get": prepareCommand(ExecutionsStepResultGetCommand, { mutates: true }),
   "executions:steps": prepareCommand(ExecutionsStepsCommand, {}),
   "instances:config-vars:list": prepareCommand(InstancesConfigVarsListCommand, {}),
+  "instances:executions:cancel-queued": prepareCommand(InstancesExecutionsCancelQueuedCommand, {
+    mutates: true,
+    humanOutput: (data) => data.instanceId,
+  }),
   "instances:flow-configs:list": prepareCommand(InstancesFlowConfigsListCommand, {}),
   "instances:flow-configs:test": prepareCommand(InstancesFlowConfigsTestCommand, {
     mutates: true,
