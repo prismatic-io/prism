@@ -1,3 +1,5 @@
+import type { FieldMappingConfig } from "../../types.js";
+
 export type ValidComplexYAMLValue = Array<{
   type: string;
   value: ValidYAMLValue | ValidComplexYAMLValue | ConditionObjectFromYAML;
@@ -93,6 +95,7 @@ export type ConfigVarObjectFromYAML = {
       };
     }
   >;
+  fieldMapping?: FieldMappingConfig;
   useScopedConfigVar?: string;
   meta?: {
     visibleToOrgDeployer: boolean;

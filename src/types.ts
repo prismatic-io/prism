@@ -137,16 +137,55 @@ export interface DataSourceConfigVar extends DefaultRequiredConfigVar {
   inputs?: Record<string, Input>;
 }
 
+export interface FieldMappingConfigVar
+  extends Pick<DefaultRequiredConfigVar, "key" | "description" | "orgOnly" | "meta"> {
+  dataType: Extract<DefaultConfigVarDataTypeEnum, "fieldMapping">;
+  fieldMapping: FieldMappingConfig;
+}
+
+export interface FieldMappingConfig {
+  source: FieldMappingSide;
+  destination: FieldMappingSide;
+  allowAdditionalMappings?: boolean;
+  allowNewFields?: boolean;
+  rules?: FieldMappingRule[];
+}
+
+export type FieldMappingSide = FieldMappingDataSourceSide | FieldMappingStaticOptionsSide;
+
+export interface FieldMappingDataSourceSide {
+  dataSource: ComponentKeySelector;
+  inputs?: Record<string, Input>;
+}
+
+export interface FieldMappingStaticOptionsSide {
+  staticOptions: FieldMappingStaticOption[];
+}
+
+export interface FieldMappingStaticOption {
+  key: string;
+  label?: string;
+}
+
+export type FieldMappingRuleModeEnum = "required" | "optional" | "static";
+
+export interface FieldMappingRule {
+  mode: FieldMappingRuleModeEnum;
+  sourceField?: string;
+  destField?: string;
+}
+
 export type RequiredConfigVar =
   | DefaultRequiredConfigVar
   | ConnectionConfigVar
-  | DataSourceConfigVar;
+  | DataSourceConfigVar
+  | FieldMappingConfigVar;
 
 export interface DefaultRequiredConfigVar {
   key: string;
   defaultValue?: string;
   header?: string;
-  dataType?: Exclude<DefaultConfigVarDataTypeEnum, "connection">;
+  dataType?: Exclude<DefaultConfigVarDataTypeEnum, "connection" | "fieldMapping">;
   pickList?: string[];
   scheduleType?: ScheduleTypeEnum;
   timeZone?: string;
@@ -194,12 +233,17 @@ export type DefaultConfigVarDataTypeEnum =
   | "credential"
   | "boolean"
   | "number"
-  // Backend schema does not include 'connection' or 'dataSource' as yml validation doesn't have the equivalent of Exclude/Extract
+  // The backend's defaultConfigVarDataTypeEnum excludes 'connection' and 'fieldMapping'
+  // because each has its own config var shape in the YAML schema.
   | "connection"
   | "objectSelection"
   | "objectFieldMap"
-  | "jsonForm";
-export type DataSourceConfigVarDataTypeEnum = Exclude<DefaultConfigVarDataTypeEnum, "connection">;
+  | "jsonForm"
+  | "fieldMapping";
+export type DataSourceConfigVarDataTypeEnum = Exclude<
+  DefaultConfigVarDataTypeEnum,
+  "connection" | "fieldMapping"
+>;
 export type CredentialTypeEnum =
   | "oauth2"
   | "basic"
