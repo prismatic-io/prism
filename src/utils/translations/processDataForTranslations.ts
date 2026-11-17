@@ -9,114 +9,116 @@ import { loadYaml } from "../serialize.js";
 type ProcessedData = {
   [key: string]: string;
 };
-const processedProperties = new Set<string>();
 
-const setResultProperty = (property?: string | null) => {
-  if (property && !processedProperties.has(property)) {
-    processedProperties.add(property);
-  }
-};
+const collectPhrases = (phrases: Set<string>) => {
+  const setResultProperty = (property?: string | null) => {
+    if (property) phrases.add(property);
+  };
 
-const processProperties = (properties: Array<string | undefined | null>) => {
-  // biome-ignore lint/suspicious/useIterableCallbackReturn: TODO
-  properties.forEach((property) => setResultProperty(property));
-};
-
-const processIntegration = (integration: IntegrationTranslationFragment) => {
-  const { name, description, category, overview, definition } = integration;
-  processProperties([name, description, category, overview]);
-  if (definition) processIntegrationDefinition(definition);
-};
-const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
-  const definition = loadYaml<IntegrationSchema>(unparsedYamlDefinition);
-
-  if (!definition) {
-    return;
-  }
-
-  const { category, description, configPages, flows, labels, requiredConfigVars } = definition;
-
-  processProperties([description, category]);
-
-  configPages?.forEach((page) => {
-    setResultProperty(page.name);
-    setResultProperty(page.tagline);
+  const processProperties = (properties: Array<string | undefined | null>) => {
     // biome-ignore lint/suspicious/useIterableCallbackReturn: TODO
-    page.elements.forEach((element) => setResultProperty(element.value));
-  });
+    properties.forEach((property) => setResultProperty(property));
+  };
 
-  flows?.forEach(traverse);
-  processProperties(labels ?? []);
+  const processIntegration = (integration: IntegrationTranslationFragment) => {
+    const { name, description, category, overview, definition } = integration;
+    processProperties([name, description, category, overview]);
+    if (definition) processIntegrationDefinition(definition);
+  };
 
-  requiredConfigVars?.forEach((configVar) => {
-    if (
-      configVar.dataType === "date" ||
-      configVar.dataType === "timestamp" ||
-      configVar.dataType === "schedule"
-    ) {
+  const processIntegrationDefinition = (unparsedYamlDefinition: string) => {
+    const definition = loadYaml<IntegrationSchema>(unparsedYamlDefinition);
+
+    if (!definition) {
       return;
     }
-    setResultProperty(configVar.key);
-    setResultProperty(configVar.description);
 
-    if ("collectionType" in configVar) {
-      try {
-        const valueParsed = JSON.parse(configVar.defaultValue ?? "");
-        valueParsed.forEach((value: any) => {
-          if (typeof value === "string") {
-            setResultProperty(value);
-          }
+    const { category, description, configPages, flows, labels, requiredConfigVars } = definition;
 
-          if (typeof value === "object") {
-            Object.entries(value).forEach(([key, value]) => {
-              setResultProperty(key);
-              setResultProperty(value as string);
-            });
-          }
-        });
-      } catch (error) {
-        writeCommandOutput(`JSON Parsing Error: ${error}`, "stderr");
+    processProperties([description, category]);
+
+    configPages?.forEach((page) => {
+      setResultProperty(page.name);
+      setResultProperty(page.tagline);
+      // biome-ignore lint/suspicious/useIterableCallbackReturn: TODO
+      page.elements.forEach((element) => setResultProperty(element.value));
+    });
+
+    flows?.forEach(traverse);
+    processProperties(labels ?? []);
+
+    requiredConfigVars?.forEach((configVar) => {
+      if (
+        configVar.dataType === "date" ||
+        configVar.dataType === "timestamp" ||
+        configVar.dataType === "schedule"
+      ) {
+        return;
       }
-    }
+      setResultProperty(configVar.key);
+      setResultProperty(configVar.description);
 
-    if (configVar.dataType === "picklist") {
-      processProperties(configVar.pickList ?? []);
-    }
-  });
-};
+      if ("collectionType" in configVar) {
+        try {
+          const valueParsed = JSON.parse(configVar.defaultValue ?? "");
+          valueParsed.forEach((value: any) => {
+            if (typeof value === "string") {
+              setResultProperty(value);
+            }
 
-const traverse = (flowOrStep: Flow | Step) => {
-  const stack: Array<Flow | Step | Branch> = [flowOrStep];
+            if (typeof value === "object") {
+              Object.entries(value).forEach(([key, value]) => {
+                setResultProperty(key);
+                setResultProperty(value as string);
+              });
+            }
+          });
+        } catch (error) {
+          writeCommandOutput(`JSON Parsing Error: ${error}`, "stderr");
+        }
+      }
 
-  while (stack.length > 0) {
-    const current = stack.pop();
+      if (configVar.dataType === "picklist") {
+        processProperties(configVar.pickList ?? []);
+      }
+    });
+  };
 
-    if (current === undefined) continue;
+  const traverse = (flowOrStep: Flow | Step) => {
+    const stack: Array<Flow | Step | Branch> = [flowOrStep];
 
-    if (isFlow(current)) {
-      // Handling Flow type
-      processProperties([current.name, current.description]);
-      stack.push(...current.steps);
-    } else if (isStep(current)) {
-      // Handling Step type
-      processProperties([current.name, current.description, current.action?.component?.key]);
-      if (current.steps) {
+    while (stack.length > 0) {
+      const current = stack.pop();
+
+      if (current === undefined) continue;
+
+      if (isFlow(current)) {
+        // Handling Flow type
+        processProperties([current.name, current.description]);
+        stack.push(...current.steps);
+      } else if (isStep(current)) {
+        // Handling Step type
+        processProperties([current.name, current.description, current.action?.component?.key]);
+        if (current.steps) {
+          stack.push(...current.steps);
+        }
+        if (current.branches) {
+          stack.push(
+            ...current.branches.map((branch) => ({
+              name: branch.name,
+              steps: branch.steps,
+            })),
+          );
+        }
+      } else {
+        // Handling Branch type
+        setResultProperty(current.name);
         stack.push(...current.steps);
       }
-      if (current.branches) {
-        stack.push(
-          ...current.branches.map((branch) => ({
-            name: branch.name,
-            steps: branch.steps,
-          })),
-        );
-      }
-    } else {
-      // Handling Branch type
-      setResultProperty(current.name);
-      stack.push(...current.steps);
     }
-  }
+  };
+
+  return { setResultProperty, processIntegration };
 };
 
 const isFlow = (object: Flow | Step): object is Flow => {
@@ -130,6 +132,8 @@ const isStep = (object: Flow | Step): object is Step => {
 export const processIntegrationsForTranslations = (
   data: MarketplaceTranslationsQuery,
 ): ProcessedData => {
+  const phrases = new Set<string>();
+  const { setResultProperty, processIntegration } = collectPhrases(phrases);
   for (const integration of data.marketplaceIntegrations.nodes) {
     processIntegration(integration);
     for (const instance of integration.instances.nodes) {
@@ -137,7 +141,7 @@ export const processIntegrationsForTranslations = (
       processIntegration(instance.integration);
     }
   }
-  return Object.fromEntries(processedProperties.entries());
+  return Object.fromEntries(phrases.entries());
 };
 
 import { writeCommandOutput } from "../../command.js";
