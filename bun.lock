@@ -290,7 +290,7 @@
 
     "@paralleldrive/cuid2": ["@paralleldrive/cuid2@2.3.1", "", { "dependencies": { "@noble/hashes": "^1.1.5" } }, "sha512-XO7cAxhnTZl0Yggq6jOgjiOHhbgcO4NqFqwSmQpjK3b6TEE6Uj/jfSk6wzYyemh3+I0sHirKSetjQwn5cZktFw=="],
 
-    "@prismatic-io/spectral": ["@prismatic-io/spectral@10.38.4", "", { "dependencies": { "axios": "^1.20.0", "axios-retry": "^4.5.0", "date-fns": "^4.4.0", "ejs": "^7.0.2", "form-data": "^4.0.6", "json-schema-to-ts": "^3.1.1", "lodash": "^4.18.1", "object-sizeof": "^2.6.4", "prettier": "^3.9.9", "safe-stable-stringify": "^3.0.0", "valid-url": "1.0.9", "yaml": "^2.9.1", "zod": "^4.6.7" }, "peerDependencies": { "@jest/globals": ">=29", "vitest": ">=4" }, "optionalPeers": ["@jest/globals", "vitest"], "bin": { "component-manifest": "bin/component-manifest.js", "cni-component-manifest": "bin/cni-component-manifest.js" } }, "sha512-IiAhlKCkKPpGnuuxP7ZolVq3/pMFtNB/xH3rF/xFJF800xoE0Wwvbi4T5aYxuP2TUCiwQCbHC0LMaTFl750QFA=="],
+    "@prismatic-io/spectral": ["@prismatic-io/spectral@10.39.0", "", { "dependencies": { "axios": "^1.20.0", "axios-retry": "^4.5.0", "date-fns": "^4.4.0", "ejs": "^7.0.2", "form-data": "^4.0.6", "json-schema-to-ts": "^3.1.1", "lodash": "^4.18.1", "object-sizeof": "^2.6.4", "prettier": "^3.9.9", "safe-stable-stringify": "^3.0.0", "valid-url": "1.0.9", "yaml": "^2.9.1", "zod": "^4.6.7" }, "peerDependencies": { "@jest/globals": ">=29", "vitest": ">=4" }, "optionalPeers": ["@jest/globals", "vitest"], "bin": { "component-manifest": "bin/component-manifest.js", "cni-component-manifest": "bin/cni-component-manifest.js" } }, "sha512-Gp2vpXzTulCJeCabeapUPzOTeKwisUFgcZa6UhrhrPLZFEEVPeghyPbkPrEcNKA6FO9RyC3bsiqkcW3yBSVq7Q=="],
 
     "@repeaterjs/repeater": ["@repeaterjs/repeater@3.0.6", "", {}, "sha512-Javneu5lsuhwNCryN+pXH93VPQ8g0dBX7wItHFgYiwQmzE1sVdg5tWHiOgHywzL2W21XQopa7IwIEnNbmeUJYA=="],
 
@@ -656,7 +656,7 @@
 
     "graceful-fs": ["graceful-fs@4.2.11", "", {}, "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ=="],
 
-    "graphql": ["graphql@16.14.2", "", {}, "sha512-Chq1s4CY7jmh8gO2qvLIJyfCDIN+EHLFW/9iShnp1z8FjBQMoodWP1kDC36VAMXXIvAjj4ARa7ntfAV2BrjsbA=="],
+    "graphql": ["graphql@16.15.0", "", {}, "sha512-32kz9FecohDiC/tgcViwnRXM7HFBVTPiW7pHO+DikKOI5KjhU/jNULOReXsrFqt2WAYbE9xFXsTffJw6iTO8qw=="],
 
     "graphql-config": ["graphql-config@5.1.8", "", { "dependencies": { "@graphql-tools/graphql-file-loader": "^8.1.22", "@graphql-tools/json-file-loader": "^8.0.36", "@graphql-tools/load": "^8.1.19", "@graphql-tools/merge": "^9.2.6", "@graphql-tools/url-loader": "^9.1.12", "@graphql-tools/utils": "^12.0.3", "cosmiconfig": "^8.1.0", "jiti": "^2.0.0", "minimatch": "^10.0.0", "string-env-interpolation": "^1.0.1", "tslib": "^2.4.0" }, "peerDependencies": { "cosmiconfig-toml-loader": "^1.0.0", "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0" }, "optionalPeers": ["cosmiconfig-toml-loader"] }, "sha512-7DyT4ctUiNRMAU19IFy8o1zoQCJPjik1/vBwWIZlILGI6O1mHZXd59rUzF81oglNyHtPrNNCWonqfwu58BG66A=="],
 
