@@ -14,6 +14,9 @@ updates:
         patterns:
           - "*"
     ignore:
+      # This update pulls in @inquirer/prompts 8.8.0, which excludes Node 22.19.0.
+      - dependency-name: "inquirer"
+        versions: ["14.2.5"]
       # Biome bumps require updating the $schema URL in biome.json files,
       # which dependabot doesn't do. Bump manually.
       - dependency-name: "@biomejs/biome"
