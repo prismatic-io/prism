@@ -104,6 +104,10 @@ export const pinComponentSignatures = (
     const variable = object(value);
     pin(object(variable?.connection)?.component);
     pin(object(variable?.dataSource)?.component);
+    const fieldMapping = object(variable?.fieldMapping);
+    for (const side of [fieldMapping?.source, fieldMapping?.destination]) {
+      pin(object(object(side)?.dataSource)?.component);
+    }
   }
   const importMetadata: ImportMetadata = {
     ...object(definition.importMetadata),

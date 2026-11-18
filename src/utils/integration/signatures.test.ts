@@ -41,6 +41,36 @@ describe("pinComponentSignatures", () => {
     expect(result.requiredConfigVars[0].inputs.component).toEqual(selector);
   });
 
+  it("pins the data source components of both field mapping sides without touching inputs or static options", () => {
+    const staticMapping = {
+      source: { staticOptions: [{ key: "component" }] },
+      destination: { staticOptions: [{ key: "email" }] },
+    };
+    const definition = {
+      requiredConfigVars: [
+        {
+          key: "Lead Mapping",
+          dataType: "fieldMapping",
+          fieldMapping: {
+            source: {
+              dataSource: { key: "sourceFields", component: selector },
+              inputs: { component: selector },
+            },
+            destination: { dataSource: { key: "destinationFields", component: selector } },
+          },
+        },
+        { key: "Static Mapping", dataType: "fieldMapping", fieldMapping: staticMapping },
+      ],
+      flows: [],
+    };
+    const result = loadYaml<any>(pinComponentSignatures(dumpYaml(definition), components));
+    const [mapping, staticResult] = result.requiredConfigVars;
+    expect(mapping.fieldMapping.source.dataSource.component).toEqual(pinned);
+    expect(mapping.fieldMapping.destination.dataSource.component).toEqual(pinned);
+    expect(mapping.fieldMapping.source.inputs.component).toEqual(selector);
+    expect(staticResult.fieldMapping).toEqual(staticMapping);
+  });
+
   it("distinguishes visibility and leaves unrelated components unchanged", () => {
     const other = { key: "other", isPublic: false, version: "LATEST" };
     const publicSelector = { key: "dependency", isPublic: true, version: "LATEST" };
