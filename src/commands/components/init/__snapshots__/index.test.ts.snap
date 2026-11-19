@@ -6673,7 +6673,7 @@ exports[`component generation tests > modern - openApi - nested-objects > should
     "@biomejs/biome": "2.5.1",
     "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
-    "tsdown": "0.22.3",
+    "tsdown": "0.23.7",
     "typescript": "6.0.3",
     "vitest": "4.1.9",
     "@prismatic-io/spectral": "VERSION"
@@ -7162,7 +7162,7 @@ exports[`component generation tests > modern - openApi - petstore-expanded > sho
     "@biomejs/biome": "2.5.1",
     "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
-    "tsdown": "0.22.3",
+    "tsdown": "0.23.7",
     "typescript": "6.0.3",
     "vitest": "4.1.9",
     "@prismatic-io/spectral": "VERSION"
@@ -7930,7 +7930,7 @@ exports[`component generation tests > modern - openApi - petstore-expanded-uuid-
     "@biomejs/biome": "2.5.1",
     "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
-    "tsdown": "0.22.3",
+    "tsdown": "0.23.7",
     "typescript": "6.0.3",
     "vitest": "4.1.9",
     "@prismatic-io/spectral": "VERSION"
@@ -8703,7 +8703,7 @@ exports[`component generation tests > modern - openApi - todo-api > should match
     "@biomejs/biome": "2.5.1",
     "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
-    "tsdown": "0.22.3",
+    "tsdown": "0.23.7",
     "typescript": "6.0.3",
     "vitest": "4.1.9",
     "@prismatic-io/spectral": "VERSION"
@@ -12578,7 +12578,7 @@ exports[`component generation tests > modern - wsdl - countryinfoservice > shoul
     "@biomejs/biome": "2.5.1",
     "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
-    "tsdown": "0.22.3",
+    "tsdown": "0.23.7",
     "typescript": "6.0.3",
     "vitest": "4.1.9",
     "@prismatic-io/spectral": "VERSION"
@@ -13912,7 +13912,7 @@ exports[`component generation tests > modern - wsdl - numberconversion > should 
     "@biomejs/biome": "2.5.1",
     "@types/node": "^22.0.0",
     "dotenv": "^17.2.2",
-    "tsdown": "0.22.3",
+    "tsdown": "0.23.7",
     "typescript": "6.0.3",
     "vitest": "4.1.9",
     "@prismatic-io/spectral": "VERSION"
