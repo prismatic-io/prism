@@ -24,7 +24,7 @@ export class ModernToolchain extends Toolchain {
     "@biomejs/biome": "2.5.1",
     "@types/node": "^22.0.0",
     dotenv: "^17.2.2",
-    tsdown: "0.22.3",
+    tsdown: "0.23.7",
     typescript: "6.0.3",
     vitest: "4.1.9",
   };
